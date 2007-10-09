@@ -1,0 +1,19 @@
+/*meta-form specific styles*/
+
+.question {
+  background-color: #ddd;
+}
+
+.incomplete {
+  border: 1px solid red;
+}
+
+.errors {
+	color: #e00;
+}
+
+.other_box {
+  border:1px solid blue;
+}
+
+
