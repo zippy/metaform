@@ -522,7 +522,7 @@ YAML
     end
     def javascript_submit(&block)
       save_context(:js) do
-        javascript %Q|$('birthForm').submit();|
+        javascript %Q|$('metaForm').submit();|
       end
     end
 
@@ -530,7 +530,7 @@ YAML
     #
     def javascript_submit_workflow_action(state)
       save_context(:js) do
-        javascript %Q|$('_workflow').value = '#{state}';$('birthForm').submit();|
+        javascript %Q|$('_workflow').value = '#{state}';$('metaForm').submit();|
       end
     end
     

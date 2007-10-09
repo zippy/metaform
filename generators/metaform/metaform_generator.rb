@@ -12,7 +12,7 @@ class MetaformGenerator < Rails::Generator::Base
 
     record do |m|
       m.directory('forms')
-#      m.file('sessions_new.rhtml', 'app/views/sessions/new.rhtml')
+      m.file('metaform.js', 'public/javascripts/metaform.js')
 
       @migrations.sort.each do |f|
         m.migration_template(f, 'db/migrate', {
