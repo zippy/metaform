@@ -1,0 +1,116 @@
+# Thanks to Peter Jones (pmade.com) for inspiring this coding pattern
+################################################################################
+class Widget
+  ################################################################################
+  def self.inherited(klass)
+    instance_eval { (@widgets ||= {}).store(klass.to_s.sub(/Widget/, ''), klass) }
+  end
+
+  ################################################################################
+  def self.list
+    instance_eval {@widgets.keys}
+  end
+  
+  def self.enumeration (constraints)
+    if constraints && constraints["enumeration"] 
+      enum = constraints["enumeration"].collect{|h| h.to_a[0].reverse}
+    elsif constraints && constraints["enumeration_lookup"]
+      enum = []
+      spec = constraints["enumeration_lookup"]
+      the_form = Form.find(:first, :conditions => ["name = ?",spec["form_name"]])
+      the_field = Field.find(:first, :conditions => ["name = ?",spec["field_name"]])
+      the_form.form_instances.each do |form_instance|
+        field_instance = FieldInstance.find(:first, :conditions => ["form_instance_id = ? and field_id = ?",form_instance.id,the_field.id])
+        enum << [field_instance.answer, field_instance.id]
+      end
+    end
+    enum
+  end
+
+  ################################################################################
+  def self.fetch(name)
+    widgets = instance_eval {@widgets}
+
+    raise "Unknown widget #{name}" unless widgets.has_key?(name)
+    widgets[name]
+  end
+
+  ################################################################################
+  def self.render(form,field_instance_id,value,label,options={})
+    render_label(label,field_instance_id,render_form_object(form,field_instance_id,value,options))
+  end
+
+  ################################################################################
+  # convert the value produced by rails submit to an sql saveable value
+  def self.convert_html_value(value)
+    value
+  end
+  
+  ################################################################################
+  # TODO at some point this needs to be generalized into a value type system i.e
+  # scalar/array/hash
+  def self.is_multi_value?
+    false
+  end
+
+  ################################################################################
+  def self.render_label(label,field_instance_id,form_object)
+    %Q|<label class="label" for="#{build_html_name(field_instance_id)}">#{label}</label>#{form_object}|
+  end
+
+  ################################################################################
+  def self.javascript_get_value_function(field_instance_id)
+    %Q|$F('#{build_html_id(field_instance_id)}')|
+  end
+  
+  ################################################################################
+  def self.javascript_build_observe_function(field_instance_id,script,constraints)
+    %Q|Event.observe('#{build_html_id(field_instance_id)}', 'change', function(e){ #{script} });|
+  end
+
+  def self.build_html_name(field_name)
+    "record[#{field_name}]"
+  end
+  
+  def self.build_html_multi_name(field_name,multi_elem_widget_value)
+    "record[#{field_name}][#{multi_elem_widget_value}]"
+  end
+
+  def self.build_html_id(field_name)
+    "record_#{field_name}"
+  end
+
+  def self.build_html_multi_id(field_name,multi_elem_widget_value)
+    result = "record_#{field_name}_"
+    if multi_elem_widget_value
+      value = multi_elem_widget_value.to_s.downcase
+      value = value.gsub(/[^a-z0-9_]/i,'')
+      result << value
+    end
+    result
+  end
+
+  protected
+  
+  def self.unflatten(array,cols)
+    result = []
+    sub = []
+    array.each do |elem|
+      sub << elem 
+      if sub.size >= cols
+        result << sub
+        sub = []
+      end
+    end
+    result << sub if sub.size > 0
+    result
+  end
+  
+  
+  
+end
+################################################################################
+Dir.foreach(File.join(File.dirname(__FILE__), 'widgets')) do |file|
+  require 'metaform/widgets/' + file if file.match(/\.rb$/)
+end
+################################################################################
