@@ -69,7 +69,7 @@ class RecordsController < ApplicationController
   end
   
   def setup_new_record
-    the_form = Definition.find(params[:form_id])
+    the_form = Form.find(params[:form_id])
 #TODO there is a circularity problem here.  To set up the form we call it with a presentation
 # but part of the setup gets us the default presentation if we don't have one!
 #    @presentation = the_form.get_stuff(:default_create_presentation) if !@presentation

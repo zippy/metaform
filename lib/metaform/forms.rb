@@ -231,7 +231,7 @@ class Form
 
   ################################################################################
   def self.inherited (klass)
-    instance_eval { (@forms ||= {}).store(klass.to_s.sub(/Form/, ''), klass) }
+    instance_eval { (@forms ||= {}).store(klass.to_s.sub(/^Form/, ''), klass) }
   end
   ################################################################################
   def self.find (name)

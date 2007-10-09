@@ -1,8 +1,11 @@
 Metaform
 ========
 
-This plugin provides a system for defining and generating forms for complex data-collection.
-
+This plugin provides a system for defining and generating forms for complex data-collection
+which includes workflows, listings, and statistics.  Forms are defined using a domain specific
+languages which makes it easy to separate the data model from the presentation.  The system
+also includes a "widget" system that pre-defines a number of html widgets including radio-button
+and check-box groups, text-based date entry, etc.. which include javascript nubs built in.
 
 == Getting Started
 
@@ -10,6 +13,10 @@ This plugin provides a system for defining and generating forms for complex data
 
  ./script/generate metaform
 
-This will add two migrations (which you need to rake db:migrate for) as well as the "forms" directory where you will define your forms
+This will add:
+ - two migrations (which you need to rake db:migrate for) 
+ - the "forms" directory where you will define your forms
+ - a javascript file to your public/javascripts
+ - the default css stylesheet to public/stylesheets
 
 Copyright (c) 2007 Harris-Braun Enterprises, LLC (eric -at- harris-braun.com) released under the MIT license
