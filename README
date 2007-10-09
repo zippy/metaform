@@ -4,10 +4,12 @@ Metaform
 This plugin provides a system for defining and generating forms for complex data-collection.
 
 
-Example
-=======
+== Getting Started
 
-Example goes here.
+* Use the generator:
 
+ ./script/generate metaform
+
+This will add two migrations (which you need to rake db:migrate for) as well as the "forms" directory where you will define your forms
 
 Copyright (c) 2007 Harris-Braun Enterprises, LLC (eric -at- harris-braun.com) released under the MIT license
