@@ -1,3 +1,7 @@
 require 'metaform/definition'
 require 'metaform/constraints'
 require 'metaform/widget'
+require 'metaform/record'
+require 'metaform/records_controller'
+require 'metaform/field_instance'
+require 'metaform/form_instance'

@@ -1,0 +1,224 @@
+######################################################################################
+# this is the class that encapuslates an instance of a record of a meta-form
+# i.e. it stands in front of the usual ActiveRecord model classes to provide the same
+# type of interface for the controller and the views, but really it's pulling it's data
+# from FormInstances and FieldInstances
+
+require 'metaform/form_proxy'
+
+class Record
+  
+  attr :form_instance
+  attr :errors
+  attr :attributes
+
+  ######################################################################################
+  # creating a new Record happens either because we pass in a given FormInstance
+  # or we create a raw new one here
+
+  def initialize(the_instance = nil,attributes = nil)
+    @attributes = {}
+    the_instance = FormInstance.new if !the_instance
+    @form_instance = the_instance
+    self.attributes= attributes if attributes
+  end
+  
+  ######################################################################################
+  # set the attributes from a hash that comes from the http PUT.
+  def attributes= (attribs)
+    @attributes = {}
+
+    attribs.each do |id,value|
+      q = form.get_question(id)
+      raise "unknown question #{id}" if !q
+      @attributes[id] = Widget.fetch(q.appearance).convert_html_value(value)
+    end
+  end
+  
+  ######################################################################################
+  # some paramaters are just those of the form instance object
+  def id
+    @form_instance.id
+  end
+  
+  def form
+    @form_instance.form
+  end
+
+  ######################################################################################
+  # return and or create ActiveRecord errors object
+  def errors
+    @errors ||= ActiveRecord::Errors.new(self)
+  end
+  
+  def build_tabs(tabs,current)
+    form.build_tabs(tabs,current,@form_instance)
+  end
+  
+  def build_html(presentation = 0,current=nil)
+    
+    f = FormProxy.new(form.name.gsub(/ /,'_'))
+    if form.presentation_exists?(presentation)
+      form.build(presentation,@form_instance,f)
+#    p = form.find_presentation(presentation_id)
+#    if p
+#      p.build_html(f,self,current)
+    else
+      #TODO: fix this to be a user-friendly exception mechanism that logs errors and sends admins e-mails etc (i.e. see WAGN)
+      raise "presentation #{presentation} not found"
+    end
+  end
+    
+  ######################################################################################
+  # to save a record we have to update the form_instance info as well as update any
+  # attributes
+  # TODO here is another place where it's clear that things are wonky.  Mixing in the
+  # workflow_action into the save function is odd.  
+  def save(presentation = 0,workflow_action = nil)
+    #TODO we need to test this transactionality to see how it works if different parts
+    # of the _update_attributes process fails.
+    begin
+      FormInstance.transaction do
+        result = @form_instance.save
+        if result
+          result = _update_attributes(presentation,workflow_action)
+          raise "no new state" if !result
+        end
+        result
+      end
+    rescue Exception => e
+      # if the error was a thrown inside _update_attributes then we should
+      # rethrow it.  Otherwise we can just return false to the caller.
+      #TODO make our own Exception class instead of just using the string value.
+      raise e if e.to_s != "no new state"
+      false
+    end
+  end
+  
+  ######################################################################################
+  # To update the record attributes we have to update all the field instances objects
+  # that are what actually are the "attributes."  The attributes parameter should be a 
+  # hash where the keys are the FieldInstance ids and the values are the answers
+  def update_attributes(attribs,presentation = 0,workflow_action = nil)
+    form.setup(presentation,@form_instance)
+    self.attributes = attribs
+    _update_attributes(presentation,workflow_action)
+  end
+
+  def _update_attributes(presentation,workflow_action)
+    
+    #TODO this is screwey right now because form.verify call has to come first
+    # to initialize the form object so any actions taken will have all the 
+    # data set up in the form.  This is part of how things are currently screwy and
+    # form should be an instance created by new, which initializes all the data or
+    # something like that.  i.e. form = V2Form.new(@presentation,@form_instance)
+    # then all the stuff that is currently stored as a class variable in form
+    # can be simple object instance variables.
+
+    #TODO by moving the workflow action stuff to the begining here I've introduced a 
+    # transactionality problem.  I.e. if the workflow changes state info and then the 
+    # field instance values can't be saved, then the record is in a screwed up state.
+    # Thus this stuff should be roll-backable in some way.  This may have been handled
+    # by the transactionality handling I added up in save, but then we we should also add it to
+    # to update_attributes.
+    if workflow_action && workflow_action != ''
+      form.verify(presentation,@form_instance,@attributes)
+      next_state = form.do_workflow_action(workflow_action,@form_instance)
+      if next_state
+        form_instance.update_attributes({:workflow_state => next_state})
+      else
+        return false
+      end
+    else
+      form.setup(presentation,@form_instance)
+    end
+
+    field_instances = FieldInstance.find(:all, :conditions => ["field_id in (?) and form_instance_id = ?",@attributes.keys,id])
+		@attributes.each do |field_instance_id,value|
+			raise "field '#{field_instance_id}' not in form" if !form.field_exists?(field_instance_id)
+			f = field_instances.find {|field_instance| field_instance.attributes['field_id'] == field_instance_id}
+			if f != nil
+				f.answer = value				
+			else
+				f = FieldInstance.new({:answer => value, :field_id=>field_instance_id, :form_instance_id => id})
+				field_instances << f		
+			end			
+			f.state = 'answered'		
+			if !f.valid?
+				name = f.field ? f.field.name : ""
+				errors.add(name,"FieldInstance invalid: "<< f.errors.full_messages.join(','))
+			end		
+		end
+		    
+    if errors.empty?
+      FieldInstance.transaction do
+        field_instances.each do |i|
+          if !i.save 
+            raise "error saving field instance " << field_instances.inspect
+          end
+        end
+      end
+
+      form.submit(presentation,@form_instance)
+
+      true
+    else
+      #TODO if there is a field instance that is invalid, i.e. for example because
+      # the field is in a questions that is in group that is in a presentation that isn't
+      # in a form, you'll see something very ugly.  Currently validate puts things in place
+      # so that the standard rails error message shows up.  Note that this is different from
+      # our own validation.
+#      raise errors.inspect
+      false
+    end
+  end  
+
+  def self.human_attribute_name(attribute_key_name) #:nodoc:
+    attribute_key_name
+  end
+
+  ######################################################################################
+  ######################################################################################
+  # CLASS METHODS
+  ######################################################################################
+  # Record.find just delegates to FormInstance.find
+  def Record.find(parm,*rest)
+    forms = FormInstance.find(parm,rest)
+    Record.create(forms)
+  end
+  
+  def Record.url(record_id,presentation,tab)
+    url = "/records/#{record_id}"
+    url << "/#{presentation}" if presentation != ""
+    url << "/#{tab}" if tab
+    url
+  end
+  
+  def Record.create_url(form,presentation,current)
+    url = "/forms/#{form}/records"
+    url << "/#{presentation}" if presentation && presentation != ""
+    url << "/#{current}" if current && current != ''
+    url
+  end
+  
+  def Record.listing_url(listing,order = nil)
+    url = "/records/listings/#{listing}"
+    url << "?order=#{order}" if order && order != ''
+    url
+  end
+  
+  
+  ######################################################################################
+  # convienence class method to create a bunch of records from a single or a list of 
+  # FormInstances
+  def Record.create(records)
+    if records.is_a?(Array)
+      result = []
+      records.collect{|r| records.push(Record.new(r))}
+    else
+      result = Record.new(records)
+    end
+    result
+  end
+end
+   
