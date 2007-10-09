@@ -1,7 +1,7 @@
 
 ################################################################################
 ################################################################################
-# Definition is a base class which allows the creation of Forms and Workflows using
+# Forms is a base class which allows the creation of Forms and Workflows using
 # a domain specific language.  (The implementation of the storage and mapping the
 # language into a working system is done in record.rb, records_controller.rb, 
 # field_instance.rb & form_instance.rb)
@@ -116,8 +116,8 @@ class Listings
     #################################################################################
     #TODO-LISA this is both inefficient, and also tied into the FormInstance/FieldInstance impelementation
     # of the data storage model.  
-    # The ideas is that Defintion should be based on the idea is that the data-storage model should be abstracted out
-    # out of Definition and implemented someplace else.
+    # The ideas is that Forms should be based on the idea is that the data-storage model should be abstracted out
+    # out of Forms and implemented someplace else.
     # i.e. we should refactor this into field_values(field_list) that gets the values of all the fields instead of
     # calling FieldInstance.find here
     def get_list(list_name,options = {})
@@ -177,7 +177,7 @@ class Listings
   end
 end
 
-class Definition
+class Forms
 
   FieldTypes = ['string','integer','float','decimal','boolean','date','datetime','time','text']
   
@@ -231,7 +231,7 @@ class Definition
 
   ################################################################################
   def self.inherited (klass)
-    instance_eval { (@forms ||= {}).store(klass.to_s.sub(/Definition/, ''), klass) }
+    instance_eval { (@forms ||= {}).store(klass.to_s.sub(/Forms/, ''), klass) }
   end
   ################################################################################
   def self.find (name)
@@ -744,7 +744,7 @@ YAML
     #TODO-LISA? figure out a better way to be doing this.  Right now the fact that these calls
     # require @@form_instance to be set right (as a global) is a clear indication that this
     # should actually be (in some form) an object that is instantiated.  Perhaps these
-    # calls should be over in Record, not in Definition.
+    # calls should be over in Record, not in Forms.
     
     def workflow_state
       @@form_instance.workflow_state
@@ -841,7 +841,7 @@ end
 
 ################################################################################
 # Load the form definitions from RAILS_ROOT/definitions
-Dir.foreach('definitions') do |file|
-  require 'definitions/' + file if file.match(/\.rb$/)
+Dir.foreach('forms') do |file|
+  require 'forms/' + file if file.match(/\.rb$/)
 end
 ################################################################################
