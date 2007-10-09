@@ -1,4 +1,4 @@
-require 'metaform/definition'
+require 'metaform/forms'
 require 'metaform/constraints'
 require 'metaform/widget'
 require 'metaform/record'
