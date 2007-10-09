@@ -309,10 +309,10 @@ class Definition
     end
     
     #################################################################################
-    def presentation(presentation_name,legal_viewing_states = :any,create_workflow=nil, &block)
-      pres = Struct.new(:block,:legal_states,:create_workflow,:initialized)
+    def presentation(presentation_name,legal_viewing_states = :any,create_options=nil, &block)
+      pres = Struct.new(:block,:legal_states,:create_options,:initialized)
       legal_viewing_states = [legal_viewing_states]  if legal_viewing_states != :any && legal_viewing_states.class != Array
-      self.presentations[presentation_name] = pres[block,legal_viewing_states,create_workflow,false]
+      self.presentations[presentation_name] = pres[block,legal_viewing_states,create_options,false]
     end
     
     #################################################################################
@@ -661,9 +661,25 @@ YAML
     end
     
     def workflow_for_new_form(presentation_name)
+      get_create_presentation_option(presentation_name,:workflow)
+    end
+    
+    def url_after_new_form(presentation_name)
+      url = get_create_presentation_option(presentation_name,:redirect_url)
+      case
+      when url.is_a?(String)
+        url
+      when url.is_a?(Proc)
+        url.call
+      else
+        raise "redirect_url must be String or Proc (was #{url.class.to_s})"
+      end
+    end
+
+    def get_create_presentation_option(presentation_name,option)
       pres = self.presentations[presentation_name]
-      raise "can't create a new form from the presentation #{pres}" if !pres.create_workflow
-      pres.create_workflow
+      raise "new forms can't be created from #{presentation_name} (no create options defined)" if !pres.create_options
+      pres.create_options[option]
     end
 
     #################################################################################
@@ -824,6 +840,7 @@ YAML
 end
 
 ################################################################################
+# Load the form definitions from RAILS_ROOT/definitions
 Dir.foreach('definitions') do |file|
   require 'definitions/' + file if file.match(/\.rb$/)
 end
