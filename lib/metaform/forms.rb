@@ -841,7 +841,9 @@ end
 
 ################################################################################
 # Load the form definitions from RAILS_ROOT/definitions
-Dir.foreach('forms') do |file|
-  require 'forms/' + file if file.match(/\.rb$/)
+if File.directory?('forms')
+  Dir.foreach('forms') do |file|
+    require 'forms/' + file if file.match(/\.rb$/)
+  end
 end
 ################################################################################
