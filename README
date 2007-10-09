@@ -9,6 +9,14 @@ and check-box groups, text-based date entry, etc.. which include javascript nubs
 
 == Getting Started
 
+* You may need to add this line:
+
+ config.plugins = [ :all, :metaform ] 
+
+into your environment.rb file to make metaform load last in the load order.
+
+* Add the code from example/routes.rb into your config/routes.rb file.
+
 * Use the generator:
 
  ./script/generate metaform
@@ -18,5 +26,16 @@ This will add:
  - the "forms" directory where you will define your forms
  - a javascript file to your public/javascripts
  - the default css stylesheet to public/stylesheets
+ - records/show.rhtml and records/new.rhtml to app/views/ as sample views that use metaform to create forms
+
+* Include the following helper in the head of your application layout:
+ <%= include_metaform_assets %>
+This will load the javascripts and the stylesheets when needed.  To tell this function when to load the assets
+simply add: 
+ <%@metaform_include_assets = true%>
+to the top of the view that shows a form.  You will see that the
+
+
+-----
 
 Copyright (c) 2007 Harris-Braun Enterprises, LLC (eric -at- harris-braun.com) released under the MIT license
