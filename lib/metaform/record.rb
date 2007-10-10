@@ -11,6 +11,7 @@ class Record
   attr :form_instance
   attr :errors
   attr :attributes
+  attr_accessor :action_result
 
   ######################################################################################
   # creating a new Record happens either because we pass in a given FormInstance
@@ -123,9 +124,9 @@ class Record
     # to update_attributes.
     if workflow_action && workflow_action != ''
       form.verify(presentation,@form_instance,@attributes)
-      next_state = form.do_workflow_action(workflow_action,@form_instance)
-      if next_state
-        form_instance.update_attributes({:workflow_state => next_state})
+      self.action_result = form.do_workflow_action(workflow_action,@form_instance)
+      if self.action_result[:next_state]
+        form_instance.update_attributes({:workflow_state => self.action_result[:next_state]})
       else
         return false
       end

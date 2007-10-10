@@ -109,8 +109,15 @@ class Listings
     end
 
     #################################################################################
-    def listing(listing_name, options)
-      self.listings[listing_name] = Struct.new(:workflow_state_filter,:fields,:conditions,:forms)[options[:workflow_state_filter],options[:fields],options[:conditions],options[:forms]]
+    # expected options are :workflow_state_filter,:fields,:conditions,:forms
+    def listing(listing_name, opts, &block)
+      options = {
+        :workflow_state_filter => nil,
+        :fields => nil,
+        :conditions => nil,
+        :forms => nil 
+      }.update(opts)
+      self.listings[listing_name] = Struct.new(:block,*options.keys)[block,*options.values]
     end
 
     #################################################################################
@@ -221,7 +228,7 @@ class Form
 #  @@phase = :setup
   @@contexts = []
   @@attributes = nil
-  @@next_state = nil
+  @@action_result = nil
 
   #TODO  BOGUS!!!!! this shouldn't exist and will cause concurrency problems
   def self.reset_attributes
@@ -309,10 +316,13 @@ class Form
     end
     
     #################################################################################
-    def presentation(presentation_name,legal_viewing_states = :any,create_options=nil, &block)
-      pres = Struct.new(:block,:legal_states,:create_options,:initialized)
+    def presentation(presentation_name,opts={}, &block)
+      options = {
+        :legal_states => :any
+      }.update(opts)
+      pres = Struct.new(:block,:options,:initialized)
       legal_viewing_states = [legal_viewing_states]  if legal_viewing_states != :any && legal_viewing_states.class != Array
-      self.presentations[presentation_name] = pres[block,legal_viewing_states,create_options,false]
+      self.presentations[presentation_name] = pres[block,options,false]
     end
     
     #################################################################################
@@ -350,7 +360,7 @@ class Form
     # an action consist of a block to execute when running the action as well as a list of
     # states that the form must be in for the action to execute.
     def action(action_name,states_for_action,&block)
-      # convert to array we were called with a single state
+      # convert to array if we were called with a single state
       states_for_action = arrayify(states_for_action)
       @@actions[action_name] = Struct.new(:block,:legal_states)[block,states_for_action]
     end
@@ -359,7 +369,11 @@ class Form
     # the context of defining a workflow.  All this requires some interesting refactoring into a meta-language
     # for defining DSLs like this one.
     def state(s)
-      @@next_state = s
+      @@action_result[:next_state] = s
+    end
+
+    def redirect_url(url)
+      @@action_result[:redirect_url] = url
     end
     
     #################################################################################
@@ -468,7 +482,8 @@ YAML
         return if pres.initialized
       end
       if @@phase == :build
-        if pres.legal_states != :any && !pres.legal_states.include?(workflow_state)
+        legal_states = pres.options[:legal_states]
+        if legal_states != :any && !legal_states.include?(workflow_state)
           raise "presentation #{presentation_name} is not allowed when form is in state #{workflow_state}"
         end
       end
@@ -642,7 +657,7 @@ YAML
     end
  
     def do_workflow_action(action_name,form_instance)
-      @@next_state = nil
+      @@action_result = {}
       @@form_instance = form_instance      
       workflow_name = form_instance.workflow
       w = self.workflows[workflow_name]
@@ -651,7 +666,7 @@ YAML
       raise "unknown action #{action_name}" if !a
       raise "action #{action_name} is not allowed when form is in state #{workflow_state}" if !a.legal_states.include?(form_instance.workflow_state)
       a.block.call
-      @@next_state
+      @@action_result
     end
 
     def submit(presentation_name,form_instance)
@@ -661,25 +676,13 @@ YAML
     end
     
     def workflow_for_new_form(presentation_name)
-      get_create_presentation_option(presentation_name,:workflow)
-    end
-    
-    def url_after_new_form(presentation_name)
-      url = get_create_presentation_option(presentation_name,:redirect_url)
-      case
-      when url.is_a?(String)
-        url
-      when url.is_a?(Proc)
-        url.call
-      else
-        raise "redirect_url must be String or Proc (was #{url.class.to_s})"
-      end
+      w = get_presentation_option(presentation_name,:create_with_workflow)
+      raise "#{presentation_name} doesn't define a workflow for create!" if !w
     end
 
-    def get_create_presentation_option(presentation_name,option)
+    def get_presentation_option(presentation_name,option)
       pres = self.presentations[presentation_name]
-      raise "new forms can't be created from #{presentation_name} (no create options defined)" if !pres.create_options
-      pres.create_options[option]
+      pres.options[option]
     end
 
     #################################################################################

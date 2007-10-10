@@ -30,7 +30,8 @@ class RecordsController < ApplicationController
     respond_to do |format|
       if @record.save(@presentation,params[:workflow_action])
 #        flash[:notice] = 'Record was successfully created.'
-        format.html { redirect_to @record.form.url_after_new_form(@presentation) }
+        redirect_url = @record.action_result[:redirect_url]
+        format.html { redirect_to(redirect_url) }
         format.xml  { head :created, :location => Record.url(@record.id,@presentation,@tabs) }
       else
         format.html { render :action => "new" }
@@ -46,7 +47,8 @@ class RecordsController < ApplicationController
     respond_to do |format|
       if @record.update_attributes(params[:record],@presentation,params[:workflow_action])
         flash[:notice] = 'Record was successfully updated.'
-        format.html { render :action => "show" }
+        redirect_url = @record.action_result[:redirect_url]
+        format.html { redirect_url ? redirect_to(redirect_url) : render(:action => "show") }
         format.xml  { head :ok }
       else
         format.html { render :action => "show" }
