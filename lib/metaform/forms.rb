@@ -507,7 +507,7 @@ YAML
       end
       if @@phase == :build
         legal_states = pres.options[:legal_states]
-        if legal_states != :any && !legal_states.include?(workflow_state)
+        if legal_states != :any && !arrayify(legal_states).include?(workflow_state)
           raise "presentation #{presentation_name} is not allowed when form is in state #{workflow_state}"
         end
       end
