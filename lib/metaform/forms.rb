@@ -54,12 +54,21 @@ class Reports
     end
 
     #################################################################################
-    def def_report(report_name, options, &block)
+    def def_report(report_name, opts, &block)
+      options = {
+        :workflow_state_filter => nil,
+        :fields => nil,
+        :conditions => nil,
+        :forms => nil,
+        :sum_queries => {},
+        :count_queries => {}
+      }.update(opts)
       self.reports[report_name] = Struct.new(:block,*options.keys)[block,*options.values]
     end
 
     #################################################################################
     def get_report(report_name,options = {})
+
       r = self.reports[report_name]
       raise "unknown report #{report_name}" if !r 
       results = {}
