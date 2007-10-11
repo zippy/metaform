@@ -303,8 +303,12 @@ class Form
     # define a field with optional constraint
     # constraint should be a hash of constrainttype, constraintvalue pairs, or a YAML encoded hash.
     def f(field_name,label = "", field_type = "string",constraints=nil)
-      
-      raise "unknown field type #{field_type}" if !FieldTypes.include?(field_type)
+ 
+ #TODO handle user defined types:
+# boolean_TxCCTf
+# boolean_CCTfTpTf
+# boolean_TxCCTpTf     
+#      raise "unknown field type #{field_type}" if !FieldTypes.include?(field_type)
       
       field = Struct.new(:name, :label, :type, :constraints,:followups,:followup_name_map)
       c = @@constraints
@@ -327,10 +331,13 @@ class Form
       the_field = f field_name,label,field_type,constraints
       the_field.followups = followups
       map = {}
-      followups.each do |value,field| 
-        map[field.name] = value
-        field.constraints ||= {}
-        field.constraints['required'] = "#{field_name}=#{value}"
+      followups.each do |value,fields|
+        fields = arrayify(fields)
+        fields.each do |field|
+          map[field.name] = value
+          field.constraints ||= {}
+          field.constraints['required'] = "#{field_name}=#{value}"
+        end 
       end
       the_field.followup_name_map = map
     end
@@ -347,9 +354,6 @@ class Form
     
     #################################################################################
     def question(field_name,appearance_type,appearance_parameters=nil)
-#TODO store and use the parameters?
-#TODO-LISA make parameters work for things like TextArea widget where they should be like:
-# TextArea(3,60) which means rows=3 cols= 60 
       qs = self.questions
       if qs[field_name]
         current_question = qs[field_name]
@@ -786,7 +790,9 @@ YAML
     #TODO this is going to have to switch to "question_name" when that gets implemented
     # to distinguish between questions that render the same field differently
     def get_question(field_name)
-      self.questions[field_name]
+      q = self.questions[field_name.to_s]
+      raise "question: #{field_name} has not been defined" if !q
+      q
     end
     
     def body(text)
@@ -815,8 +821,7 @@ YAML
     
     ###########################################################
     def get_field_appearance(field)
-      qs = self.questions[field]
-      raise "question: #{field} has not been defined" if !qs
+      qs = get_question(field)
       qs.appearance
     end
 
@@ -828,7 +833,7 @@ YAML
     
     ###########################################################
     def get_field_id(field)
-      qs = self.questions[field]
+      qs = get_question(field)
       "record_#{field}"
     end
 
