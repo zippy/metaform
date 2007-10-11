@@ -66,7 +66,8 @@ class Reports
 
       field_list = {}
       r.fields.each {|f| field_list[f]=1}
-      r.percent_queries.each { |stat,q| q.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1} if q.is_a?(String)}
+      r.count_queries.each { |stat,q| q.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1} if q.is_a?(String)}
+      r.sum_queries.each { |stat,q| q.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1} if q.is_a?(String)}
 
       w = sql_workflow_condition(r.workflow_state_filter,true)
       
@@ -80,7 +81,18 @@ class Reports
       form_instances.each {|i| f = {}; forms[i.id]=f; i.field_instances.each {|fld| f[fld.field_id]=fld.answer}}      
       total = form_instances.size
       
-      r.percent_queries.each do |stat,q|
+      r.sum_queries.each do |stat,q|
+        t = 0
+        begin
+          expr = q.gsub(/:([a-zA-Z0-9_-]+)/,'f["\1"].to_i')
+          forms.values.each {|f| t = t + eval(expr)}
+        rescue Exception => e
+          raise "Eval error '#{e.to_s}' while evaluating: #{expr}"
+        end
+        results[stat] = t
+      end
+      
+      r.count_queries.each do |stat,q|
         t = 0
         begin
           expr = q.gsub(/:([a-zA-Z0-9_-]+)/,'f["\1"]')
@@ -88,8 +100,7 @@ class Reports
         rescue Exception => e
           raise "Eval error '#{e.to_s}' while evaluating: #{expr}"
         end
-        results[stat] = ((t.to_f/total) * 100).to_i
-        results["#{stat}_num".intern] = t
+        results[stat] = t
       end
       results[:total] = total
       r.block.call(results,forms)

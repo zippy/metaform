@@ -47,7 +47,7 @@ class RecordsController < ApplicationController
     respond_to do |format|
       if @record.update_attributes(params[:record],@presentation,params[:workflow_action])
         flash[:notice] = 'Record was successfully updated.'
-        redirect_url = @record.action_result[:redirect_url]
+        redirect_url = @record.action_result[:redirect_url] if @record.action_result
         format.html { redirect_url ? redirect_to(redirect_url) : render(:action => "show") }
         format.xml  { head :ok }
       else
