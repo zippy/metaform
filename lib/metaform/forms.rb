@@ -702,6 +702,7 @@ YAML
     def workflow_for_new_form(presentation_name)
       w = get_presentation_option(presentation_name,:create_with_workflow)
       raise "#{presentation_name} doesn't define a workflow for create!" if !w
+      w
     end
 
     def get_presentation_option(presentation_name,option)
