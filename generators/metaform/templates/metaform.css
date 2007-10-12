@@ -1,7 +1,11 @@
 /*meta-form specific styles*/
 
 .question {
-  background-color: #ddd;
+/*  background-color: #ddd; */
+}
+
+.presentation {
+/*  border:1px solid green; */
 }
 
 .incomplete {
@@ -12,8 +16,16 @@
 	color: #e00;
 }
 
-.other_box {
+.followup {
   border:1px solid blue;
 }
 
+/* Widget Classes */
 
+.checkbox_group {
+  border-width: 0px;
+}
+
+.radio_buttons {
+  border-width: 0px;
+}

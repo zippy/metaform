@@ -445,10 +445,11 @@ class Form
         errs = constraint_errors.join("; ")
         field_html  << %Q|<span class="errors">#{errs}</span>|
       end
-      css_class = %Q| class="#{css_class}"| if css_class
+      css_class ||= 'question'
+      css_class = %Q| class="#{css_class}"|
       body %Q|<div id="question_#{field_name}"#{css_class}>#{field_html}</div>|
 
-      #TODO-LISA find some way that the "other_box" css spec can be passed in as part of the followup
+      #TODO-LISA find some way that the "followup" css spec can be passed in as part of the followup
       # appearance specification, and also to pass in a css_class specification for the followup question
       # itself
       if followup_appearances 
@@ -457,7 +458,7 @@ class Form
         followup_appearances.each do |followup_field_name, followup_field_appearance|
           question(followup_field_name,followup_field_appearance)  #declare the question to make sure it exists   
           value = map[followup_field_name]
-          javascript_show_if(field_name,widget.is_multi_value? ? :in : '==',value,nil,"other_box") do
+          javascript_show_if(field_name,widget.is_multi_value? ? :in : '==',value,nil,"followup") do
             q followup_field_name,followup_field_appearance
           end
         end
@@ -469,7 +470,7 @@ class Form
     # TODO this should probably be in V2Form, it's not general enough to be a metaform method
     def qfa(field_name,followup_field_name,options=nil,appearance ="PopUp",css_class = nil,followup_appearance="CheckBoxGroup",action_appearance="CheckBoxGroup")
       q field_name, appearance, css_class
-      javascript_show_if(field_name,'==',"Y",nil,"other_box") do
+      javascript_show_if(field_name,'==',"Y",nil,"followup") do
         followup_spec = []
         options = get_field_enumeration_values(followup_field_name) if options == nil
         options.each do |o|
@@ -512,7 +513,7 @@ YAML
         end
       end
       pres.initialized = true
-      body %Q|<div id="presentation_#{presentation_name}">|      
+      body %Q|<div id="presentation_#{presentation_name}" class="presentation">|      
       pres.block.call
       body "</div>"
     end
