@@ -11,7 +11,8 @@ class FieldInstance < ActiveRecord::Base
     form_instance.form.field_exists?(field_id)
   end
   
-  def validate
+  def validatex
+    logger.info "fish"
     unless field
       errors.add(:field_id, "doesn't exist")
     end

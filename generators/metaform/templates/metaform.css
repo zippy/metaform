@@ -23,9 +23,9 @@
 /* Widget Classes */
 
 .checkbox_group {
-  border-width: 0px;
+	width: auto;
 }
 
 .radio_buttons {
-  border-width: 0px;
+	width: auto;
 }

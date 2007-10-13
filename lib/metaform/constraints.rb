@@ -45,18 +45,24 @@ module Constraints
         when constraint && (value == nil || value == "")
           constraint_errors << (err_override || "this field is required")
         end
+      when "set"
+        #for the set constraint the value will be an array of strings or of hashes of the form:
+        # [{value => 'description'},{value2 => 'description'}, ...]
+        ok_values = constraint[0].is_a?(String) ? constraint : constraint.collect{|h| h.keys[0]}
+        cur_values = !value ? [nil] : value.split(',')
+        if not cur_values.all? {|v| ok_values.include?(v)}
+          constraint_errors << (err_override || ("value out of range, must be in " << ok_values.join(', ')))
+        end
       when "enumeration"
-        #for the range constraint the value will be an array of hashes of the form:
+        #for the enumeration constraint the value will be an array of strings or of hashes of the form:
         # [{value => 'description'},{value2 => 'description'}, ...]
 
         #TODO-LISA this doesn't yet handle when null is allowed.  Which fact also has to be added
         # to the definition of "f" in definition.rb
 
-        #TODO-LISA this doesn't yet handle multi-value enumerations, i.e. for checkboxes where 
-        # value is an array (or comma delimited string, etc)
-        ok_values = constraint.collect{|h| h.keys[0]}
+        ok_values = constraint[0].is_a?(String) ? constraint : constraint.collect{|h| h.keys[0]}
         if !ok_values.include?(value)
-          constraint_errors << (err_override || ("value out of range, must be one of " << ok_values.join(', ')))
+          constraint_errors << (err_override || ("value out of range, must be in " << ok_values.join(', ')))
         end
       end
     end

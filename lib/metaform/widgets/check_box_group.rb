@@ -3,13 +3,12 @@ class CheckBoxGroupWidget < Widget
   ################################################################################
   def self.render_form_object(form,field_instance_id,value,options)
     result = ""
-    e = enumeration(options[:constraints])
+    e = enumeration(options[:constraints],'set')
     result = []
     checked = value.split(/,/) if value
     checked ||= []
-    e.each do |key,vals|
-      result << %Q|<input name="#{build_html_multi_name(field_instance_id,vals)}" id="#{build_html_multi_id(field_instance_id,vals)}" type="checkbox" value="#{vals}" #{checked.include?(vals) ? 'checked' : ''}> #{key}|
-#      result << %Q|<input name="#{build_html_name(field_instance_id)}" id="#{build_html_id(field_instance_id)}" type="checkbox" value="#{vals}"> #{key}|
+    e.each do |key,val|
+      result << %Q|<input name="#{build_html_multi_name(field_instance_id,val)}" id="#{build_html_multi_id(field_instance_id,val)}" type="checkbox" value="#{val}" #{checked.include?(val) ? 'checked' : ''}> #{key}|
     end
     params = options[:params]
     if params 
@@ -33,7 +32,7 @@ class CheckBoxGroupWidget < Widget
 
   ################################################################################
   def self.javascript_build_observe_function(field_instance_id,script,constraints)
-    e = enumeration(constraints)
+    e = enumeration(constraints,'set')
     result = ""
     e.each do |key,value|
       result << %Q|Event.observe('#{build_html_multi_id(field_instance_id,value)}', 'change', function(e){ #{script} });\n|

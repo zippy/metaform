@@ -11,10 +11,15 @@ class Widget
     instance_eval {@widgets.keys}
   end
   
-  def self.enumeration (constraints)
-    if constraints && constraints["enumeration"] 
-      enum = constraints["enumeration"].collect{|h| h.to_a[0].reverse}
-    elsif constraints && constraints["enumeration_lookup"]
+  def self.enumeration (constraints,constraint_name='enumeration')
+    if constraints && constraints[constraint_name]
+      constraint_list = constraints[constraint_name]
+      if constraint_list[0].is_a?(String)
+        enum = constraint_list.collect { |e| [e.humanize,e]}
+      else
+        enum = constraints[constraint_name].collect{|h| h.to_a[0].reverse}
+      end
+    elsif constraints && constraints[constraint_name]
       enum = []
       spec = constraints["enumeration_lookup"]
       the_form = Form.find(:first, :conditions => ["name = ?",spec["form_name"]])

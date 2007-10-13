@@ -134,7 +134,7 @@ class Record
       form.setup(presentation,@form_instance)
     end
 
-    field_instances = FieldInstance.find(:all, :conditions => ["field_id in (?) and form_instance_id = ?",@attributes.keys,id])
+    field_instances = @form_instance.field_instances.find(:all, :conditions => ["field_id in (?) and form_instance_id = ?",@attributes.keys,id])
 		@attributes.each do |field_instance_id,value|
 			raise "field '#{field_instance_id}' not in form" if !form.field_exists?(field_instance_id)
 			f = field_instances.find {|field_instance| field_instance.attributes['field_id'] == field_instance_id}
@@ -142,20 +142,17 @@ class Record
 				f.answer = value				
 			else
 				f = FieldInstance.new({:answer => value, :field_id=>field_instance_id, :form_instance_id => id})
-				field_instances << f		
-			end			
+				field_instances << f
+			end
+			puts Time.now.to_s << 'create '<< f.field_id
 			f.state = 'answered'		
-			if !f.valid?
-				name = f.field ? f.field.name : ""
-				errors.add(name,"FieldInstance invalid: "<< f.errors.full_messages.join(','))
-			end		
 		end
 		    
     if errors.empty?
       FieldInstance.transaction do
         field_instances.each do |i|
           if !i.save 
-            raise "error saving field instance " << field_instances.inspect
+    				errors.add(i.field_id,i.errors.full_messages.join(','))
           end
         end
       end
@@ -173,6 +170,10 @@ class Record
       false
     end
   end  
+  
+  def logger
+    form_instance.logger
+  end
 
   def self.human_attribute_name(attribute_key_name) #:nodoc:
     attribute_key_name
