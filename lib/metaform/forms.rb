@@ -38,7 +38,13 @@ module Utilites
     result = ''
     if conditions
       result << " and " if add_and
-      result << conditions.collect {|field,expr| %Q|if(field_id='#{field.to_s}',if(answer#{expr},true,false),true)|}.join(' and ')
+      conditions = arrayify(conditions)
+      result << conditions.collect do |c|
+        c =~ /:([a-zA-Z0-9_-]+)/
+        field_name = $1
+        c = c.gsub(/:#{field_name}/,'answer')
+        %Q|if(field_id='#{field_name}',if(#{c},true,false),true)|
+      end.join(' and ')
     end
     result
   end
@@ -60,6 +66,7 @@ class Reports
         :fields => nil,
         :conditions => nil,
         :forms => nil,
+        :filters => nil,
         :sum_queries => {},
         :count_queries => {}
       }.update(opts)
@@ -73,46 +80,65 @@ class Reports
       raise "unknown report #{report_name}" if !r 
       results = {}
 
+      # build up the lists of fields we need to get from the database by looking in 
+      # count queries, the sum querries and the fiters
       field_list = {}
       r.fields.each {|f| field_list[f]=1}
       r.count_queries.each { |stat,q| q.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1} if q.is_a?(String)}
       r.sum_queries.each { |stat,q| q.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1} if q.is_a?(String)}
+      if options[:filters]
+        filters = arrayify(options[:filters])
+        filters.each { |fltr| fltr.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1}}
+      end
 
       w = sql_workflow_condition(r.workflow_state_filter,true)
       
-      c = sql_field_conditions(r.sql_conditions,true)
+#      sql_conditions = sql_field_conditions(r.sql_conditions,true)
+#      sql_conditions << sql_field_conditions(options[:sql_conditions],true)
 
       form_instances = FormInstance.find(:all, 
-        :conditions => ["form_id in (?) and field_id in (?)" << w << c,r.forms,field_list.keys], 
+        :conditions => ["form_id in (?) and field_id in (?)" << w ,r.forms,field_list.keys], 
         :include => [:field_instances]
         )
+        
       forms = {}
-      form_instances.each {|i| f = {}; forms[i.id]=f; i.field_instances.each {|fld| f[fld.field_id]=fld.answer}}      
-      total = form_instances.size
+      
+      #TODO This has got to be way inneficient!  It would be much better to push this
+      # off the SQL server, but I don't know how to do that yet in the context of rails
+      # and the structure of having the field instances in their own tables.
+      form_instances.each do |i|
+        f = {}
+        i.field_instances.each {|fld| f[fld.field_id]=fld.answer}
+        filtered = false
+        if filters.size > 0
+          eval_field(filters.collect{|x| "(#{x})"}.join('&&')) {|expr| filtered = !eval(expr)}
+        end
+        forms[i.id]=f if !filtered
+      end
+      total = forms.size
       
       r.sum_queries.each do |stat,q|
         t = 0
-        begin
-          expr = q.gsub(/:([a-zA-Z0-9_-]+)/,'f["\1"].to_i')
-          forms.values.each {|f| t = t + eval(expr)}
-        rescue Exception => e
-          raise "Eval error '#{e.to_s}' while evaluating: #{expr}"
-        end
+        forms.values.each {|f| eval_field(q) { |expr| t = t + eval(expr).to_i }}
         results[stat] = t
       end
       
       r.count_queries.each do |stat,q|
         t = 0
-        begin
-          expr = q.gsub(/:([a-zA-Z0-9_-]+)/,'f["\1"]')
-          forms.values.each {|f| t = t + 1 if eval(expr)}
-        rescue Exception => e
-          raise "Eval error '#{e.to_s}' while evaluating: #{expr}"
-        end
+        forms.values.each {|f| eval_field(q) { |expr| t = t + 1 if eval(expr) }}
         results[stat] = t
       end
       results[:total] = total
       r.block.call(results,forms)
+    end
+ 
+    def eval_field(expression)
+      begin
+        expr = expression.gsub(/:([a-zA-Z0-9_-]+)/,'f["\1"]')
+        yield expr
+      rescue Exception => e
+        raise "Eval error '#{e.to_s}' while evaluating: #{expr}"
+      end
     end
 
   end

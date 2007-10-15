@@ -34,9 +34,11 @@ function getCheckboxGroupValue(checkboxGroupName,form) {
 }
 
 function setCheckboxGroup(checkboxGroupName,form,value) {
-	form.getInputs("checkbox", checkboxGroupName).findAll(function(item)
-	{ item.checked = value; });
-}	
+	form.getInputs("checkbox").findAll(function(item)
+	{ if (item.name.indexOf(checkboxGroupName) === 0) {
+		item.checked = value;
+	} });
+}
 
 function oc(a)
 {
