@@ -12,7 +12,6 @@ class CheckBoxGroupFollowupWidget < Widget
     
     params = options[:params].split(/,/)
     sub_label = params.shift
-
     e.each do |value_label,val|
       if val != 'none'
         checked = set_values[val]
