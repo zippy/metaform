@@ -35,8 +35,13 @@ class DateWidget < Widget
 
   ################################################################################
   def self.convert_html_value(value)
-    date = Time.local(value['year'],value['month'],value['day'])
-    date.strftime('%Y-%m-%d')
+    begin
+      date = Time.local(value['year'],value['month'],value['day'])      
+      date.strftime('%Y-%m-%d')
+    rescue
+      nil
+    end
+    
   end
 
 end

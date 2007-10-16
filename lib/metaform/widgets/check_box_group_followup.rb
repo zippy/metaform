@@ -19,7 +19,7 @@ class CheckBoxGroupFollowupWidget < Widget
         followup_id = "#{field_instance_id}_#{val}"
 
         idx = "_#{val}-none"
-        none_checked = checked && checked['none']
+        none_checked = checked && checked.include?('none')
         followups = [<<-EOHTML
           <input name="#{build_html_multi_name(field_instance_id,idx)}" id="#{build_html_multi_id(field_instance_id,idx)}" type="checkbox" value="none" #{ none_checked ? 'checked' : ''}> None
           EOHTML
@@ -27,16 +27,16 @@ class CheckBoxGroupFollowupWidget < Widget
         params.each do |i|
           idx = "_#{val}-#{i}"
           followups << <<-EOHTML
-          <input name="#{build_html_multi_name(field_instance_id,idx)}" id="#{build_html_multi_id(field_instance_id,idx)}" type="checkbox" value="#{i}" #{ (checked && checked[i]) ? 'checked' : ''}> #{i.humanize}
+          <input name="#{build_html_multi_name(field_instance_id,idx)}" id="#{build_html_multi_id(field_instance_id,idx)}" type="checkbox" value="#{i}" #{ (checked && checked.include?(i)) ? 'checked' : ''}> #{i.humanize}
           EOHTML
         end
       end
 
+      none_id = build_html_multi_id(field_instance_id,'none')
       if val == 'none'
-        javascript = ""
+        javascript = "if ($('#{none_id}').checked) {mapCheckboxGroup('#{build_html_name(field_instance_id)}',$('metaForm'),function(e,val){if (val != 'none') {e.checked=false};var followup_id='#{field_instance_id}_'+val;var h = $(followup_id);if (h != null) {h.hide()}})}"
         followup_span = ''
       else
-        none_id = build_html_multi_id(field_instance_id,'none')
         javascript = "var e = $('#{followup_id}'); if (this.checked) {e.show();$('#{none_id}').checked = false} else {e.hide()}"
         followup_span = <<-EOHTML 
           <span id="#{followup_id}" class="checkbox_followups" style="display:#{checked ? 'inline' : 'none'}">
@@ -93,7 +93,7 @@ class CheckBoxGroupFollowupWidget < Widget
         result[value] ||= []
       end
     end
-    raise result.inspect
+    result
   end
   
 end

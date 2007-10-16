@@ -524,9 +524,17 @@ YAML
     ###############################################
     # Question with sub-presentation.  Use this to declare a question which if the value
     # of the question is "value" (defaults to "N") then display a sub-presentation
-    def qp(field_name,appearance = "TextField", css_class = nil,value = "N")
-      q field_name, appearance, css_class
-      javascript_hide_if(field_name,'==',value,nil) do
+    def qp(field_name,appearance = "TextField",opts = {})
+      options = {
+        :operator => '==',
+        :value => 'N',
+        :css_class => nil,
+        :condition => nil
+      }.update(opts)
+      q field_name, appearance, options[:css_class]
+      options.delete(:css_class) #this css class is for the question not for the javascript hide box!
+      options[:show] = false
+      javascript_show_hide_if(field_name,options) do
         p field_name
       end      
     end
