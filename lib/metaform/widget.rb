@@ -17,7 +17,7 @@ class Widget
       if constraint_list[0].is_a?(String)
         enum = constraint_list.collect { |e| [e.humanize,e]}
       else
-        enum = constraints[constraint_name].collect{|h| h.to_a[0].reverse}
+        enum = constraints[constraint_name].collect{|h| h.is_a?(Hash) ? h.to_a[0].reverse : [h.to_s.humanize,h.to_s] }
       end
     elsif constraints && constraints[constraint_name]
       enum = []

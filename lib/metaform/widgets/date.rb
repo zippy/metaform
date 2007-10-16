@@ -20,6 +20,20 @@ class DateWidget < Widget
   end
 
   ################################################################################
+  def self.javascript_get_value_function (field_instance_id)
+    %Q|$DF('#{build_html_id(field_instance_id)}')|
+  end
+
+  ################################################################################
+  def self.javascript_build_observe_function(field_instance_id,script,constraints)
+    result = ""
+    %w(month year day).each do |field|
+      result << %Q|Event.observe('#{build_html_multi_id(field_instance_id,field)}', 'change', function(e){ #{script} });\n|
+    end
+    result
+  end
+
+  ################################################################################
   def self.convert_html_value(value)
     date = Time.local(value['year'],value['month'],value['day'])
     date.strftime('%Y-%m-%d')

@@ -14,29 +14,41 @@ class CheckBoxGroupFollowupWidget < Widget
     sub_label = params.shift
 
     e.each do |value_label,val|
-      checked = set_values[val]
-      followup_id = "#{field_instance_id}_#{val}"
+      if val != 'none'
+        checked = set_values[val]
+        followup_id = "#{field_instance_id}_#{val}"
 
-      idx = "_#{val}-none"
-      none_checked = checked && checked['none']
-      followups = [<<-EOHTML
-        <input name="#{build_html_multi_name(field_instance_id,idx)}" id="#{build_html_multi_id(field_instance_id,idx)}" type="checkbox" value="none" #{ none_checked ? 'checked' : ''}> None
-        EOHTML
-        ]
-      params.each do |i|
-        idx = "_#{val}-#{i}"
-        followups << <<-EOHTML
-        <input name="#{build_html_multi_name(field_instance_id,idx)}" id="#{build_html_multi_id(field_instance_id,idx)}" type="checkbox" value="#{i}" #{ (checked && checked[i]) ? 'checked' : ''}> #{i.humanize}
-        EOHTML
+        idx = "_#{val}-none"
+        none_checked = checked && checked['none']
+        followups = [<<-EOHTML
+          <input name="#{build_html_multi_name(field_instance_id,idx)}" id="#{build_html_multi_id(field_instance_id,idx)}" type="checkbox" value="none" #{ none_checked ? 'checked' : ''}> None
+          EOHTML
+          ]
+        params.each do |i|
+          idx = "_#{val}-#{i}"
+          followups << <<-EOHTML
+          <input name="#{build_html_multi_name(field_instance_id,idx)}" id="#{build_html_multi_id(field_instance_id,idx)}" type="checkbox" value="#{i}" #{ (checked && checked[i]) ? 'checked' : ''}> #{i.humanize}
+          EOHTML
+        end
       end
 
+      if val == 'none'
+        javascript = ""
+        followup_span = ''
+      else
+        none_id = build_html_multi_id(field_instance_id,'none')
+        javascript = "var e = $('#{followup_id}'); if (this.checked) {e.show();$('#{none_id}').checked = false} else {e.hide()}"
+        followup_span = <<-EOHTML 
+          <span id="#{followup_id}" class="checkbox_followups" style="display:#{checked ? 'inline' : 'none'}">
+          &nbsp;&nbsp; #{sub_label} #{followups.join("\n")}
+          </span>
+        EOHTML
+      end
       result << <<-EOHTML 
         <input name="#{build_html_multi_name(field_instance_id,val)}" id="#{build_html_multi_id(field_instance_id,val)}" type="checkbox" value="#{val}" #{checked ? 'checked' : ''}
-        onClick="var e = $('#{followup_id}'); this.checked ? e.show() : e.hide();">
+        onClick="#{javascript}">
         #{value_label}
-        <span id="#{followup_id}" class="checkbox_followups" style="display:#{checked ? 'inline' : 'none'}">
-        &nbsp;&nbsp; #{sub_label} #{followups.join("\n")}
-        </span>
+        #{followup_span}
       EOHTML
     end
 

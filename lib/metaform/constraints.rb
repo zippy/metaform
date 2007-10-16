@@ -48,7 +48,7 @@ module Constraints
       when "set"
         #for the set constraint the value will be an array of strings or of hashes of the form:
         # [{value => 'description'},{value2 => 'description'}, ...]
-        ok_values = constraint[0].is_a?(String) ? constraint : constraint.collect{|h| h.keys[0]}
+        ok_values = constraint[0].is_a?(String) ? constraint : constraint.collect{|h| h.is_a?(String) ? h.to_s : h.keys[0]}
         cur_values = !value ? [nil] : value.split(',')
         if not cur_values.all? {|v| ok_values.include?(v)}
           constraint_errors << (err_override || ("value out of range, must be in " << ok_values.join(', ')))

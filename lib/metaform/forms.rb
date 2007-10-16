@@ -484,8 +484,15 @@ class Form
         followup_appearances.each do |followup_field_name, followup_field_appearance|
           question(followup_field_name,followup_field_appearance)  #declare the question to make sure it exists   
           value = map[followup_field_name]
-          javascript_show_if(field_name,widget.is_multi_value? ? :in : '==',value,nil,"followup") do
-            q followup_field_name,followup_field_appearance
+          opts = {:css_class => 'followup'}
+          if value == :answered
+            opts[:condition] = %Q|field_value != null && field_value != ""|
+          else
+            opts[:value] = value
+            opts[:operator] = widget.is_multi_value? ? :in : '=='
+          end
+          javascript_show_hide_if(field_name,opts) do
+            q followup_field_name,followup_field_appearance,'question_followup'
           end
         end
       end
@@ -603,13 +610,13 @@ YAML
     ###############################################
     #
     def javascript_show_if(field,expr,value,div_id=nil,css_class="hideable_box",&block)
-      javascript_show_hide_if(field,expr,value,div_id=nil,true,css_class,&block)
+      javascript_show_hide_if(field,:operator => expr,:value => value,:div_id=>div_id,:show=>true,:css_class=>css_class,&block)
     end
 
     ###############################################
     #
     def javascript_hide_if(field,expr,value,div_id=nil,css_class="hideable_box",&block)
-      javascript_show_hide_if(field,expr,value,div_id=nil,false,css_class,&block)
+      javascript_show_hide_if(field,:operator => expr,:value => value,:div_id=>div_id,:show=>false,:css_class=>css_class,&block)
     end
     
     ###############################################
@@ -637,7 +644,15 @@ YAML
     
     ###############################################
     #
-    def javascript_show_hide_if(field,operator,value,div_id=nil,show=true,css_class="hideable_box",&block)
+    def javascript_show_hide_if(field,opts={},&block)
+      options = {
+        :operator => '==',
+        :value => nil,
+        :div_id =>nil,
+        :show => true,
+        :css_class => "hideable_box",
+        :condition => nil
+      }.update(opts)
             
       # if we are not actually building skip the generation of javascript
       # but yield so that any sub-questions and stuff can be initialized.
@@ -645,9 +660,14 @@ YAML
         block.call
         return
       end
-      
+
+      show = options[:show]
+      div_id = options[:div_id]
+      css_class = options[:css_class]
+
       div_id = "uid_#{@@unique_ids += 1}" if !div_id
-      condition = build_javascript_boolean_expression(operator,value)
+      condition = options[:condition]
+      condition ||= build_javascript_boolean_expression(options[:operator],options[:value])
       add_observer_javascript(field,%Q|(#{!show ? "!" : ""}(#{condition}))|,"Element.show('#{div_id}');} else {Element.hide('#{div_id}');")
       
       body %Q|<div id="#{div_id}" class="#{css_class}">|
