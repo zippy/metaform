@@ -6,7 +6,6 @@ class CheckBoxGroupWidget < Widget
     result = []
     checked = value.split(/,/) if value
     checked ||= []
-    result << %Q|<input name="#{build_html_multi_name(field_instance_id,'__none__')}" id="#{build_html_multi_id(field_instance_id,'__none__')}" type="hidden"}>|
     e.each do |key,val|
       result << %Q|<input name="#{build_html_multi_name(field_instance_id,val)}" id="#{build_html_multi_id(field_instance_id,val)}" type="checkbox" value="#{val}" #{checked.include?(val) ? 'checked' : ''}> #{key}|
     end
@@ -14,10 +13,11 @@ class CheckBoxGroupWidget < Widget
     if params 
       (rows,cols) = params.split(/,/)
       result = unflatten(result,rows.to_i).collect {|col| col.join("<br />") }
-      %Q|<table class="checkbox_group"><tr><td class="checkbox_group">#{result.join('</td><td class="checkbox_group">')}</td></tr></table>|
+      result = %Q|<table class="checkbox_group"><tr><td class="checkbox_group">#{result.join('</td><td class="checkbox_group">')}</td></tr></table>|
     else
-      result.join("\n")
+      result = result.join("\n")
     end
+    result << %Q|<input name="#{build_html_multi_name(field_instance_id,'__none__')}" id="#{build_html_multi_id(field_instance_id,'__none__')}" type="hidden"}>|
   end
   
   ################################################################################
