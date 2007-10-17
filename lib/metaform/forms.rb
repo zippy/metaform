@@ -481,8 +481,19 @@ class Form
       if followup_appearances 
         raise "no followups defined for #{field_name}" if !the_field.followups
         map = self.fields[field_name].followup_name_map
-        followup_appearances.each do |followup_field_name, followup_field_appearance|
-          question(followup_field_name,followup_field_appearance)  #declare the question to make sure it exists   
+        followup_appearances.each do |app|
+          case 
+          when app.is_a?(String)
+            followup_field_name = app; followup_field_appearance = 'TextField'
+          when app.is_a?(Hash)
+            followup_field_name = app.keys[0]; followup_field_appearance =  app.values[0]
+          when app.is_a?(Array)
+            followup_field_name = app[0]; followup_field_appearance =  app[1]
+          else
+            raise "followp spec must be String, Hash or Array, got #{app.class} #{app.inspect}"
+          end
+          followup_appearance_type,followup_appearance_parameters = parse_appearance(followup_field_appearance)
+          question(followup_field_name,followup_appearance_type,followup_appearance_parameters)  #declare the question to make sure it exists   
           value = map[followup_field_name]
           opts = {:css_class => 'followup'}
           if value == :answered

@@ -13,12 +13,7 @@ class Widget
   
   def self.enumeration (constraints,constraint_name='enumeration')
     if constraints && constraints[constraint_name]
-      constraint_list = constraints[constraint_name]
-      if constraint_list[0].is_a?(String)
-        enum = constraint_list.collect { |e| [e.humanize,e]}
-      else
-        enum = constraints[constraint_name].collect{|h| h.is_a?(Hash) ? h.to_a[0].reverse : [h.to_s.humanize,h.to_s] }
-      end
+      enum = constraints[constraint_name].collect{|h| h.is_a?(Hash) ? h.to_a[0].reverse : [h.to_s.humanize,h.to_s] }
     elsif constraints && constraints[constraint_name]
       enum = []
       spec = constraints["enumeration_lookup"]

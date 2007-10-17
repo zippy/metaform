@@ -33,10 +33,12 @@ class CheckBoxGroupFollowupWidget < Widget
 
       none_id = build_html_multi_id(field_instance_id,'none')
       if val == 'none'
+        # Javscript: uncheck all items in this checkbox group if the users clicks on none and also hide the followup.
         javascript = "if ($('#{none_id}').checked) {mapCheckboxGroup('#{build_html_name(field_instance_id)}',$('metaForm'),function(e,val){if (val != 'none') {e.checked=false};var followup_id='#{field_instance_id}_'+val;var h = $(followup_id);if (h != null) {h.hide()}})}"
         followup_span = ''
       else
-        javascript = "var e = $('#{followup_id}'); if (this.checked) {e.show();$('#{none_id}').checked = false} else {e.hide()}"
+        # Javscript: hide/show the followup (unchecking all items in the followup if hiding, and unchecking the none value if showing)
+        javascript = "var e = $('#{followup_id}'); if (this.checked) {e.show();$('#{none_id}').checked = false} else {e.hide();mapCheckboxGroup('record[#{field_instance_id}][_#{val}-',$('metaForm'),function(el,val){el.checked=false})}"
         followup_span = <<-EOHTML 
           <span id="#{followup_id}" class="checkbox_followups" style="display:#{checked ? 'inline' : 'none'}">
           &nbsp;&nbsp; #{sub_label} #{followups.join("\n")}
@@ -44,7 +46,8 @@ class CheckBoxGroupFollowupWidget < Widget
         EOHTML
       end
       result << <<-EOHTML 
-        <input name="#{build_html_multi_name(field_instance_id,val)}" id="#{build_html_multi_id(field_instance_id,val)}" type="checkbox" value="#{val}" #{checked ? 'checked' : ''}
+      <input name="#{build_html_multi_name(field_instance_id,'__none__')}" id="#{build_html_multi_id(field_instance_id,'__none__')}" type="hidden"}>
+      <input name="#{build_html_multi_name(field_instance_id,val)}" id="#{build_html_multi_id(field_instance_id,val)}" type="checkbox" value="#{val}" #{checked ? 'checked' : ''}
         onClick="#{javascript}">
         #{value_label}
         #{followup_span}
@@ -83,6 +86,8 @@ class CheckBoxGroupFollowupWidget < Widget
   
   ################################################################################
   def self.convert_html_value(value)
+    value.delete('__none__')
+    return nil if value.size == 0
     result = {}
     value.each do |key,value|
       if key =~ /^_(.*)-(.*)/

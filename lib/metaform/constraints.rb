@@ -60,7 +60,7 @@ module Constraints
         #TODO-LISA this doesn't yet handle when null is allowed.  Which fact also has to be added
         # to the definition of "f" in definition.rb
 
-        ok_values = constraint[0].is_a?(String) ? constraint : constraint.collect{|h| h.keys[0]}
+        ok_values = constraint[0].is_a?(String) ? constraint : constraint.collect{|h| h.is_a?(String) ? h.to_s : h.keys[0]}
         if !ok_values.include?(value)
           constraint_errors << (err_override || ("value out of range, must be in " << ok_values.join(', ')))
         end

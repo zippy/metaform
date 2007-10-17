@@ -2,11 +2,11 @@
 class CheckBoxGroupWidget < Widget
   ################################################################################
   def self.render_form_object(form,field_instance_id,value,options)
-    result = ""
     e = enumeration(options[:constraints],'set')
     result = []
     checked = value.split(/,/) if value
     checked ||= []
+    result << %Q|<input name="#{build_html_multi_name(field_instance_id,'__none__')}" id="#{build_html_multi_id(field_instance_id,'__none__')}" type="hidden"}>|
     e.each do |key,val|
       result << %Q|<input name="#{build_html_multi_name(field_instance_id,val)}" id="#{build_html_multi_id(field_instance_id,val)}" type="checkbox" value="#{val}" #{checked.include?(val) ? 'checked' : ''}> #{key}|
     end
@@ -47,6 +47,8 @@ class CheckBoxGroupWidget < Widget
   
   ################################################################################
   def self.convert_html_value(value)
+    value.delete('__none__')
+    return nil if value.size == 0
     value.keys.join(',')
   end
   

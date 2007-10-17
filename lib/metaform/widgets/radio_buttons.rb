@@ -6,7 +6,6 @@ class RadioButtonsWidget < Widget
     e = enumeration(options[:constraints])
     result = []
     e.each do |key,val|
-#      result << "#{form.radio_button('record',field_instance_id,val,value)} #{key}"
       result << %Q|<input name="#{build_html_name(field_instance_id)}" id="#{build_html_multi_id(field_instance_id,val)}" type="radio" value="#{val}" #{value==val ? 'checked' : ''}> #{key}|
     end
     params = options[:params]
@@ -37,6 +36,12 @@ class RadioButtonsWidget < Widget
       result << %Q|Event.observe('#{build_html_multi_id(field_instance_id,value)}', 'change', function(e){ #{script} });\n|
     end
     result
+  end
+  
+  ################################################################################
+  def self.convert_html_value(value)
+    value = nil if value == ''
+    value
   end
 
 end
