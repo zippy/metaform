@@ -18,10 +18,14 @@ function $RF(el){
 	return getRadioGroupValue(el,$('metaForm'))
 }
 
+function $DF(name){
+	var d = new Date($F(name+'_month') + "/" + $F(name+'_day')  + "/" + $F(name+'_year'));
+	return (d == "Invalid Date") ? null : d;
+}
+
 function getRadioGroupValue(radioGroupName,form) {
-	return $F(form.getInputs('radio', radioGroupName).find(
-		function(re) {return re.checked;}
-	));
+	var checked_element = form.getInputs('radio', radioGroupName).find(function(re) {return re.checked;});
+	return (checked_element != null) ? $F(checked_element) : null;
 }
 
 function getCheckboxGroupValue(checkboxGroupName,form) {
@@ -39,6 +43,12 @@ function setCheckboxGroup(checkboxGroupName,form,value) {
 		item.checked = value;
 	} });
 }
+function mapCheckboxGroup(checkboxGroupName,form,func) {
+	form.getInputs("checkbox").findAll(function(item)
+	{ if (item.name.indexOf(checkboxGroupName) === 0) {
+		func(item,item.name.replace(checkboxGroupName,'').gsub(/[\[\]]/,''));
+	} });
+}
 
 function oc(a)
 {
@@ -48,4 +58,11 @@ function oc(a)
     o[a[i]]='';
   }
   return o;
+}
+
+function submitAndRedirect(url)
+{
+	$('_redirect_url').value = url;
+	$('metaForm').submit();
+	return false;
 }
