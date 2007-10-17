@@ -17,6 +17,7 @@ module Utilites
   # used for parameters that can optionally be an array.
   # converts non-array params to a single element array
   def arrayify(param)
+    return [] if param == nil
     param = [param]  if param.class != Array
     param
   end
@@ -64,7 +65,6 @@ class Reports
       options = {
         :workflow_state_filter => nil,
         :fields => nil,
-        :conditions => nil,
         :forms => nil,
         :filters => nil,
         :sum_queries => {},
@@ -86,8 +86,9 @@ class Reports
       r.fields.each {|f| field_list[f]=1}
       r.count_queries.each { |stat,q| q.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1} if q.is_a?(String)}
       r.sum_queries.each { |stat,q| q.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1} if q.is_a?(String)}
+      filters = arrayify(r.filters)
       if options[:filters]
-        filters = arrayify(options[:filters])
+        filters = filters.concat(arrayify(options[:filters]))
         filters.each { |fltr| fltr.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1}}
       end
 
