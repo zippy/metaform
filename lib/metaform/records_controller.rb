@@ -45,9 +45,14 @@ class RecordsController < ApplicationController
   def update
     setup_record
     respond_to do |format|
-      if @record.update_attributes(params[:record],@presentation,params[:workflow_action])
+      if !params[:record]
+        redirect_url = params[:_redirect_url] if params[:_redirect_url]
+        format.html { redirect_url ? redirect_to(redirect_url) : render(:action => "show") }
+        format.xml  { head :ok }        
+      elsif @record.update_attributes(params[:record],@presentation,params[:workflow_action])
         flash[:notice] = 'Record was successfully updated.'
         redirect_url = @record.action_result[:redirect_url] if @record.action_result
+        redirect_url = params[:_redirect_url] if !redirect_url  && params[:_redirect_url]
         format.html { redirect_url ? redirect_to(redirect_url) : render(:action => "show") }
         format.xml  { head :ok }
       else

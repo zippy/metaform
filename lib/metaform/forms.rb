@@ -587,7 +587,8 @@ YAML
     
     def tab(presentation_name,pretty_name = nil)
       url = Record.url(@@form_instance.id,presentation_name,@@tabs_name)
-      body %Q|<li #{(@@current_tab == presentation_name) ? 'id="current"' : '' }> <a href="#{url}"><span>#{pretty_name ? pretty_name : presentation_name}</span></a> </li>|
+      name = pretty_name ? pretty_name : presentation_name
+      body %Q|<li #{(@@current_tab == presentation_name) ? 'id="current"' : '' }> <a href="#" onClick="return submitAndRedirect('#{url}')" title="Click here to go to #{name}"><span>#{name}</span></a> </li>|
     end    
     ###############################################
     # a javascript function button
