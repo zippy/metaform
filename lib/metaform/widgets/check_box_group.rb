@@ -13,7 +13,7 @@ class CheckBoxGroupWidget < Widget
     if params 
       (rows,cols) = params.split(/,/)
       result = unflatten(result,rows.to_i).collect {|col| col.join("<br />") }
-      result = %Q|<table class="checkbox_group"><tr><td class="checkbox_group">#{result.join('</td><td class="checkbox_group">')}</td></tr></table>|
+      result = %Q|<table class="checkbox_group"><tr><td class="checkbox_group" valign="top">#{result.join('</td><td class="checkbox_group" valign="top">')}</td></tr></table>|
     else
       result = result.join("\n")
     end
