@@ -76,21 +76,8 @@ class RecordsController < ApplicationController
   end
   
   def setup_new_record
-    the_form = Form.find(params[:form_id])
-#TODO there is a circularity problem here.  To set up the form we call it with a presentation
-# but part of the setup gets us the default presentation if we don't have one!
-#    @presentation = the_form.get_stuff(:default_create_presentation) if !@presentation
     @presentation = params[:presentation]
-
-#TODO this is more evidence that we don't have things right.  Currently a "form instance" is spread accross
-# Record, FormInstance, and "setting up" the class variables in V2Form to work correctly.  All this needs
-# to be unified, because right now there will be two calls to setup.  Once here "manually" and also later
-# in Record#update_attributes
-    fi = FormInstance.new
-    fi.form_id = the_form.to_s
-    fi.workflow = the_form.workflow_for_new_form(@presentation)
-    the_form.setup(@presentation,fi)
-    @record = Record.new(fi,params[:record])
+    @record = Record.make(Form.find(params[:form_id]),@presentation,params[:record])
     setup_record_params
   end
 end

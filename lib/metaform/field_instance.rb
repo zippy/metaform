@@ -11,6 +11,7 @@ class FieldInstance < ActiveRecord::Base
     form_instance.form.field_exists?(field_id)
   end
   
+  #TODO figure out if we want to do rails level validation of field instances...
   def validatex
     logger.info "fish"
     unless field

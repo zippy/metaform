@@ -12,7 +12,6 @@ class Record
   attr :errors
   attr :attributes
   attr_accessor :action_result
-
   ######################################################################################
   # creating a new Record happens either because we pass in a given FormInstance
   # or we create a raw new one here
@@ -30,6 +29,7 @@ class Record
     @attributes = {}
 
     attribs.each do |id,value|
+      id = id.to_s
       q = form.get_question(id)
       raise "unknown question #{id}" if !q
       @attributes[id] = Widget.fetch(q.appearance).convert_html_value(value)
@@ -44,6 +44,30 @@ class Record
   
   def form
     @form_instance.form
+  end
+
+  ######################################################################################
+  # field accessors
+
+  # the field_value is either pulled from the attributes hash if it exists or from the database
+  # TODO we need to make a system where field_instance values can be pre-loaded for a full presentation, otherwise
+  # this causes one hit to the database per field per page.
+  def [](attribute)
+    field_name = attribute.to_s
+    return @attributes[field_name] if @attributes.has_key?(field_name)
+    raise "field #{field_name} not in form " if !form.field_exists?(field_name)
+    if !@form_instance.new_record?  && field_instance = FieldInstance.find(:first, :conditions => ["form_instance_id = ? and field_id = ?",@form_instance.id,field_name])
+      #cache the value in the attributes hash
+      @attributes[field_name] = field_instance.answer
+    else
+      #TODO get the default from the definition if we aren't getting the value from the database
+      nil
+    end
+  end
+  
+  def method_missing(attribute,*args)
+    return self[attribute] if form.field_exists?(attribute)
+    super
   end
 
   ######################################################################################
@@ -144,7 +168,6 @@ class Record
 				f = FieldInstance.new({:answer => value, :field_id=>field_instance_id, :form_instance_id => id})
 				field_instances << f
 			end
-			puts Time.now.to_s << 'create '<< f.field_id
 			f.state = 'answered'		
 		end
 		    
@@ -207,6 +230,22 @@ class Record
     url = "/records/listings/#{listing}"
     url << "?order=#{order}" if order && order != ''
     url
+  end
+  
+  def Record.make(form_name,presentation,attribs = {})
+    the_form = Form.find(form_name)
+    #TODO there is a circularity problem here.  To set up the form we call it with a presentation
+    # but part of the setup gets us the default presentation if we don't have one!
+
+    #TODO this is more evidence that we don't have things right.  Currently a "form instance" is spread accross
+    # Record, FormInstance, and "setting up" the class variables in V2Form to work correctly.  All this needs
+    # to be unified, because right now there will be two calls to setup.  Once here "manually" and also later
+    # in Record#update_attributes
+    fi = FormInstance.new
+    fi.form_id = the_form.to_s
+    fi.workflow = the_form.workflow_for_new_form(presentation)
+    the_form.setup(presentation,fi)
+    @record = Record.new(fi,attribs)    
   end
   
   

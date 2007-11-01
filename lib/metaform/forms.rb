@@ -232,7 +232,9 @@ class Listings
 end
 
 class Form
-
+  cattr_accessor :forms_dir
+  @@forms_dir = 'forms'
+  
   FieldTypes = ['string','integer','float','decimal','boolean','date','datetime','time','text']
   
   class << self
@@ -330,7 +332,7 @@ class Form
     # define a field with optional constraint
     # constraint should be a hash of constrainttype, constraintvalue pairs, or a YAML encoded hash.
     def f(field_name,label = "", field_type = "string",constraints=nil)
- 
+      field_name = field_name.to_s
  #TODO handle user defined types:
 # boolean_TxCCTf
 # boolean_CCTfTpTf
@@ -381,6 +383,7 @@ class Form
     
     #################################################################################
     def question(field_name,appearance_type,appearance_parameters=nil)
+      field_name = field_name.to_s
       qs = self.questions
       if qs[field_name]
         current_question = qs[field_name]
@@ -801,8 +804,7 @@ YAML
     end
     
     # the field_value is either pulled from the attributes hash if it exists or from the database
-    # TODO we need to make a system where field_instance values can be pre-loaded for a full presentation, otherwise
-    # this causes one hit to the database per field per page.
+    #TODO this needs to be migrated over to get the value from Record.
     def field_value(field_name)
       raise "field #{field_name} not in form " if !field_exists?(field_name)
       field_instance = FieldInstance.find(:first, :conditions => ["form_instance_id = ? and field_id = ?",@@form_instance.id,field_name])
@@ -849,7 +851,7 @@ YAML
     #################################################################################
     ## accessors
     def field_exists?(field_name)
-      self.fields.has_key?(field_name)
+      self.fields.has_key?(field_name.to_s)
     end
 
     def presentation_exists?(presentation_name)
@@ -938,9 +940,9 @@ end
 
 ################################################################################
 # Load the form definitions from RAILS_ROOT/definitions
-if File.directory?('forms')
-  Dir.foreach('forms') do |file|
-    require 'forms/' + file if file.match(/\.rb$/)
+if File.directory?(Form.forms_dir)
+  Dir.foreach(Form.forms_dir) do |file|
+    require File.join(Form.forms_dir, file) if file.match(/\.rb$/)
   end
 end
 ################################################################################
