@@ -597,9 +597,10 @@ YAML
     end    
     ###############################################
     # a javascript function button
-    def function_button(name,&block)
+    def function_button(name,css_class=nil,&block)
       js = block.call
-      body %Q|<input type="button" value="#{name}" onclick="#{js}">|
+      css = css_class ? %Q| class="#{css_class}"| : ''
+      body %Q|<input type="button" value="#{name}"#{css} onclick="#{js}">|
     end
     
     ###############################################
