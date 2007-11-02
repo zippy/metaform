@@ -361,12 +361,12 @@ class Form
       the_field = f field_name,label,field_type,constraints
       the_field.followups = followups
       map = {}
-      followups.each do |value,fields|
-        fields = arrayify(fields)
+      followups.each do |field_answer,followup_fields|
+        fields = arrayify(followup_fields)
         fields.each do |field|
-          map[field.name] = value
+          map[field.name] = field_answer
           field.constraints ||= {}
-          field.constraints['required'] = "#{field_name}=#{value}"
+          field.constraints['required'] = "#{field_name}=#{field_answer}"
         end 
       end
       the_field.followup_name_map = map
