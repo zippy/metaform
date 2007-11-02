@@ -292,6 +292,7 @@ class Form
   ################################################################################
   def self.find (name)
     forms = instance_eval {@forms}
+    name = name.to_s
     raise "Unknown form #{name}" unless forms.has_key?(name)
     forms[name]
   end
