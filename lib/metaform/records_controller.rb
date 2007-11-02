@@ -13,7 +13,11 @@ class RecordsController < ApplicationController
     setup_record
     
     respond_to do |format|
-      format.html # show.rhtml
+      if params[:template]
+        format.html { render :template => 'records/'<<params[:template] }
+      else
+        format.html # show.rhtml
+      end
       format.xml  { render :xml => @record.to_xml }
     end
   end

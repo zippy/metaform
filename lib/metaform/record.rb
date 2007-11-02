@@ -197,6 +197,11 @@ class Record
   def logger
     form_instance.logger
   end
+  
+  def url(presentation,tab)
+    Record.url(id,presentation,tab)
+  end
+    
 
   def self.human_attribute_name(attribute_key_name) #:nodoc:
     attribute_key_name
