@@ -452,7 +452,7 @@ class Form
     
     ###############################################
     # produces a question, with a optional followup questions (field had to be defined with fwf)
-    def q(field_name,appearance = "TextField",css_class = nil,followup_appearances = nil)
+    def q(field_name,appearance = "TextField",css_class = nil,followup_appearances = nil,initially_hidden = false)
       appearance_type,appearance_parameters = parse_appearance(appearance)
       question(field_name,appearance_type,appearance_parameters)
       
@@ -478,7 +478,7 @@ class Form
       end
       css_class ||= 'question'
       css_class = %Q| class="#{css_class}"|
-      body %Q|<div id="question_#{field_name}"#{css_class}>#{field_html}</div>|
+      body %Q|<div id="question_#{field_name}"#{css_class}#{initially_hidden ? ' style="display:none"' : ""}>#{field_html}</div>|
 
       #TODO-LISA find some way that the "followup" css spec can be passed in as part of the followup
       # appearance specification, and also to pass in a css_class specification for the followup question
@@ -544,12 +544,15 @@ YAML
       options = {
         :operator => '==',
         :value => 'N',
-        :css_class => nil,
-        :condition => nil
+        :question_css_class => nil,
+        :show_hide_css_class => nil,
+        :condition => nil,
+        :show => false
       }.update(opts)
-      q field_name, appearance, options[:css_class]
-      options.delete(:css_class) #this css class is for the question not for the javascript hide box!
-      options[:show] = false
+      q field_name, appearance, options[:question_css_class]
+      options.delete(:question_css_class)
+      options[:css_class] = options[:show_hide_css_class] if options[:show_hide_css_class]
+      options.delete(:show_hide_css_class)
       javascript_show_hide_if(field_name,options) do
         p field_name
       end      
