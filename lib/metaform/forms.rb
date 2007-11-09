@@ -366,6 +366,8 @@ class Form
         fields.each do |field|
           map[field.name] = field_answer
           field.constraints ||= {}
+          #TODO-LISA this constraints needs to distinguish between enumerations and sets it currently
+          # is assuming that the contraints is just and enumeration.
           field.constraints['required'] = "#{field_name}=#{field_answer}"
         end 
       end
@@ -503,6 +505,9 @@ class Form
           opts = {:css_class => 'followup'}
           if value == :answered
             opts[:condition] = %Q|field_value != null && field_value != ""|
+          elsif value =~ /^\/(.*)\/$/
+            #TODO-LISA make this work if the field value is an array (which it would be for a set instead of an enum)
+            opts[:condition] = %Q|field_value.match(#{value})|
           else
             opts[:value] = value
             opts[:operator] = widget.is_multi_value? ? :in : '=='
