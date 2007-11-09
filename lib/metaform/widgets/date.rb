@@ -5,11 +5,11 @@ class DateWidget < Widget
     require 'parsedate'
     if value && (d = ParseDate.parsedate(value))[0]
       date = Time.local(*d)
-      result = <<-EOHTML
+      <<-EOHTML
       <input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'month')}" id="#{build_html_multi_id(field_instance_id,'month')}" value="#{date.month}" /> /
       <input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'day')}" id="#{build_html_multi_id(field_instance_id,'day')}" value="#{date.day}" /> /
       <input type="text" size=4 name="#{build_html_multi_name(field_instance_id,'year')}" id="#{build_html_multi_id(field_instance_id,'year')}" value="#{date.year}" />
-      EOHTML if 
+      EOHTML
     else
       <<-EOHTML
       <input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'month')}" id="#{build_html_multi_id(field_instance_id,'month')}"/> /
