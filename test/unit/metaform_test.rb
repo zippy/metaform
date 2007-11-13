@@ -20,19 +20,24 @@ class MetaformTest < Test::Unit::TestCase
   
   def test_locating_records
     r = []
-    r << Record.make('SampleForm','new_entry',{:name =>'Fred Smith'})
-    r << Record.make('SampleForm','new_entry',{:name =>'Joe Smith'})
-    r << Record.make('SampleForm','new_entry',{:name =>'Bob Smith'})
+    r << Record.make('SampleForm','new_entry',{:name =>'Fred Smith',:fruit => 'banana'})
+    r << Record.make('SampleForm','new_entry',{:name =>'Joe Smith',:fruit => 'banana'})
+    r << Record.make('SampleForm','new_entry',{:name =>'Frank Smith',:fruit => 'pear'})
     r.last.workflow_state = 'fish'
-    r << Record.make('SampleForm','new_entry',{:name =>'Herbert Wilcox'})
+    r << Record.make('SampleForm','new_entry',{:name =>'Herbert Wilcox',:fruit => 'banana'})
     
     r.each { |recs| recs.save('new_entry') }
 
     r0 = Record.locate(r[0].id)
     assert r0.name == r[0].name
     
-    assert Record.locate(:all).size == 4
-    
+    recs = Record.locate(:all)
+    assert recs.size == 4
+#    assert Record.locate(:all,{:conditions => ['name like "%Smith"','fruit = "banana"']}).size == 2
+#    assert Record.locate(:all,{:conditions => 'name like "%Smith"'}).size == 3
+    assert Record.locate(:all,{:filters => ':fruit == "banana"'}).size == 3
+    assert Record.locate(:all,{:filters => [':name =~ /Smith/',':fruit == "banana"']}).size == 2
+    assert Record.locate(:all,{:filters => ':name =~ /^F/'}).size == 2
     assert Record.locate(:all,{:workflow_state_filter => 'fish'}).size == 1
 
   end

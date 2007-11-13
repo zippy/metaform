@@ -232,30 +232,78 @@ class Record
   
   # Record.locate
   def Record.locate(what,options = {})
-    conditions = []
+    condition_strings = []
     conditions_params = []
+    
+    field_list = {} 
+    
     if options.has_key?(:forms)
-      conditions << "(form_id in (?))"
+      condition_strings << "(form_id in (?))"
       conditions_params << options[:forms]
     end
     if options.has_key?(:workflow_state_filter)
-      conditions << "(workflow_state in (?))"
+      condition_strings << "(workflow_state in (?))"
       conditions_params << options[:workflow_state_filter]
     end
-    if options.has_key?(:fields)
-      conditions << "(field_id in (?))"
-      conditions_params << options[:fields]
+
+    if options.has_key?(:filters)
+      filters = arrayify(options[:filters])
+      filters.each { |fltr| fltr.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1}}
     end
-    
-    find_opts = {
-      :conditions => [conditions.join(' and ')].concat(conditions_params), 
-      :include => [:field_instances]
-    } if !conditions.empty?
+    if options.has_key?(:fields)
+      condition_strings << "(field_id in (?))"
+      options[:fields].each {|x| field_list[x] = 1 }
+      conditions_params << field_list.keys
+    end
+    if options.has_key?(:conditions)
+      c = arrayify (options[:conditions])
+      c.each {|x| x =~ /([a-zA-Z0-9_-]+)(.*)/; condition_strings << %Q|if(field_id = '#{$1}',if (answer #{$2},true,false),false)|}
+    end
+
+    if !condition_strings.empty?
+      condition_string = condition_strings.join(' and ')
+      if !conditions_params.empty?
+        conditions = [condition_string] << conditions_params
+      else
+        conditions = condition_string
+      end
+      find_opts = {
+        :conditions => conditions, 
+        :include => [:field_instances]
+      }
+    end
     find_opts ||= {}
     
     form_instances = FormInstance.find(what,find_opts)
+      
+    if filters
+      forms = []
+      #TODO This has got to be way inneficient!  It would be much better to push this
+      # off the SQL server, but I don't know how to do that yet in the context of rails
+      # and the structure of having the field instances in their own tables.
+      form_instances.each do |r|
+        f = {}
+        r.field_instances.each {|fld| f[fld.field_id]=fld.answer}
+        kept = false
+        if filters.size > 0
+          eval_field(filters.collect{|x| "(#{x})"}.join('&&')) {|expr| kept = eval(expr)}
+        end
+        forms << r if kept
+      end
+    else
+      forms = form_instances
+    end
 
-    Record.create(form_instances)
+    Record.create(forms)
+  end
+  
+  def Record.eval_field(expression)
+    begin
+      expr = expression.gsub(/:([a-zA-Z0-9_-]+)/,'f["\1"]')
+      yield expr
+    rescue Exception => e
+      raise "Eval error '#{e.to_s}' while evaluating: #{expr}"
+    end
   end
   
   def Record.url(record_id,presentation,tab)
@@ -307,5 +355,13 @@ class Record
     end
     result
   end
+  
+  private
+  def Record.arrayify(param)
+    return [] if param == nil
+    param = [param]  if param.class != Array
+    param
+  end
+  
 end
    
