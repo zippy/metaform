@@ -282,7 +282,7 @@ class Record
       # off the SQL server, but I don't know how to do that yet in the context of rails
       # and the structure of having the field instances in their own tables.
       form_instances.each do |r|
-        f = {}
+        f = {'workflow_state' => r.workflow_state,'updated_at' => r.updated_at}
         r.field_instances.each {|fld| f[fld.field_id]=fld.answer}
         kept = false
         if filters.size > 0
