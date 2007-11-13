@@ -263,7 +263,7 @@ class Record
     if !condition_strings.empty?
       condition_string = condition_strings.join(' and ')
       if !conditions_params.empty?
-        conditions = [condition_string] << conditions_params
+        conditions = [condition_string].concat(conditions_params)
       else
         conditions = condition_string
       end

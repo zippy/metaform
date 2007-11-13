@@ -149,7 +149,6 @@ class Listings
   class << self
     include Utilites
 
-
     def listings
       @listings ||= {}
       @listings
@@ -181,11 +180,13 @@ class Listings
       
       options[:order] ||= l.fields[0]
       
-      locate_options = {
-        :forms => l.forms,
-        :fields => l.fields,
-        :workflow_state_filter => l.workflow_state_filter
-      }
+      locate_options = {}
+      locate_options[:forms] = l.forms if l.forms
+      locate_options[:fields] = l.fields if l.fields
+      locate_options[:conditions] = l.conditions if l.conditions
+      locate_options[:workflow_state_filter] = l.workflow_state_filter if l.workflow_state_filter
+      locate_options[:filters] = options[:filters] if options[:filters]
+      
       forms = Record.locate(:all,locate_options)
 
       # TODO-LISA
