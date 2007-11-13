@@ -653,7 +653,7 @@ YAML
         :value => nil,
         :div_id =>nil,
         :show => true,
-        :css_class => "hideable_box",
+        :css_class => "hideable_box_with_border",
         :condition => nil
       }.update(opts)
             
