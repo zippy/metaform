@@ -26,7 +26,7 @@ class MetaformTest < Test::Unit::TestCase
     r.last.workflow_state = 'fish'
     r << Record.make('SampleForm','new_entry',{:name =>'Herbert Wilcox'})
     
-    r.each { |recs| recs.save }
+    r.each { |recs| recs.save('new_entry') }
 
     r0 = Record.locate(r[0].id)
     assert r0.name == r[0].name

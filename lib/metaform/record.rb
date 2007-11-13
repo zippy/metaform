@@ -39,19 +39,19 @@ class Record
   ######################################################################################
   # some paramaters are just those of the form instance object
   def id
-    @form_instance.id
+    form_instance.id
   end
   
   def form
-    @form_instance.form
+    form_instance.form
   end
   
   def workflow_state
-    @form_instance.workflow_state
+    form_instance.workflow_state
   end
   
   def workflow_state=(new_state)
-    form_instance.update_attribute({:workflow_state => new_state})
+    form_instance.update_attribute(:workflow_state,new_state)
   end
 
   def workflow_state_name
