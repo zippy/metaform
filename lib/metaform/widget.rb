@@ -11,17 +11,30 @@ class Widget
     instance_eval {@widgets.keys}
   end
   
-  def self.enumeration (constraints,constraint_name='enumeration')
+  def self.enumeration (constraints)
+    
+    constraint_name = nil
+    #TODO this is stupid.  Fix!
+    ['enumeration','set','enumeration_lookup','set_lookup'].each {|e| constraint_name = e if constraints.has_key?(e); }
+    raise constraints.inspect if !constraint_name
     if constraints && constraints[constraint_name]
-      enum = constraints[constraint_name].collect{|h| h.is_a?(Hash) ? h.to_a[0].reverse : [h.to_s.humanize,h.to_s] }
-    elsif constraints && constraints[constraint_name]
-      enum = []
-      spec = constraints["enumeration_lookup"]
-      the_form = Form.find(:first, :conditions => ["name = ?",spec["form_name"]])
-      the_field = Field.find(:first, :conditions => ["name = ?",spec["field_name"]])
-      the_form.form_instances.each do |form_instance|
-        field_instance = FieldInstance.find(:first, :conditions => ["form_instance_id = ? and field_id = ?",form_instance.id,the_field.id])
-        enum << [field_instance.answer, field_instance.id]
+      case 
+      when constraint_name == 'enumeration' || constraint_name == 'set'
+        enum = constraints[constraint_name].collect{|h| h.is_a?(Hash) ? h.to_a[0].reverse : [h.to_s.humanize,h.to_s] }
+      when constraint_name =~ /(set|enumeration)_lookup/
+        spec = constraints[constraint_name]
+        #spec[:model] can be a string or a class
+        model = spec[:model].is_a?(String) ? spec[:model].constantize : spec[:model]
+        results = model.find(*spec[:find_args])
+        enum = results.collect {|r| spec.has_key?(:proc) ? spec[:proc].call(r) : [r.name,r.id]}
+# this code does lookup within Forms, 
+#        spec = constraints["enumeration_lookup"]
+#        the_form = Form.find(:first, :conditions => ["name = ?",spec["form_name"]])
+#        the_field = Field.find(:first, :conditions => ["name = ?",spec["field_name"]])
+#        the_form.form_instances.each do |form_instance|
+#          field_instance = FieldInstance.find(:first, :conditions => ["form_instance_id = ? and field_id = ?",form_instance.id,the_field.id])
+#          enum << [field_instance.answer, field_instance.id]
+#        end
       end
     end
     enum

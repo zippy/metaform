@@ -2,7 +2,7 @@
 class CheckBoxGroupWidget < Widget
   ################################################################################
   def self.render_form_object(form,field_instance_id,value,options)
-    e = enumeration(options[:constraints],'set')
+    e = enumeration(options[:constraints])
     result = []
     checked = value.split(/,/) if value
     checked ||= []
@@ -32,7 +32,7 @@ class CheckBoxGroupWidget < Widget
 
   ################################################################################
   def self.javascript_build_observe_function(field_instance_id,script,constraints)
-    e = enumeration(constraints,'set')
+    e = enumeration(constraints)
     result = ""
     e.each do |key,value|
       result << %Q|Event.observe('#{build_html_multi_id(field_instance_id,value)}', 'change', function(e){ #{script} });\n|

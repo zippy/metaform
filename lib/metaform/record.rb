@@ -45,6 +45,19 @@ class Record
   def form
     @form_instance.form
   end
+  
+  def workflow_state
+    @form_instance.workflow_state
+  end
+  
+  def workflow_state=(new_state)
+    form_instance.update_attribute({:workflow_state => new_state})
+  end
+
+  def workflow_state_name
+    n = workflow_state
+    n.nil? ? '' : n.titleize
+  end
 
   ######################################################################################
   # field accessors
@@ -217,6 +230,34 @@ class Record
     Record.create(forms)
   end
   
+  # Record.locate
+  def Record.locate(what,options = {})
+    conditions = []
+    conditions_params = []
+    if options.has_key?(:forms)
+      conditions << "(form_id in (?))"
+      conditions_params << options[:forms]
+    end
+    if options.has_key?(:workflow_state_filter)
+      conditions << "(workflow_state in (?))"
+      conditions_params << options[:workflow_state_filter]
+    end
+    if options.has_key?(:fields)
+      conditions << "(field_id in (?))"
+      conditions_params << options[:fields]
+    end
+    
+    find_opts = {
+      :conditions => [conditions.join(' and ')].concat(conditions_params), 
+      :include => [:field_instances]
+    } if !conditions.empty?
+    find_opts ||= {}
+    
+    form_instances = FormInstance.find(what,find_opts)
+
+    Record.create(form_instances)
+  end
+  
   def Record.url(record_id,presentation,tab)
     url = "/records/#{record_id}"
     url << "/#{presentation}" if presentation != ""
@@ -260,7 +301,7 @@ class Record
   def Record.create(records)
     if records.is_a?(Array)
       result = []
-      records.collect{|r| records.push(Record.new(r))}
+      records.collect{|r| result.push(Record.new(r))}
     else
       result = Record.new(records)
     end

@@ -179,47 +179,15 @@ class Listings
       l = self.listings[list_name]
       raise "unknown list #{list_name}" if !l      
       
-      # here we build up the where clause by adding in the field lists and the conditions for 
-      # feild ids
-      field_list_for_where = l.fields.clone
-      field_list_for_where.concat(l.conditions.keys).uniq if l.conditions
-      fields = field_list_for_where.collect do |f|
-         where = "field_instances.field_id = '#{f}'"
-         if l.conditions && l.conditions[f]
-           # add in the condition for this field
-           conditions = arrayify(l.conditions[f])
-           where = %Q|(#{where} and #{conditions.collect {|c| "answer #{c}"}.join(' and ')})| 
-         end
-         where
-      end
       options[:order] ||= l.fields[0]
-            
-      c = l.conditions
-      if c
-        other_conditions = c.collect { |h|
-          ors = h.collect{|field_id,condition| "(field_id = '#{field_id}' and answer '#{condition}'"}.join(' or ')
-          "(#{ors})"
-        }.join(' and ')
-        other_conditions = " and (#{other_conditions})"
-      else
-        other_conditions = ''
-      end
-      other_condition = ''
       
-      w = sql_workflow_condition(l.workflow_state_filter,true)
-      
-      form_instances = FormInstance.find(:all, 
-        :conditions => ["form_id in (?) and (#{fields.join(' or ')})" << w,l.forms], 
-        :include => [:field_instances]
-        )
-      #TODO find out if this is a reasonable use of eval or if it is going to screw me over in some way
-      params = [':id',':state',':form'].concat(l.fields.collect {|f| ":#{f}"}).join(',')
-      eval("Struct.new('Form',#{params})")
-      form_instances.each do |fi|
-        f = Struct::Form.new(fi.id,fi.workflow_state,fi.form_id)
-        fi.field_instances.each {|i| f[i.field_id] = i.answer}
-        forms << f
-      end
+      locate_options = {
+        :forms => l.forms,
+        :fields => l.fields,
+        :workflow_state_filter => l.workflow_state_filter
+      }
+      forms = Record.locate(:all,locate_options)
+
       # TODO-LISA
       # implement 1) sub-sorting, and 2) sorting by type, i.e. this sorting only does
       # alphabetical.  We should be converting dates to dates and sorting by that
@@ -769,7 +737,7 @@ YAML
       raise "unknown workflow #{workflow_name}" if !w
       a = w.actions[action_name]
       raise "unknown action #{action_name}" if !a
-      raise "action #{action_name} is not allowed when form is in state #{workflow_state}" if !a.legal_states.include?(form_instance.workflow_state)
+      raise "action #{action_name} is not allowed when form is in state #{workflow_state}" if !a.legal_states.include?(:any) && !a.legal_states.include?(form_instance.workflow_state)
       a.block.call
       @@action_result
     end
