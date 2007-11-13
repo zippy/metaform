@@ -418,12 +418,28 @@ class Form
     # produces a "text" element.  Defaults to a <p></p> html element with no class
     def t(text,css_class = nil,element = 'p')
       css_class = %Q| class = "#{css_class}"| if css_class
-      body %Q|<#{element}#{css_class}>#{text}</#{element}>|
+      text = %Q|<#{element}#{css_class}>#{text}</#{element}>| if element
+      body text
     end
     
     ###############################################
     # produces a question, with a optional followup questions (field had to be defined with fwf)
-    def q(field_name,appearance = "TextField",css_class = nil,followup_appearances = nil,initially_hidden = false)
+    # options: 
+    # :erb => specify an erb block to render how the question should be displayed.  The default rendering is
+    # the equivalent of this:
+    #    <div id="question_<%=field_name%>"<%=css_class%><%=initially_hidden ? ' style="display:none"' : ""%>><%=field_html%></div>
+    #  though it is done as a straight interpolated string for speed.
+    #  additionally the variables available for inserting into the erb block are:
+    #     field_name, field_label, field_element, and field_html which is the label and element joined 
+    #     rendered together by the widget.
+    
+    def q(field_name,appearance = "TextField",css_class = nil,followup_appearances = nil,opts = {})
+      require 'erb'
+      options = {
+        :initially_hidden => false,
+      }.update(opts)
+
+      initially_hidden = options[:initially_hidden]
       appearance_type,appearance_parameters = parse_appearance(appearance)
       question(field_name,appearance_type,appearance_parameters)
       
@@ -439,7 +455,12 @@ class Form
       return if @@phase == :verify
       
       widget = Widget.fetch(appearance_type)
+      if options[:erb]
+        field_element = widget.render_form_object(@@form,field_name,value,:constraints => constraints, :params => appearance_parameters)
+        field_label = the_field.label
+      end
       field_html = widget.render(@@form,field_name,value,the_field.label,:constraints => constraints, :params => appearance_parameters)
+
       #TODO, this produces an ugly list of errors right now.  Control over this should be
       # made much higher, i.e. some errors shouldn't show up depending on which other errors
       # have been detected (i.e. if required, then don't bother to show an enum error)
@@ -449,8 +470,12 @@ class Form
       end
       css_class ||= 'question'
       css_class = %Q| class="#{css_class}"|
-      body %Q|<div id="question_#{field_name}"#{css_class}#{initially_hidden ? ' style="display:none"' : ""}>#{field_html}</div>|
-
+      if options[:erb]
+        body ERB.new(options[:erb]).result(binding)
+      else
+        body %Q|<div id="question_#{field_name}"#{css_class}#{initially_hidden ? ' style="display:none"' : ""}>#{field_html}</div>|
+      end
+      
       #TODO-LISA find some way that the "followup" css spec can be passed in as part of the followup
       # appearance specification, and also to pass in a css_class specification for the followup question
       # itself
