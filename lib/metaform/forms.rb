@@ -654,13 +654,15 @@ YAML
         :div_id =>nil,
         :show => true,
         :css_class => "hideable_box_with_border",
-        :condition => nil
+        :condition => nil,
+        :jsaction_show => nil,
+        :jsaction_hide => nil
       }.update(opts)
             
       # if we are not actually building skip the generation of javascript
       # but yield so that any sub-questions and stuff can be initialized.
       if @@phase != :build
-        block.call
+        block.call if block
         return
       end
 
@@ -671,10 +673,10 @@ YAML
       div_id = "uid_#{@@unique_ids += 1}" if !div_id
       condition = options[:condition]
       condition ||= build_javascript_boolean_expression(options[:operator],options[:value])
-      add_observer_javascript(field,%Q|(#{!show ? "!" : ""}(#{condition}))|,"Element.show('#{div_id}');} else {Element.hide('#{div_id}');")
+      add_observer_javascript(field,%Q|(#{!show ? "!" : ""}(#{condition}))|,"Element.show('#{div_id}');#{options[:jsaction_show]};} else {Element.hide('#{div_id}');#{options[:jsaction_hide]};}")
       
       body %Q|<div id="#{div_id}" class="#{css_class}">|
-      block.call
+      block.call if block
       body '</div>'
     end
     
@@ -697,7 +699,7 @@ YAML
         observer_function = widget.javascript_build_observe_function(field,"check_#{field}()",self.fields[field].constraints)
         value_function = widget.javascript_get_value_function(field)
         scripts = ""
-        jsc.each {|action| scripts << "if (#{action[:condition]}) {#{action[:script]}};"}
+        jsc.each {|action| scripts << "if (#{action[:condition]}) {#{action[:script]}"}
         script = <<-EOJS
           #{observer_function}
           function check_#{field}() {
