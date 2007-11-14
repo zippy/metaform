@@ -422,6 +422,17 @@ class Form
       body text
     end
     
+    def html(text)
+      body text
+    end
+    
+    def q_meta_workflow(label,appearance_type,states)
+      widget = Widget.fetch(appearance_type)
+      html widget.render(@@form,'_workflow_action',workflow_state,label,:constraints => {"enumeration"=>states}) #TODO , :params => appearance_parameters
+      @@meta[:workflow] = 1
+    end
+    
+    
     ###############################################
     # produces a question, with a optional followup questions (field had to be defined with fwf)
     # options: 
@@ -716,8 +727,9 @@ YAML
       @@form_instance = form_instance
       @@phase = :build
       @@constraint_errors = nil
+      @@meta = {}
       p(presentation_name)
-      body %Q|<input type="hidden" name="workflow_action" id="_workflow">|
+      body %Q|<input type="hidden" name="workflow_action" id="_workflow">| if !@@meta[:workflow]
       
       foot_jscripts = @@observer_jscripts.collect do |field,jsc|
         widget = Widget.fetch(get_field_appearance(field))
