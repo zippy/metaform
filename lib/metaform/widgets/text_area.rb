@@ -9,7 +9,7 @@ class TextAreaWidget < Widget
     else
       opts = {}
     end
-    form.text_area_tag("record[#{field_instance_id}]",value,opts)
+    form.text_area_tag(build_html_name(field_instance_id),value,opts)
   end
 end
 ################################################################################

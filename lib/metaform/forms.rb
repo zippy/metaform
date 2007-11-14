@@ -426,10 +426,13 @@ class Form
       body text
     end
     
-    def q_meta_workflow(label,appearance_type,states)
+    def q_meta_workflow_state(label,appearance_type,states)
       widget = Widget.fetch(appearance_type)
-      html widget.render(@@form,'_workflow_action',workflow_state,label,:constraints => {"enumeration"=>states}) #TODO , :params => appearance_parameters
-      @@meta[:workflow] = 1
+      w = widget.render(@@form,'workflow_state',workflow_state,label,:constraints => {"enumeration"=>states}) #TODO , :params => appearance_parameters
+      #TODO this is a cheat and we need to fix it in widget to generalize it, but it works ok!
+      w = w.gsub(/record(.)workflow_state/,'meta\1workflow_state')
+      html w
+      @@meta[:workflow_state] = 1
     end
     
     
@@ -642,7 +645,7 @@ YAML
     #
     def javascript_submit_workflow_action(state)
       save_context(:js) do
-        javascript %Q|$('_workflow').value = '#{state}';$('metaForm').submit();|
+        javascript %Q|$('meta_workflow_action').value = '#{state}';$('metaForm').submit();|
       end
     end
     
@@ -729,7 +732,7 @@ YAML
       @@constraint_errors = nil
       @@meta = {}
       p(presentation_name)
-      body %Q|<input type="hidden" name="workflow_action" id="_workflow">| if !@@meta[:workflow]
+      body %Q|<input type="hidden" name="meta[workflow_action]" id="meta_workflow_action">| if !@@meta[:workflow_action]
       
       foot_jscripts = @@observer_jscripts.collect do |field,jsc|
         widget = Widget.fetch(get_field_appearance(field))
@@ -769,7 +772,7 @@ YAML
       p(presentation_name)
     end
  
-    def do_workflow_action(action_name,form_instance)
+    def do_workflow_action(action_name,form_instance,meta)
       @@action_result = {}
       @@form_instance = form_instance      
       workflow_name = form_instance.workflow
@@ -778,7 +781,7 @@ YAML
       a = w.actions[action_name]
       raise "unknown action #{action_name}" if !a
       raise "action #{action_name} is not allowed when form is in state #{workflow_state}" if !a.legal_states.include?(:any) && !a.legal_states.include?(form_instance.workflow_state)
-      a.block.call
+      a.block.call(meta)
       @@action_result
     end
 
