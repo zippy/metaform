@@ -79,9 +79,16 @@ class Record
   end
   
   def method_missing(attribute,*args)
-    #is this an attribute setter?
-    if attribute.to_s =~ /^(.*)=$/ && form.field_exists?($1)
-      return @attributes[$1] = args[0]
+    #is this an attribute setter? or questioner?
+    a = attribute.to_s
+    if a =~ /^(.*)([=?])$/ && form.field_exists?(attribute = $1)
+      case $2
+      when '?'
+        val = @attributes[attribute]
+        return val && val != ''
+      when '='
+        return @attributes[attribute] = args[0]
+      end
     else
       #otherwise assume an attribute getter
       return self[attribute] if form.field_exists?(attribute)
