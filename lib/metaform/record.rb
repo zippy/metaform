@@ -84,7 +84,7 @@ class Record
     if a =~ /^(.*)([=?])$/ && form.field_exists?(attribute = $1)
       case $2
       when '?'
-        val = @attributes[attribute]
+        val = self[attribute]
         return val && val != ''
       when '='
         return @attributes[attribute] = args[0]
