@@ -79,7 +79,13 @@ class Record
   end
   
   def method_missing(attribute,*args)
-    return self[attribute] if form.field_exists?(attribute)
+    #is this an attribute setter?
+    if attribute.to_s =~ /^(.*)=$/ && form.field_exists?($1)
+      return @attributes[$1] = args[0]
+    else
+      #otherwise assume an attribute getter
+      return self[attribute] if form.field_exists?(attribute)
+    end
     super
   end
 
@@ -161,6 +167,7 @@ class Record
     # to update_attributes.
     if meta_data && meta_data[:workflow_action] && meta_data[:workflow_action] != ''
       form.verify(presentation,@form_instance,@attributes)
+      meta_data[:record] = self
       self.action_result = form.do_workflow_action(meta_data[:workflow_action],@form_instance,meta_data)
       if self.action_result[:next_state]
         form_instance.update_attributes({:workflow_state => self.action_result[:next_state]})
@@ -322,7 +329,7 @@ class Record
   
   def Record.listing_url(listing,order = nil)
     url = "/records/listings/#{listing}"
-    url << "?order=#{order}" if order && order != ''
+    url << "?search[order]=#{order}" if order && order != ''
     url
   end
   
