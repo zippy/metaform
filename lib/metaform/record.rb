@@ -58,6 +58,11 @@ class Record
     n = workflow_state
     n.nil? ? '' : n.titleize
   end
+  
+  # get the default field as definined in the form
+  def field_label(field_name)
+    form.fields[field_name].label
+  end
 
   ######################################################################################
   # field accessors
