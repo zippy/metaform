@@ -33,7 +33,7 @@ class Record
       q = form.get_question(id)
       raise "unknown question #{id}" if !q
       @attributes[id] = Widget.fetch(q.appearance).convert_html_value(value)
-    end
+    end if attribs
   end
   
   ######################################################################################

@@ -1,6 +1,9 @@
 require_dependency("#{RAILS_ROOT}/app/controllers/application")
 
 class RecordsController < ApplicationController
+  
+  include ApplicationHelper
+  
   # GET /records/listings/[/<list_name>]
   def index
     @listing_name = params[:list_name]
@@ -49,7 +52,7 @@ class RecordsController < ApplicationController
   def update
     setup_record
     respond_to do |format|
-      if !params[:record]
+      if !params[:record] && !params[:meta]
         redirect_url = params[:_redirect_url] if params[:_redirect_url]
         format.html { redirect_url ? redirect_to(redirect_url) : render(:action => "show") }
         format.xml  { head :ok }        
