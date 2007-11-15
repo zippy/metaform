@@ -35,7 +35,7 @@ class CheckBoxGroupWidget < Widget
     e = enumeration(constraints)
     result = ""
     e.each do |key,value|
-      result << %Q|Event.observe('#{build_html_multi_id(field_instance_id,value)}', 'change', function(e){ #{script} });\n|
+       result << %Q|var watcher_#{build_html_multi_id(field_instance_id,value)} = new WidgetWatcher('#{build_html_multi_id(field_instance_id,value)}', function(e){ #{script} });\n|
     end
     result
   end
