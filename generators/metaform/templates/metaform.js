@@ -62,7 +62,26 @@ function oc(a)
 
 function submitAndRedirect(url)
 {
-	$('_redirect_url').value = url;
-	$('metaForm').submit();
-	return false;
+	if ($('metaForm')) {
+		$('_redirect_url').value = url;
+		$('metaForm').submit();
+		return false;
+	}
+	else {
+		location.href = url;
+		return false;
+	}
 }
+
+var WidgetWatcher = Class.create();
+WidgetWatcher.prototype = {
+	initialize: function(widget,my_function) {
+		this.widget = $(widget);
+		this.my_function = my_function;
+		this.widget.onclick = this.do_onclick.bindAsEventListener(this);
+	},	
+	
+	do_onclick: function(evt) {
+		this.my_function();
+	}
+};
