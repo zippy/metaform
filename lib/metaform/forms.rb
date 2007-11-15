@@ -773,7 +773,7 @@ YAML
  
     # the meta information that will be available to an actions is:
     # meta[:request] the request object
-    # meta[:request] the session object
+    # meta[:session] the session object
     # and anything put into it by a callback #meta_data_for_save that should
     # be definined in the application controller
     def do_workflow_action(action_name,form_instance,meta)
