@@ -714,9 +714,13 @@ YAML
       condition ||= build_javascript_boolean_expression(options[:operator],options[:value])
       add_observer_javascript(field,%Q|(#{!show ? "!" : ""}(#{condition}))|,"Element.show('#{div_id}');#{options[:jsaction_show]};} else {Element.hide('#{div_id}');#{options[:jsaction_hide]};}")
       
-      body %Q|<div id="#{div_id}" class="#{css_class}">|
-      block.call if block
-      body '</div>'
+      if block
+        body %Q|<div id="#{div_id}" class="#{css_class}">|
+        block.call
+        body '</div>'
+      else
+        body %Q|<div id="#{div_id}" style="display:none"></div>|
+      end
     end
     
     #################################################################################
