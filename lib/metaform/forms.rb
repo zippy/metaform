@@ -609,7 +609,7 @@ YAML
     def tab(presentation_name,pretty_name = nil)
       url = Record.url(@@form_instance.id,presentation_name,@@tabs_name)
       name = pretty_name ? pretty_name : presentation_name
-      body %Q|<li #{(@@current_tab == presentation_name) ? 'id="current"' : '' }> <a href="#" onClick="return submitAndRedirect('#{url}')" title="Click here to go to #{name}"><span>#{name}</span></a> </li>|
+      body %Q|<li #{(@@current_tab == presentation_name) ? 'id="current"' : '' } class="tab_#{presentation_name}"> <a href="#" onClick="return submitAndRedirect('#{url}')" title="Click here to go to #{name}"><span>#{name}</span></a> </li>|
     end    
     ###############################################
     # a javascript function button
@@ -754,12 +754,7 @@ YAML
         EOJS
       end
       
-      <<-EOHTML
-        #{@@body.join("\n")} 
-        <script type="text/javascript" language="javascript">
-        #{foot_jscripts.join("\n")}
-        </script>
-      EOHTML
+      [@@body.join("\n"),foot_jscripts.join("\n")]
     end
     
     def setup(presentation_name,form_instance)

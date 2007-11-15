@@ -1,8 +1,9 @@
-<%@metaform_include_assets = true%>
+<%@metaform_include_assets = true
+(@form_html,@form_javascript) = @record.build_html(@presentation,@current)
+%>
 <h1><%= h @form.name %> record # <%= h @record.id %></h1>
 
 <%= error_messages_for :record %>
-<% @form_html = @record.build_html(@presentation)%>
 <% if @tabs%>
 <%= @record.build_tabs(@tabs,@presentation)%>
 <p>
@@ -10,5 +11,4 @@
 <% form_tag(Record.url(@record.id,@presentation,@tabs), :method => :put, :id => 'metaForm') do -%>
 	<%= @form_html %>
 <% end -%>
-
-
+<%= javascript_tag @form_javascript%>
