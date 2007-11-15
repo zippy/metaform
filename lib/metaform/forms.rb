@@ -83,7 +83,7 @@ class Reports
       # build up the lists of fields we need to get from the database by looking in 
       # count queries, the sum querries and the fiters
       field_list = {}
-      r.fields.each {|f| field_list[f]=1}
+      r.fields.each {|f| field_list[f]=1} if r.fields
       r.count_queries.each { |stat,q| q.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1} if q.is_a?(String)}
       r.sum_queries.each { |stat,q| q.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1} if q.is_a?(String)}
       filters = arrayify(r.filters)
