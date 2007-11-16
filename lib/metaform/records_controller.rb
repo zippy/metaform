@@ -56,7 +56,7 @@ class RecordsController < ApplicationController
         redirect_url = params[:_redirect_url] if params[:_redirect_url]
         format.html { redirect_url ? redirect_to(redirect_url) : render(:action => "show") }
         format.xml  { head :ok }        
-      elsif @record.update_attributes(params[:record],@presentation,get_meta_data)
+      elsif @record.update_attributes(params[:record],@presentation,get_meta_data,:convert_from_html=>true,:index=>@index)
         flash[:notice] = 'Record was successfully updated.'
         redirect_url = @record.action_result[:redirect_url] if @record.action_result
         redirect_url = params[:_redirect_url] if !redirect_url  && params[:_redirect_url]
@@ -84,7 +84,7 @@ class RecordsController < ApplicationController
   
   def setup_new_record
     @presentation = params[:presentation]
-    @record = Record.make(Form.find(params[:form_id]),@presentation,params[:record])
+    @record = Record.make(Form.find(params[:form_id]),@presentation,params[:record],:convert_from_html => true,:index => params[:index])
     setup_record_params
   end
   

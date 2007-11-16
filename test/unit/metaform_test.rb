@@ -54,7 +54,7 @@ class MetaformTest < Test::Unit::TestCase
     assert r[:name] == 'Herbert Smith'
   end
   
-  def test_arrayable_fields
+  def test_arrayable_fields_basics
     r = Record.make('SampleForm','new_entry',{:name =>'Fred Smith',:fruit => 'banana'})
     assert r[:name,nil] == 'Fred Smith'   # the nil index is the default index
     assert r[:name,1] == nil
@@ -64,6 +64,21 @@ class MetaformTest < Test::Unit::TestCase
     nr = Record.locate(:first)
     assert nr[:name,nil] == 'Fred Smith'   # the nil index is the default index
     assert nr[:name,1] == 'Fred Smith Jones'
+  end
+
+  def test_arrayable_fields_initializing
+    r = Record.make('SampleForm','new_entry',{:name =>'Fred Smith',:fruit => 'banana'},:index => 1)
+    assert r[:name,1] == 'Fred Smith'
+    assert r[:name,nil] == nil
+    r = Record.make('SampleForm','new_entry', {
+      2 => {:name =>'Fred Smith 2',:fruit => 'apple'},
+      1 => {:name =>'Fred Smith 1',:fruit => 'banana'}
+    },:multi_index => true)
+    assert r[:name,1] == 'Fred Smith 1'
+    assert r[:name,2] == 'Fred Smith 2'
+    assert r[:fruit,1] == 'banana'
+    assert r[:fruit,2] == 'apple'
+    assert r[:name,nil] == nil
   end
 
   def test_arrayable_fields_locate

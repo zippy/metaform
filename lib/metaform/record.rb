@@ -15,23 +15,44 @@ class Record
   # creating a new Record happens either because we pass in a given FormInstance
   # or we create a raw new one here
 
-  def initialize(the_instance = nil,attributes = nil)
+  def initialize(the_instance = nil,attributes = nil,options = {})
     reset_attributes
     the_instance = FormInstance.new if !the_instance
     @form_instance = the_instance
-    self.attributes= attributes if attributes
+    if attributes
+      set_attributes(attributes,options)
+    end
   end
   
   ######################################################################################
-  # set the attributes from a hash that comes from the http PUT.
-  def attributes= (attribs)
+  # set the attributes from a hash optionally converting from HTML
+  def set_attributes(attributes,options = {})
     reset_attributes
-    attribs.each do |attribute,value|
-      attribute = attribute.to_s
-      q = form.get_question(attribute)
-      raise "unknown question #{attribute}" if !q
-      set_attribute(attribute,Widget.fetch(q.appearance).convert_html_value(value))
-    end if attribs
+    
+    if options[:multi_index]
+      attribs = attributes
+    else
+      if options[:index]
+        attribs = {options[:index]=>attributes} 
+      else
+        attribs = {nil => attributes}
+      end
+    end
+    convert_from_html = options[:convert_from_html]
+    attribs.each do |index,a|
+      a.each do |attribute,value|
+        attribute = attribute.to_s
+        # if we are converting from HTML then we assume that a presentation was
+        # setup and we check to make sure that the questions exist in this presentation
+        # as a santity check.  TODO.  This check should be moved elsewhere!!
+        if convert_from_html
+          q = form.get_question(attribute)
+          raise "unknown question #{attribute}" if !q
+          value = Widget.fetch(q.appearance).convert_html_value(value)
+        end
+        set_attribute(attribute,value,index)
+      end if a
+    end
   end
   
   def attributes(index=nil)
@@ -187,9 +208,9 @@ class Record
   # To update the record attributes we have to update all the field instances objects
   # that are what actually are the "attributes."  The attributes parameter should be a 
   # hash where the keys are the FieldInstance ids and the values are the answers
-  def update_attributes(attribs,presentation = 0,meta_data = nil)
+  def update_attributes(attribs,presentation = 0,meta_data = nil,options={})
     form.setup(presentation,self)
-    self.attributes = attribs
+    set_attributes(attribs,options)
     _update_attributes(presentation,meta_data)
   end
 
@@ -391,7 +412,7 @@ class Record
     url
   end
   
-  def Record.make(form_name,presentation,attribs = {})
+  def Record.make(form_name,presentation,attribs = {},options ={})
     the_form = Form.find(form_name)
     #TODO there is a circularity problem here.  To set up the form we call it with a presentation
     # but part of the setup gets us the default presentation if we don't have one!
@@ -404,7 +425,8 @@ class Record
     fi.form_id = the_form.to_s
     fi.workflow = the_form.workflow_for_new_form(presentation)
     the_form.setup(presentation,nil)
-    @record = Record.new(fi,attribs)    
+    
+    @record = Record.new(fi,attribs,options)    
   end
   
   
