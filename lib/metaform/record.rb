@@ -382,7 +382,11 @@ class Record
     end
     find_opts ||= {}
     
-    form_instances = FormInstance.find(what,find_opts)
+    begin
+      form_instances = FormInstance.find(what,find_opts)
+    rescue 
+      form_instances = nil
+    end
       
     if filters
       forms = []
