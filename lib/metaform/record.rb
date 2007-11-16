@@ -33,7 +33,7 @@ class Record
       attribs = attributes
     else
       if options[:index]
-        attribs = {options[:index]=>attributes} 
+        attribs = {options[:index].to_i=>attributes} 
       else
         attribs = {nil => attributes}
       end
@@ -293,7 +293,7 @@ class Record
     form_instance.logger
   end
   
-  def url(presentation,tab,index=nil)
+  def url(presentation,tab=nil,index=nil)
     Record.url(id,presentation,tab,index)
   end
     

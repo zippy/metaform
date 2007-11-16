@@ -39,7 +39,7 @@ class RecordsController < ApplicationController
 #        flash[:notice] = 'Record was successfully created.'
         redirect_url = @record.action_result[:redirect_url]
         format.html { redirect_to(redirect_url) }
-        format.xml  { head :created, :location => Record.url(@record.id,@presentation,@tabs) }
+        format.xml  { head :created, :location => @record.url(@presentation,@tabs) }
       else
         format.html { render :action => "new" }
         format.xml  { render :xml => @updated.errors.to_xml }
