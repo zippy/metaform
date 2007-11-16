@@ -103,4 +103,14 @@ class MetaformTest < Test::Unit::TestCase
     assert r.name__1 == 'Fred Smith Jones'
   end
     
+  def test_arrayables_updating
+    r = Record.make('SampleForm','new_entry',{:name =>'Fred Smith',:fruit => 'banana'},:index=>1)
+    r.save('new_entry')
+    r = Record.find(:first)
+    r.name__1 = "Joe Smith"
+    r.save('new_entry')
+    r = Record.find(:first)
+    assert r.name__1 == "Joe Smith"
+  end
+  
 end

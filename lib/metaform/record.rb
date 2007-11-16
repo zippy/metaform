@@ -55,9 +55,9 @@ class Record
     end
   end
   
-  def attributes(index=nil)
-    @attributes[index]
-  end
+#  def attributes(index=nil)
+#    @attributes[index]
+#  end
   def reset_attributes
     @attributes = {nil=>{}}
   end
@@ -140,6 +140,7 @@ class Record
     a =~ /^(.*?)(__([0-9]+))*([=?])*$/
     (attribute,index,action) = [$1,$3,$4]
     if form.field_exists?(attribute)
+      index = index.to_i if index
       case action
       when '?'
         val = self[attribute,index]
@@ -243,9 +244,13 @@ class Record
       form.setup(presentation,self)
     end
 
-    field_instances = @form_instance.field_instances.find(:all, :conditions => ["field_id in (?) and form_instance_id = ?",attributes.keys,id])
+    field_list = @attributes.values.collect {|a| a.keys}.flatten.uniq
+    logger.info("XXXXXXattribute list: " << field_list.inspect)
+    field_instances = @form_instance.field_instances.find(:all, :conditions => ["field_id in (?) and form_instance_id = ?",field_list,id])
+    logger.info("YYYYYY field_instances: " << field_instances.inspect)
+    field_instances.each {|fi| logger.info("#{fi.answer} #{fi.idx.to_s} ZZZZZ" << fi.idx.class.to_s)}
     @attributes.each do |index,attribs|
-      logger.info("saving: "<< index.to_s << attribs.inspect)
+      logger.info("BBBBBBBB saving: "<< index.to_s << attribs.inspect << "index class #{index.class.to_s}")
   	  attribs.each do |field_instance_id,value|
   			raise "field '#{field_instance_id}' not in form" if !form.field_exists?(field_instance_id)
   			f = field_instances.find {|fi| fi.field_id == field_instance_id && fi.idx == index}
@@ -264,7 +269,7 @@ class Record
     if errors.empty?
       FieldInstance.transaction do
         field_instances.each do |i|
-          if !i.save 
+          if !i.save!
     				errors.add(i.field_id,i.errors.full_messages.join(','))
           end
         end
@@ -297,6 +302,18 @@ class Record
     attribute_key_name
   end
 
+  def slice(*field_names)
+    r = Record.locate(self.id,:index => :any, :fields => field_names)
+    result = {}
+    field_names.each {|a| result[a] = {}}
+
+    r.form_instance.field_instances.collect do |fi| 
+      result[fi.field_id][fi.idx] = fi.answer
+    end
+    result = result[field_names[0]] if field_names.size == 1
+    result
+  end
+  
   ######################################################################################
   ######################################################################################
   # CLASS METHODS
@@ -316,8 +333,10 @@ class Record
     
     if options.has_key?(:index)
       idx = options[:index]
-      condition_strings << "(idx #{idx ? '=' : 'is'} ?)"
-      conditions_params << idx
+      if idx != :any
+        condition_strings << "(idx #{idx ? '=' : 'is'} ?)"
+        conditions_params << idx
+      end
     else
       condition_strings << "(idx is null)"      
     end
