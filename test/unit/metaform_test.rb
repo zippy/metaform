@@ -29,6 +29,8 @@ class MetaformTest < Test::Unit::TestCase
     r.each { |recs| recs.save('new_entry') }
 
     r0 = Record.locate(r[0].id)
+#    raise  "r[0]:" << r[0].name.inspect << "  r0:" << r0.name.inspect
+#    raise r0.form_instance.field_instances.inspect
     assert r0.name == r[0].name
     
     recs = Record.locate(:all)
@@ -39,7 +41,51 @@ class MetaformTest < Test::Unit::TestCase
     assert Record.locate(:all,{:filters => [':name =~ /Smith/',':fruit == "banana"']}).size == 2
     assert Record.locate(:all,{:filters => ':name =~ /^F/'}).size == 2
     assert Record.locate(:all,{:workflow_state_filter => 'fish'}).size == 1
+  end
 
+  def test_setting_fields
+    r = Record.make('SampleForm','new_entry',{:name =>'Fred Smith',:fruit => 'banana'})
+    assert r.name == 'Fred Smith'  
+    r.name='Herbert Smith'
+    assert r.name == 'Herbert Smith'
+    r.save('new_entry') 
+    nr = Record.locate(:first)
+    assert r.name == 'Herbert Smith'
+    assert r[:name] == 'Herbert Smith'
   end
   
+  def test_arrayable_fields
+    r = Record.make('SampleForm','new_entry',{:name =>'Fred Smith',:fruit => 'banana'})
+    assert r[:name,nil] == 'Fred Smith'   # the nil index is the default index
+    assert r[:name,1] == nil
+    r[:name,1] = 'Fred Smith Jones'
+    assert r[:name,1] == 'Fred Smith Jones'
+    r.save('new_entry')
+    nr = Record.locate(:first)
+    assert nr[:name,nil] == 'Fred Smith'   # the nil index is the default index
+    assert nr[:name,1] == 'Fred Smith Jones'
+  end
+
+  def test_arrayable_fields_locate
+    r = []
+    r << Record.make('SampleForm','new_entry',{:name =>'Fred Smith',:fruit => 'banana'})
+    r << Record.make('SampleForm','new_entry',{:name =>'Joe Smith',:fruit => 'banana'})
+    r << Record.make('SampleForm','new_entry',{:name =>'Frank Smith',:fruit => 'pear'})
+
+    r[0][:name,1] = 'Fred Smith 1'
+    r[1][:name,99] = 'Joe Smith 99'
+    r[2][:name,1] = 'Frank Smith 1'
+    r.each { |recs| recs.save('new_entry') }
+    assert Record.locate(:all,{:index => 1}).size == 2
+    assert Record.locate(:all,{:index => 99}).size == 1
+    assert Record.locate(:all,{:index => nil}).size == 3
+  end
+
+  def test_arrayable_missing_methods
+    r = Record.make('SampleForm','new_entry',{:name =>'Fred Smith',:fruit => 'banana'})
+    assert r.name__1 == nil
+    r.name__1 = 'Fred Smith Jones'
+    assert r.name__1 == 'Fred Smith Jones'
+  end
+    
 end

@@ -1,7 +1,7 @@
 class FieldInstance < ActiveRecord::Base
   belongs_to :form_instance
 #  belongs_to :field
-  validates_uniqueness_of :field_id, :scope => "form_instance_id"
+  validates_uniqueness_of :field_id, :scope => [:form_instance_id,:idx]
   validates_presence_of :field_id,:form_instance_id
 
   States = %w(unanswered answered invalid explained)

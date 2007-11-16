@@ -10,14 +10,13 @@ class Record
   
   attr :form_instance
   attr :errors
-  attr :attributes
   attr_accessor :action_result
   ######################################################################################
   # creating a new Record happens either because we pass in a given FormInstance
   # or we create a raw new one here
 
   def initialize(the_instance = nil,attributes = nil)
-    @attributes = {}
+    reset_attributes
     the_instance = FormInstance.new if !the_instance
     @form_instance = the_instance
     self.attributes= attributes if attributes
@@ -26,16 +25,33 @@ class Record
   ######################################################################################
   # set the attributes from a hash that comes from the http PUT.
   def attributes= (attribs)
-    @attributes = {}
-
-    attribs.each do |id,value|
-      id = id.to_s
-      q = form.get_question(id)
-      raise "unknown question #{id}" if !q
-      @attributes[id] = Widget.fetch(q.appearance).convert_html_value(value)
+    reset_attributes
+    attribs.each do |attribute,value|
+      attribute = attribute.to_s
+      q = form.get_question(attribute)
+      raise "unknown question #{attribute}" if !q
+      set_attribute(attribute,Widget.fetch(q.appearance).convert_html_value(value))
     end if attribs
   end
   
+  def attributes(index=nil)
+    @attributes[index]
+  end
+  def reset_attributes
+    @attributes = {nil=>{}}
+  end
+  def attribute_exists(attribute,index=nil)
+    @attributes.has_key?(index) && @attributes[index].has_key?(attribute.to_s)
+  end
+  def get_attribute(attribute,index=nil)
+    i = @attributes[index]
+    i ? i[attribute.to_s] : nil
+  end
+  def set_attribute(attribute,value,index=nil)
+    i = @attributes[index]
+    @attributes[index] = i = {} if !i
+    i[attribute.to_s] = value
+  end
   ######################################################################################
   # some paramaters are just those of the form instance object
   def id
@@ -70,37 +86,53 @@ class Record
   # the field_value is either pulled from the attributes hash if it exists or from the database
   # TODO we need to make a system where field_instance values can be pre-loaded for a full presentation, otherwise
   # this causes one hit to the database per field per page.
-  def [](attribute)
+  def [](attribute,index=nil)
     field_name = attribute.to_s
-    return @attributes[field_name] if @attributes.has_key?(field_name)
+    return get_attribute(field_name,index) if attribute_exists(field_name,index)
     raise "field #{field_name} not in form " if !form.field_exists?(field_name)
-    if !@form_instance.new_record?  && field_instance = FieldInstance.find(:first, :conditions => ["form_instance_id = ? and field_id = ?",@form_instance.id,field_name])
+    if !@form_instance.new_record?      
+      field_instance = nil 
+      # The instance may already have been loaded in the instances from a Record.locate so check there first
+      field_instance = nil
+      @form_instance.field_instances.each do |fi|
+        if fi.field_id == field_name && fi.idx == index
+          field_instance = fi
+          break
+        end
+      end
+      field_instance ||= FieldInstance.find(:first, :conditions => ["form_instance_id = ? and field_id = ? and idx #{index ? '=' : 'is'} ?",@form_instance.id,field_name,index])
       #cache the value in the attributes hash
-      @attributes[field_name] = field_instance.answer
+      set_attribute(field_name,field_instance ? field_instance.answer : nil,index)
     else
       #TODO get the default from the definition if we aren't getting the value from the database
       nil
     end
   end
   
-  def method_missing(attribute,*args)
+  def []=(attribute,index=nil,value=nil)
+    set_attribute(attribute,value,index)
+  end
+  
+  def method_missing(method,*args)
     #is this an attribute setter? or questioner?
-    a = attribute.to_s
-    if a =~ /^(.*)([=?])$/ && form.field_exists?(attribute = $1)
-      case $2
+    a = method.to_s
+    a =~ /^(.*?)(__([0-9]+))*([=?])*$/
+    (attribute,index,action) = [$1,$3,$4]
+    if form.field_exists?(attribute)
+      case action
       when '?'
-        val = self[attribute]
+        val = self[attribute,index]
         return val && val != ''
       when '='
-        return @attributes[attribute] = args[0]
+        return set_attribute(attribute,args[0],index)
+      else
+        #otherwise assume an attribute getter
+        return self[attribute,index]
       end
-    else
-      #otherwise assume an attribute getter
-      return self[attribute] if form.field_exists?(attribute)
     end
     super
   end
-
+  
   ######################################################################################
   # return and or create ActiveRecord errors object
   def errors
@@ -178,7 +210,7 @@ class Record
     # by the transactionality handling I added up in save, but then we we should also add it to
     # to update_attributes.
     if meta_data && meta_data[:workflow_action] && meta_data[:workflow_action] != ''
-      form.verify(presentation,@form_instance,@attributes)
+      form.verify(presentation,@form_instance,attributes)
       meta_data[:record] = self
       self.action_result = form.do_workflow_action(meta_data[:workflow_action],@form_instance,meta_data)
       if self.action_result[:next_state]
@@ -190,17 +222,22 @@ class Record
       form.setup(presentation,@form_instance)
     end
 
-    field_instances = @form_instance.field_instances.find(:all, :conditions => ["field_id in (?) and form_instance_id = ?",@attributes.keys,id])
-		@attributes.each do |field_instance_id,value|
-			raise "field '#{field_instance_id}' not in form" if !form.field_exists?(field_instance_id)
-			f = field_instances.find {|field_instance| field_instance.attributes['field_id'] == field_instance_id}
-			if f != nil
-				f.answer = value				
-			else
-				f = FieldInstance.new({:answer => value, :field_id=>field_instance_id, :form_instance_id => id})
-				field_instances << f
-			end
-			f.state = 'answered'		
+    field_instances = @form_instance.field_instances.find(:all, :conditions => ["field_id in (?) and form_instance_id = ?",attributes.keys,id])
+    @attributes.each do |index,attribs|
+      logger.info("saving: "<< index.to_s << attribs.inspect)
+  	  attribs.each do |field_instance_id,value|
+  			raise "field '#{field_instance_id}' not in form" if !form.field_exists?(field_instance_id)
+  			f = field_instances.find {|fi| fi.field_id == field_instance_id && fi.idx == index}
+  			if f != nil
+          logger.info("saving into exisiting fi: "<< field_instance_id << " answer:" << value.to_s)
+  				f.answer = value
+  			else
+          logger.info("creating new fi: "<< field_instance_id << " answer:" << value.to_s)
+  				f = FieldInstance.new({:answer => value, :field_id=>field_instance_id, :form_instance_id => id, :idx => index})
+  				field_instances << f
+  			end
+  			f.state = 'answered'		
+  		end
 		end
 		    
     if errors.empty?
@@ -255,6 +292,14 @@ class Record
     conditions_params = []
     
     field_list = {} 
+    
+    if options.has_key?(:index)
+      idx = options[:index]
+      condition_strings << "(idx #{idx ? '=' : 'is'} ?)"
+      conditions_params << idx
+    else
+      condition_strings << "(idx is null)"      
+    end
     
     if options.has_key?(:forms)
       condition_strings << "(form_id in (?))"
@@ -365,12 +410,12 @@ class Record
   ######################################################################################
   # convienence class method to create a bunch of records from a single or a list of 
   # FormInstances
-  def Record.create(records)
-    if records.is_a?(Array)
+  def Record.create(form_instances)
+    if form_instances.is_a?(Array)
       result = []
-      records.collect{|r| result.push(Record.new(r))}
+      form_instances.each{|r| result.push(Record.new(r))}
     else
-      result = Record.new(records)
+      result = Record.new(form_instances)
     end
     result
   end

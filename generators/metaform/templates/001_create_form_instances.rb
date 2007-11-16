@@ -9,9 +9,13 @@ class CreateFormInstances < ActiveRecord::Migration
       t.column :workflow_state, :string
       t.column :workflow, :string
     end
+    add_index :form_instances, :workflow_state
+    add_index :form_instances, :form_id
   end
 
   def self.down
+    remove_index :form_instances, :workflow_state
+    remove_index :form_instances, :form_id
     drop_table :form_instances
   end
 end
