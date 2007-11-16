@@ -55,9 +55,9 @@ class Record
     end
   end
   
-#  def attributes(index=nil)
-#    @attributes[index]
-#  end
+  def attributes(index=nil)
+    @attributes[index]
+  end
   def reset_attributes
     @attributes = {nil=>{}}
   end
@@ -81,6 +81,10 @@ class Record
   
   def form
     form_instance.form
+  end
+
+  def workflow
+    form_instance.workflow
   end
   
   def workflow_state
