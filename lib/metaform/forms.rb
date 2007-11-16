@@ -593,8 +593,8 @@ YAML
     
     ###############################################
     # Tabs
-    def build_tabs(tabs_name,current,form_instance)
-      @@form_instance = form_instance
+    def build_tabs(tabs_name,current,record)
+      @@record = record
       @@body = []
       tabs = self.tabs[tabs_name]
       raise "tab group #{tabs_name} doesn't exist" if !tabs
@@ -607,7 +607,7 @@ YAML
     end
     
     def tab(presentation_name,pretty_name = nil)
-      url = Record.url(@@form_instance.id,presentation_name,@@tabs_name)
+      url = Record.url(@@record.id,presentation_name,@@tabs_name)
       name = pretty_name ? pretty_name : presentation_name
       body %Q|<li #{(@@current_tab == presentation_name) ? 'id="current"' : '' } class="tab_#{presentation_name}"> <a href="#" onClick="return submitAndRedirect('#{url}')" title="Click here to go to #{name}"><span>#{name}</span></a> </li>|
     end    
@@ -725,13 +725,13 @@ YAML
     
     #################################################################################
     # the function called by the client to actually render the the html of the form
-    def build(presentation_name,form_instance=nil,form = nil)
+    def build(presentation_name,record=nil,form = nil)
       @@form = form
       @@unique_ids = 0  
       @@body = []
       @@jscripts = []
       @@observer_jscripts =  {}
-      @@form_instance = form_instance
+      @@record = record
       @@phase = :build
       @@constraint_errors = nil
       @@meta = {}
@@ -757,15 +757,15 @@ YAML
       [@@body.join("\n"),foot_jscripts.join("\n")]
     end
     
-    def setup(presentation_name,form_instance)
-      @@form_instance = form_instance
+    def setup(presentation_name,record)
+      @@record = record
       @@phase = :setup
       p(presentation_name)
     end
 
-    def verify(presentation_name,form_instance,attributes)
+    def verify(presentation_name,record,attributes)
       @@phase = :verify
-      @@form_instance = form_instance
+      @@record = record
       @@attributes = attributes
       @@constraint_errors = nil
       p(presentation_name)
@@ -776,24 +776,24 @@ YAML
     # meta[:session] the session object
     # and anything put into it by a callback #meta_data_for_save that should
     # be definined in the application controller
-    def do_workflow_action(action_name,form_instance,meta)
+    def do_workflow_action(action_name,record,meta)
       @@action_result = {}
-      @@form_instance = form_instance      
-      workflow_name = form_instance.workflow
+      @@record = record      
+      workflow_name = record.workflow
       w = self.workflows[workflow_name]
       raise "unknown workflow #{workflow_name}" if !w
       a = w.actions[action_name]
       raise "unknown action #{action_name}" if !a
-      raise "action #{action_name} is not allowed when form is in state #{workflow_state}" if !a.legal_states.include?(:any) && !a.legal_states.include?(form_instance.workflow_state)
+      raise "action #{action_name} is not allowed when form is in state #{workflow_state}" if !a.legal_states.include?(:any) && !a.legal_states.include?(record.workflow_state)
       a.block.call(meta)
       @@action_result
     end
 
-    def submit(presentation_name,form_instance)
-      @@phase = :submit
-      @@form_instance = form_instance
-      p(presentation_name)
-    end
+#    def submit(presentation_name,record)
+#      @@phase = :submit
+#      @@record = record
+#      p(presentation_name)
+#    end
     
     def workflow_for_new_form(presentation_name)
       w = get_presentation_option(presentation_name,:create_with_workflow)
@@ -810,11 +810,11 @@ YAML
     # submitting functions
     # TODO, we took this out in favor of the workflow model, but I think it may need
     # to come back in to handle redirects, etc.
-    def submit_actions()
-      if @@phase == :submit 
-        yield
-      end
-    end
+#    def submit_actions()
+#      if @@phase == :submit 
+#        yield
+#      end
+#    end
     
     # for now this function assumes that either a build or a verify pass was called on the
     # presentation so that the errors are stored in @@constraint_errors.
@@ -831,18 +831,7 @@ YAML
     # the field_value is either pulled from the attributes hash if it exists or from the database
     #TODO this needs to be migrated over to get the value from Record.
     def field_value(field_name)
-      raise "field #{field_name} not in form " if !field_exists?(field_name)
-      field_instance = FieldInstance.find(:first, :conditions => ["form_instance_id = ? and field_id = ?",@@form_instance.id,field_name])
-      if @@attributes && @@attributes.has_key?(field_name)
-        @@attributes[field_name]
-      elsif @@form_instance && !@@form_instance.new_record?  && field_instance = FieldInstance.find(:first, :conditions => ["form_instance_id = ? and field_id = ?",@@form_instance.id,field_name])
-        #cache the value in the attributes hash
-        @@attributes ||= {}
-        @@attributes[field_name] = field_instance.answer
-      else
-        #TODO get the default from the definition if we aren't getting the value from the database
-        nil
-      end
+      @@record[field_name]
     end
         
     # TODO, remember why I wrote this.  Now I'm just using pure ruby ifs in the DNS.  This seems
@@ -863,14 +852,8 @@ YAML
       yield if result
     end
     
-    ##################################################################################
-    #TODO-LISA? figure out a better way to be doing this.  Right now the fact that these calls
-    # require @@form_instance to be set right (as a global) is a clear indication that this
-    # should actually be (in some form) an object that is instantiated.  Perhaps these
-    # calls should be over in Record, not in Form.
-    
     def workflow_state
-      @@form_instance.workflow_state
+      @@record.workflow_state
     end
         
     #################################################################################

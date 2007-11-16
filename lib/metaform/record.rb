@@ -140,14 +140,14 @@ class Record
   end
   
   def build_tabs(tabs,current)
-    form.build_tabs(tabs,current,@form_instance)
+    form.build_tabs(tabs,current,self)
   end
   
   def build_html(presentation = 0,current=nil)
     
     f = FormProxy.new(form.name.gsub(/ /,'_'))
     if form.presentation_exists?(presentation)
-      form.build(presentation,@form_instance,f)
+      form.build(presentation,self,f)
 #    p = form.find_presentation(presentation_id)
 #    if p
 #      p.build_html(f,self,current)
@@ -188,7 +188,7 @@ class Record
   # that are what actually are the "attributes."  The attributes parameter should be a 
   # hash where the keys are the FieldInstance ids and the values are the answers
   def update_attributes(attribs,presentation = 0,meta_data = nil)
-    form.setup(presentation,@form_instance)
+    form.setup(presentation,self)
     self.attributes = attribs
     _update_attributes(presentation,meta_data)
   end
@@ -210,16 +210,16 @@ class Record
     # by the transactionality handling I added up in save, but then we we should also add it to
     # to update_attributes.
     if meta_data && meta_data[:workflow_action] && meta_data[:workflow_action] != ''
-      form.verify(presentation,@form_instance,attributes)
+      form.verify(presentation,self,attributes)
       meta_data[:record] = self
-      self.action_result = form.do_workflow_action(meta_data[:workflow_action],@form_instance,meta_data)
+      self.action_result = form.do_workflow_action(meta_data[:workflow_action],self,meta_data)
       if self.action_result[:next_state]
         form_instance.update_attributes({:workflow_state => self.action_result[:next_state]})
       else
         return false
       end
     else
-      form.setup(presentation,@form_instance)
+      form.setup(presentation,self)
     end
 
     field_instances = @form_instance.field_instances.find(:all, :conditions => ["field_id in (?) and form_instance_id = ?",attributes.keys,id])
@@ -249,7 +249,7 @@ class Record
         end
       end
 
-      form.submit(presentation,@form_instance)
+#      form.submit(presentation,self)
 
       true
     else
@@ -402,7 +402,7 @@ class Record
     fi = FormInstance.new
     fi.form_id = the_form.to_s
     fi.workflow = the_form.workflow_for_new_form(presentation)
-    the_form.setup(presentation,fi)
+    the_form.setup(presentation,nil)
     @record = Record.new(fi,attribs)    
   end
   
