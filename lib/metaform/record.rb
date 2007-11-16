@@ -143,11 +143,11 @@ class Record
     form.build_tabs(tabs,current,self)
   end
   
-  def build_html(presentation = 0,current=nil)
+  def build_html(presentation = 0,current=nil,index=nil)
     
     f = FormProxy.new(form.name.gsub(/ /,'_'))
     if form.presentation_exists?(presentation)
-      form.build(presentation,self,f)
+      form.build(presentation,self,f,index)
 #    p = form.find_presentation(presentation_id)
 #    if p
 #      p.build_html(f,self,current)
@@ -267,8 +267,8 @@ class Record
     form_instance.logger
   end
   
-  def url(presentation,tab)
-    Record.url(id,presentation,tab)
+  def url(presentation,tab,index=nil)
+    Record.url(id,presentation,tab,index)
   end
     
 
@@ -370,10 +370,11 @@ class Record
     end
   end
   
-  def Record.url(record_id,presentation,tab)
+  def Record.url(record_id,presentation,tab=nil,index=nil)
     url = "/records/#{record_id}"
     url << "/#{presentation}" if presentation != ""
     url << "/#{tab}" if tab
+    url << "/#{index}" if index
     url
   end
   

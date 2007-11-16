@@ -78,8 +78,8 @@ class RecordsController < ApplicationController
   
   def setup_record_params
     @form = @record.form
-    @form.reset_attributes
     @tabs = params[:tabs]
+    @index = params[:index]
   end
   
   def setup_new_record

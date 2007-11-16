@@ -245,14 +245,7 @@ class Form
 
 #  @@phase = :setup
   @@contexts = []
-  @@attributes = nil
   @@action_result = nil
-
-  #TODO  BOGUS!!!!! this shouldn't exist and will cause concurrency problems
-  def self.reset_attributes
-    @@attributes = nil
-  end
-
 
   ################################################################################
   def self.inherited (klass)
@@ -725,8 +718,9 @@ YAML
     
     #################################################################################
     # the function called by the client to actually render the the html of the form
-    def build(presentation_name,record=nil,form = nil)
+    def build(presentation_name,record=nil,form = nil,index=nil)
       @@form = form
+      @@index = index
       @@unique_ids = 0  
       @@body = []
       @@jscripts = []
@@ -766,7 +760,6 @@ YAML
     def verify(presentation_name,record,attributes)
       @@phase = :verify
       @@record = record
-      @@attributes = attributes
       @@constraint_errors = nil
       p(presentation_name)
     end
@@ -831,7 +824,7 @@ YAML
     # the field_value is either pulled from the attributes hash if it exists or from the database
     #TODO this needs to be migrated over to get the value from Record.
     def field_value(field_name)
-      @@record[field_name]
+      @@record[field_name,@@index]
     end
         
     # TODO, remember why I wrote this.  Now I'm just using pure ruby ifs in the DNS.  This seems
