@@ -56,19 +56,23 @@ class Record
   end
   
   def attributes(index=nil)
+    index = index.to_i if index
     @attributes[index]
   end
   def reset_attributes
     @attributes = {nil=>{}}
   end
   def attribute_exists(attribute,index=nil)
+    index = index.to_i if index
     @attributes.has_key?(index) && @attributes[index].has_key?(attribute.to_s)
   end
   def get_attribute(attribute,index=nil)
+    index = index.to_i if index
     i = @attributes[index]
     i ? i[attribute.to_s] : nil
   end
   def set_attribute(attribute,value,index=nil)
+    index = index.to_i if index
     i = @attributes[index]
     @attributes[index] = i = {} if !i
     i[attribute.to_s] = value
@@ -144,7 +148,6 @@ class Record
     a =~ /^(.*?)(__([0-9]+))*([=?])*$/
     (attribute,index,action) = [$1,$3,$4]
     if form.field_exists?(attribute)
-      index = index.to_i if index
       case action
       when '?'
         val = self[attribute,index]
