@@ -4,7 +4,7 @@ class DateWidget < Widget
   def self.render_form_object(form,field_instance_id,value,options)
     require 'parsedate'
     if value && (d = ParseDate.parsedate(value))[0]
-      date = Time.local(*d)
+      date = Date.new(*d[0..2])
       <<-EOHTML
       <input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'month')}" id="#{build_html_multi_id(field_instance_id,'month')}" value="#{date.month}" /> /
       <input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'day')}" id="#{build_html_multi_id(field_instance_id,'day')}" value="#{date.day}" /> /
@@ -36,12 +36,11 @@ class DateWidget < Widget
   ################################################################################
   def self.convert_html_value(value)
     begin
-      date = Time.local(value['year'],value['month'],value['day'])      
-      date.strftime('%Y-%m-%d')
+      date = Date.new(value['year'].to_i,value['month'].to_i,value['day'].to_i)      
+      date.to_s
     rescue
       nil
     end
-    
   end
 
 end
