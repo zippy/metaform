@@ -252,20 +252,15 @@ class Record
     end
 
     field_list = @attributes.values.collect {|a| a.keys}.flatten.uniq
-    logger.info("XXXXXXattribute list: " << field_list.inspect)
     field_instances = @form_instance.field_instances.find(:all, :conditions => ["field_id in (?) and form_instance_id = ?",field_list,id])
-    logger.info("YYYYYY field_instances: " << field_instances.inspect)
     field_instances.each {|fi| logger.info("#{fi.answer} #{fi.idx.to_s} ZZZZZ" << fi.idx.class.to_s)}
     @attributes.each do |index,attribs|
-      logger.info("BBBBBBBB saving: "<< index.to_s << attribs.inspect << "index class #{index.class.to_s}")
   	  attribs.each do |field_instance_id,value|
   			raise "field '#{field_instance_id}' not in form" if !form.field_exists?(field_instance_id)
   			f = field_instances.find {|fi| fi.field_id == field_instance_id && fi.idx == index}
   			if f != nil
-          logger.info("saving into exisiting fi: "<< field_instance_id << " answer:" << value.to_s)
   				f.answer = value
   			else
-          logger.info("creating new fi: "<< field_instance_id << " answer:" << value.to_s)
   				f = FieldInstance.new({:answer => value, :field_id=>field_instance_id, :form_instance_id => id, :idx => index})
   				field_instances << f
   			end
