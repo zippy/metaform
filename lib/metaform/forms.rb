@@ -450,7 +450,18 @@ class Form
       appearance_type,appearance_parameters = parse_appearance(appearance)
       question(field_name,appearance_type,appearance_parameters)
       
-      return if !(@@phase == :build || @@phase == :verify)
+      if !(@@phase == :build || @@phase == :verify) 
+        #declare the followups to make sure they exist
+        #TODO this needs to be formalized so that we aren't doing so much weird duplication of setup here
+        # and there in the code.  I think the abstracted DSL code should handle the different phases
+        # better
+        followup_appearances.each do |app|
+          (followup_field_name,followup_field_appearance) = parse_followup_spec(app)
+          followup_appearance_type,followup_appearance_parameters = parse_appearance(followup_field_appearance)
+          question(followup_field_name,followup_appearance_type,followup_appearance_parameters)  
+        end if followup_appearances
+        return
+      end
       value = field_value(field_name)
       the_field = self.fields[field_name]
       constraints = the_field.constraints
@@ -490,16 +501,7 @@ class Form
         raise "no followups defined for #{field_name}" if !the_field.followups
         map = self.fields[field_name].followup_name_map
         followup_appearances.each do |app|
-          case 
-          when app.is_a?(String)
-            followup_field_name = app; followup_field_appearance = 'TextField'
-          when app.is_a?(Hash)
-            followup_field_name = app.keys[0]; followup_field_appearance =  app.values[0]
-          when app.is_a?(Array)
-            followup_field_name = app[0]; followup_field_appearance =  app[1]
-          else
-            raise "followp spec must be String, Hash or Array, got #{app.class} #{app.inspect}"
-          end
+          (followup_field_name,followup_field_appearance) = parse_followup_spec(app)
           followup_appearance_type,followup_appearance_parameters = parse_appearance(followup_field_appearance)
           question(followup_field_name,followup_appearance_type,followup_appearance_parameters)  #declare the question to make sure it exists   
           value = map[followup_field_name]
@@ -863,7 +865,7 @@ YAML
     # to distinguish between questions that render the same field differently
     def get_question(field_name)
       q = self.questions[field_name.to_s]
-      raise "question: #{field_name} has not been defined" if !q
+      raise "question: #{field_name} has not been defined" << self.questions.inspect  if !q
       q
     end
     
@@ -889,6 +891,20 @@ YAML
       else
         a
       end
+    end
+    
+    def parse_followup_spec(app)
+      case 
+      when app.is_a?(String)
+        followup_field_name = app; followup_field_appearance = 'TextField'
+      when app.is_a?(Hash)
+        followup_field_name = app.keys[0]; followup_field_appearance =  app.values[0]
+      when app.is_a?(Array)
+        followup_field_name = app[0]; followup_field_appearance =  app[1]
+      else
+        raise "followp spec must be String, Hash or Array, got #{app.class} #{app.inspect}"
+      end
+      [followup_field_name,followup_field_appearance]
     end
     
     ###########################################################
