@@ -130,12 +130,20 @@ class Record
         end
       end
       field_instance ||= FieldInstance.find(:first, :conditions => ["form_instance_id = ? and field_id = ? and idx #{index ? '=' : 'is'} ?",@form_instance.id,field_name,index])
-      #cache the value in the attributes hash
-      set_attribute(field_name,field_instance ? field_instance.answer : nil,index)
-    else
-      #TODO get the default from the definition if we aren't getting the value from the database
-      nil
     end
+
+    # use the database value or get the default value
+    if field_instance
+      value = field_instance.answer
+    else
+      if index && form.fields[field_name].default == :from_null_index
+        value = self[attribute,nil]
+      else
+        value = form.fields[field_name].default
+      end
+    end
+    #cache the value in the attributes hash
+    set_attribute(field_name,value,index)
   end
   
   def []=(attribute,index=nil,value=nil)

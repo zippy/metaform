@@ -294,7 +294,7 @@ class Form
     
     # define a field with optional constraint
     # constraint should be a hash of constrainttype, constraintvalue pairs, or a YAML encoded hash.
-    def f(field_name,label = "", field_type = "string",constraints=nil)
+    def f(field_name,label = "", field_type = "string",constraints=nil,options = {})
       field_name = field_name.to_s
  #TODO handle user defined types:
 # boolean_TxCCTf
@@ -302,7 +302,7 @@ class Form
 # boolean_TxCCTpTf     
 #      raise "unknown field type #{field_type}" if !FieldTypes.include?(field_type)
       
-      field = Struct.new(:name, :label, :type, :constraints,:followups,:followup_name_map)
+      field = Struct.new(:name, :label, :type, :constraints,:followups,:followup_name_map,:default)
       c = @@constraints
       c ||= {}
       if constraints
@@ -313,14 +313,17 @@ class Form
       end
 #TODO reinstate this line once we fix the dups created in V1Form
 #      raise "#{field_name} allready defined" if self.fields.has_key?(field_name)
-      self.fields[field_name] = field[field_name,label,field_type,c,nil,nil]
+      self.fields[field_name] = field[field_name,label,field_type,c,nil,nil,options[:default]]
     end
     
     #################################################################################
     #TODO-LISA test that fwf works with nested fwf fields.
     # define a field with followup fields
-    def fwf(field_name,label = "", field_type = "string",constraints=nil,followups = {})
-      the_field = f field_name,label,field_type,constraints
+    def fwf(field_name,label = "", field_type = "string",constraints=nil,options = {})
+      followups = options[:followups]
+      raise "followups missing!" if !followups
+      options.delete(:followups)
+      the_field = f field_name,label,field_type,constraints,options
       the_field.followups = followups
       map = {}
       followups.each do |field_answer,followup_fields|
