@@ -34,8 +34,12 @@ class RecordsController < ApplicationController
   # POST /records.xml
   def create
     setup_new_record
+    before_create_record(@record) if respond_to?(:before_create_record)
+    before_save_record(@record) if respond_to?(:before_save_record)
     respond_to do |format|
       if @record.save(@presentation,get_meta_data)
+        after_create_record(@record) if respond_to?(:after_create_record)
+        after_save_record(@record) if respond_to?(:after_save_record)
 #        flash[:notice] = 'Record was successfully created.'
         redirect_url = @record.action_result[:redirect_url]
         format.html { redirect_to(redirect_url) }
@@ -51,12 +55,16 @@ class RecordsController < ApplicationController
   # PUT /records/1.xml
   def update
     setup_record
+    before_update_record(@record) if respond_to?(:before_update_record)
+    before_save_record(@record) if respond_to?(:before_save_record)
     respond_to do |format|
       if !params[:record] && !params[:meta]
         redirect_url = params[:_redirect_url] if params[:_redirect_url]
         format.html { redirect_url ? redirect_to(redirect_url) : render(:action => "show") }
         format.xml  { head :ok }        
       elsif @record.update_attributes(params[:record],@presentation,get_meta_data,:convert_from_html=>true,:index=>@index)
+        after_update_record(@record) if respond_to?(:after_update_record)
+        after_save_record(@record) if respond_to?(:after_save_record)
         flash[:notice] = 'Record was successfully updated.'
         redirect_url = @record.action_result[:redirect_url] if @record.action_result
         redirect_url = params[:_redirect_url] if !redirect_url  && params[:_redirect_url]
