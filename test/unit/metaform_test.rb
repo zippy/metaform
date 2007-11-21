@@ -113,4 +113,25 @@ class MetaformTest < Test::Unit::TestCase
     assert r.name__1 == "Joe Smith"
   end
   
+  def test_setting_defaults
+    r = Record.make('SampleForm','new_entry',{:name =>'Fred Smith',:fruit => 'banana'})
+    assert r.occupation == nil
+    assert r.occupation__1 == nil
+    
+    assert r.field_with_default == 'fish'
+    assert r.field_with_default__1 == 'fish'
+
+    assert r.arrayable_field_no_default == nil
+    assert r.arrayable_field_no_default__1 == nil
+    r.arrayable_field_no_default = 'dog'
+    assert r.arrayable_field_no_default__2 == 'dog'
+    assert r.arrayable_field_no_default__1 == nil  #should still be nil because it was already set
+
+    assert r.arrayable_field_with_default == 'cow'
+    assert r.arrayable_field_with_default__1 == 'cow'
+    r.arrayable_field_with_default = 'cat'
+    assert r.arrayable_field_with_default__2 == 'cat'
+    assert r.arrayable_field_with_default__1 == 'cow' #should still be 'cow' because it was already set
+  end
+  
 end

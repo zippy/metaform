@@ -136,7 +136,7 @@ class Record
     if field_instance
       value = field_instance.answer
     else
-      if index && form.fields[field_name].default == :from_null_index
+      if index && form.fields[field_name].arrayable_default_from_null_index
         value = self[attribute,nil]
       else
         value = form.fields[field_name].default
