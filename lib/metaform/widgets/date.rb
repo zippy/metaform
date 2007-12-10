@@ -34,7 +34,7 @@ class DateWidget < Widget
   end
 
   ################################################################################
-  def self.convert_html_value(value)
+  def self.convert_html_value(value,params={})
     begin
       date = Date.new(value['year'].to_i,value['month'].to_i,value['day'].to_i)      
       date.to_s

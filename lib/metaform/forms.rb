@@ -11,11 +11,18 @@
 # which are run-time helper function, which are the user hooks (build, verify, setup), etc
 
 require 'yaml'
+require 'metaform/form_helper'
 
 module Utilites
   ###########################################################
   # used for parameters that can optionally be an array.
   # converts non-array params to a single element array
+  HTML_ESCAPE = { '&' => '&amp;', '"' => '&quot;', '>' => '&gt;', '<' => '&lt;' }
+
+  def html_escape(s)
+    s.to_s.gsub(/[&\"><]/) { |special| HTML_ESCAPE[special] }
+  end
+
   def arrayify(param)
     return [] if param == nil
     param = [param]  if param.class != Array
@@ -49,6 +56,8 @@ module Utilites
     end
     result
   end
+  
+
 end
 
 class Reports
@@ -208,6 +217,7 @@ class Form
   
   class << self
     include Utilites
+    include FormHelper
     
     #TODO boy does this look like it could be refactored doesn't it!!!  It should all be generalized
     # into the meta-langage/abstraction for generating DSLs

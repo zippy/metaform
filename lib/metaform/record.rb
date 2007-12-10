@@ -46,9 +46,9 @@ class Record
         # setup and we check to make sure that the questions exist in this presentation
         # as a santity check.  TODO.  This check should be moved elsewhere!!
         if convert_from_html
-          q = form.get_question(attribute)
+        	q = form.get_question(attribute)
           raise "unknown question #{attribute}" if !q
-          value = Widget.fetch(q.appearance).convert_html_value(value)
+          value = Widget.fetch(q.appearance).convert_html_value(value,q.params)
         end
         set_attribute(attribute,value,index)
       end if a

@@ -39,7 +39,7 @@ class RadioButtonsWidget < Widget
   end
   
   ################################################################################
-  def self.convert_html_value(value)
+  def self.convert_html_value(value,params={})
     value = nil if value == ''
     value
   end

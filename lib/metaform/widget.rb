@@ -55,7 +55,7 @@ class Widget
 
   ################################################################################
   # convert the value produced by rails submit to an sql saveable value
-  def self.convert_html_value(value)
+  def self.convert_html_value(value,params={})
     value
   end
   

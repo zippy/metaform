@@ -85,7 +85,7 @@ class CheckBoxGroupFollowupWidget < Widget
   
   
   ################################################################################
-  def self.convert_html_value(value)
+  def self.convert_html_value(value,params={})
     value.delete('__none__')
     return nil if value.size == 0
     result = {}

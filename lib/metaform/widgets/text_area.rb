@@ -9,6 +9,7 @@ class TextAreaWidget < Widget
     else
       opts = {}
     end
+    #TODO This generates HTML with id=name, so the id follows the wrong syntax.
     form.text_area_tag(build_html_name(field_instance_id),value,opts)
   end
 end

@@ -32,7 +32,7 @@ class TimeIntervalWidget < Widget
   end
 
   ################################################################################
-  def self.convert_html_value(value)
+  def self.convert_html_value(value,params={})
     begin
       interval = (value['hours'].to_i * 60 + value['minutes'].to_i).to_s
     rescue
