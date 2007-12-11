@@ -20,7 +20,7 @@ class Widget
     if constraints && constraints[constraint_name]
       case 
       when constraint_name == 'enumeration' || constraint_name == 'set'
-        enum = constraints[constraint_name].collect{|h| h.is_a?(Hash) ? h.to_a[0].reverse : [h.to_s.humanize,h.to_s] }
+        enum = constraints[constraint_name].collect{|h| h.is_a?(Hash) ? h.to_a[0].reverse : ( h.is_a?(Array) ? h : [h.to_s.humanize,h.to_s]) }
       when constraint_name =~ /(set|enumeration)_lookup/
         spec = constraints[constraint_name]
         #spec[:model] can be a string or a class
