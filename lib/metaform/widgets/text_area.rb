@@ -2,7 +2,7 @@
 class TextAreaWidget < Widget
   ################################################################################
   def self.render_form_object(form,field_instance_id,value,options)
-    params = options[:params]
+   params = options[:params]
     if params
       (rows,cols) = params.split(/,/)
       opts = {:cols => cols, :rows => rows}
