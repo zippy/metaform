@@ -6,13 +6,13 @@ class TimeIntervalWidget < Widget
       hours = value.to_i / 60
       minutes = value.to_i % 60
       <<-EOHTML
-      <input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'hours')}" id="#{build_html_multi_id(field_instance_id,'hours')}" value="#{hours}" /> hours
-      <input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'minutes')}" id="#{build_html_multi_id(field_instance_id,'minutes')}" value="#{minutes}" /> minutes
+      <input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'hours')}" id="#{build_html_multi_id(field_instance_id,'hours')}" value="#{hours}" /> hours
+      <input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'minutes')}" id="#{build_html_multi_id(field_instance_id,'minutes')}" value="#{minutes}" /> minutes
       EOHTML
     else
       <<-EOHTML
-      <input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'hours')}" id="#{build_html_multi_id(field_instance_id,'hours')}"/> hours
-      <input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'minutes')}" id="#{build_html_multi_id(field_instance_id,'minutes')}"  /> minutes
+      <input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'hours')}" id="#{build_html_multi_id(field_instance_id,'hours')}"/> hours
+      <input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'minutes')}" id="#{build_html_multi_id(field_instance_id,'minutes')}"  /> minutes
       EOHTML
     end
   end

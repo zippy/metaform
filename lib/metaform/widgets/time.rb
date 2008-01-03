@@ -14,16 +14,16 @@ class TimeWidget < Widget
       	meridian =  "pm"
 	  end
       <<-EOHTML
-      <input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'hours &')}" id="#{build_html_multi_id(field_instance_id,'hours')}" value="#{hours}" />:
-      <input type="text" class="narrow_left_margin" size=2 name="#{build_html_multi_name(field_instance_id,'minutes')}" id="#{build_html_multi_id(field_instance_id,'minutes')}" value="#{date.min}" />
+      <input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'hours &')}" id="#{build_html_multi_id(field_instance_id,'hours')}" value="#{hours}" />:
+      <input type="text" class="narrow_left_margin textfield_2" size=2 name="#{build_html_multi_name(field_instance_id,'minutes')}" id="#{build_html_multi_id(field_instance_id,'minutes')}" value="#{date.min}" />
       <select name="#{build_html_multi_name(field_instance_id,'am_pm')}" id="#{build_html_multi_id(field_instance_id,'am_pm')}">
       	#{form.options_for_select(meridian_options, meridian)}
 	  </select>
       EOHTML
     else
       <<-EOHTML
-      <input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'hours &')}" id="#{build_html_multi_id(field_instance_id,'hours')}"/>:
-      <input type="text" class="narrow_left_margin" size=2 name="#{build_html_multi_name(field_instance_id,'minutes')}" id="#{build_html_multi_id(field_instance_id,'minutes')}"  />
+      <input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'hours &')}" id="#{build_html_multi_id(field_instance_id,'hours')}"/>:
+      <input type="text" class="narrow_left_margin textfield_2" size=2 name="#{build_html_multi_name(field_instance_id,'minutes')}" id="#{build_html_multi_id(field_instance_id,'minutes')}"  />
       <select name="#{build_html_multi_name(field_instance_id,'am_pm')}" id="#{build_html_multi_id(field_instance_id,'am_pm')}">
 	  	   #{form.options_for_select(meridian_options, "am")}
 	  </select>

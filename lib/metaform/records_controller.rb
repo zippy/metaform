@@ -14,7 +14,7 @@ class RecordsController < ApplicationController
   # GET /records/1.xml
   def show
     setup_record
-    
+    session[:current_participant] = [Record.find(params[:id]).mom_name,'/records/' << Record.find(params[:id]).id.to_s << '?template=forms_all']
     respond_to do |format|
       if params[:template]
         format.html { render :template => 'records/'<<params[:template] }

@@ -25,16 +25,16 @@ class Weight < Widget
 		pounds = total_ounces / 16
 		ounces = total_ounces % 16      	
 		<<-EOHTML
-		<input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'pounds_box')}" id="#{build_html_multi_id(field_instance_id,'pounds_box')}" value="#{pounds}" onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(true)" /> lb
-		<input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'ounces_box')}" id="#{build_html_multi_id(field_instance_id,'ounces_box')}" value="#{ounces}" onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(true)" /> oz or
-		<input type="text" size=4 name="#{build_html_multi_name(field_instance_id,'grams_box')}" id="#{build_html_multi_id(field_instance_id,'grams_box')}" value="#{grams}" onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(false)" /> g
+		<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'pounds_box')}" id="#{build_html_multi_id(field_instance_id,'pounds_box')}" value="#{pounds}" onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(true)" /> lb
+		<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'ounces_box')}" id="#{build_html_multi_id(field_instance_id,'ounces_box')}" value="#{ounces}" onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(true)" /> oz or
+		<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'grams_box')}" id="#{build_html_multi_id(field_instance_id,'grams_box')}" value="#{grams}" onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(false)" /> g
 		#{form.javascript_tag(js_update_weight)}
 		EOHTML
 	  else
 		<<-EOHTML
-		<input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'pounds_box')}" id="#{build_html_multi_id(field_instance_id,'pounds_box')}" onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(true)" /> lb
-		<input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'ounces_box')}" id="#{build_html_multi_id(field_instance_id,'ounces_box')}"  onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(true)" /> oz
-		<input type="text" size=4 name="#{build_html_multi_name(field_instance_id,'grams_box')}" id="#{build_html_multi_id(field_instance_id,'grams_box')}"  onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(false)" /> g
+		<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'pounds_box')}" id="#{build_html_multi_id(field_instance_id,'pounds_box')}" onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(true)" /> lb
+		<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'ounces_box')}" id="#{build_html_multi_id(field_instance_id,'ounces_box')}"  onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(true)" /> oz
+		<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'grams_box')}" id="#{build_html_multi_id(field_instance_id,'grams_box')}"  onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(false)" /> g
 		#{form.javascript_tag(js_update_weight)}
 		EOHTML
 	  end
