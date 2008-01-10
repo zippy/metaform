@@ -22,10 +22,31 @@
 
 /* Widget Classes */
 
-.checkbox_group {
+.checkbox_group { 
 	width: auto;
+}
+td.checkbox_group {
+	padding: 5px;
 }
 
 .radio_buttons {
 	width: auto;
+/*	clear: both;  Not in Mana */
 }
+td.radio_buttons {
+	padding: 5px;
+}
+
+.narrow_left_margin {
+	margin-left:-5px;
+}
+.textfield_1 {
+	width:.7em;
+}
+.textfield_2 {
+	width:1.3em;
+}
+.textfield_4 {
+	width:2.6em;
+}
+
