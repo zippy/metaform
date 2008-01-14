@@ -23,7 +23,7 @@ class OptionalNoteWidget < Widget
 		  	label='Hide Note';
 		  } else {
 		  	if( ($('#{div_id}').value)=='') {
-		  		label='Add Note';
+		  		label='Optional Note';
 		  	} else {
 		  		label='Show Note';
 		  	}
