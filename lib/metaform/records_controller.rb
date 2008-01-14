@@ -14,7 +14,6 @@ class RecordsController < ApplicationController
   # GET /records/1.xml
   def show
     setup_record
-    before_show_record(@record) if respond_to?(:before_show_record)
     respond_to do |format|
       if params[:template]
         format.html { render :template => 'records/'<<params[:template] }
