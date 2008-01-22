@@ -478,12 +478,15 @@ class Form
       value = field_value(field_name)
       the_field = self.fields[field_name]
       constraints = the_field.constraints
-      constraint_errors = Constraints.verify(constraints, value, self)
-      if !constraint_errors.empty?
-        @@constraint_errors ||= {}
-        @@constraint_errors[field_name] = constraint_errors
+      #LISA if the workflow state ends in _v or if @@phase = :verify then do line 482 - 486
+      if /_v$/ =~ workflow_state or @@phase == :verify
+        constraint_errors = Constraints.verify(constraints, value, self)
+        if !constraint_errors.empty?
+          @@constraint_errors ||= {}
+          @@constraint_errors[field_name] = constraint_errors
+        end
+        return if @@phase == :verify
       end
-      return if @@phase == :verify
       
       widget = Widget.fetch(appearance_type)
       if options[:erb]
@@ -495,9 +498,12 @@ class Form
       #TODO, this produces an ugly list of errors right now.  Control over this should be
       # made much higher, i.e. some errors shouldn't show up depending on which other errors
       # have been detected (i.e. if required, then don't bother to show an enum error)
-      if !constraint_errors.empty?
-        errs = constraint_errors.join("; ")
-        field_html  << %Q|<span class="errors">#{errs}</span>|
+      #Here, workflow_state is the state this particular q is in for his record.
+      if /_v$/ =~ workflow_state
+        if !constraint_errors.empty?
+          errs = constraint_errors.join("; ")
+          field_html  << %Q|<span class="errors">#{errs}</span>|
+        end
       end
       css_class ||= 'question'
       css_class = %Q| class="#{css_class}"|
@@ -839,7 +845,7 @@ YAML
     # the field_value is either pulled from the attributes hash if it exists or from the database
     #TODO this needs to be migrated over to get the value from Record.
     def field_value(field_name)
-      @@record[field_name,@@index]
+       @@record[field_name,@@index]
     end
         
     # TODO, remember why I wrote this.  Now I'm just using pure ruby ifs in the DNS.  This seems

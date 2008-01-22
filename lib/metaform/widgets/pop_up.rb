@@ -2,9 +2,9 @@
 class PopUpWidget < Widget
   ################################################################################
   def self.render_form_object(form,field_instance_id,value,options)
-  puts "line 1 popupwidget"
+  #puts "line 1 popupwidget"
     e = enumeration(options[:constraints])
-    puts "line 2 popupwidget"
+    #puts "line 2 popupwidget"
     raise "enumeration not specified for #{field_instance_id}" if !e
     if value
       <<-EOHTML
