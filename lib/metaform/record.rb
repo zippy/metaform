@@ -261,7 +261,7 @@ class Record
 
     field_list = @attributes.values.collect {|a| a.keys}.flatten.uniq
     field_instances = @form_instance.field_instances.find(:all, :conditions => ["field_id in (?) and form_instance_id = ?",field_list,id])
-    field_instances.each {|fi| logger.info("#{fi.answer} #{fi.idx.to_s} ZZZZZ" << fi.idx.class.to_s)}
+#    field_instances.each {|fi| logger.info("#{fi.answer} #{fi.idx.to_s} ZZZZZ" << fi.idx.class.to_s)}
     @attributes.each do |index,attribs|
   	  attribs.each do |field_instance_id,value|
   			raise "field '#{field_instance_id}' not in form" if !form.field_exists?(field_instance_id)
