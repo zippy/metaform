@@ -61,6 +61,56 @@ module Utilites
 end
 
 class Reports
+
+  # we store the field answers in an answer class that can handle the indexes but also 
+  # has accessors for the non-indexted case
+  class Answer
+    def initialize(val,index)
+      self[index] = val
+    end
+
+    def value
+      @value
+    end
+
+    def value=(val,index=nil)
+      self[index] = val
+    end
+    
+    def [](index)
+      if index.nil?
+        @value.is_a?(Array) ? @value[0] : @value
+      else
+        @value.is_a?(Array) ? @value[index] : ((index == 0) ? @value : nil)
+      end
+    end
+
+    def []=(index,val)
+      if @value.is_a?(Array)
+        @value[index ? index : 0] = val
+      else
+        if index  #convert to array if necessary
+          @value = [@value]
+          @value[index] = val
+        else
+          @value = val
+        end
+      end
+    end
+    
+    def size
+      if @value.is_a?(Array)
+        @value.size
+      else
+        @value ? 1 : 0
+      end
+    end
+    
+    def exists?
+      @value.size > 0
+    end
+  end
+  
   class << self
     include Utilites
     
@@ -118,7 +168,13 @@ class Reports
       # and the structure of having the field instances in their own tables.
       form_instances.each do |i|
         f = {}
-        i.field_instances.each {|fld| f[fld.field_id]=fld.answer}
+        i.field_instances.each do |fld|
+          if f.has_key?(fld.field_id)
+            f[fld.field_id][fld.idx] = fld.answer
+          else
+            f[fld.field_id]= Answer.new(fld.answer,fld.idx)
+          end
+        end
         filtered = false
         if filters.size > 0
           eval_field(filters.collect{|x| "(#{x})"}.join('&&')) {|expr| filtered = !eval(expr)}
@@ -144,7 +200,10 @@ class Reports
  
     def eval_field(expression)
       begin
-        expr = expression.gsub(/:([a-zA-Z0-9_-]+)/,'f["\1"]')
+        expr = expression.gsub(/:([a-zA-Z0-9_-]+)/,'f["\1"].value ')
+        expr = expression.gsub(/:(f\["[a-zA-Z0-9_-]+"\])\.value\.size/,'\1.size')
+        expr = expression.gsub(/:(f\["[a-zA-Z0-9_-]+"\])\.value\.exists\?/,'\1.exists?')
+        expr = expression.gsub(/:(f\["[a-zA-Z0-9_-]+"\])\.value\[/,'\1[')
         yield expr
       rescue Exception => e
         raise "Eval error '#{e.to_s}' while evaluating: #{expr}"
