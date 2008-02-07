@@ -170,15 +170,25 @@ class Reports
         f = {}
         i.field_instances.each do |fld|
           if f.has_key?(fld.field_id)
-            f[fld.field_id][fld.idx] = fld.answer
+            a = f[fld.field_id]
+            a[fld.idx] = fld.answer
           else
             f[fld.field_id]= Answer.new(fld.answer,fld.idx)
           end
         end
         filtered = false
+        field_list.each {|field_id| f[field_id] = Answer.new(nil,nil) if !f.has_key?(field_id)}
         if filters.size > 0
-          eval_field(filters.collect{|x| "(#{x})"}.join('&&')) {|expr| filtered = !eval(expr)}
+          eval_field(filters.collect{|x| "(#{x})"}.join('&&')) {|expr| 
+            puts "expr=#{expr}"
+            puts "f=#{f.inspect}"
+            filtered = !eval(expr)
+            
+            }
         end
+        # puts "filtered=#{filtered}"
+        # puts "i.id=#{i.id}"
+        # puts "forms=#{forms.inspect}"
         forms[i.id]=f if !filtered
       end
       total = forms.size
@@ -197,13 +207,19 @@ class Reports
       results[:total] = total
       r.block.call(results,forms)
     end
- 
     def eval_field(expression)
       begin
+puts "---------"
+puts "eval_Field:  expression=#{expression}"        
         expr = expression.gsub(/:([a-zA-Z0-9_-]+)/,'f["\1"].value ')
-        expr = expression.gsub(/:(f\["[a-zA-Z0-9_-]+"\])\.value\.size/,'\1.size')
-        expr = expression.gsub(/:(f\["[a-zA-Z0-9_-]+"\])\.value\.exists\?/,'\1.exists?')
-        expr = expression.gsub(/:(f\["[a-zA-Z0-9_-]+"\])\.value\[/,'\1[')
+        puts "eval_field:  expr=#{expr}"
+        expr = expr.gsub(/:(f\["[a-zA-Z0-9_-]+"\])\.value\.size/,'\1.size')
+        puts "eval_field:  expr=#{expr}"
+        expr = expr.gsub(/:(f\["[a-zA-Z0-9_-]+"\])\.value\.exists\?/,'\1.exists?')
+        puts "eval_field:  expr=#{expr}"
+        expr = expr.gsub(/:(f\["[a-zA-Z0-9_-]+"\])\.value\[/,'\1[')
+puts "eval_field:  expr=#{expr}"
+puts "---------"
         yield expr
       rescue Exception => e
         raise "Eval error '#{e.to_s}' while evaluating: #{expr}"
@@ -680,6 +696,10 @@ YAML
     end
     
     def tab(presentation_name,pretty_name = nil)
+      puts "presentation_name=#{presentation_name}"
+      puts "@@record.id=#{@@record.id}"
+      puts "@@tabs_name=#{@@tabs_name}"
+      puts "@@index=#{@@index}"
       url = Record.url(@@record.id,presentation_name,@@tabs_name,@@index)
       name = pretty_name ? pretty_name : presentation_name
       body %Q|<li #{(@@current_tab == presentation_name) ? 'id="current"' : '' } class="tab_#{presentation_name}"> <a href="#" onClick="return submitAndRedirect('#{url}')" title="Click here to go to #{name}"><span>#{name}</span></a> </li>|
