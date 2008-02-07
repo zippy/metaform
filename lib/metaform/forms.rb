@@ -177,7 +177,7 @@ class Reports
           end
         end
         filtered = false
-        field_list.each {|field_id| f[field_id] = Answer.new(nil,nil) if !f.has_key?(field_id)}
+        field_list.keys.each {|field_id| f[field_id] = Answer.new(nil,nil) if !f.has_key?(field_id)}
         if filters.size > 0
           eval_field(filters.collect{|x| "(#{x})"}.join('&&')) {|expr| 
             puts "expr=#{expr}"
