@@ -107,7 +107,7 @@ class Reports
     end
     
     def exists?
-      @value.size > 0
+      self.size > 0
     end
   end
   
