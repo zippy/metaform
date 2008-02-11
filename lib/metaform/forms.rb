@@ -180,15 +180,10 @@ class Reports
         field_list.keys.each {|field_id| f[field_id] = Answer.new(nil,nil) if !f.has_key?(field_id)}
         if filters.size > 0
           eval_field(filters.collect{|x| "(#{x})"}.join('&&')) {|expr| 
-            puts "expr=#{expr}"
-            puts "f=#{f.inspect}"
-            filtered = !eval(expr)
-            
+            filtered = !eval(expr) 
+                 
             }
         end
-        # puts "filtered=#{filtered}"
-        # puts "i.id=#{i.id}"
-        # puts "forms=#{forms.inspect}"
         forms[i.id]=f if !filtered
       end
       total = forms.size
@@ -209,17 +204,6 @@ class Reports
     end
     def eval_field(expression)
       begin
-puts "---------"
-puts "eval_Field:  expression=#{expression}"        
-        expr = expression.gsub(/:([a-zA-Z0-9_-]+)/,'f["\1"].value ')
-        puts "eval_field:  expr=#{expr}"
-        expr = expr.gsub(/:(f\["[a-zA-Z0-9_-]+"\])\.value\.size/,'\1.size')
-        puts "eval_field:  expr=#{expr}"
-        expr = expr.gsub(/:(f\["[a-zA-Z0-9_-]+"\])\.value\.exists\?/,'\1.exists?')
-        puts "eval_field:  expr=#{expr}"
-        expr = expr.gsub(/:(f\["[a-zA-Z0-9_-]+"\])\.value\[/,'\1[')
-puts "eval_field:  expr=#{expr}"
-puts "---------"
         yield expr
       rescue Exception => e
         raise "Eval error '#{e.to_s}' while evaluating: #{expr}"
@@ -433,7 +417,7 @@ class Form
       legal_viewing_states = [legal_viewing_states]  if legal_viewing_states != :any && legal_viewing_states.class != Array
       self.presentations[presentation_name] = pres[block,options,false]
     end
-    
+        
     #################################################################################
     def question(field_name,appearance_type,appearance_parameters=nil)
       field_name = field_name.to_s
@@ -679,7 +663,7 @@ YAML
       pres.block.call
       body "</div>"
     end
-    
+
     ###############################################
     # Tabs
     def build_tabs(tabs_name,current,record)
@@ -695,12 +679,9 @@ YAML
       @@body.join("\n")
     end
     
-    def tab(presentation_name,pretty_name = nil)
-      puts "presentation_name=#{presentation_name}"
-      puts "@@record.id=#{@@record.id}"
-      puts "@@tabs_name=#{@@tabs_name}"
-      puts "@@index=#{@@index}"
-      url = Record.url(@@record.id,presentation_name,@@tabs_name,@@index)
+    def tab(presentation_name,pretty_name = nil,index = -1)
+      index = index == -1 ? @@index : index
+      url = Record.url(@@record.id,presentation_name,@@tabs_name,index)
       name = pretty_name ? pretty_name : presentation_name
       body %Q|<li #{(@@current_tab == presentation_name) ? 'id="current"' : '' } class="tab_#{presentation_name}"> <a href="#" onClick="return submitAndRedirect('#{url}')" title="Click here to go to #{name}"><span>#{name}</span></a> </li>|
     end    
@@ -923,9 +904,10 @@ YAML
     
     # the field_value is either pulled from the attributes hash if it exists or from the database
     #TODO this needs to be migrated over to get the value from Record.
-    def field_value(field_name)
-       @@record[field_name,@@index]
-    end
+    def field_value(field_name,index = -1)
+      index = index == -1 ? @@index : index
+       @@record[field_name,index]
+    end   
         
     # TODO, remember why I wrote this.  Now I'm just using pure ruby ifs in the DNS.  This seems
     # really cumbersome.

@@ -5,6 +5,8 @@
 
 <%= error_messages_for :record %>
 <% if @tabs%>
+	<% puts "records_show: @tabs=#{@tabs}" %>
+	<% puts "records_show: @presentation=#{@presentation}" %>
 <%= @record.build_tabs(@tabs,@presentation)%>
 <p>
 <% end %>

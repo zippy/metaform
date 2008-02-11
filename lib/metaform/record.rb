@@ -181,7 +181,6 @@ class Record
   end
   
   def build_html(presentation = 0,current=nil,index=nil)
-    
     f = FormProxy.new(form.name.gsub(/ /,'_'))
     if form.presentation_exists?(presentation)
       form.build(presentation,self,f,index)
