@@ -8,12 +8,7 @@ class CheckBoxWidget < Widget
     result << "\n"
     result << %Q|<input name="#{build_html_multi_name(field_instance_id,'__none__')}" id="#{build_html_multi_id(field_instance_id,'__none__')}" type="hidden"}>|
     result
-  end
- 
-  ################################################################################
-   def self.render_label (label,field_instance_id,form_object)
-     %Q|#{form_object}#{label}|
-   end
+  end 
    
    ################################################################################
   def self.javascript_get_value_function (field_instance_id)
