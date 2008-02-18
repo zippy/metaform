@@ -180,33 +180,48 @@ class Reports
         field_list.keys.each {|field_id| f[field_id] = Answer.new(nil,nil) if !f.has_key?(field_id)}
         if filters.size > 0
           eval_field(filters.collect{|x| "(#{x})"}.join('&&')) {|expr| 
-            filtered = !eval(expr) 
-                 
+            filtered = !eval(expr)
             }
         end
         forms[i.id]=f if !filtered
       end
       total = forms.size
-      
+      puts "total forms #{total}"
+      puts "---------sum_queries:" << r.sum_queries.size.to_s
       r.sum_queries.each do |stat,q|
         t = 0
+        puts "sq: q= #{q}"
         forms.values.each {|f| eval_field(q) { |expr| t = t + eval(expr).to_i }}
         results[stat] = t
       end
       
+      puts "---------count_queries:" << r.sum_queries.size.to_s
       r.count_queries.each do |stat,q|
         t = 0
+        puts "cq: q= #{q}"
         forms.values.each {|f| eval_field(q) { |expr| t = t + 1 if eval(expr) }}
         results[stat] = t
       end
       results[:total] = total
       r.block.call(results,forms)
     end
+    
     def eval_field(expression)
+#      puts "---------"
+#      puts "eval_Field:  expression=#{expression}"
+      expr = expression.gsub(/:([a-zA-Z0-9_-]+)/,'f["\1"].value ')
+#      puts "eval_field:  expr=#{expr}"
+      expr = expr.gsub(/:(f\["[a-zA-Z0-9_-]+"\])\.value\.size/,'\1.size')
+#      puts "eval_field:  expr=#{expr}"
+      expr = expr.gsub(/:(f\["[a-zA-Z0-9_-]+"\])\.value\.exists\?/,'\1.exists?')
+#      puts "eval_field:  expr=#{expr}"
+      expr = expr.gsub(/:(f\["[a-zA-Z0-9_-]+"\])\.value\[/,'\1[')
+      puts "eval_field:  expr=#{expr}"
+#      puts "---------"
       begin
         yield expr
       rescue Exception => e
-        raise "Eval error '#{e.to_s}' while evaluating: #{expr}"
+        raise "Eval error '#{e.to_s}' while evaluating: #{expression}"
       end
     end
 
