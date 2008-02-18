@@ -180,7 +180,7 @@ class Reports
         field_list.keys.each {|field_id| f[field_id] = Answer.new(nil,nil) if !f.has_key?(field_id)}
         if filters.size > 0
           eval_field(filters.collect{|x| "(#{x})"}.join('&&')) {|expr| 
-            filtered = !eval(expr)
+            filtered = eval(expr)
             }
         end
         forms[i.id]=f if !filtered
