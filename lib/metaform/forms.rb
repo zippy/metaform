@@ -698,7 +698,8 @@ YAML
       index = index == -1 ? @@index : index
       url = Record.url(@@record.id,presentation_name,@@tabs_name,index)
       name = pretty_name ? pretty_name : presentation_name
-      body %Q|<li #{(@@current_tab == presentation_name) ? 'id="current"' : '' } class="tab_#{presentation_name}"> <a href="#" onClick="return submitAndRedirect('#{url}')" title="Click here to go to #{name}"><span>#{name}</span></a> </li>|
+      id_text = 'id="current"' if @@index.to_s == index.to_s && @@current_tab == presentation_name
+      body %Q|<li #{id_text} class="tab_#{presentation_name}"> <a href="#" onClick="return submitAndRedirect('#{url}')" title="Click here to go to #{c}"><span>#{name}</span></a> </li>|
     end    
     ###############################################
     # a javascript function button
