@@ -79,14 +79,14 @@ class Reports
     
     def [](index)
       if index.nil?
-        @value.is_a?(Array) ? @value[0] : @value
+        is_indexed? ? @value[0] : @value
       else
-        @value.is_a?(Array) ? @value[index] : ((index == 0) ? @value : nil)
+        is_indexed? ? @value[index] : ((index == 0) ? @value : nil)
       end
     end
 
     def []=(index,val)
-      if @value.is_a?(Array)
+      if is_indexed?
         @value[index ? index : 0] = val
       else
         if index  #convert to array if necessary
@@ -99,8 +99,18 @@ class Reports
     end
     
     def size
-      if @value.is_a?(Array)
+      if is_indexed?
         @value.size
+      else
+        @value ? 1 : 0
+      end
+    end
+    
+    # this probably needs to have yield block so that we can count any property
+    # not just which ones aren't nil
+    def count
+      if is_indexed?
+        @value.compact.size
       else
         @value ? 1 : 0
       end
@@ -109,6 +119,11 @@ class Reports
     def exists?
       self.size > 0
     end
+    
+    def is_indexed?
+      @value.is_a?(Array)
+    end
+    
   end
   
   class << self
@@ -208,20 +223,20 @@ class Reports
     
     def eval_field(expression)
 #      puts "---------"
-#      puts "eval_Field:  expression=#{expression}"
-      expr = expression.gsub(/:([a-zA-Z0-9_-]+)/,'f["\1"].value ')
+      puts "eval_Field:  expression=#{expression}"
 #      puts "eval_field:  expr=#{expr}"
-      expr = expr.gsub(/:(f\["[a-zA-Z0-9_-]+"\])\.value\.size/,'\1.size')
+      expr = expression.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists?|count)/,'f["\1"].\2')
 #      puts "eval_field:  expr=#{expr}"
-      expr = expr.gsub(/:(f\["[a-zA-Z0-9_-]+"\])\.value\.exists\?/,'\1.exists?')
+      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\./,'f["\1"].value.')
 #      puts "eval_field:  expr=#{expr}"
-      expr = expr.gsub(/:(f\["[a-zA-Z0-9_-]+"\])\.value\[/,'\1[')
+      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\[/,'f["\1"][')
+      expr = expr.gsub(/:([a-zA-Z0-9_-]+)/,'(f["\1"].is_indexed? ? f["\1"].value[0] : f["\1"].value)')
       puts "eval_field:  expr=#{expr}"
 #      puts "---------"
       begin
         yield expr
       rescue Exception => e
-        raise "Eval error '#{e.to_s}' while evaluating: #{expression}"
+        raise "Eval error '#{e.to_s}' while evaluating: #{expr}"
       end
     end
 
