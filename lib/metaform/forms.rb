@@ -214,7 +214,7 @@ class Reports
       r.count_queries.each do |stat,q|
         t = 0
         puts "cq: q= #{q}"
-        forms.values.each {|f| eval_field(q) { |expr| t = t + 1 if eval(expr) }}
+        forms.values.each {|f| eval_field(q) { |expr| r = eval(expr); t = t + (r == true ? 1 : (r == false ? 0 : r) ) }}
         results[stat] = t
       end
       results[:total] = total
@@ -225,7 +225,7 @@ class Reports
 #      puts "---------"
       puts "eval_Field:  expression=#{expression}"
 #      puts "eval_field:  expr=#{expr}"
-      expr = expression.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists?|count)/,'f["\1"].\2')
+      expr = expression.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists?|count|is_indexed\?)/,'f["\1"].\2')
 #      puts "eval_field:  expr=#{expr}"
       expr = expr.gsub(/:([a-zA-Z0-9_-]+)\./,'f["\1"].value.')
 #      puts "eval_field:  expr=#{expr}"
