@@ -120,10 +120,18 @@ class Reports
       self.size > 0
     end
     
+    def each(&block)
+      if is_indexed?
+        @value.each {|v| block.call(v)}
+      else
+        block.call(@value)
+      end
+    end
+    
     def is_indexed?
       @value.is_a?(Array)
     end
-    
+        
   end
   
   class << self
@@ -148,6 +156,15 @@ class Reports
     end
 
     #################################################################################
+    class Counter
+      attr :value
+      def initialize
+        @value = 0
+      end
+      def increment(by = 1)
+        @value = @value + by
+      end
+    end
     def get_report(report_name,options = {})
 
       r = self.reports[report_name]
@@ -201,21 +218,18 @@ class Reports
         forms[i.id]=f if !filtered
       end
       total = forms.size
-      puts "total forms #{total}"
       puts "---------sum_queries:" << r.sum_queries.size.to_s
       r.sum_queries.each do |stat,q|
-        t = 0
-        puts "sq: q= #{q}"
-        forms.values.each {|f| eval_field(q) { |expr| t = t + eval(expr).to_i }}
-        results[stat] = t
+        sum = Counter.new
+        forms.values.each {|f| eval_field(q) { |expr| eval(expr) }}
+        results[stat] = sum.value
       end
       
       puts "---------count_queries:" << r.sum_queries.size.to_s
       r.count_queries.each do |stat,q|
-        t = 0
-        puts "cq: q= #{q}"
-        forms.values.each {|f| eval_field(q) { |expr| r = eval(expr); t = t + (r == true ? 1 : (r == false ? 0 : r) ) }}
-        results[stat] = t
+        count = Counter.new
+        forms.values.each {|f| eval_field(q) { |expr| eval(expr) }}
+        results[stat] = count.value
       end
       results[:total] = total
       r.block.call(results,forms)
@@ -225,7 +239,7 @@ class Reports
 #      puts "---------"
       puts "eval_Field:  expression=#{expression}"
 #      puts "eval_field:  expr=#{expr}"
-      expr = expression.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists?|count|is_indexed\?)/,'f["\1"].\2')
+      expr = expression.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each)/,'f["\1"].\2')
 #      puts "eval_field:  expr=#{expr}"
       expr = expr.gsub(/:([a-zA-Z0-9_-]+)\./,'f["\1"].value.')
 #      puts "eval_field:  expr=#{expr}"
