@@ -883,14 +883,20 @@ YAML
       p(presentation_name)
     end
 
+    ###  TODO: FIXME!!
+    # This verify thing doesn't really work at all.  Right now it is being called by
+    # Record#_update_attributes but I'm not sure exactly what it does.  And the verification
+    # in the create action seems reduntant to me and is why we are setting @@index to nil
+    # so that it will run, bu it's all crappy right now.
     def verify(presentation_name,record,attributes)
       @@phase = :verify
+      @@index = nil  ####  TODO: FIXME!!
       @@record = record
       @@constraint_errors = nil
       p(presentation_name)
     end
  
-    # the meta information that will be available to an actions is:
+    # the meta information that will be available to an action is:
     # meta[:request] the request object
     # meta[:session] the session object
     # and anything put into it by a callback #meta_data_for_save that should

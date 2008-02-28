@@ -10,7 +10,7 @@ class FormProxy
     include ActionView::Helpers::FormOptionsHelper
     include ActionView::Helpers::FormTagHelper
     include ActionView::Helpers::JavaScriptHelper
-    include ActionView::Helpers::JavaScriptMacrosHelper
+#    include ActionView::Helpers::JavaScriptMacrosHelper
   #  include ActionView::Helpers::NumberHelper
   #  include ActionView::Helpers::PaginationHelper
     include ActionView::Helpers::PrototypeHelper
