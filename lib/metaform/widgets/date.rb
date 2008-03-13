@@ -8,13 +8,13 @@ class DateWidget < Widget
       <<-EOHTML
       <input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'month')}" id="#{build_html_multi_id(field_instance_id,'month')}" value="#{date.month}" /> /
       <input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'day')}" id="#{build_html_multi_id(field_instance_id,'day')}" value="#{date.day}" /> /
-      <input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'year')}" id="#{build_html_multi_id(field_instance_id,'year')}" value="#{date.year}" />
+      <input type="text" size=4 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'year')}" id="#{build_html_multi_id(field_instance_id,'year')}" value="#{date.year.to_s[2..3]}" />
       EOHTML
     else
       <<-EOHTML
       <input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'month')}" id="#{build_html_multi_id(field_instance_id,'month')}"/> /
       <input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'day')}" id="#{build_html_multi_id(field_instance_id,'day')}"  /> /
-      <input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'year')}" id="#{build_html_multi_id(field_instance_id,'year')}"  />
+      <input type="text" size=4 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'year')}" id="#{build_html_multi_id(field_instance_id,'year')}"  />
       EOHTML
     end
   end
@@ -36,7 +36,7 @@ class DateWidget < Widget
   ################################################################################
   def self.convert_html_value(value,params={})
     begin
-      date = Date.new(value['year'].to_i,value['month'].to_i,value['day'].to_i)      
+      date = Date.new(('20'+value['year']).to_i,value['month'].to_i,value['day'].to_i)      
       date.to_s
     rescue
       nil
