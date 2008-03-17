@@ -136,6 +136,14 @@ class Reports
       end
     end
     
+    def include?(desired_value)
+      if is_indexed?
+        @value.include?(desired_value)
+      else
+        @value == desired_value
+      end
+    end
+    
     def is_indexed?
       @value.is_a?(Array)
     end
@@ -239,21 +247,21 @@ class Reports
     end
     
     def eval_field(expression)
-      #puts "---------"
-      #puts "eval_Field:  expression=#{expression}"
-      expr = expression.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|zip)/,'f["\1"].\2')
-      #puts "eval_field:  expr=#{expr}"
+#      puts "---------"
+#      puts "eval_Field:  expression=#{expression}"
+      expr = expression.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|zip|include\?)/,'f["\1"].\2')
+#      puts "eval_field:  expr=#{expr}"
       expr = expr.gsub(/:([a-zA-Z0-9_-]+)\./,'f["\1"].value.')
-      #puts "eval_field:  expr=#{expr}"
+#      puts "eval_field:  expr=#{expr}"
       expr = expr.gsub(/:([a-zA-Z0-9_-]+)\[/,'f["\1"][')
-      #puts "eval_field:  expr=#{expr}"
+#      puts "eval_field:  expr=#{expr}"
       if /\.zip/.match(expr)
         expr = expr.gsub(/\.zip\(:([a-zA-Z0-9_-]+)/,'.zip(f["\1"]')
       else
         expr = expr.gsub(/:([a-zA-Z0-9_-]+)/,'(f["\1"].is_indexed? ? f["\1"].value[0] : f["\1"].value)')
       end
-      #puts "eval_field:  expr=#{expr}"
-      #puts "---------"
+#      puts "eval_field:  expr=#{expr}"
+#      puts "---------"
       begin
         yield expr
       rescue Exception => e
