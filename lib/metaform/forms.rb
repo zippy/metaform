@@ -128,6 +128,14 @@ class Reports
       end
     end
     
+    def zip(other_answer,&block)
+      if is_indexed?
+        @value.zip(other_answer.value) {|a| block.call(a)}
+      else
+         block.call([@value,other_answer.value])
+      end
+    end
+    
     def is_indexed?
       @value.is_a?(Array)
     end
@@ -149,7 +157,6 @@ class Reports
         :fields => nil,
         :forms => nil,
         :filters => nil,
-        :sum_queries => {},
         :count_queries => {}
       }.update(opts)
       self.reports[report_name] = Struct.new(:block,*options.keys)[block,*options.values]
@@ -176,7 +183,6 @@ class Reports
       field_list = {}
       r.fields.each {|f| field_list[f]=1} if r.fields
       r.count_queries.each { |stat,q| q.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1} if q.is_a?(String)}
-      r.sum_queries.each { |stat,q| q.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1} if q.is_a?(String)}
       filters = arrayify(r.filters)
       if options[:filters]
         filters = filters.concat(arrayify(options[:filters]))
@@ -184,6 +190,8 @@ class Reports
       end
 
       w = sql_workflow_condition(r.workflow_state_filter,true)
+      #To do:  Stats will present forms that have passed validation but not data review, 
+      #and data reveiwed.  Correct w when these states are finalized
       
 #      sql_conditions = sql_field_conditions(r.sql_conditions,true)
 #      sql_conditions << sql_field_conditions(options[:sql_conditions],true)
@@ -192,7 +200,7 @@ class Reports
         :conditions => ["form_id in (?) and field_id in (?)" << w ,r.forms,field_list.keys], 
         :include => [:field_instances]
         )
-        
+      
       forms = {}
       
       #TODO This has got to be way inneficient!  It would be much better to push this
@@ -215,38 +223,37 @@ class Reports
             filtered = eval(expr)
             }
         end
-        forms[i.id]=f if !filtered
+        forms[i.id]=f if !filtered    
       end
       total = forms.size
-      puts "---------sum_queries:" << r.sum_queries.size.to_s
-      r.sum_queries.each do |stat,q|
-        sum = Counter.new
-        forms.values.each {|f| eval_field(q) { |expr| eval(expr) }}
-        results[stat] = sum.value
-      end
-      
-      puts "---------count_queries:" << r.sum_queries.size.to_s
+     
+      #puts "---------count_queries:" 
       r.count_queries.each do |stat,q|
-        count = Counter.new
-        forms.values.each {|f| eval_field(q) { |expr| eval(expr) }}
+         count = Counter.new
+        forms.values.each {|f| eval_field(q) { |expr| eval(expr)}}
         results[stat] = count.value
       end
+      
       results[:total] = total
       r.block.call(results,forms)
     end
     
     def eval_field(expression)
-#      puts "---------"
-      puts "eval_Field:  expression=#{expression}"
-#      puts "eval_field:  expr=#{expr}"
-      expr = expression.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each)/,'f["\1"].\2')
-#      puts "eval_field:  expr=#{expr}"
+      #puts "---------"
+      #puts "eval_Field:  expression=#{expression}"
+      expr = expression.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|zip)/,'f["\1"].\2')
+      #puts "eval_field:  expr=#{expr}"
       expr = expr.gsub(/:([a-zA-Z0-9_-]+)\./,'f["\1"].value.')
-#      puts "eval_field:  expr=#{expr}"
+      #puts "eval_field:  expr=#{expr}"
       expr = expr.gsub(/:([a-zA-Z0-9_-]+)\[/,'f["\1"][')
-      expr = expr.gsub(/:([a-zA-Z0-9_-]+)/,'(f["\1"].is_indexed? ? f["\1"].value[0] : f["\1"].value)')
-      puts "eval_field:  expr=#{expr}"
-#      puts "---------"
+      #puts "eval_field:  expr=#{expr}"
+      if /\.zip/.match(expr)
+        expr = expr.gsub(/\.zip\(:([a-zA-Z0-9_-]+)/,'.zip(f["\1"]')
+      else
+        expr = expr.gsub(/:([a-zA-Z0-9_-]+)/,'(f["\1"].is_indexed? ? f["\1"].value[0] : f["\1"].value)')
+      end
+      #puts "eval_field:  expr=#{expr}"
+      #puts "---------"
       begin
         yield expr
       rescue Exception => e
