@@ -237,7 +237,7 @@ class Reports
      
       #puts "---------count_queries:" 
       r.count_queries.each do |stat,q|
-         count = Counter.new
+        count = Counter.new
         forms.values.each {|f| eval_field(q) { |expr| eval(expr)}}
         results[stat] = count.value
       end
