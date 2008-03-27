@@ -19,19 +19,18 @@ class Reports
     
     def [](index)
       if index.nil?
-        is_indexed? ? @value[0] : @value
+        is_indexed? ? @value[nil] : @value
       else
-        is_indexed? ? @value[index] : ((index == 0) ? @value : nil)
+        is_indexed? ? @value[index] : ((index == nil) ? @value : nil)
       end
     end
 
     def []=(index,val)
       if is_indexed?
-        @value[index ? index : 0] = val
+        @value[index ? index : nil] = val
       else
-        if index  #convert to array if necessary
-          @value = [@value]
-          @value[index] = val
+        if index  #convert to hash if necessary
+          @value = {index => val}
         else
           @value = val
         end
@@ -50,7 +49,7 @@ class Reports
     # not just which ones aren't nil
     def count
       if is_indexed?
-        @value.compact.size
+        @value.values.compact.size
       else
         @value ? 1 : 0
       end
@@ -62,7 +61,7 @@ class Reports
     
     def each(&block)
       if is_indexed?
-        @value.each {|v| block.call(v)}
+        @value.values.each {|v| block.call(v)}
       else
         block.call(@value)
       end
@@ -70,7 +69,7 @@ class Reports
     
     def zip(other_answer,&block)
       if is_indexed?
-        @value.zip(other_answer.value) {|a| block.call(a)}
+        @value.values.zip(other_answer.value) {|a| block.call(a)}
       else
          block.call([@value,other_answer.value])
       end
@@ -78,14 +77,14 @@ class Reports
     
     def include?(desired_value)
       if is_indexed?
-        @value.include?(desired_value)
+        @value.values.include?(desired_value)
       else
         @value == desired_value
       end
     end
     
     def is_indexed?
-      @value.is_a?(Array)
+      @value.is_a?(Hash)
     end
         
   end
@@ -148,7 +147,6 @@ class Reports
         :conditions => ["form_id in (?) and field_id in (?)" << w ,r.forms,field_list.keys], 
         :include => [:field_instances]
         )
-      
       forms = {}
       
       #TODO This has got to be way inneficient!  It would be much better to push this
@@ -174,7 +172,6 @@ class Reports
         forms[i.id]=f if !filtered    
       end
       total = forms.size
-     
       #puts "---------count_queries:" 
       r.count_queries.each do |stat,q|
         count = Counter.new

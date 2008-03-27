@@ -6,8 +6,8 @@ class SampleForm < Form
     f 'education', 'Post-secondary formal education (years)', 'integer', {"range"=>"0-14"}
     f 'occupation', 'Occupation', 'string'
     f 'field_with_default', 'FWD', 'string', nil, :default=> 'fish'
-    f 'arrayable_field_no_default', 'AF', 'string', nil, :arrayable_default_from_null_index => true
-    f 'arrayable_field_with_default', 'AFWD', 'string', nil, :default=> 'cow',:arrayable_default_from_null_index => true
+    f 'indexed_field_no_default', 'AF', 'string', nil, :indexed_default_from_null_index => true
+    f 'indexed_field_with_default', 'AFWD', 'string', nil, :default=> 'cow',:indexed_default_from_null_index => true
     fo = f('fruit_other', 'Other fruit', 'string', {"required"=>"fruit=other"})
     fwf 'fruit', '', 'string', {"enumeration"=>[{"apple_mac"=>"Macintosh Apple"}, {"apple_mutsu"=>"Mutsu"}, {"pear"=>"Pear"}, {"banana"=>"Banana"}, {"other"=>"Other...*"}, {"x"=>"XOther...*"}], "required"=>true}, :followups => {'/other|x/' => fo}
   end
@@ -72,20 +72,15 @@ class Stats < Reports
   def_report('fruits', 
     :description => 'Fruits',    
     :forms => ['SampleForm'],
-    :fields => ['education'],
-    :workflow_state_filter => ['logged'],
+#    :fields => ['education'],
+#    :workflow_state_filter => ['logged'],
 #    :sql_conditions => {'Dem_MomAge' => '> 0'},
-    :percent_queries => {
-   		:bananas => 	":fruit == 'banana'",
-   		:apples => ":fruit == 'apple_mutsu' || :fruit == 'apple_mac'"
+    :count_queries => {
+   		:bananas => 	"count.increment if :fruit == 'banana'",
+   		:apples => "count.increment if :fruit == 'apple_mutsu' || :fruit == 'apple_mac'",
+   		:painters => "count.increment if :occupation.include?('painter')",
+   		:slackers => "count.increment if :occupation.include?('unemployed')"
   	}) { |q,forms|
-      r = Struct.new(*(q.keys+[:education_av]))[*q.values]
-
-    education_av = 0
-    forms.values.each {|f| education_av = education_av + f['education'].to_i if f['education']}
-  	education_av = education_av/forms.values.size
-  	r.education_av = sprintf("%.0f",education_av) if education_av > 0;
-
-    r
-  }
+      Struct.new(*(q.keys))[*q.values]
+    }
 end

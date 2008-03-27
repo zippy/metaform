@@ -56,23 +56,23 @@ class Record
   end
   
   def attributes(index=nil)
-    index = index.to_i if index
+    index = index.to_s if index
     @attributes[index]
   end
   def reset_attributes
     @attributes = {nil=>{}}
   end
   def attribute_exists(attribute,index=nil)
-    index = index.to_i if index
+    index = index.to_s if index
     @attributes.has_key?(index) && @attributes[index].has_key?(attribute.to_s)
   end
   def get_attribute(attribute,index=nil)
-    index = index.to_i if index
+    index = index.to_s if index
     i = @attributes[index]
     i ? i[attribute.to_s] : nil
   end
   def set_attribute(attribute,value,index=nil)
-    index = index.to_i if index
+    index = index.to_s if index
     i = @attributes[index]
     @attributes[index] = i = {} if !i
     i[attribute.to_s] = value
@@ -136,7 +136,7 @@ class Record
     if field_instance
       value = field_instance.answer
     else
-      if index && form.fields[field_name].arrayable_default_from_null_index
+      if index && form.fields[field_name].indexed_default_from_null_index
         value = self[attribute,nil]
       else
         value = form.fields[field_name].default
@@ -146,14 +146,14 @@ class Record
     set_attribute(field_name,value,index)
   end
   
-  def []=(attribute,index=nil,value=nil)
+  def []=(attribute,index,value)
     set_attribute(attribute,value,index)
   end
   
   def method_missing(method,*args)
     #is this an attribute setter? or questioner?
     a = method.to_s
-    a =~ /^(.*?)(__([0-9]+))*([=?])*$/
+    a =~ /^(.*?)(__([^=?]))*([=?])*$/
     (attribute,index,action) = [$1,$3,$4]
     if form.field_exists?(attribute)
       case action
@@ -161,7 +161,8 @@ class Record
         val = self[attribute,index]
         return val && val != ''
       when '='
-        return set_attribute(attribute,args[0],index)
+        value = args[0]
+        return set_attribute(attribute,value,index)
       else
         #otherwise assume an attribute getter
         return self[attribute,index]

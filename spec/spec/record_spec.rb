@@ -24,6 +24,39 @@ describe Record do
     end
   end
   
+  describe "(indexed fields)" do
+    before(:each) do
+      @initial_values = {:name =>'Fred Smith',:fruit => 'banana'}
+      @record = Record.make('SampleForm','new_entry',@initial_values)
+    end
+
+    it "should work to use numerical indexes" do
+      @record[:name,1]='Herbert Smith'
+      @record.name__1.should == 'Herbert Smith'
+      @record[:name,1].should == 'Herbert Smith'
+      @record.name.should == 'Fred Smith'
+    end 
+    it "should work to use string indexes" do
+      @record[:name,'x']='Herbert Smith'
+      @record[:name,'y']='Frankfurt Smith'
+      @record[:name,'x'].should == 'Herbert Smith'
+      @record[:name,'y'].should =='Frankfurt Smith'
+      @record.name__x.should == 'Herbert Smith'
+      @record.name.should == 'Fred Smith'
+    end 
+    it "should save all types of indexes to the database" do
+      @record[:name,9]='Name 9'
+      @record[:name,'x']='Name x'
+      @record[:name,'y']='Name y'
+      @record.save('new_entry')
+      nr = Record.locate(:first)
+      nr[:name,9].should == 'Name 9'
+      nr[:name,'x'].should == 'Name x'
+      nr[:name,'y'].should =='Name y'
+      nr.name.should == 'Fred Smith'
+    end
+    
+  end
   describe "(setting_fields without initializing index)" do
     
     before(:each) do
@@ -70,7 +103,7 @@ describe Record do
       nr[:name,nil].should == 'Herbert Smith'
     end
     
-    it "should change a value when set via attribute arrayable" do
+    it "should change a value when set via attribute indexed" do
       @record.name.should == 'Fred Smith'
       @record.name__1='Herbert Smith'
       @record.name__1.should == 'Herbert Smith'
@@ -124,14 +157,14 @@ describe Record do
       @records << Record.make('SampleForm','new_entry',{:name =>'Frank Smith',:fruit => 'pear'})
     end
     
-    it "should correctly set, save and locate arrayable fields, each of nil index" do
+    it "should correctly set, save and locate indexed fields, each of nil index" do
       @records.each {|recs| recs.save('new_entry')}
       @nr = Record.locate(@records[0].id)
       @nr.name.should == @records[0].name
       Record.locate(:all,{:index => nil}).size.should == 3     
     end
     
-    it "should correctly set, save and locate arrayable fields, of non-nil indices" do
+    it "should correctly set, save and locate indexed fields, of non-nil indices" do
       @records[0][:name,1] = 'Fred Smith 1'
       @records[1][:name,99] = 'Joe Smith 99'
       @records[2][:name,1] = 'Frank Smith 1'
@@ -141,7 +174,7 @@ describe Record do
       Record.locate(:all,{:index => nil}).size.should == 3
     end
     
-    it "should correctly set, save and locate arrayable fields, with work_flow_state" do
+    it "should correctly set, save and locate indexed fields, with work_flow_state" do
       @records.last.workflow_state = 'fish'
       @records << Record.make('SampleForm','new_entry',{:name =>'Herbert Wilcox',:fruit => 'banana'})
       @records.each { |recs| recs.save('new_entry') }
@@ -165,17 +198,17 @@ describe Record do
         @records.field_with_default.should == 'fish'
         @records.field_with_default__1.should == 'fish'
 
-        @records.arrayable_field_no_default.should == nil
-        @records.arrayable_field_no_default__1.should == nil
-        @records.arrayable_field_no_default = 'dog'
-        @records.arrayable_field_no_default__2.should == 'dog'
-        @records.arrayable_field_no_default__1.should == nil  #should still be nil because it was already set
+        @records.indexed_field_no_default.should == nil
+        @records.indexed_field_no_default__1.should == nil
+        @records.indexed_field_no_default = 'dog'
+        @records.indexed_field_no_default__2.should == 'dog'
+        @records.indexed_field_no_default__1.should == nil  #should still be nil because it was already set
 
-        @records.arrayable_field_with_default.should == 'cow'
-        @records.arrayable_field_with_default__1.should == 'cow'
-        @records.arrayable_field_with_default = 'cat'
-        @records.arrayable_field_with_default__2.should == 'cat'
-        @records.arrayable_field_with_default__1.should == 'cow' #should still be 'cow' because it was already set
+        @records.indexed_field_with_default.should == 'cow'
+        @records.indexed_field_with_default__1.should == 'cow'
+        @records.indexed_field_with_default = 'cat'
+        @records.indexed_field_with_default__2.should == 'cat'
+        @records.indexed_field_with_default__1.should == 'cow' #should still be 'cow' because it was already set
       end
     
   end
