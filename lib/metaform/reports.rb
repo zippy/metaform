@@ -30,7 +30,9 @@ class Reports
         @value[index ? index : nil] = val
       else
         if index  #convert to hash if necessary
-          @value = {index => val}
+          v = {index => val}
+          v[nil] = @value if @value
+          @value = v
         else
           @value = val
         end
