@@ -397,9 +397,18 @@ class Record
     field_instances_proc = options[:field_instances_proc] if options.has_key?(:field_instances_proc)
     return_raw = options.has_key?(:raw)
     
+    if options.has_key?(:eval_field_proc)
+      eval_field_proc = options[:eval_field_proc]
+    else
+      eval_field_proc = Proc.new do |expression|
+        expr = expression.gsub(/:([a-zA-Z0-9_-]+)/,'f["\1"]')
+      end
+    end
+    
     if filters || field_instances_proc
       forms = []
 
+      filter_eval_string = filters.collect{|x| "(#{x})"}.join('&&') if filters
       #TODO test for scalability on large datatsets
       form_instances.each do |r|
         f = {'workflow_state' => r.workflow_state,'updated_at' => r.updated_at}
@@ -413,7 +422,11 @@ class Record
         the_form = return_raw ? f : r
         if filters && filters.size > 0
           kept = false
-          eval_field(filters.collect{|x| "(#{x})"}.join('&&')) {|expr| kept = eval(expr)}
+          begin
+            kept = eval eval_field_proc.call(filter_eval_string)
+          rescue Exception => e
+            raise "Eval error '#{e.to_s}' while evaluating: #{expr}"
+          end
           forms << the_form if kept
         else
           forms << the_form
@@ -425,15 +438,6 @@ class Record
     
     return forms if return_raw
     Record.create(forms)
-  end
-  
-  def Record.eval_field(expression)
-    begin
-      expr = expression.gsub(/:([a-zA-Z0-9_-]+)/,'f["\1"]')
-      yield expr
-    rescue Exception => e
-      raise "Eval error '#{e.to_s}' while evaluating: #{expr}"
-    end
   end
   
   def Record.url(record_id,presentation,tab=nil,index=nil)

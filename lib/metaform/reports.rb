@@ -166,6 +166,25 @@ class Reports
           f[field_instance.field_id]= Answer.new(field_instance.answer,field_instance.idx)
         end
       end
+#      locate_options[:before_filter_proc] = Proc.new do |f,field_instance|
+      locate_options[:eval_field_proc] = Proc.new do |expression|
+  #      puts "---------"
+  #      puts "eval_Field:  expression=#{expression}"
+        expr = expression.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|zip|include\?)/,'f["\1"].\2')
+  #      puts "eval_field:  expr=#{expr}"
+        expr = expr.gsub(/:([a-zA-Z0-9_-]+)\./,'f["\1"].value.')
+  #      puts "eval_field:  expr=#{expr}"
+        expr = expr.gsub(/:([a-zA-Z0-9_-]+)\[/,'f["\1"][')
+  #      puts "eval_field:  expr=#{expr}"
+        if /\.zip/.match(expr)
+          expr = expr.gsub(/\.zip\(:([a-zA-Z0-9_-]+)/,'.zip(f["\1"]')
+        else
+          expr = expr.gsub(/:([a-zA-Z0-9_-]+)/,'(f["\1"].is_indexed? ? f["\1"].value[0] : f["\1"].value)')
+        end
+  #      puts "eval_field:  expr=#{expr}"
+  #      puts "---------"
+        expr
+      end
 
       form_instances = Record.locate(:all,locate_options) 
       
@@ -173,7 +192,13 @@ class Reports
       #puts "---------count_queries:" 
       r.count_queries.each do |stat,q|
         count = Counter.new
-        form_instances.each {|f| eval_field(q) { |expr| eval(expr)}}
+        form_instances.each do |f|
+          begin
+            eval(locate_options[:eval_field_proc].call(q))
+          rescue Exception => e
+            raise "Eval error '#{e.to_s}' while evaluating: #{expr}"
+          end
+        end
         results[stat] = count.value
       end
       
@@ -181,28 +206,5 @@ class Reports
       r.block.call(results,forms)
     end
     
-    def eval_field(expression)
-#      puts "---------"
-#      puts "eval_Field:  expression=#{expression}"
-      expr = expression.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|zip|include\?)/,'f["\1"].\2')
-#      puts "eval_field:  expr=#{expr}"
-      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\./,'f["\1"].value.')
-#      puts "eval_field:  expr=#{expr}"
-      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\[/,'f["\1"][')
-#      puts "eval_field:  expr=#{expr}"
-      if /\.zip/.match(expr)
-        expr = expr.gsub(/\.zip\(:([a-zA-Z0-9_-]+)/,'.zip(f["\1"]')
-      else
-        expr = expr.gsub(/:([a-zA-Z0-9_-]+)/,'(f["\1"].is_indexed? ? f["\1"].value[0] : f["\1"].value)')
-      end
-#      puts "eval_field:  expr=#{expr}"
-#      puts "---------"
-      begin
-        yield expr
-      rescue Exception => e
-        raise "Eval error '#{e.to_s}' while evaluating: #{expr}"
-      end
-    end
-
   end
 end
