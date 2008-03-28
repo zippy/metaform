@@ -22,10 +22,16 @@ class Record
       self[index] = val
     end
     
-    def [](index)
+    def [](*index)
+      if index.size == 0 || index == [nil]
+        index = nil
+      else
+        index = index.collect {|i| i.to_s}.join(',')
+      end
       if index.nil?
         is_indexed? ? @value[nil] : @value
       else
+        index = index.to_s
         is_indexed? ? @value[index] : ((index == nil) ? @value : nil)
       end
     end
@@ -159,8 +165,17 @@ class Record
     i = @attributes[index]
     i ? i[attribute.to_s] : nil
   end
+  
   def set_attribute(attribute,value,index=nil)
-    index = index.to_s if index
+    if index.instance_of?(Array)
+      if index == [nil]
+        index = nil
+      else
+        index = index.join(',')
+      end
+    else
+      index = index.to_s if index
+    end
     i = @attributes[index]
     @attributes[index] = i = {} if !i
     i[attribute.to_s] = value
@@ -203,7 +218,13 @@ class Record
   # the field_value is either pulled from the attributes hash if it exists or from the database
   # TODO we need to make a system where field_instance values can be pre-loaded for a full presentation, otherwise
   # this causes one hit to the database per field per page.
-  def [](attribute,index=nil)
+  def [](attribute,*index)
+    if index.size == 0 || index == [nil]
+      index = nil
+    else
+      index = index.collect {|i| i.to_s}.join(',')
+    end
+    
     field_name = attribute.to_s
     return get_attribute(field_name,index) if attribute_exists(field_name,index)
     raise "field #{field_name} not in form " if !form.field_exists?(field_name)
@@ -234,8 +255,9 @@ class Record
     set_attribute(field_name,value,index)
   end
   
-  def []=(attribute,index,value)
-    set_attribute(attribute,value,index)
+  def []=(attribute,*args)
+    value = args.pop
+    set_attribute(attribute,value,args)
   end
   
   def method_missing(method,*args)
