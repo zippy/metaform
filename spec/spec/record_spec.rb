@@ -174,7 +174,7 @@ describe Record do
       Record.locate(:all,{:index => nil}).size.should == 3
     end
     
-    it "should correctly set, save and locate indexed fields, with work_flow_state" do
+    it "should correctly set, save and locate fields with filters and, with work_flow_state_filters" do
       @records.last.workflow_state = 'fish'
       @records << Record.make('SampleForm','new_entry',{:name =>'Herbert Wilcox',:fruit => 'banana'})
       @records.each { |recs| recs.save('new_entry') }
@@ -184,6 +184,20 @@ describe Record do
       Record.locate(:all,{:filters => [':name =~ /Smith/',':fruit == "banana"']}).size.should == 2
       Record.locate(:all,{:filters => ':name =~ /^F/'}).size.should == 2
       Record.locate(:all,{:workflow_state_filter => 'fish'}).size.should == 1
+    end
+
+    it "should correctly set, save and locate indexed fields with complex filters" do
+      @records[0].fruit__1 = 'carrot'
+      @records[2].fruit__1 = 'carrot'
+      @records[0].occupation = 'cat_catcher'
+      @records[0].occupation__1 = 'snoozer'
+      @records[1].occupation = 'unemployed'
+      @records.each { |recs| recs.save('new_entry') }
+#      recs = Record.locate(:all,{:return_answers_hash => true})
+#      raise recs.inspect
+#      recs.size.should == 3
+      Record.locate(:all,{:index => :any,:filters => ':fruit.include?("carrot")'}).size.should == 2
+      Record.locate(:all,{:index => :any,:filters => ':occupation.count >1'}).size.should == 1
     end
     
   end 

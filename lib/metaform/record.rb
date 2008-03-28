@@ -6,7 +6,95 @@
 
 require 'metaform/form_proxy'
 
+
 class Record
+
+  class Answer
+    def initialize(val,index)
+      self[index] = val
+    end
+
+    def value
+      @value
+    end
+
+    def value=(val,index=nil)
+      self[index] = val
+    end
+    
+    def [](index)
+      if index.nil?
+        is_indexed? ? @value[nil] : @value
+      else
+        is_indexed? ? @value[index] : ((index == nil) ? @value : nil)
+      end
+    end
+
+    def []=(index,val)
+      if is_indexed?
+        @value[index ? index : nil] = val
+      else
+        if index  #convert to hash if necessary
+          v = {index => val}
+          v[nil] = @value if @value
+          @value = v
+        else
+          @value = val
+        end
+      end
+    end
+    
+    def size
+      if is_indexed?
+        @value.size
+      else
+        @value ? 1 : 0
+      end
+    end
+    
+    # this probably needs to have yield block so that we can count any property
+    # not just which ones aren't nil
+    def count
+      if is_indexed?
+        @value.values.compact.size
+      else
+        @value ? 1 : 0
+      end
+    end
+    
+    def exists?
+      self.size > 0
+    end
+    
+    def each(&block)
+      if is_indexed?
+        @value.values.each {|v| block.call(v)}
+      else
+        block.call(@value)
+      end
+    end
+    
+    def zip(other_answer,&block)
+      if is_indexed?
+        @value.values.zip(other_answer.value) {|a| block.call(a)}
+      else
+         block.call([@value,other_answer.value])
+      end
+    end
+    
+    def include?(desired_value)
+      if is_indexed?
+        @value.values.include?(desired_value)
+      else
+        @value == desired_value
+      end
+    end
+    
+    def is_indexed?
+      @value.is_a?(Hash)
+    end
+        
+  end
   
   attr :form_instance
   attr :errors
@@ -388,42 +476,32 @@ class Record
     end
     find_opts ||= {}
     
-    begin
-      form_instances = FormInstance.find(what,find_opts)
-    rescue 
-      form_instances = nil
-    end
+    form_instances = FormInstance.find(what,find_opts)
     
-    field_instances_proc = options[:field_instances_proc] if options.has_key?(:field_instances_proc)
-    return_raw = options.has_key?(:raw)
+    return_answers_hash = options.has_key?(:return_answers_hash)
     
-    if options.has_key?(:eval_field_proc)
-      eval_field_proc = options[:eval_field_proc]
-    else
-      eval_field_proc = Proc.new do |expression|
-        expr = expression.gsub(/:([a-zA-Z0-9_-]+)/,'f["\1"]')
-      end
-    end
-    
-    if filters || field_instances_proc
-      forms = []
+    forms = []
 
+    if filters || return_answers_hash
       filter_eval_string = filters.collect{|x| "(#{x})"}.join('&&') if filters
       #TODO test for scalability on large datatsets
       form_instances.each do |r|
         f = {'workflow_state' => r.workflow_state,'updated_at' => r.updated_at}
-        r.field_instances.each do |fld|
-          if field_instances_proc
-            field_instances_proc.call(f,fld)
+        r.field_instances.each do |field_instance|
+          if f.has_key?(field_instance.field_id)
+            a = f[field_instance.field_id]
+            a[field_instance.idx] = field_instance.answer
           else
-            f[fld.field_id]=fld.answer
+            f[field_instance.field_id]= Answer.new(field_instance.answer,field_instance.idx)
           end
         end
-        the_form = return_raw ? f : r
+        field_list.keys.each {|field_id| f[field_id] = Answer.new(nil,nil) if !f.has_key?(field_id)}
+        the_form = return_answers_hash ? f : r
         if filters && filters.size > 0
           kept = false
           begin
-            kept = eval eval_field_proc.call(filter_eval_string)
+            expr = eval_field(filter_eval_string)
+            kept = eval expr
           rescue Exception => e
             raise "Eval error '#{e.to_s}' while evaluating: #{expr}"
           end
@@ -436,8 +514,26 @@ class Record
       forms = form_instances
     end
     
-    return forms if return_raw
+    return forms if return_answers_hash
     Record.create(forms)
+  end
+  def Record.eval_field(expression)
+#      puts "---------"
+#      puts "eval_Field:  expression=#{expression}"
+    expr = expression.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|zip|include\?)/,'f["\1"].\2')
+#      puts "eval_field:  expr=#{expr}"
+    expr = expr.gsub(/:([a-zA-Z0-9_-]+)\./,'f["\1"].value.')
+#      puts "eval_field:  expr=#{expr}"
+    expr = expr.gsub(/:([a-zA-Z0-9_-]+)\[/,'f["\1"][')
+#      puts "eval_field:  expr=#{expr}"
+    if /\.zip/.match(expr)
+      expr = expr.gsub(/\.zip\(:([a-zA-Z0-9_-]+)/,'.zip(f["\1"]')
+    else
+      expr = expr.gsub(/:([a-zA-Z0-9_-]+)/,'(f["\1"].is_indexed? ? f["\1"].value[0] : f["\1"].value)')
+    end
+#      puts "eval_field:  expr=#{expr}"
+#      puts "---------"
+    expr
   end
   
   def Record.url(record_id,presentation,tab=nil,index=nil)
