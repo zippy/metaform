@@ -22,12 +22,6 @@ class Listings
     end
 
     #################################################################################
-    #TODO-LISA this is both inefficient, and also tied into the FormInstance/FieldInstance impelementation
-    # of the data storage model.  
-    # The ideas is that Form should be based on the idea is that the data-storage model should be abstracted out
-    # out of Form and implemented someplace else.
-    # i.e. we should refactor this into field_values(field_list) that gets the values of all the fields instead of
-    # calling FieldInstance.find here
     def get_list(list_name,options = {})
       forms = []
       l = self.listings[list_name]

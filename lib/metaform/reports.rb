@@ -127,57 +127,53 @@ class Reports
       raise "unknown report #{report_name}" if !r 
       results = {}
 
-      # build up the lists of fields we need to get from the database by looking in 
-      # count queries, the sum querries and the fiters
+      locate_options = {}
+      locate_options[:forms] = r.forms if r.forms
+      locate_options[:workflow_state_filter] = r.workflow_state_filter if r.workflow_state_filter
+
+      # build up the list of extra fields we need to get from the database by looking in count queries
       field_list = {}
       r.fields.each {|f| field_list[f]=1} if r.fields
       r.count_queries.each { |stat,q| q.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1} if q.is_a?(String)}
       filters = arrayify(r.filters)
       if options[:filters]
         filters = filters.concat(arrayify(options[:filters]))
-        filters.each { |fltr| fltr.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1}}
       end
+      
+      locate_options[:fields] = field_list.keys
+      locate_options[:filters] = filters if filters.size>0
+      locate_options[:raw] = true
+      locate_options[:index] = :any
 
-      w = sql_workflow_condition(r.workflow_state_filter,true)
-      #To do:  Stats will present forms that have passed validation but not data review, 
+#      w = sql_workflow_condition(r.workflow_state_filter,true)
+      #TODO:  Stats will present forms that have passed validation but not data review, 
       #and data reveiwed.  Correct w when these states are finalized
       
 #      sql_conditions = sql_field_conditions(r.sql_conditions,true)
 #      sql_conditions << sql_field_conditions(options[:sql_conditions],true)
 
-      form_instances = FormInstance.find(:all, 
-        :conditions => ["form_id in (?) and field_id in (?)" << w ,r.forms,field_list.keys], 
-        :include => [:field_instances]
-        )
+#      form_instances = FormInstance.find(:all, 
+#        :conditions => ["form_id in (?) and field_id in (?)" << w ,r.forms,field_list.keys], 
+#        :include => [:field_instances]
+#        )
       forms = {}
       
-      #TODO This has got to be way inneficient!  It would be much better to push this
-      # off the SQL server, but I don't know how to do that yet in the context of rails
-      # and the structure of having the field instances in their own tables.
-      form_instances.each do |i|
-        f = {}
-        i.field_instances.each do |fld|
-          if f.has_key?(fld.field_id)
-            a = f[fld.field_id]
-            a[fld.idx] = fld.answer
-          else
-            f[fld.field_id]= Answer.new(fld.answer,fld.idx)
-          end
+      locate_options[:field_instances_proc] = Proc.new do |f,field_instance|
+        if f.has_key?(field_instance.field_id)
+          a = f[field_instance.field_id]
+          a[field_instance.idx] = field_instance.answer
+        else
+          f[field_instance.field_id]= Answer.new(field_instance.answer,field_instance.idx)
         end
-        filtered = false
-        field_list.keys.each {|field_id| f[field_id] = Answer.new(nil,nil) if !f.has_key?(field_id)}
-        if filters.size > 0
-          eval_field(filters.collect{|x| "(#{x})"}.join('&&')) {|expr| 
-            filtered = eval(expr)
-            }
-        end
-        forms[i.id]=f if !filtered    
       end
+
+      form_instances = Record.locate(:all,locate_options) 
+      
       total = forms.size
       #puts "---------count_queries:" 
       r.count_queries.each do |stat,q|
         count = Counter.new
-        forms.values.each {|f| eval_field(q) { |expr| eval(expr)}}
+        form_instances.each {|f| eval_field(q) { |expr| eval(expr)}}
         results[stat] = count.value
       end
       

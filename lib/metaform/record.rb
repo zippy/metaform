@@ -393,25 +393,37 @@ class Record
     rescue 
       form_instances = nil
     end
-      
-    if filters
+    
+    field_instances_proc = options[:field_instances_proc] if options.has_key?(:field_instances_proc)
+    return_raw = options.has_key?(:raw)
+    
+    if filters || field_instances_proc
       forms = []
-      #TODO This has got to be way inneficient!  It would be much better to push this
-      # off the SQL server, but I don't know how to do that yet in the context of rails
-      # and the structure of having the field instances in their own tables.
+
+      #TODO test for scalability on large datatsets
       form_instances.each do |r|
         f = {'workflow_state' => r.workflow_state,'updated_at' => r.updated_at}
-        r.field_instances.each {|fld| f[fld.field_id]=fld.answer}
-        kept = false
-        if filters.size > 0
-          eval_field(filters.collect{|x| "(#{x})"}.join('&&')) {|expr| kept = eval(expr)}
+        r.field_instances.each do |fld|
+          if field_instances_proc
+            field_instances_proc.call(f,fld)
+          else
+            f[fld.field_id]=fld.answer
+          end
         end
-        forms << r if kept
+        the_form = return_raw ? f : r
+        if filters && filters.size > 0
+          kept = false
+          eval_field(filters.collect{|x| "(#{x})"}.join('&&')) {|expr| kept = eval(expr)}
+          forms << the_form if kept
+        else
+          forms << the_form
+        end
       end
     else
       forms = form_instances
     end
-
+    
+    return forms if return_raw
     Record.create(forms)
   end
   

@@ -127,13 +127,13 @@ describe Record do
   
   describe "(setting fields with initializing index)" do
 
-    it "should correctly set fields when one index is initialized" do
+    it "should correctly set fields when initializing with :index option" do
       @record = Record.make('SampleForm','new_entry',{:name =>'Fred Smith',:fruit => 'banana'},:index => 1)
       @record.name.should == nil
       @record.name__1.should == 'Fred Smith'
     end
 
-    it "should correctly set fields when two indices are initialized" do
+    it "should correctly set fields when initializing with :multi_index option" do
        @record = Record.make('SampleForm','new_entry', {
           2 => {:name =>'Fred Smith 2',:fruit => 'apple'},
           1 => {:name =>'Fred Smith 1',:fruit => 'banana'}

@@ -77,7 +77,7 @@ class Stats < Reports
 #    :sql_conditions => {'Dem_MomAge' => '> 0'},
     :count_queries => {
    		:bananas => 	"count.increment if :fruit == 'banana'",
-   		:apples => "count.increment if :fruit == 'apple_mutsu' || :fruit == 'apple_mac'",
+   		:apples => "count.increment if :fruit =~ /apple*/",
    		:painters => "count.increment if :occupation.include?('painter')",
    		:slackers => "count.increment if :occupation.include?('unemployed')"
   	}) { |q,forms|
