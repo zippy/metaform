@@ -27,13 +27,18 @@ class Listings
       l = self.listings[list_name]
       raise "unknown list #{list_name}" if !l      
       
+      puts "getlist options: "+options.inspect
       options[:order] ||= l.fields[0]
       
       locate_options = {}
       locate_options[:forms] = l.forms if l.forms
       locate_options[:fields] = l.fields if l.fields
       locate_options[:conditions] = l.conditions if l.conditions
-      locate_options[:workflow_state_filter] = l.workflow_state_filter if l.workflow_state_filter
+      wsf = []
+      wsf << l.workflow_state_filter if l.workflow_state_filter
+      wsf << options[:workflow_state_filter] if options[:workflow_state_filter]
+      wsf = wsf.flatten
+      locate_options[:workflow_state_filter] = wsf if wsf.size > 0
       locate_options[:filters] = options[:filters] if options[:filters]
       
       forms = Record.locate(:all,locate_options)

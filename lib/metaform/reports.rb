@@ -80,7 +80,8 @@ class Reports
         count = Counter.new
         form_instances.each do |f|
           begin
-            eval(Record.eval_field(q))
+            expr = Record.eval_field(q)
+            eval(expr)
           rescue Exception => e
             raise "Eval error '#{e.to_s}' while evaluating: #{expr}"
           end

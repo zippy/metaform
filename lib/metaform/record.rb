@@ -10,62 +10,69 @@ require 'metaform/form_proxy'
 class Record
 
   class Answer
-    def initialize(val,index)
-      self[index] = val
+    def initialize(val,index=nil)
+      if index.instance_of?(String)
+        index = index.split(/,/)
+      else
+        index = [index]
+      end
+      self[*index] = val
     end
 
     def value
-      @value
+      return nil if @value.size == 0
+      return @value[0] if @value.size == 1
+      return @value
     end
 
     def value=(val,index=nil)
       self[index] = val
     end
     
-    def [](*index)
-      if index.size == 0 || index == [nil]
-        index = nil
-      else
-        index = index.collect {|i| i.to_s}.join(',')
+    def make_multi_dimensional(i1,i2)
+      @value.collect! {|v| [v]} unless @value[0].instance_of?(Array)
+      while @value.size <= i1.to_i
+        @value << []
       end
-      if index.nil?
-        is_indexed? ? @value[nil] : @value
+    end
+    
+    def [](*index)
+      make_multi_dimensional(*index) if index.size > 1
+      if index.size == 0
+        index = 0
+        @value[index]
+      elsif index.size == 1
+        index = index[0].to_i
+        @value[index]
       else
-        index = index.to_s
-        is_indexed? ? @value[index] : ((index == nil) ? @value : nil)
+        @value[index[0].to_i][index[1].to_i]
       end
     end
 
-    def []=(index,val)
-      if is_indexed?
-        @value[index ? index : nil] = val
+    def []=(index,*args)
+      @value ||= []
+      val = args.pop
+      if args.size == 0 && muilt_dimensional?
+        args.push 0
+      end
+      
+      if args.size == 0
+        @value[index.to_i] = val
       else
-        if index  #convert to hash if necessary
-          v = {index => val}
-          v[nil] = @value if @value
-          @value = v
-        else
-          @value = val
-        end
+        index2 = args.pop
+        make_multi_dimensional(index,index2)
+        @value[index.to_i][index2.to_i] = val        
       end
     end
     
     def size
-      if is_indexed?
-        @value.size
-      else
-        @value ? 1 : 0
-      end
+      @value.size
     end
     
     # this probably needs to have yield block so that we can count any property
     # not just which ones aren't nil
     def count
-      if is_indexed?
-        @value.values.compact.size
-      else
-        @value ? 1 : 0
-      end
+      @value.compact.size
     end
     
     def exists?
@@ -73,31 +80,23 @@ class Record
     end
     
     def each(&block)
-      if is_indexed?
-        @value.values.each {|v| block.call(v)}
-      else
-        block.call(@value)
-      end
+      @value.each {|v| block.call(v)}
     end
     
     def zip(other_answer,&block)
-      if is_indexed?
-        @value.values.zip(other_answer.value) {|a| block.call(a)}
-      else
-         block.call([@value,other_answer.value])
-      end
+      @value.zip(other_answer.value) {|a| block.call(a)}
     end
     
     def include?(desired_value)
-      if is_indexed?
-        @value.values.include?(desired_value)
-      else
-        @value == desired_value
-      end
+      @value.include?(desired_value)
     end
     
     def is_indexed?
-      @value.is_a?(Hash)
+      @value.size > 1
+    end
+    
+    def muilt_dimensional?
+      @value[0].instance_of?(Array)
     end
         
   end
@@ -449,6 +448,8 @@ class Record
     condition_strings = []
     conditions_params = []
     
+   puts "searching for #{what} options = " + options.inspect
+    
     field_list = {} 
     
     if options.has_key?(:index)
@@ -465,6 +466,7 @@ class Record
       condition_strings << "(form_id in (?))"
       conditions_params << options[:forms]
     end
+    
     if options.has_key?(:workflow_state_filter)
       condition_strings << "(workflow_state in (?))"
       conditions_params << options[:workflow_state_filter]
@@ -474,6 +476,7 @@ class Record
       filters = arrayify(options[:filters])
       filters.each { |fltr| fltr.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1}}
     end
+    
     if options.has_key?(:fields)
       condition_strings << "(field_id in (?))"
       options[:fields].each {|x| field_list[x] = 1 }
@@ -498,17 +501,21 @@ class Record
     end
     find_opts ||= {}
     
-    form_instances = FormInstance.find(what,find_opts)
+    begin
+      form_instances = FormInstance.find(what,find_opts)
+    rescue
+      form_instances = nil
+    end
     
     return_answers_hash = options.has_key?(:return_answers_hash)
     
     forms = []
 
-    if filters || return_answers_hash
+    if form_instances && (filters || return_answers_hash)
       filter_eval_string = filters.collect{|x| "(#{x})"}.join('&&') if filters
       #TODO test for scalability on large datatsets
       form_instances.each do |r|
-        f = {'workflow_state' => r.workflow_state,'updated_at' => r.updated_at}
+        f = {'workflow_state' => Answer.new(r.workflow_state),'updated_at' => Answer.new(r.updated_at)}
         r.field_instances.each do |field_instance|
           if f.has_key?(field_instance.field_id)
             a = f[field_instance.field_id]

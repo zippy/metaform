@@ -200,12 +200,15 @@ describe Record do
       @records.last.workflow_state = 'fish'
       @records << Record.make('SampleForm','new_entry',{:name =>'Herbert Wilcox',:fruit => 'banana'})
       @records.each { |recs| recs.save('new_entry') }
-      recs = Record.locate(:all)
-      recs.size.should == 4
+#      recs = Record.locate(:all)
+#      recs.size.should == 4
       Record.locate(:all,{:filters => ':fruit == "banana"'}).size.should == 3
       Record.locate(:all,{:filters => [':name =~ /Smith/',':fruit == "banana"']}).size.should == 2
       Record.locate(:all,{:filters => ':name =~ /o/'}).size.should == 3
       Record.locate(:all,{:workflow_state_filter => 'fish'}).size.should == 1
+      Record.locate(:all,{:workflow_state_filter => 'cow'}).size.should == 0
+      Record.locate(:all,{:workflow_state_filter => ['fish','cow']}).size.should == 1
+      Record.locate(:all,{:workflow_state_filter => ['cow']}).size.should == 0
     end
 
     it "should correctly set, save and locate indexed fields with complex filters" do
@@ -228,17 +231,29 @@ describe Record do
       r['name'].instance_of?(Record::Answer).should == true
     end
     
-    it "should handle mult-dimensional indexing" do
+    it "should return indexed fields as arrays in the answers hash" do
+      @records[0].fruit__1 = 'peach'
+      @records[0].fruit__2 = 'kiwi'
+      @records.each { |recs| recs.save('new_entry') }
+      recs = Record.locate(:all,{:index => :any,:return_answers_hash => true})
+      r = recs[0]
+      r['fruit'][0].should == 'banana'
+      r['fruit'][1].should == 'peach'
+      r['fruit'][2].should == 'kiwi'
+      r['fruit'].value.should == ['banana','peach','kiwi']
+    end
+    
+    it "should return multi-dimentional indexes as arrays of arrays in the answers hash" do
       @records[0].fruit__1 = 'peach'
       @records[0].fruit__2 = 'kiwi'
       @records[0][:fruit,2,1] = 'orange'
       @records.each { |recs| recs.save('new_entry') }
       recs = Record.locate(:all,{:index => :any,:return_answers_hash => true})
       r = recs[0]
-      r['fruit']['1'].should == 'peach'
-      r['fruit'][2].should == 'kiwi'
+      r['fruit'].value.should == [['banana'],['peach'],['kiwi','orange']]
+      r['fruit'][1].should == ['peach']
+      r['fruit'][2].should == ['kiwi','orange']
       r['fruit'][2,1].should == 'orange'
-      r['fruit'].should == [['banana',nil],['peach',nil],['kiwi','orange']]
     end
     
   end 
@@ -267,4 +282,52 @@ describe Record do
       end
     
   end
+end
+
+describe Record::Answer do
+  it "should create with value initializer" do
+    a = Record::Answer.new('some_value')
+    a.value.should == 'some_value'
+    a.is_indexed?.should == false
+  end
+
+  it "should create with value and index initializer" do
+    a = Record::Answer.new('some_value',2)
+    a.value.should == [nil,nil,'some_value']
+    a.is_indexed?.should == true
+    a[0].should == nil
+    a[1].should == nil
+    a[2].should == 'some_value'
+  end
+
+  it "should set value" do
+    a = Record::Answer.new('some_value')
+    a.value.should == 'some_value'
+    a.value = 'other_value'
+    a.value.should == 'other_value'
+  end
+
+  it "should set indexed values" do
+    a = Record::Answer.new('some_value')
+    a.value.should == 'some_value'
+    a[2] = 'other_value'
+    a.value.should == ['some_value',nil,'other_value']
+    a[0].should == 'some_value'
+    a[1].should == nil
+    a[2].should == 'other_value'
+  end
+
+  it "should handle multi-dimensional indexs" do
+    a = Record::Answer.new('some_value')
+    a.value.should == 'some_value'
+    a[2,1] = 'other_value'
+    a.value.should == [['some_value'],[],[nil,'other_value']]
+    a[0].should == ['some_value']
+    a[1].should == []
+    a[2].should == [nil,'other_value']
+    a[2,1].should == 'other_value'
+    a[0,1].should == nil
+    a[0,0].should == 'some_value'
+  end
+
 end
