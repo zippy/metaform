@@ -70,11 +70,10 @@ class Reports
 #        :conditions => ["form_id in (?) and field_id in (?)" << w ,r.forms,field_list.keys], 
 #        :include => [:field_instances]
 #        )
-      forms = {}
       
       form_instances = Record.locate(:all,locate_options) 
       
-      total = forms.size
+      total = form_instances.size
       #puts "---------count_queries:" 
       r.count_queries.each do |stat,q|
         count = Counter.new
@@ -90,7 +89,7 @@ class Reports
       end
       
       results[:total] = total
-      r.block.call(results,forms)
+      r.block.call(results,form_instances)
     end
     
   end

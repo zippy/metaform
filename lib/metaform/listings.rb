@@ -27,7 +27,6 @@ class Listings
       l = self.listings[list_name]
       raise "unknown list #{list_name}" if !l      
       
-      puts "getlist options: "+options.inspect
       options[:order] ||= l.fields[0]
       
       locate_options = {}

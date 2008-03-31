@@ -84,7 +84,9 @@ class Record
     end
     
     def zip(other_answer,&block)
-      @value.zip(other_answer.value) {|a| block.call(a)}
+      if @value && other_answer.value
+        @value.zip(other_answer.value) {|a| block.call(a)} 
+      end
     end
     
     def include?(desired_value)
@@ -517,6 +519,7 @@ class Record
       form_instances.each do |r|
         f = {'workflow_state' => Answer.new(r.workflow_state),'updated_at' => Answer.new(r.updated_at)}
         r.field_instances.each do |field_instance|
+          puts "key: #{field_instance.field_id} answer:#{field_instance.answer}"
           if f.has_key?(field_instance.field_id)
             a = f[field_instance.field_id]
             a[field_instance.idx] = field_instance.answer
@@ -560,7 +563,7 @@ class Record
     else
       expr = expr.gsub(/:([a-zA-Z0-9_-]+)/,'(f["\1"].is_indexed? ? f["\1"].value[0] : f["\1"].value)')
     end
-#      puts "eval_field:  expr=#{expr}"
+      puts "eval_field:  expr=#{expr}"
 #      puts "---------"
     expr
   end
