@@ -63,7 +63,7 @@ class Log < Listings
     # to be anded together)
     listing 'samples', 
       :forms => ['SampleForm'],
-#      :workflow_state_filter => ['logged','completed'],
+#      :workflow_state_filter => ['logged'],
 #      :conditions => {'fruit' => '!= "pear"'},
       :fields => ['name','fruit']
 end
