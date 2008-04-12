@@ -5,6 +5,6 @@ describe Form, "using sample form as 'schema'" do
     SampleForm.should == SampleForm
   end
   it "should have 9 fields" do
-    SampleForm.fields.size.should == 9
+    SampleForm.fields.size.should == 10
   end
 end
