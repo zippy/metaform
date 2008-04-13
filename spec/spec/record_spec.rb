@@ -382,6 +382,24 @@ describe Record do
      end    
   
   describe "(testing answer_num)" do
+    
+    it "should return 0 when no matching answers will be found within answer_num"  do
+       nr = Record.locate(:first, :index => :any)
+       Record.locate(nr.id,:index => :any,:fields => ['breastfeeding'], :return_answers_hash => true).should == nil
+       nr.answer_num("breastfeeding",'Z').should == 0
+    end
+    
+    it "should return 0 when there are no matching answers for a given field"  do
+       @record = Record.make('SampleForm','new_entry')
+       @record[:breastfeeding] = 'A'    #Only one baby, first PP visit
+       @record[:breastfeeding,1] = 'B'  #Only one baby, second PP visit
+       @record[:breastfeeding,2] = 'C'  #Only one baby, third PP visit
+       @record[:breastfeeding,3] = 'D'  #Only one baby, fourth PP visit
+       @record.save('new_entry')
+       nr = Record.locate(:first, :index => :any)
+       nr.answer_num("breastfeeding",'Z').should == 0
+    end
+    
     it "should return 1 when that number of matches answers for a given field"  do
        @record = Record.make('SampleForm','new_entry')
        @record[:breastfeeding] = 'A'    #Only one baby, first PP visit
