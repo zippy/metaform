@@ -482,18 +482,26 @@ class Record
   end
 
   def slice(*field_names)
+    # puts "--------------"
+    # puts "slice:  field_names = #{field_names.inspect}"
     r = Record.locate(self.id,:index => :any, :fields => field_names)
+    # puts "slice:  r = #{r.inspect}"
     result = {}
     field_names.each {|a| result[a] = {}}
     r.form_instance.field_instances.collect do |fi| 
       result[fi.field_id][fi.idx] = fi.answer
     end
     result = result[field_names[0]] if field_names.size == 1
+    # puts "result = #{result.inspect}"
     result
   end
   
   def answer_num(field,answer,index=nil)
-    #self.slice(field).select{|k,v| v == answer}.length
+    # puts "---------"
+    # puts "answer_num: field = #{field.inspect}"
+    # puts "answer_num: answer = #{answer.inspect}"
+    # puts "answer_num: index = #{index.inspect}"
+    # puts "answer_num: self.id = #{self.id}"
     r = Record.locate(self.id,:index => :any,:fields => [field], :return_answers_hash => true)
     if r
       if index
@@ -506,10 +514,12 @@ class Record
   
   def last_answer(field,index=nil)
     r = Record.locate(self.id,:index => :any,:fields => [field], :return_answers_hash => true)
-    if index
-      r[field].value.map{ |a| a[index] }.compact[-1]
-    else
-      r[field].value.compact[-1]
+    if r
+      if index
+        r[field].value.map{ |a| a[index] }.compact[-1]
+      else
+        r[field].value.compact[-1]
+      end
     end
  end
   
