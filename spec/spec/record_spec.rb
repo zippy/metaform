@@ -309,6 +309,12 @@ describe Record do
   end
   
   describe "(testing last_answer)" do
+    it "should return nil when no matching answers will be found within last_answer"  do
+       nr = Record.locate(:first, :index => :any)
+       Record.locate(self.id,:index => :any,:fields => ['breastfeeding'], :return_answers_hash => true).should == nil
+       nr.last_answer("breastfeeding").should == nil
+    end
+    
     it "should get highest index value of field"  do
        @record = Record.make('SampleForm','new_entry')
        @record[:breastfeeding] = 'A'    #Only one baby, first PP visit
