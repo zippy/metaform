@@ -427,6 +427,7 @@ class Record
       form.setup(presentation,self)
     end
 
+    #TODO scalability.  This could be responsible for slowness.  Why check all the indexes!?!
     field_list = @attributes.values.collect {|a| a.keys}.flatten.uniq
     field_instances = @form_instance.field_instances.find(:all, :conditions => ["field_id in (?) and form_instance_id = ?",field_list,id])
 #    field_instances.each {|fi| logger.info("#{fi.answer} #{fi.idx.to_s} ZZZZZ" << fi.idx.class.to_s)}
@@ -494,10 +495,12 @@ class Record
   def answer_num(field,answer,index=nil)
     #self.slice(field).select{|k,v| v == answer}.length
     r = Record.locate(self.id,:index => :any,:fields => [field], :return_answers_hash => true)
-    if index
-      r[field].value.map{ |a| a[index] }.delete_if {|x| x != answer}.size
-    else
-      r[field].value.delete_if{ |x| x != answer}.size
+    if r
+      if index
+        r[field].value.map{ |a| a[index] }.delete_if {|x| x != answer}.size
+      else
+        r[field].value.delete_if{ |x| x != answer}.size
+      end
     end
   end
   
