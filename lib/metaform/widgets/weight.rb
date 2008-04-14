@@ -1,5 +1,5 @@
 ################################################################################
-class Weight < Widget
+class WeightWidget < Widget
   
   ################################################################################
   def self.render_form_object(form,field_instance_id,value,options)
@@ -38,6 +38,11 @@ class Weight < Widget
 		#{form.javascript_tag(js_update_weight)}
 		EOHTML
 	  end
+  end
+  
+  ################################################################################
+  def self.humanize_value(value,options=nil)
+    "#{value} grams"
   end
 
   ################################################################################
