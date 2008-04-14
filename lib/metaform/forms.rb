@@ -294,11 +294,13 @@ class Form
       end
       
       widget = Widget.fetch(appearance_type)
+      widget_options = {:constraints => constraints, :params => appearance_parameters}
+      widget_options[:read_only] = true if options[:read_only]
       if options[:erb]
-        field_element = widget.render_form_object(@@form,field_name,value,:constraints => constraints, :params => appearance_parameters)
+        field_element = widget.render_form_object(@@form,field_name,value,widget_options)
         field_label = the_field.label
       end
-      field_html = widget.render(@@form,field_name,value,the_field.label,:constraints => constraints, :params => appearance_parameters)
+      field_html = widget.render(@@form,field_name,value,the_field.label,widget_options)
 
       #TODO, this produces an ugly list of errors right now.  Control over this should be
       # made much higher, i.e. some errors shouldn't show up depending on which other errors
@@ -344,6 +346,15 @@ class Form
           end
         end
       end
+    end
+    
+    ###############################################
+    # Question in read-only mode (shorthand)
+    def qro(field_name,appearance = "TextField",css_class = nil,followup_appearances = nil,opts = {})
+      options = {
+        :read_only => true
+      }.update(opts)
+      q(field_name,appearance,css_class,followup_appearances,options)
     end
     
     ###############################################
@@ -544,9 +555,7 @@ YAML
       end
     end
     
-    #################################################################################
-    # the function called by the client to actually render the the html of the form
-    def build(presentation_name,record=nil,form = nil,index=nil)
+    def prepare_for_build(record,form,index)
       @@form = form
       @@index = index
       @@unique_ids = 0  
@@ -557,6 +566,12 @@ YAML
       @@phase = :build
       @@constraint_errors = nil
       @@meta = {}
+    end
+    
+    #################################################################################
+    # the function called by the client to actually render the the html of the form
+    def build(presentation_name,record=nil,form = nil,index=nil)
+      prepare_for_build(record,form,index)
       p(presentation_name)
       body %Q|<input type="hidden" name="meta[workflow_action]" id="meta_workflow_action">| if !@@meta[:workflow_action]
       
@@ -705,6 +720,9 @@ YAML
     def body(text)
       return if @@phase != :build
       @@body << text
+    end
+    def get_body
+      @@body
     end
     def javascript(js)
       return if @@phase != :build
