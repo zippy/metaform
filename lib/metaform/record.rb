@@ -114,8 +114,32 @@ class Record
     end
     
     def zip(other_answer,&block)
-      if @value && other_answer.value
-        @value.zip(other_answer.value) {|a| block.call(a)} 
+      # puts "------"
+      # puts "@value = #{@value.inspect}"
+      # puts "other_answer = #{other_answer.inspect}"
+      # puts "other_answer.value = #{other_answer.value.inspect}"
+      # puts "@value is #{@value.nil?}"
+      # puts "other_answer.value is #{other_answer.value.nil?}"
+      if !@value.nil? && !other_answer.value.nil?
+        # puts "1"
+        puts "@value.zip(other_answer.value) = #{@value.zip(other_answer.value).inspect}"
+        if block
+          # puts "3"
+          @value.zip(other_answer.value) {|a| block.call(a)} 
+        else
+          # puts "4"
+          @value.zip(other_answer.value)
+        end
+      else
+        # puts "2"
+       [[nil,nil]]          
+      end
+    end
+    
+    def map(&block)
+      if @value
+        @value.map {|v| 
+          block.call(v)}
       end
     end
     
@@ -646,8 +670,8 @@ class Record
         end
         field_list.keys.each {|field_id| f[field_id] = Answer.new(nil,nil) if !f.has_key?(field_id)}
         the_form = return_answers_hash ? f : r
-        #puts "2:  f = #{f.inspect}"
-        #puts "r = #{r.inspect}"
+        # puts "2:  f = #{f.inspect}"
+        # puts "r = #{r.inspect}"
         if filters && filters.size > 0
           kept = false
           begin
@@ -672,7 +696,7 @@ class Record
   def Record.eval_field(expression)
 #      #puts "---------"
 #      #puts "eval_Field:  expression=#{expression}"
-    expr = expression.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|zip|include\?)/,'f["\1"].\2')
+    expr = expression.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|zip|map|include\?)/,'f["\1"].\2')
 #      #puts "eval_field:  expr=#{expr}"
     expr = expr.gsub(/:([a-zA-Z0-9_-]+)\./,'f["\1"].value.')
 #      #puts "eval_field:  expr=#{expr}"

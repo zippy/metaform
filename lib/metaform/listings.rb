@@ -48,7 +48,7 @@ class Listings
       # numbers to numbers, etc.  Actually, perhaps that should be solved by
       # the loading of the field instances answer value and then the <=> should just work right.
       order_field = options[:order]
-      puts "forms.inspect = #{forms.inspect}"
+      # puts "forms.inspect = #{forms.inspect}"
       forms.sort {|x,y| x.send(order_field) ? (x.send(order_field) <=> y.send(order_field)) : 0 }
     end
   end

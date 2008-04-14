@@ -48,7 +48,13 @@ class Reports
       # build up the list of extra fields we need to get from the database by looking in count queries
       field_list = {}
       r.fields.each {|f| field_list[f]=1} if r.fields
-      r.count_queries.each { |stat,q| q.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1} if q.is_a?(String)}
+      
+      count_queries = r.count_queries
+      if options[:count_queries]
+        count_queries.update(options[:count_queries])
+      end
+      count_queries.each { |stat,q| q.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1} if q.is_a?(String)}
+      
       filters = arrayify(r.filters)
       if options[:filters]
         filters = filters.concat(arrayify(options[:filters]))
@@ -70,12 +76,12 @@ class Reports
 #        :conditions => ["form_id in (?) and field_id in (?)" << w ,r.forms,field_list.keys], 
 #        :include => [:field_instances]
 #        )
-      
       form_instances = Record.locate(:all,locate_options) 
+      # puts "form_instances = #{form_instances.inspect}"
       
       total = form_instances.size
       #puts "---------count_queries:" 
-      r.count_queries.each do |stat,q|
+      count_queries.each do |stat,q|
         count = Counter.new
         form_instances.each do |f|
           begin
