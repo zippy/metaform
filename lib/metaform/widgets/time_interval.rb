@@ -18,6 +18,13 @@ class TimeIntervalWidget < Widget
   end
 
   ################################################################################
+  def self.humanize_value(value,options=nil)
+    hours = value.to_i / 60
+    minutes = value.to_i % 60
+    "#{hours} hours, #{minutes} minutes"
+  end
+
+  ################################################################################
   def self.javascript_get_value_function (field_instance_id)
     %Q|$DF('#{build_html_id(field_instance_id)}')|
   end

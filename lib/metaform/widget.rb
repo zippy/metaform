@@ -14,9 +14,9 @@ class Widget
   def self.enumeration (constraints)
     
     constraint_name = nil
-    #TODO this is stupid.  Fix!
+    #TODO this is stupid.  Fix!  Error message isn't clear if you make a mistake
     ['enumeration','set','enumeration_lookup','set_lookup'].each {|e| constraint_name = e if constraints.has_key?(e); }
-    raise constraints.inspect if !constraint_name
+    raise "you must set an enumeration/set constraint!" if !constraint_name
     if constraints && constraints[constraint_name]
       case 
       when constraint_name == 'enumeration' || constraint_name == 'set'
@@ -50,7 +50,15 @@ class Widget
 
   ################################################################################
   def self.render(form,field_instance_id,value,label,options={})
-    render_label(label,field_instance_id,render_form_object(form,field_instance_id,value,options))
+    render_label(label,field_instance_id,options[:read_only] ? render_form_object_read_only(form,field_instance_id,value,options) : render_form_object(form,field_instance_id,value,options))
+  end
+  
+  def self.render_form_object_read_only(form,field_instance_id,value,options)
+    "<span id=\"record[#{field_instance_id}]\">#{humanize_value(value,options)}</span>"
+  end
+
+  def self.humanize_value(value,options=nil)
+    value
   end
 
   ################################################################################

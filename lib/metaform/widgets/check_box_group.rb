@@ -3,9 +3,9 @@ class CheckBoxGroupWidget < Widget
   ################################################################################
   def self.render_form_object(form,field_instance_id,value,options)
     e = enumeration(options[:constraints])
-    result = []
     checked = value.split(/,/) if value
     checked ||= []
+    result = []
     e.each do |key,val|
       result << %Q|<input name="#{build_html_multi_name(field_instance_id,val)}" id="#{build_html_multi_id(field_instance_id,val)}" type="checkbox" value="#{val}" #{checked.include?(val) ? 'checked' : ''}> #{key}|
     end
@@ -18,6 +18,14 @@ class CheckBoxGroupWidget < Widget
       result = result.join("\n")
     end
     result << %Q|<input name="#{build_html_multi_name(field_instance_id,'__none__')}" id="#{build_html_multi_id(field_instance_id,'__none__')}" type="hidden"}>|
+  end
+
+  def self.humanize_value(value,options=nil)
+    e = enumeration(options[:constraints])
+    checked = value.split(/,/) if value
+    checked ||= []
+    e = Hash[*e.collect {|r| r.reverse}.flatten]
+    checked.collect {|c| e[c]}.join(', ')
   end
   
   ################################################################################

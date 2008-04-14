@@ -2,7 +2,7 @@
 # This widget expects parameters:
 # (factor, first_label, second_label) where factor is the ration between the units 
 # of the first textfield and the second textfield.  
-class FactorTextFields < Widget
+class FactorTextFieldsWidget < Widget
   
   ################################################################################
   def self.render_form_object(form,field_instance_id,value,options)
@@ -13,16 +13,29 @@ class FactorTextFields < Widget
       	first_value = value.to_i / factor.to_i
       	second_Value = value.to_i % factor.to_i
       	<<-EOHTML
-      	<input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'first_box')}" id="#{build_html_multi_id(field_instance_id,'first_box')}" value="#{first_value}" /> #{first_label}
-      	<input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'second_box')}" id="#{build_html_multi_id(field_instance_id,'second_box')}" value="#{second_Value}" /> #{second_label}
-      	EOHTML
+<input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'first_box')}" id="#{build_html_multi_id(field_instance_id,'first_box')}" value="#{first_value}" /> #{first_label}
+<input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'second_box')}" id="#{build_html_multi_id(field_instance_id,'second_box')}" value="#{second_Value}" /> #{second_label}
+EOHTML
       else
       	<<-EOHTML
-      	<input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'first_box')}" id="#{build_html_multi_id(field_instance_id,'first_box')}"/> #{first_label}
-      	<input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'second_box')}" id="#{build_html_multi_id(field_instance_id,'second_box')}"  /> #{second_label}
-      	EOHTML
+<input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'first_box')}" id="#{build_html_multi_id(field_instance_id,'first_box')}"/> #{first_label}
+<input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'second_box')}" id="#{build_html_multi_id(field_instance_id,'second_box')}"  /> #{second_label}
+EOHTML
       end
     end
+  end
+
+  ################################################################################
+  def self.humanize_value(value,options=nil)
+    params = options[:params]
+    if params
+      (factor,first_label,second_label) = params.split(/,/)
+      if value 
+    	  first_value = value.to_i / factor.to_i
+    	  second_Value = value.to_i % factor.to_i
+        "#{first_value} #{first_label} #{second_Value} #{second_label}"
+      end
+  	end
   end
 
   ################################################################################

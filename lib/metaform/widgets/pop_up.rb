@@ -9,17 +9,23 @@ class PopUpWidget < Widget
     raise "enumeration not specified for #{field_instance_id}" if !e
     if value
       <<-EOHTML
-      <select name="#{build_html_name(field_instance_id)}" id="#{build_html_id(field_instance_id)}">
-      	#{form.options_for_select(e, value)}
-	  </select>
+<select name="#{build_html_name(field_instance_id)}" id="#{build_html_id(field_instance_id)}">
+	#{form.options_for_select(e, value)}
+</select>
       EOHTML
     else
       <<-EOHTML
-      <select name="#{build_html_name(field_instance_id)}" id="#{build_html_id(field_instance_id)}">
-	  	   #{form.options_for_select(e)}
-	  </select>
+<select name="#{build_html_name(field_instance_id)}" id="#{build_html_id(field_instance_id)}">
+   #{form.options_for_select(e)}
+</select>
       EOHTML
     end
+  end
+  ################################################################################
+  def self.humanize_value(value,options=nil)
+    e = enumeration(options[:constraints])
+    e = Hash[*e.collect {|r| r.reverse}.flatten]
+    e[value]
   end
 end
 ################################################################################
