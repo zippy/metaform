@@ -1,5 +1,4 @@
-Metaform
-========
+= Metaform
 
 This plugin provides a system for defining and generating forms for complex data-collection
 which includes workflows, listings, and statistics.  Forms are defined using a domain specific
