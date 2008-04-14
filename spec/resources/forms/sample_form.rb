@@ -10,6 +10,7 @@ class SampleForm < Form
     f 'indexed_field_with_default', 'AFWD', 'string', nil, :default=> 'cow',:indexed_default_from_null_index => true
     fo = f('fruit_other', 'Other fruit', 'string', {"required"=>"fruit=other"})
     fwf 'fruit', '', 'string', {"enumeration"=>[{"apple_mac"=>"Macintosh Apple"}, {"apple_mutsu"=>"Mutsu"}, {"pear"=>"Pear"}, {"banana"=>"Banana"}, {"other"=>"Other...*"}, {"x"=>"XOther...*"}], "required"=>true}, :followups => {'/other|x/' => fo}
+    f 'breastfeeding', 'BF', 'string', nil, :indexed_default_from_null_index => true
   end
         
   def_workflows do 
@@ -37,6 +38,7 @@ class SampleForm < Form
     q 'education', 'TextField'
     q 'occupation', 'TextField'
     q 'fruit', 'RadioButtons',nil,'fruit_other'
+    q 'breastfeeding', 'TextField'
     function_button "New Entry" do
       javascript_submit_workflow_action('create')
     end  

@@ -30,8 +30,14 @@ class Record
     end
     
     def make_multi_dimensional(i1,i2)
+      #puts "ANSWER#make_multi_dimensional i1 = #{i1.inspect}"
+      #puts "ANSWER#make_multi_dimensional i2 = #{i2.inspect}"
+      #puts "ANSWER#make_multi_dimensional @value = #{@value.inspect}"
       @value.collect! {|v| [v]} unless @value[0].instance_of?(Array)
+      #puts "ANSWER#make_multi_dimensional @value = #{@value.inspect}"
+      #puts "ANSWER#make_multi_dimensional i1.to_i = #{i1.to_i}"
       while @value.size <= i1.to_i
+        #puts "ANSWER#make_multi_dimensional @value = #{@value.inspect}"
         @value << []
       end
     end
@@ -50,17 +56,41 @@ class Record
     end
 
     def []=(index,*args)
+      # puts "----------------------"
+      # puts "ANSWER#[]= index = #{index.inspect}, args = #{args.inspect}"
       @value ||= []
+      #puts "ANSWER#[]= @value = #{@value.inspect}"
       val = args.pop
+      if index && index.to_s.include?(',')
+        index_array = index.split(',')
+        while index_array.size > 1 
+          args.unshift index_array.pop
+        end
+        index = index_array[0]
+      end
+      # puts "ANSWER#[]= index = #{index.inspect}, args = #{args.inspect}"
+      
+      #puts "ANSWER#[]= val = #{val.inspect}"
+      #puts "ANSWER#[]= args = #{args.inspect}"
       if args.size == 0 && muilt_dimensional?
+        #puts "ANSWER#[]= args.size == 0 && muilt_dimensional? is true"
+        #puts "PUSHING"
         args.push 0
+        #puts "ANSWER#[]= args = #{args.inspect}"
       end
       
       if args.size == 0
+        #puts "ANSWER#[]= arbs.size == 0 is true"
         @value[index.to_i] = val
+        #puts "ANSWER#[]= @value = #{@value.inspect}"
       else
+        #puts "ANSWER#[]= arbs.size == 0 is NOT true"
         index2 = args.pop
+        #puts "ANSWER#[]= index = #{index.inspect}"
+        #puts "ANSWER#[]= index2 = #{index2}"
         make_multi_dimensional(index,index2)
+        #puts "ANSWER#[]= index = #{index.inspect}"
+        #puts "ANSWER#[]= index2 = #{index2.inspect}"
         @value[index.to_i][index2.to_i] = val        
       end
     end
@@ -111,12 +141,17 @@ class Record
   # or we create a raw new one here
 
   def initialize(the_instance = nil,attributes = nil,options = {})
+    #puts "INITIALIZE"
+    #puts "the_instance = #{the_instance.inspect}"
+    #puts "attributes = #{attributes.inspect}"
+    #puts "options = #{options.inspect}"
     reset_attributes
     the_instance = FormInstance.new if !the_instance
     @form_instance = the_instance
-    if attributes
-      set_attributes(attributes,options)
-    end
+    # if attributes
+    #   set_attributes(attributes,options)
+    # end
+    set_attributes(attributes,options)
   end
   
   ######################################################################################
@@ -158,7 +193,10 @@ class Record
     @attributes = {nil=>{}}
   end
   def attribute_exists(attribute,index=nil)
+    #puts "attribute_exists @attributes = #{@attributes.inspect}"
+    #puts "attribute_exists @index = #{@index.inspect}"
     index = index.to_s if index
+    #puts "attribute_exists @index = #{@index.inspect}"
     @attributes.has_key?(index) && @attributes[index].has_key?(attribute.to_s)
   end
   def get_attribute(attribute,index=nil)
@@ -168,15 +206,7 @@ class Record
   end
   
   def set_attribute(attribute,value,index=nil)
-    if index.instance_of?(Array)
-      if index == [nil]
-        index = nil
-      else
-        index = index.join(',')
-      end
-    else
-      index = index.to_s if index
-    end
+    index = normalize(index)
     i = @attributes[index]
     @attributes[index] = i = {} if !i
     i[attribute.to_s] = value
@@ -220,12 +250,9 @@ class Record
   # TODO we need to make a system where field_instance values can be pre-loaded for a full presentation, otherwise
   # this causes one hit to the database per field per page.
   def [](attribute,*index)
-    if index.size == 0 || index == [nil]
-      index = nil
-    else
-      index = index.collect {|i| i.to_s}.join(',')
-    end
-    
+    #puts "[] attribute = #{attribute.inspect}"
+    #puts "[] index = #{index.inspect}"
+    index = normalize(index)
     field_name = attribute.to_s
     return get_attribute(field_name,index) if attribute_exists(field_name,index)
     raise "field #{field_name} not in form " if !form.field_exists?(field_name)
@@ -282,6 +309,26 @@ class Record
     super
   end
   
+  def normalize(index)
+    if index.instance_of?(Array)
+      index.pop while index.size > 0 && (index[-1] == '' || index[-1] == 0 || index[-1] == nil ) 
+    end
+    if index.instance_of?(Array)
+      if index.size == 0
+        index = nil
+      else
+        index = index.join(',')
+      end
+    elsif index 
+      if index.size == 0 || index == [nil] || index == ""
+        index = nil
+      else
+        index = index.to_s
+      end
+    end
+    index
+  end
+  
   ######################################################################################
   # return and or create ActiveRecord errors object
   def errors
@@ -311,15 +358,25 @@ class Record
   # TODO here is another place where it's clear that things are wonky.  Mixing in the
   # workflow_action into the save function is odd.  
   def save(presentation = 0,meta_data = nil)
+    #puts "SAVE presentation = #{presentation.inspect}"
+    #puts "SAVE meta_data = #{meta_data.inspect}"
+    #puts "SAVE  @form_instance = #{@form_instance.inspect}"
+    #puts "SAVE  @attributes = #{@attributes.inspect}"
+    #puts "SAVE self = #{self.inspect}"
     #TODO we need to test this transactionality to see how it works if different parts
     # of the _update_attributes process fails.
     begin
       FormInstance.transaction do
         result = @form_instance.save
+        #puts "result = #{result.inspect}"
         if result
           result = _update_attributes(presentation,meta_data)
           raise "no new state" if !result
         end
+        #puts "SAVE self = #{self.inspect}"
+        #puts "Errors #{self.errors.full_messages.inspect}"
+        #puts "Errors #{self.errors.empty?}"
+        
         result
       end
     rescue Exception => e
@@ -370,6 +427,7 @@ class Record
       form.setup(presentation,self)
     end
 
+    #TODO scalability.  This could be responsible for slowness.  Why check all the indexes!?!
     field_list = @attributes.values.collect {|a| a.keys}.flatten.uniq
     field_instances = @form_instance.field_instances.find(:all, :conditions => ["field_id in (?) and form_instance_id = ?",field_list,id])
 #    field_instances.each {|fi| logger.info("#{fi.answer} #{fi.idx.to_s} ZZZZZ" << fi.idx.class.to_s)}
@@ -424,16 +482,46 @@ class Record
   end
 
   def slice(*field_names)
+    # puts "--------------"
+    # puts "slice:  field_names = #{field_names.inspect}"
     r = Record.locate(self.id,:index => :any, :fields => field_names)
+    # puts "slice:  r = #{r.inspect}"
     result = {}
     field_names.each {|a| result[a] = {}}
-
     r.form_instance.field_instances.collect do |fi| 
       result[fi.field_id][fi.idx] = fi.answer
     end
     result = result[field_names[0]] if field_names.size == 1
+    # puts "result = #{result.inspect}"
     result
   end
+  
+  def answer_num(field,answer,index=nil)
+    # puts "---------"
+    # puts "answer_num: field = #{field.inspect}"
+    # puts "answer_num: answer = #{answer.inspect}"
+    # puts "answer_num: index = #{index.inspect}"
+    # puts "answer_num: self.id = #{self.id}"
+    r = Record.locate(self.id,:index => :any,:fields => [field], :return_answers_hash => true)
+    if r
+      if index
+        r[field].value.map{ |a| a[index] }.delete_if {|x| x != answer}.size
+      else
+        r[field].value.delete_if{ |x| x != answer}.size
+      end
+    end
+  end
+  
+  def last_answer(field,index=nil)
+    r = Record.locate(self.id,:index => :any,:fields => [field], :return_answers_hash => true)
+    if r
+      if index
+        r[field].value.map{ |a| a[index] }.compact[-1]
+      else
+        r[field].value.compact[-1]
+      end
+    end
+ end
   
   ######################################################################################
   ######################################################################################
@@ -447,10 +535,14 @@ class Record
   
   # Record.locate
   def Record.locate(what,options = {})
+    #puts "----------"
+    #puts "begin Record.locate"
+    #puts "what = #{what.inspect}"
+    #puts "options = #{options.inspect}"
     condition_strings = []
     conditions_params = []
     
-   puts "searching for #{what} options = " + options.inspect
+   #puts "searching for #{what} options = " + options.inspect
     
     field_list = {} 
     
@@ -463,7 +555,7 @@ class Record
     else
       condition_strings << "(idx is null)"      
     end
-    
+    #puts "condition_strings = #{condition_strings}"
     if options.has_key?(:forms)
       condition_strings << "(form_id in (?))"
       conditions_params << options[:forms]
@@ -502,33 +594,60 @@ class Record
       }
     end
     find_opts ||= {}
-    
+    #puts "find_opts = #{find_opts.inspect}"
     begin
       form_instances = FormInstance.find(what,find_opts)
     rescue
       form_instances = nil
     end
-    
+        
     return_answers_hash = options.has_key?(:return_answers_hash)
     
     forms = []
-
+    #puts "1 form_instances = #{form_instances.inspect}"
+    #puts "filters = #{filters.inspect}"
+    #puts "return_answers_hash = #{return_answers_hash}"
     if form_instances && (filters || return_answers_hash)
+      #puts "after if"
+        if !form_instances.respond_to?('each')
+          form_instances = [form_instances]
+          did_it = true
+          #puts "DID IT"
+        end
       filter_eval_string = filters.collect{|x| "(#{x})"}.join('&&') if filters
       #TODO test for scalability on large datatsets
+      #puts "next line"
+      #puts "2 form_instances = #{form_instances.inspect}"
       form_instances.each do |r|
+        #puts "r = #{r.inspect}"
         f = {'workflow_state' => Answer.new(r.workflow_state),'updated_at' => Answer.new(r.updated_at)}
+        #puts "1:  f = #{f.inspect}"
+        #puts "r.field_instances = #{r.field_instances.inspect}"
         r.field_instances.each do |field_instance|
-          puts "key: #{field_instance.field_id} answer:#{field_instance.answer}"
+          #puts "field_instance = #{field_instance.inspect}"
+          #puts "key: #{field_instance.field_id}, answer: #{field_instance.answer}, idx: #{field_instance.idx}"
           if f.has_key?(field_instance.field_id)
+            #puts "f.has_key?  TRUE field_instance.field_id #{field_instance.field_id}"
             a = f[field_instance.field_id]
+            #puts "a = #{a.inspect}"
+            #puts "field_instance.idx = #{field_instance.idx}"
+            #puts "field_instance.answer = #{ field_instance.answer}"
             a[field_instance.idx] = field_instance.answer
+            #puts "a = #{a.inspect}"
           else
+            #puts "f.has_key? FALSE field_instance.field_id #{field_instance.field_id}"
+            #puts "field_instance = #{field_instance.inspect}"
+            #puts "field_instance.answer = #{field_instance.answer.inspect}"
+            #puts "field_instance.idx = #{field_instance.idx.inspect}"
             f[field_instance.field_id]= Answer.new(field_instance.answer,field_instance.idx)
+            #puts "f[#{field_instance.field_id}] = #{f[field_instance.field_id].inspect}"
           end
+          #puts "!!! f[field_instance.field_id] = #{f[field_instance.field_id].inspect}"
         end
         field_list.keys.each {|field_id| f[field_id] = Answer.new(nil,nil) if !f.has_key?(field_id)}
         the_form = return_answers_hash ? f : r
+        #puts "2:  f = #{f.inspect}"
+        #puts "r = #{r.inspect}"
         if filters && filters.size > 0
           kept = false
           begin
@@ -542,29 +661,30 @@ class Record
           forms << the_form
         end
       end
+      forms = forms[0] if forms.length == 1 && did_it
     else
       forms = form_instances
     end
-    
+    #puts "forms = #{forms.inspect}"
     return forms if return_answers_hash
     Record.create(forms)
   end
   def Record.eval_field(expression)
-#      puts "---------"
-#      puts "eval_Field:  expression=#{expression}"
+#      #puts "---------"
+#      #puts "eval_Field:  expression=#{expression}"
     expr = expression.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|zip|include\?)/,'f["\1"].\2')
-#      puts "eval_field:  expr=#{expr}"
+#      #puts "eval_field:  expr=#{expr}"
     expr = expr.gsub(/:([a-zA-Z0-9_-]+)\./,'f["\1"].value.')
-#      puts "eval_field:  expr=#{expr}"
+#      #puts "eval_field:  expr=#{expr}"
     expr = expr.gsub(/:([a-zA-Z0-9_-]+)\[/,'f["\1"][')
-#      puts "eval_field:  expr=#{expr}"
+#      #puts "eval_field:  expr=#{expr}"
     if /\.zip/.match(expr)
       expr = expr.gsub(/\.zip\(:([a-zA-Z0-9_-]+)/,'.zip(f["\1"]')
     else
       expr = expr.gsub(/:([a-zA-Z0-9_-]+)/,'(f["\1"].is_indexed? ? f["\1"].value[0] : f["\1"].value)')
     end
-      puts "eval_field:  expr=#{expr}"
-#      puts "---------"
+      # #puts "eval_field:  expr=#{expr}"
+#      #puts "---------"
     expr
   end
   
@@ -590,6 +710,7 @@ class Record
   end
   
   def Record.make(form_name,presentation,attribs = {},options ={})
+    #puts "RECORD.make attribs = #{attribs.inspect}"
     the_form = Form.find(form_name)
     #TODO there is a circularity problem here.  To set up the form we call it with a presentation
     # but part of the setup gets us the default presentation if we don't have one!
@@ -599,9 +720,13 @@ class Record
     # to be unified, because right now there will be two calls to setup.  Once here "manually" and also later
     # in Record#update_attributes
     fi = FormInstance.new
+    #puts "Record.make fi = #{fi.inspect}"
     fi.form_id = the_form.to_s
     fi.workflow = the_form.workflow_for_new_form(presentation)
     the_form.setup(presentation,nil)
+    #puts "Record.make fi = #{fi.inspect}"
+    #puts "Record.make attribs = #{attribs.inspect}"
+    #puts "Record.make options = #{options.inspect}"
     
     @record = Record.new(fi,attribs,options)    
   end
@@ -611,10 +736,13 @@ class Record
   # convienence class method to create a bunch of records from a single or a list of 
   # FormInstances
   def Record.create(form_instances)
+    #puts "Record.create form_instances = #{form_instances.inspect}"
     if form_instances.is_a?(Array)
+      #puts "Record.create is_a?(Array) is true"
       result = []
       form_instances.each{|r| result.push(Record.new(r))}
     else
+      #puts "Record.create is_a?(Array) is false"
       result = Record.new(form_instances)
     end
     result

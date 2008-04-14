@@ -2,8 +2,8 @@ require File.dirname(__FILE__) + '/../spec_helper'
 
 describe Form do
   describe "(using SampleForm as 'schema')" do
-    it "should have 9 fields" do
-      SampleForm.fields.size.should == 9
+    it "should have 10 fields" do
+      SampleForm.fields.size.should == 10
     end
   end
   describe "(Form#q-- defining questions)" do

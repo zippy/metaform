@@ -1,3 +1,7 @@
+#This will run all plugin specs from the command line:  rake spec:plugins
+#For only one test:  spec <file-name> -e 'example name'
+#  spec vendor/plugins/metaform/spec/spec/record_spec.rb -e 'should return values via the [] operator'
+
 require File.dirname(__FILE__) + '/../../../../spec/spec_helper'
 require 'fileutils'
 
