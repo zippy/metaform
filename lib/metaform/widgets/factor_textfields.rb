@@ -1,6 +1,6 @@
 ################################################################################
 # This widget expects parameters:
-# (factor, first_label, second_label) where factor is the ration between the units 
+# (factor, first_label, second_label) where factor is the ratio between the units 
 # of the first textfield and the second textfield.  
 class FactorTextFieldsWidget < Widget
   
@@ -9,12 +9,11 @@ class FactorTextFieldsWidget < Widget
    params = options[:params]
     if params
       (factor,first_label,second_label) = params.split(/,/)
-      if value 
-      	first_value = value.to_i / factor.to_i
-      	second_Value = value.to_i % factor.to_i
+      if value
+        (first_value,second_value) = parse_value(value,factor)
       	<<-EOHTML
 <input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'first_box')}" id="#{build_html_multi_id(field_instance_id,'first_box')}" value="#{first_value}" /> #{first_label}
-<input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'second_box')}" id="#{build_html_multi_id(field_instance_id,'second_box')}" value="#{second_Value}" /> #{second_label}
+<input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'second_box')}" id="#{build_html_multi_id(field_instance_id,'second_box')}" value="#{second_value}" /> #{second_label}
 EOHTML
       else
       	<<-EOHTML
@@ -25,15 +24,20 @@ EOHTML
     end
   end
 
+  def self.parse_value(value,factor)
+  	first_value = value.to_i / factor.to_i
+  	second_value = value.to_i % factor.to_i
+  	[first_value,second_value]
+  end
+
   ################################################################################
   def self.humanize_value(value,options=nil)
     params = options[:params]
     if params
       (factor,first_label,second_label) = params.split(/,/)
       if value 
-    	  first_value = value.to_i / factor.to_i
-    	  second_Value = value.to_i % factor.to_i
-        "#{first_value} #{first_label} #{second_Value} #{second_label}"
+        (first_value,second_value) = parse_value(value,factor)
+        "#{first_value} #{first_label} #{second_value} #{second_label}"
       end
   	end
   end

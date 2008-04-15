@@ -68,7 +68,7 @@ describe Widget do
   end
   
   describe FactorTextFieldsWidget do
-    it "should render two html input texts lables from params" do
+    it "should render two html input texts and lables from params" do
       FactorTextFieldsWidget.render_form_object(@form,1,"500",{:params=>"5,FirstLabel,SecondLabel"}).should == 
         "<input type=\"text\" size=2 name=\"record[1][first_box]\" id=\"record_1_first_box\" value=\"100\" /> FirstLabel\n<input type=\"text\" size=2 name=\"record[1][second_box]\" id=\"record_1_second_box\" value=\"0\" /> SecondLabel\n"
     end
