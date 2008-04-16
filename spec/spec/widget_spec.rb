@@ -134,10 +134,15 @@ describe Widget do
     before(:each) do
       @options = {:constraints => {'enumeration'=>[{'val1'=>'Value 1'},{'val2'=>'Value 2'},{'val3'=>'Value 3'}]}}
     end
-     
+
     it "should render html select" do
       PopUpWidget.render_form_object(@form,1,"val1",@options).should == 
         "<select name=\"record[1]\" id=\"record_1\">\n\t<option value=\"val1\" selected=\"selected\">Value 1</option>\n<option value=\"val2\">Value 2</option>\n<option value=\"val3\">Value 3</option>\n</select>\n"
+    end
+    it "should render html select with nil option if specified as the param" do
+      @options[:params] = "Please choose a value"
+      PopUpWidget.render_form_object(@form,1,"val1",@options).should ==
+        "<select name=\"record[1]\" id=\"record_1\">\n\t<option value=\"\">Please choose a value</option>\n<option value=\"val1\" selected=\"selected\">Value 1</option>\n<option value=\"val2\">Value 2</option>\n<option value=\"val3\">Value 3</option>\n</select>\n"
     end
     it "should render the human enumerations value if read_only" do
       PopUpWidget.render_form_object_read_only(@form,1,"val2",@options).should == 
