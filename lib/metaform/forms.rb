@@ -403,7 +403,9 @@ YAML
 
     ###############################################
     # Presentation
-    def p(presentation_name)
+    def p(presentation_name,opts = {})
+      options = {
+      }.update(opts)
       pres = self.presentations[presentation_name]
       raise "presentation #{presentation_name} doesn't exist" if !pres
       if @@phase == :setup
@@ -416,8 +418,36 @@ YAML
         end
       end
       pres.initialized = true
-      body %Q|<div id="presentation_#{presentation_name}" class="presentation">|      
-      pres.block.call
+      indexed = options[:indexed]
+      css_class = indexed ? 'presentation_indexed' : 'presentation'
+      body %Q|<div id="presentation_#{presentation_name}" class="#{css_class}">|
+      if indexed
+        template = save_context(:body) do
+          pres.block.call
+        end
+        template = quote_for_javascript(template.join(''))
+        javascript %Q|var #{presentation_name} = new indexedItems;#{presentation_name}.elem_id="presentation_#{presentation_name}_items";#{presentation_name}.delete_text="#{indexed[:delete_button_text]}";#{presentation_name}.self_name="#{presentation_name}";|
+        javascript %Q|function doAdd#{presentation_name}() {#{presentation_name}.addItem("#{template}")}|
+        add_button_html = %Q|<input type="button" onclick="doAdd#{presentation_name}()" value="#{indexed[:add_button_text]}">|
+        body add_button_html if indexed[:add_button_position] != 'bottom'
+        body %Q|<ul id="presentation_#{presentation_name}_items">|
+        raise "reference_field option must be defined" if !indexed[:reference_field]
+        answers = @@record.answers_hash(indexed[:reference_field])
+        answer = answers[indexed[:reference_field]]
+        orig_index = @@index
+        (0..answer.size-1).each do |i|
+          @@index = i
+          body %Q|<li id="item_#{i}" class="presentation_indexed_item">|
+          pres.block.call
+          body %Q|<input type="button" value="#{indexed[:delete_button_text]}" onclick="#{presentation_name}.removeItem($(this).up())">|
+          body '</li>'
+        end
+        @@index = orig_index
+        body '</ul>'
+        body add_button_html if indexed[:add_button_position] == 'bottom'
+      else
+        pres.block.call
+      end
       body "</div>"
     end
 
@@ -425,7 +455,7 @@ YAML
     # Tabs
     def build_tabs(tabs_name,current,record)
       @@record = record
-      @@body = []
+      self.stuff[:body] = []
       tabs = self.tabs[tabs_name]
       raise "tab group #{tabs_name} doesn't exist" if !tabs
       @@current_tab = current
@@ -433,7 +463,7 @@ YAML
       body %Q|<div class="tabs"> <ul>|
       tabs.call
       body "</ul></div>"
-      @@body.join("\n")
+      self.stuff[:body].join("\n")
     end
     
     def tab(presentation_name,pretty_name = nil,index = -1)
@@ -559,13 +589,12 @@ YAML
       @@form = form
       @@index = index
       @@unique_ids = 0  
-      @@body = []
-      @@jscripts = []
       @@observer_jscripts =  {}
       @@record = record
       @@phase = :build
       @@constraint_errors = nil
       @@meta = {}
+      self.stuff = nil
     end
     
     #################################################################################
@@ -575,7 +604,7 @@ YAML
       p(presentation_name)
       body %Q|<input type="hidden" name="meta[workflow_action]" id="meta_workflow_action">| if !@@meta[:workflow_action]
       
-      foot_jscripts = @@observer_jscripts.collect do |field,jsc|
+      jscripts = @@observer_jscripts.collect do |field,jsc|
         widget = Widget.fetch(get_field_appearance(field))
         observer_function = widget.javascript_build_observe_function(field,"check_#{field}()",self.fields[field].constraints)
         value_function = widget.javascript_get_value_function(field)
@@ -590,8 +619,9 @@ YAML
           check_#{field}();
         EOJS
       end
+      jscripts << stuff[:js] if stuff[:js]
       
-      [@@body.join("\n"),foot_jscripts.join("\n")]
+      [stuff[:body].join("\n"),jscripts.join("\n")]
     end
     
     def setup(presentation_name,record)
@@ -719,14 +749,19 @@ YAML
     
     def body(text)
       return if @@phase != :build
-      @@body << text
+      self.stuff[:body] ||= []
+      self.stuff[:body] << text
     end
     def get_body
-      @@body
+      self.stuff[:body]
     end
     def javascript(js)
       return if @@phase != :build
+      self.stuff[:js] ||= []
       self.stuff[:js] << js
+    end
+    def get_jscripts
+      self.stuff[:js]
     end
     
     #################################################################################
@@ -801,6 +836,9 @@ YAML
     ###########################################################
     def quote_for_javascript(text)
       text.gsub(/\n/,'\n').gsub(/"/,'\"')
+    end
+    def quote_for_html_attribute(text)
+      text.gsub(/"/,'&quot;')
     end
     
   end

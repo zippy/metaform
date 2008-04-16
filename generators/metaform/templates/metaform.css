@@ -8,6 +8,12 @@
 /*  border:1px solid green; */
 }
 
+.presentation_indexed_item {
+	background-color: #ddd;
+  list-style: none;
+	padding: 1px;
+}
+
 .incomplete {
   border: 1px solid red;
 }
@@ -33,6 +39,7 @@ td.checkbox_group {
 	width: auto;
 /*	clear: both;  Not in Mana */
 }
+
 td.radio_buttons {
 	padding: 5px;
 }

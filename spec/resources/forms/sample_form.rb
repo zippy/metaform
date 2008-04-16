@@ -44,6 +44,14 @@ class SampleForm < Form
     end  
   end
   
+  presentation 'simple' do
+    q 'name'
+  end
+  
+  presentation 'indexed_sub_presentation' do
+    p 'simple',:indexed => {:appearance => :list, :add_button_text => 'Add a name', :delete_button_text => 'Delete this name'}
+  end
+  
 	presentation 'update_entry',:legal_states =>'logged' do
     t "name: #{field_value('name')}"
     q 'due_date', 'Date'

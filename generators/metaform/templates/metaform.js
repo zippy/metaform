@@ -85,3 +85,34 @@ WidgetWatcher.prototype = {
 		this.my_function();
 	}
 };
+
+var indexedItems = Class.create();
+indexedItems.prototype = {
+	elem_id: 'indexed_presentation',
+	self_name: 'i',
+	delete_text: 'Delete an item',
+	initialize: function () {
+		},
+	addItem: function(item) {
+		var items = $(this.elem_id).childElements();
+		var item_id = items.length;
+		var element = new Element('li', {id:'item_'+items.length,'class':'presentation_indexed_item',style:'display:none'});
+		element.innerHTML = item;
+		$(element).appendChild(Element('input',{type:'button',value:this.delete_text,onclick:this.self_name+".removeItem($(this).up())"}));
+		$(this.elem_id).appendChild(element);
+		Effect.toggle(element,'blind',{duration: .3});
+	},
+	removeItem: function(item) {
+		Effect.toggle(item,'blind',{duration: .5, afterFinish: myCallBackOnFinish});
+	}
+};
+
+function myCallBackOnFinish(obj){
+	var item = obj.element.id;
+	$(item).remove();
+	var items = $(this.elem_id).childElements();
+	items.each(function(i,index) {
+		$(i).id = 'item_'+index;
+		}
+	);
+
