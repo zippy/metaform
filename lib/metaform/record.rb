@@ -235,6 +235,22 @@ class Record
     @attributes[index] = i = {} if !i
     i[attribute.to_s] = value
   end
+  
+  def answers_hash(*fields)
+    h = {}
+    fields = fields.collect {|f| f.to_s}
+    fields.each do |field|
+      a = Answer.new(nil,nil)
+      h[field] = a
+      @attributes.each do |index,values|
+        if values.keys.include?(field)
+          a[index]=values[field]
+        end
+      end
+    end
+    h
+  end
+  
   ######################################################################################
   # some paramaters are just those of the form instance object
   def id

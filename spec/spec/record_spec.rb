@@ -1,7 +1,7 @@
 require File.dirname(__FILE__) + '/../spec_helper'
 
 describe Record do
-  
+
   describe "(creating a new one)" do
     before(:each) do
       @record = Record.make('SampleForm','new_entry',{:name =>'Bob Smith'})
@@ -54,6 +54,19 @@ describe Record do
       nr[:name,'x'].should == 'Name x'
       nr[:name,'y'].should =='Name y'
       nr.name.should == 'Bob Smith'
+    end
+    
+    it "should be able to return an answers hash" do
+      @record[:name,1]='Herbert Smith'
+      @record[:name,5]='Squid Smith'
+      a = Record::Answer.new("Bob Smith",nil)
+      a[1] = 'Herbert Smith'
+      answers = @record.answers_hash(:name)
+      answer = answers['name']
+      answer.count == 3
+      answer[0].should == 'Bob Smith'
+      answer[1].should == 'Herbert Smith'
+      answer[5].should == 'Squid Smith'
     end
     
   end
