@@ -1,7 +1,7 @@
 class SampleForm < Form
 
   def_fields do
-    f 'name', 'Name', 'string'
+    f 'name', 'Name', 'string', {"required"=>true}
     f 'due_date', 'Due Date', 'date'
     f 'education', 'Post-secondary formal education (years)', 'integer', {"range"=>"0-14"}
     f 'occupation', 'Occupation', 'string'

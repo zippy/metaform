@@ -25,12 +25,13 @@ module Constraints
         # field was required or nil if it isn't
         case
         when constraint.class == Proc
-          e = constraint.call(value)
+          e = constraint.call(value,form)
           constraint_errors << e if e
         when constraint.class == String
           #for the required_if constraint the value must be a string of the form "field_name=value" or "field_name=~value" for regex matching
-          constraint =~ /(.*)(=~*)(.*?)/
+          constraint =~ /(.*)(=~{0,1})(.*)/
           (field_name,op,field_value) = [$1,$2,$3]
+#          raise "(field_name,op,field_value) = #{[$1,$2,$3].inspect}"
           case op
           when '='
             if form.field_value(field_name) == field_value && (value == nil || value == '')
@@ -38,8 +39,8 @@ module Constraints
             end
           when '=~'
             r = Regexp.new(field_value)
-            if r !~ form.field_value(field_name)
-              constraint_errors << (err_override || "this field is required when #{field_name} matches regexp #{field_value}")
+            if r =~ form.field_value(field_name)
+              constraint_errors << (err_override || "this field is required when #{field_name} matches regex #{field_value}")
             end
           end
         when constraint && (value == nil || value == "")
