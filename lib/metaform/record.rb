@@ -444,7 +444,7 @@ class Record
     # to initialize the form object so any actions taken will have all the 
     # data set up in the form.  This is part of how things are currently screwy and
     # form should be an instance created by new, which initializes all the data or
-    # something like that.  i.e. form = V2Form.new(@presentation,@form_instance)
+    # something like that.  i.e. form = V3form.new(@presentation,@form_instance)
     # then all the stuff that is currently stored as a class variable in form
     # can be simple object instance variables.
 
@@ -756,7 +756,7 @@ class Record
     # but part of the setup gets us the default presentation if we don't have one!
 
     #TODO this is more evidence that we don't have things right.  Currently a "form instance" is spread accross
-    # Record, FormInstance, and "setting up" the class variables in V2Form to work correctly.  All this needs
+    # Record, FormInstance, and "setting up" the class variables in V3form to work correctly.  All this needs
     # to be unified, because right now there will be two calls to setup.  Once here "manually" and also later
     # in Record#update_attributes
     fi = FormInstance.new
