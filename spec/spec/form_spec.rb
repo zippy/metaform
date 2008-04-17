@@ -145,4 +145,13 @@ describe Form do
       end
     end
   end
+
+  describe "utility functions" do
+    describe '#get_field_constraints_as_hash' do
+      it "should convert the enum list to a simple hash" do
+        SampleForm.get_field_constraints_as_hash('fruit','enumeration').should ==
+          {"apple_mac"=>"Macintosh Apple","apple_mutsu"=>"Mutsu","pear"=>"Pear","banana"=>"Banana","other"=>"Other...*","x"=>"XOther...*"}
+      end
+    end
+  end
 end

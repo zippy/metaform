@@ -796,6 +796,13 @@ YAML
       self.stuff[:js]
     end
     
+    def get_field_constraints_as_hash(field_name,constraint)
+      set = self.fields[field_name].constraints[constraint]
+      e = {}
+      set.each {|h| k = h.keys[0];e[k]=h[k]}
+      e
+    end
+
     #################################################################################
     private
     
