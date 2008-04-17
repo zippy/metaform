@@ -1,5 +1,11 @@
 class MetaformException < RuntimeError
 end
+class MetaformUndefinedFieldError < MetaformException
+  attr :field
+  def initialize(field)
+    @field = field
+  end
+end
 
 require 'metaform/forms'
 require 'metaform/listings'

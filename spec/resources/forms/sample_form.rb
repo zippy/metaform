@@ -13,6 +13,9 @@ class SampleForm < Form
     fo = f('fruit_other', 'Other fruit', 'string', {"required"=>"fruit=other"})
     fwf 'fruit', '', 'string', {"enumeration"=>[{"apple_mac"=>"Macintosh Apple"}, {"apple_mutsu"=>"Mutsu"}, {"pear"=>"Pear"}, {"banana"=>"Banana"}, {"other"=>"Other...*"}, {"x"=>"XOther...*"}], "required"=>true}, :followups => {'/other|x/' => fo}
     f 'breastfeeding', 'BF', 'string', nil, :indexed_default_from_null_index => true
+    f 'reverse_name_and_job', 'reversed name and occupation','string',nil, :calculated => {
+      :proc => Proc.new { |form,index| (form.field_value('name',index).to_s+form.field_value('occupation',index).to_s).reverse}
+    }
   end
         
   def_workflows do 

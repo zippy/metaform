@@ -121,7 +121,7 @@ class Form
 # boolean_TxCCTpTf     
 #      raise "unknown field type #{field_type}" if !FieldTypes.include?(field_type)
       
-      field = Struct.new(:name, :label, :type, :constraints,:followups,:followup_name_map,:default,:indexed_default_from_null_index)
+      field = Struct.new(:name, :label, :type, :constraints,:followups,:followup_name_map,:default,:indexed_default_from_null_index,:calculated)
       c = @@constraints
       c ||= {}
       if constraints
@@ -132,7 +132,7 @@ class Form
       end
 #TODO reinstate this line once we fix the dups created in V1Form
 #      raise "#{field_name} already defined" if self.fields.has_key?(field_name)
-      self.fields[field_name] = field[field_name,label,field_type,c,nil,nil,options[:default],options[:indexed_default_from_null_index]]
+      self.fields[field_name] = field[field_name,label,field_type,c,nil,nil,options[:default],options[:indexed_default_from_null_index],options[:calculated]]
     end
     
     #################################################################################
@@ -287,7 +287,8 @@ class Form
         :initially_hidden => false,
         :force_verify => false
       }.update(opts)
-
+      raise MetaformUndefinedFieldError.new(field_name) if !field_exists?(field_name)
+      raise MetaformException,'calculated fields can only be used read-only' if fields[field_name].calculated && !options[:read_only]
       initially_hidden = options[:initially_hidden]
       appearance_type,appearance_parameters = parse_appearance(appearance)
       question(field_name,appearance_type,appearance_parameters)

@@ -506,6 +506,23 @@ describe Record do
         end
    end
   
+  describe "(calculated fields fields)" do
+    before(:each) do
+      #TODO- think about this.  Record needs to have the form prepared for build... hmmmm...
+      @initial_values = {:name =>'Bob Smith',:occupation => 'Boss'}
+      @record = Record.make('SampleForm','new_entry',@initial_values)
+      @form = FormProxy.new('SampleForm'.gsub(/ /,'_'))
+      SampleForm.prepare_for_build(@record,@form,nil)
+    end
+    it "should do the calculation when accessed" do
+      @record.reverse_name_and_job.should == "ssoBhtimS boB"
+    end
+    it "should raise and exception if you try to store a value it" do
+      lambda {
+       @record.reverse_name_and_job = "fred"
+      }.should raise_error("you can't store a value to a calculated field")
+    end
+  end
 
 end
 

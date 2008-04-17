@@ -35,11 +35,20 @@ describe Form do
         SampleForm.f 'new_field','New field label'
         SampleForm.fields['new_field'].should_not == nil
       end
+      describe "-- with calcualted fields" do
+        it "should render calculated fields in read only mode" do
+          SampleForm.qro 'reverse_name_and_job', 'TextField'
+          SampleForm.get_body.should == ["<div id=\"question_reverse_name_and_job\" class=\"question\"><label class=\"label\" for=\"record[reverse_name_and_job]\">reversed name and occupation:</label><span id=\"record[reverse_name_and_job]\">htimS boB</span></div>"]
+        end
+        it "should raise an exception if used in non-read-only mode" do
+          lambda {SampleForm.q 'reverse_name_and_job', 'TextField'}.should raise_error('calculated fields can only be used read-only')
+        end
+      end
     end
     
     describe "q (display a question)" do
       it "should raise an exception for an undefined field" do
-        lambda {SampleForm.q 'froboz', 'TextField'}.should raise_error(MetaformException)
+        lambda {SampleForm.q 'froboz', 'TextField'}.should raise_error(MetaformUndefinedFieldError)
       end
       it "should add question html to the body" do
         SampleForm.q 'name', 'TextField'
@@ -98,7 +107,7 @@ describe Form do
         do_p
       end
 
-      it "should raise an error if you don't specify the refernce_field" do
+      it "should raise an error if you don't specify the reference_field" do
         lambda {
           SampleForm.p 'simple',:indexed => {}
         }.should raise_error("reference_field option must be defined")

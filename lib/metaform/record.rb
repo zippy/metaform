@@ -230,10 +230,12 @@ class Record
   end
   
   def set_attribute(attribute,value,index=nil)
+    attrib = attribute.to_s
+    raise MetaformException,"you can't store a value to a calculated field" if form.fields[attrib].calculated
     index = normalize(index)
     i = @attributes[index]
     @attributes[index] = i = {} if !i
-    i[attribute.to_s] = value
+    i[attrib] = value
   end
   
   def answers_hash(*fields)
@@ -295,7 +297,11 @@ class Record
     index = normalize(index)
     field_name = attribute.to_s
     return get_attribute(field_name,index) if attribute_exists(field_name,index)
-    raise MetaformException,"field #{field_name} not in form " if !form.field_exists?(field_name)
+    raise MetaformUndefinedFieldError.new(field_name) if !form.field_exists?(field_name)
+    if c = form.fields[field_name].calculated
+      return c[:proc].call(form,index)
+    end
+    
     if !@form_instance.new_record?      
       field_instance = nil 
       # The instance may already have been loaded in the instances from a Record.locate so check there first
