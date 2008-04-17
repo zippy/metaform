@@ -26,7 +26,7 @@ class Form
     
     #TODO boy does this look like it could be refactored doesn't it!!!  It should all be generalized
     # into the meta-langage/abstraction for generating DSLs
-    attr_accessor :stuff, :fields, :questions, :presentations, :workflows, :listings, :tabs
+    attr_accessor :stuff, :fields, :questions, :presentations, :workflows, :listings, :tabs, :label_options
 
     def stuff
       @stuff ||= {}
@@ -51,6 +51,10 @@ class Form
     def tabs
       @tabs ||= {}
       @tabs
+    end
+    def label_options
+      @label_options ||= {}
+      @label_options
     end
   end
 
@@ -227,6 +231,12 @@ class Form
     end
     
     #################################################################################
+    # DSL method for setting label options
+    def labeling(options={})
+      label_options.update(options)
+    end
+    
+    #################################################################################
     # DSL methods for tabs
     # build up a hash table of actions for the workflow
     # TODO This will fail if we nest workspaces.  We have to save the context instead of 
@@ -312,11 +322,16 @@ class Form
       widget = Widget.fetch(appearance_type)
       widget_options = {:constraints => constraints, :params => appearance_parameters}
       widget_options[:read_only] = true if options[:read_only]
+
+      field_label = the_field.label
+      postfix = options[:labeling][:postfix] if options.has_key?(:labeling)
+      postfix ||= label_options[:postfix] if label_options.has_key?(:postfix)
+      field_label = field_label + postfix if postfix
+      
       if options[:erb]
         field_element = widget.render_form_object(@@form,field_name,value,widget_options)
-        field_label = the_field.label
       end
-      field_html = widget.render(@@form,field_name,value,the_field.label,widget_options)
+      field_html = widget.render(@@form,field_name,value,field_label,widget_options)
 
       #TODO, this produces an ugly list of errors right now.  Control over this should be
       # made much higher, i.e. some errors shouldn't show up depending on which other errors

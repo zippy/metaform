@@ -1,5 +1,7 @@
 class SampleForm < Form
-
+  
+  labeling(:postfix => ':')
+  
   def_fields do
     f 'name', 'Name', 'string', {"required"=>true}
     f 'due_date', 'Due Date', 'date'
