@@ -70,7 +70,7 @@ class Form
   def self.find (name)
     forms = instance_eval {@forms}
     name = name.to_s
-    raise "Unknown form #{name}" unless forms.has_key?(name)
+    raise MetaformException,"Unknown form #{name}" unless forms.has_key?(name)
     forms[name]
   end
   ################################################################################
@@ -136,7 +136,7 @@ class Form
     # define a field with followup fields
     def fwf(field_name,label = "", field_type = "string",constraints=nil,options = {})
       followups = options[:followups]
-      raise "followups missing!" if !followups
+      raise MetaformException,"followups missing!" if !followups
       options.delete(:followups)
       the_field = f field_name,label,field_type,constraints,options
       the_field.followups = followups
@@ -324,7 +324,7 @@ class Form
       # appearance specification, and also to pass in a css_class specification for the followup question
       # itself
       if followup_appearances 
-        raise "no followups defined for #{field_name}" if !the_field.followups
+        raise MetaformException,"no followups defined for #{field_name}" if !the_field.followups
         map = self.fields[field_name].followup_name_map
         followup_appearances.each do |app|
           (followup_field_name,followup_field_appearance) = parse_followup_spec(app)
@@ -407,14 +407,14 @@ YAML
       options = {
       }.update(opts)
       pres = self.presentations[presentation_name]
-      raise "presentation #{presentation_name} doesn't exist" if !pres
+      raise MetaformException,"presentation #{presentation_name} doesn't exist" if !pres
       if @@phase == :setup
         return if pres.initialized
       end
       if @@phase == :build
         legal_states = pres.options[:legal_states]
         if legal_states != :any && !arrayify(legal_states).include?(workflow_state)
-          raise "presentation #{presentation_name} is not allowed when form is in state #{workflow_state}"
+          raise MetaformException,"presentation #{presentation_name} is not allowed when form is in state #{workflow_state}"
         end
       end
       pres.initialized = true
@@ -431,7 +431,7 @@ YAML
         add_button_html = %Q|<input type="button" onclick="doAdd#{presentation_name}()" value="#{indexed[:add_button_text]}">|
         body add_button_html if indexed[:add_button_position] != 'bottom'
         body %Q|<ul id="presentation_#{presentation_name}_items">|
-        raise "reference_field option must be defined" if !indexed[:reference_field]
+        raise MetaformException,"reference_field option must be defined" if !indexed[:reference_field]
         answers = @@record.answers_hash(indexed[:reference_field])
         answer = answers[indexed[:reference_field]]
         orig_index = @@index
@@ -457,7 +457,7 @@ YAML
       @@record = record
       self.stuff[:body] = []
       tabs = self.tabs[tabs_name]
-      raise "tab group #{tabs_name} doesn't exist" if !tabs
+      raise MetaformException,"tab group #{tabs_name} doesn't exist" if !tabs
       @@current_tab = current
       @@tabs_name = tabs_name
       body %Q|<div class="tabs"> <ul>|
@@ -653,10 +653,11 @@ YAML
       @@record = record      
       workflow_name = record.workflow
       w = self.workflows[workflow_name]
-      raise "unknown workflow #{workflow_name}" if !w
+      raise MetaformException,"unknown workflow #{workflow_name}" if !w
       a = w.actions[action_name]
-      raise "unknown action #{action_name}" if !a
-      raise "action #{action_name} is not allowed when form is in state #{workflow_state}" if !a.legal_states.include?(:any) && !a.legal_states.include?(record.workflow_state)
+      raise MetaformException,"unknown action #{action_name}" if !a
+      raise MetaformException,"'#{@@action_result[:next_state]}' is not a state defined in the '#{workflow_state}' workflow" if !w.states.keys.include?(@@action_result[:next_state])
+      raise MetaformException,"action #{action_name} is not allowed when form is in state #{workflow_state}" if !a.legal_states.include?(:any) && !a.legal_states.include?(record.workflow_state)
       a.block.call(meta)
       @@action_result
     end
@@ -669,7 +670,7 @@ YAML
     
     def workflow_for_new_form(presentation_name)
       w = get_presentation_option(presentation_name,:create_with_workflow)
-      raise "#{presentation_name} doesn't define a workflow for create!" if !w
+      raise MetaformException,"#{presentation_name} doesn't define a workflow for create!" if !w
       w
     end
 
@@ -743,7 +744,7 @@ YAML
     # to distinguish between questions that render the same field differently
     def get_question(field_name)
       q = self.questions[field_name.to_s]
-      raise "question: #{field_name} has not been defined" << self.questions.inspect  if !q
+      raise MetaformException,"question: #{field_name} has not been defined" << self.questions.inspect  if !q
       q
     end
     
@@ -788,7 +789,7 @@ YAML
       when app.is_a?(Array)
         followup_field_name = app[0]; followup_field_appearance =  app[1]
       else
-        raise "followp spec must be String, Hash or Array, got #{app.class} #{app.inspect}"
+        raise MetaformException,"followp spec must be String, Hash or Array, got #{app.class} #{app.inspect}"
       end
       [followup_field_name,followup_field_appearance]
     end
@@ -816,7 +817,7 @@ YAML
       c = self.fields[field].constraints
       if c
         enum = c['enumeration']
-        raise "expecting enumeration constraint for field #{field}!" if !enum
+        raise MetaformException,"expecting enumeration constraint for field #{field}!" if !enum
         enum.collect {|h| "#{h.keys[0]}"}
       else
         nil

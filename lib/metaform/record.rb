@@ -201,7 +201,7 @@ class Record
         # as a santity check.  TODO.  This check should be moved elsewhere!!
         if convert_from_html
         	q = form.get_question(attribute)
-          raise "unknown question #{attribute}" if !q
+          raise MetaformException,"unknown question #{attribute}" if !q
           value = Widget.fetch(q.appearance).convert_html_value(value,q.params)
         end
         set_attribute(attribute,value,index)
@@ -295,7 +295,7 @@ class Record
     index = normalize(index)
     field_name = attribute.to_s
     return get_attribute(field_name,index) if attribute_exists(field_name,index)
-    raise "field #{field_name} not in form " if !form.field_exists?(field_name)
+    raise MetaformException,"field #{field_name} not in form " if !form.field_exists?(field_name)
     if !@form_instance.new_record?      
       field_instance = nil 
       # The instance may already have been loaded in the instances from a Record.locate so check there first
@@ -388,7 +388,7 @@ class Record
 #      p.build_html(f,self,current)
     else
       #TODO: fix this to be a user-friendly exception mechanism that logs errors and sends admins e-mails etc (i.e. see WAGN)
-      raise "presentation #{presentation} not found"
+      raise MetaformException, "presentation #{presentation} not found"
     end
   end
     
@@ -473,7 +473,7 @@ class Record
 #    field_instances.each {|fi| logger.info("#{fi.answer} #{fi.idx.to_s} ZZZZZ" << fi.idx.class.to_s)}
     @attributes.each do |index,attribs|
   	  attribs.each do |field_instance_id,value|
-  			raise "field '#{field_instance_id}' not in form" if !form.field_exists?(field_instance_id)
+        raise MetaformException,"field '#{field_instance_id}' not in form" if !form.field_exists?(field_instance_id)
   			f = field_instances.find {|fi| fi.field_id == field_instance_id && fi.idx == index}
   			if f != nil
   				f.answer = value
@@ -694,7 +694,7 @@ class Record
             expr = eval_field(filter_eval_string)
             kept = eval expr
           rescue Exception => e
-            raise "Eval error '#{e.to_s}' while evaluating: #{expr}"
+            raise MetaformException,"Eval error '#{e.to_s}' while evaluating: #{expr}"
           end
           forms << the_form if kept
         else

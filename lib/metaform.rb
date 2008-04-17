@@ -1,3 +1,6 @@
+class MetaformException < RuntimeError
+end
+
 require 'metaform/forms'
 require 'metaform/listings'
 require 'metaform/reports'
