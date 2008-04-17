@@ -29,6 +29,24 @@ describe Form do
         SampleForm.q 'name', 'TextField',nil,nil,:read_only => true
         SampleForm.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name</label><span id=\"record[name]\">Bob Smith</span></div>"]
       end
+      describe "-- with verification" do
+        it "should add the verification html if q specifies the :force_verify option" do
+          @record.name = ''
+          SampleForm.q 'name', 'TextField',nil,nil,:force_verify => true
+          SampleForm.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name</label><input id=\"record[name]\" name=\"record[name]\" type=\"text\" value=\"\" /><span class=\"errors\">this field is required</span></div>"]
+        end
+        it "should not add the verification html if q specifies the :force_verify option but the value of the field is ok" do
+          SampleForm.q 'name', 'TextField',nil,nil,:force_verify => true
+          SampleForm.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name</label><input id=\"record[name]\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>"]
+        end
+        it "should add the verification html if record is in a workflow that requires validation" do
+          @record.name = ''
+          @record.workflow_state= 'verifying'
+          SampleForm.prepare_for_build(@record,@form,nil)
+          SampleForm.q 'name', 'TextField'
+          SampleForm.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name</label><input id=\"record[name]\" name=\"record[name]\" type=\"text\" value=\"\" /><span class=\"errors\">this field is required</span></div>"]
+        end
+      end
     end
     describe "qro (display a question read only)" do
       it "should be a short-hand for adding the :read_only option to a q" do

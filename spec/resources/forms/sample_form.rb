@@ -15,6 +15,8 @@ class SampleForm < Form
         
   def_workflows do 
     workflow 'standard' do
+      def_states_normal :logged,:completed
+      def_states_verification :verifying
     	action 'create',[nil] do
         state 'logged'
         redirect_url '/'

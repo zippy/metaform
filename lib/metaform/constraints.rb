@@ -24,7 +24,7 @@ module Constraints
         # the proc will get the value as a parameter and must return an error string if the
         # field was required or nil if it isn't
         case
-        when constraint.class == Proc
+        when constraint.instance_of?(Proc)
           e = constraint.call(value,form)
           constraint_errors << e if e
         when constraint.class == String

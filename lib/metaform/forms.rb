@@ -127,7 +127,7 @@ class Form
         c = c.clone
       end
 #TODO reinstate this line once we fix the dups created in V1Form
-#      raise "#{field_name} allready defined" if self.fields.has_key?(field_name)
+#      raise "#{field_name} already defined" if self.fields.has_key?(field_name)
       self.fields[field_name] = field[field_name,label,field_type,c,nil,nil,options[:default],options[:indexed_default_from_null_index]]
     end
     
@@ -188,12 +188,25 @@ class Form
     # build up a hash table of actions for the workflow
     # TODO This will fail if we nest workspaces.  We have to save the context instead of 
     # just saving the current action hash in a class variable.
-    def workflow(workflow_name)
+    def workflow(workflow_name,*states)
       @@actions = {}
+      @@states = {}
       yield
-      self.workflows[workflow_name] = Struct.new(:actions)[@@actions]
+      self.workflows[workflow_name] = Struct.new(:actions,:states)[@@actions,@@states]
     end
     
+    def def_states_normal(*states)
+      states.each do |s|
+        s = s.to_s
+        @@states[s] = nil
+      end
+    end
+    def def_states_verification(*states)
+      states.each do |s|
+        s = s.to_s
+        @@states[s] = true
+      end
+    end
     # an action consist of a block to execute when running the action as well as a list of
     # states that the form must be in for the action to execute.
     def action(action_name,states_for_action,&block)
@@ -262,6 +275,7 @@ class Form
       require 'erb'
       options = {
         :initially_hidden => false,
+        :force_verify => false
       }.update(opts)
 
       initially_hidden = options[:initially_hidden]
@@ -283,8 +297,10 @@ class Form
       value = field_value(field_name)
       the_field = self.fields[field_name]
       constraints = the_field.constraints
-      #LISA if the workflow state ends in _v or if @@phase = :verify then do line 482 - 486
-      if /_v$/ =~ workflow_state or @@phase == :verify
+
+#      display_verification_errors = /_v$/ =~ workflow_state
+      display_verification_errors = options[:force_verify] || @@show_verification_errors
+      if display_verification_errors or @@phase == :verify
         constraint_errors = Constraints.verify(constraints, value, self)
         if !constraint_errors.empty?
           @@constraint_errors ||= {}
@@ -306,12 +322,11 @@ class Form
       # made much higher, i.e. some errors shouldn't show up depending on which other errors
       # have been detected (i.e. if required, then don't bother to show an enum error)
       #Here, workflow_state is the state this particular q is in for his record.
-      if /_v$/ =~ workflow_state
-        if !constraint_errors.empty?
-          errs = constraint_errors.join("; ")
-          field_html  << %Q|<span class="errors">#{errs}</span>|
-        end
+      if display_verification_errors && !constraint_errors.empty?
+        errs = constraint_errors.join("; ")
+        field_html  << %Q|<span class="errors">#{errs}</span>|
       end
+
       css_class ||= 'question'
       css_class = %Q| class="#{css_class}"|
       if options[:erb]
@@ -594,6 +609,7 @@ YAML
       @@phase = :build
       @@constraint_errors = nil
       @@meta = {}
+      @@show_verification_errors = self.workflows[@@record.workflow].states[@@record.workflow_state]
       self.stuff = nil
     end
     
