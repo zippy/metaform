@@ -324,7 +324,7 @@ describe Record do
   describe "(testing last_answer)" do
     it "should return nil when no matching records will be found within last_answer"  do
        nr = Record.locate(:first, :index => :any)
-       Record.locate(self.id,:index => :any,:fields => ['breastfeeding'], :return_answers_hash => true).should == nil
+       Record.locate(nr.id,:index => :any,:fields => ['breastfeeding'], :return_answers_hash => true).should == nil
        nr.last_answer("breastfeeding").should == nil
     end
     

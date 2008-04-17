@@ -788,6 +788,9 @@ YAML
     def get_body
       self.stuff[:body]
     end
+    def get_record
+      @@record
+    end
     def javascript(js)
       return if @@phase != :build
       self.stuff[:js] ||= []
