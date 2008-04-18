@@ -330,7 +330,9 @@ class Form
       field_label = field_label + postfix if postfix
       
       if options[:erb]
-        field_element = widget.render_form_object(@@form,field_name,value,widget_options)
+        field_element = options[:read_only] ?
+        widget.render_form_object_read_only(@@form,field_name,value,widget_options) :
+        widget.render_form_object(@@form,field_name,value,widget_options)
       end
       field_html = widget.render(@@form,field_name,value,field_label,widget_options)
 
