@@ -297,7 +297,7 @@ class Record
     index = normalize(index)
     field_name = attribute.to_s
     return get_attribute(field_name,index) if attribute_exists(field_name,index)
-    raise MetaformUndefinedFieldError.new(field_name) if !form.field_exists?(field_name)
+    raise MetaformUndefinedFieldError, field_name if !form.field_exists?(field_name)
     if c = form.fields[field_name].calculated
       return c[:proc].call(form,index)
     end

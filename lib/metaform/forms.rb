@@ -287,7 +287,7 @@ class Form
         :initially_hidden => false,
         :force_verify => false
       }.update(opts)
-      raise MetaformUndefinedFieldError.new(field_name) if !field_exists?(field_name)
+      raise MetaformUndefinedFieldError,field_name if !field_exists?(field_name)
       raise MetaformException,'calculated fields can only be used read-only' if fields[field_name].calculated && !options[:read_only]
       initially_hidden = options[:initially_hidden]
       appearance_type,appearance_parameters = parse_appearance(appearance)
