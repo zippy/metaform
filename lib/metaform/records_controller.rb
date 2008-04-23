@@ -91,7 +91,9 @@ class RecordsController < ApplicationController
   
   def setup_new_record
     @presentation = params[:presentation]
-    @record = Record.make(Form.find(params[:form_id]),@presentation,params[:record],:convert_from_html => true,:index => params[:index])
+    f = Zform.cache[params[:form_id]]
+    f ||= params[:form_id].constantize.new
+    @record = Record.make(f,@presentation,params[:record],:convert_from_html => true,:index => params[:index])
     setup_record_params
   end
   

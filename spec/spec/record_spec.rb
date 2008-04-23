@@ -2,9 +2,9 @@ require File.dirname(__FILE__) + '/../spec_helper'
 
 describe Record do
 
-  describe "(creating a new one)" do
+  describe "-- creating a new one" do
     before(:each) do
-      @record = Record.make('SampleForm','new_entry',{:name =>'Bob Smith'})
+      @record = Record.make(SampleForm.new,'new_entry',{:name =>'Bob Smith'})
     end
     
     it "should return values via the [] operator" do
@@ -24,10 +24,10 @@ describe Record do
     end
   end
   
-  describe "(indexed fields)" do
+  describe "-- indexed fields" do
     before(:each) do
       @initial_values = {:name =>'Bob Smith',:fruit => 'banana'}
-      @record = Record.make('SampleForm','new_entry',@initial_values)
+      @record = Record.make(SampleForm.new,'new_entry',@initial_values)
     end
 
     it "should work to use numerical indexes" do
@@ -70,10 +70,10 @@ describe Record do
     end
     
   end
-  describe "(setting_fields without initializing index)" do
+  describe "-- setting_fields without initializing index" do
     
     before(:each) do
-    @record = Record.make('SampleForm','new_entry',{:name =>'Bob Smith',:fruit => 'banana'})
+    @record = Record.make(SampleForm.new,'new_entry',{:name =>'Bob Smith',:fruit => 'banana'})
     end
     
     it "should change a value when set via []" do
@@ -127,7 +127,7 @@ describe Record do
     end
     
     it "should change a value and retain it after a save" do
-      @record = Record.make('SampleForm','new_entry',{:name =>'Bob Smith',:fruit => 'banana'},:index=>1)
+      @record = Record.make(SampleForm.new,'new_entry',{:name =>'Bob Smith',:fruit => 'banana'},:index=>1)
       @record.save('new_entry')
       @record = Record.find(:first, :index => :any)
       @record.name__1.should == 'Bob Smith'
@@ -138,10 +138,10 @@ describe Record do
     end
   end
   
-  describe "(multi-dimensional indexing)" do
+  describe "-- multi-dimensional indexing" do
     before(:each) do
       @initial_values = {:name =>'Bob Smith',:fruit => 'banana'}
-      @record = Record.make('SampleForm','new_entry',@initial_values)
+      @record = Record.make(SampleForm.new,'new_entry',@initial_values)
     end
     
     it "should be able to set and retrieve a two dimensional index" do
@@ -163,16 +163,16 @@ describe Record do
     end
   end
   
-  describe "(setting fields with initializing index)" do
+  describe "-- setting fields with initializing index" do
 
     it "should correctly set fields when initializing with :index option" do
-      @record = Record.make('SampleForm','new_entry',{:name =>'Bob Smith',:fruit => 'banana'},:index => 1)
+      @record = Record.make(SampleForm.new,'new_entry',{:name =>'Bob Smith',:fruit => 'banana'},:index => 1)
       @record.name.should == nil
       @record.name__1.should == 'Bob Smith'
     end
 
     it "should correctly set fields when initializing with :multi_index option" do
-       @record = Record.make('SampleForm','new_entry', {
+       @record = Record.make(SampleForm.new,'new_entry', {
           2 => {:name =>'Bob Smith 2',:fruit => 'apple'},
           1 => {:name =>'Bob Smith 1',:fruit => 'banana'}
           },:multi_index => true)
@@ -186,13 +186,13 @@ describe Record do
     
   end
   
-  describe "(locating records)" do
+  describe "-- locating records" do
     
     before(:each) do
       @records = []
-      @records << Record.make('SampleForm','new_entry',{:name =>'Bob Smith',:fruit => 'banana'})
-      @records << Record.make('SampleForm','new_entry',{:name =>'Joe Smith',:fruit => 'banana'})
-      @records << Record.make('SampleForm','new_entry',{:name =>'Frank Smith',:fruit => 'pear'})
+      @records << Record.make(SampleForm.new,'new_entry',{:name =>'Bob Smith',:fruit => 'banana'})
+      @records << Record.make(SampleForm.new,'new_entry',{:name =>'Joe Smith',:fruit => 'banana'})
+      @records << Record.make(SampleForm.new,'new_entry',{:name =>'Frank Smith',:fruit => 'pear'})
     end
     
     it "should correctly set, save and locate indexed fields, each of nil index" do
@@ -214,7 +214,7 @@ describe Record do
     
     it "should correctly set, save and locate fields with filters and, with work_flow_state_filters" do
       @records.last.workflow_state = 'fish'
-      @records << Record.make('SampleForm','new_entry',{:name =>'Herbert Wilcox',:fruit => 'banana'})
+      @records << Record.make(SampleForm.new,'new_entry',{:name =>'Herbert Wilcox',:fruit => 'banana'})
       @records.each { |recs| recs.save('new_entry') }
 #      recs = Record.locate(:all)
 #      recs.size.should == 4
@@ -273,7 +273,7 @@ describe Record do
     end
     
     it "should return multi-dimentional indexes as arrays of arrays in the answers hash with second index > 1" do
-      @record = Record.make('SampleForm','new_entry')
+      @record = Record.make(SampleForm.new,'new_entry')
       @record[:fruit,2,1] = 'orange'
       @record[:fruit,2,2] = 'kiwi'
       @record.save('new_entry')
@@ -285,7 +285,7 @@ describe Record do
     
     
     it "should get highest index array when the answer is multi-dimensional" do
-      @record = Record.make('SampleForm','new_entry')
+      @record = Record.make(SampleForm.new,'new_entry')
       @record[:breastfeeding,2,1] = 'A'
       @record[:breastfeeding,2,2] = 'a'
       @record.save('new_entry')
@@ -296,185 +296,65 @@ describe Record do
     
   end 
   
-  describe "(testing using fields with defaults set in form)"  do
-    
+  describe "-- defaults options"  do
     it "should correctly set values when the field has a default and when it doesn't" do
-        @records = Record.make('SampleForm','new_entry',{:name =>'Bob Smith',:fruit => 'banana'})
-        @records.occupation.should == nil
-        @records.occupation__1.should == nil
+      @records = Record.make(SampleForm.new,'new_entry',{:name =>'Bob Smith',:fruit => 'banana'})
+      @records.occupation.should == nil
+      @records.occupation__1.should == nil
 
-        @records.field_with_default.should == 'fish'
-        @records.field_with_default__1.should == 'fish'
+      @records.field_with_default.should == 'fish'
+      @records.field_with_default__1.should == 'fish'
 
-        @records.indexed_field_no_default.should == nil
-        @records.indexed_field_no_default__1.should == nil
-        @records.indexed_field_no_default = 'dog'
-        @records.indexed_field_no_default__2.should == 'dog'
-        @records.indexed_field_no_default__1.should == nil  #should still be nil because it was already set
+      @records.indexed_field_no_default.should == nil
+      @records.indexed_field_no_default__1.should == nil
+      @records.indexed_field_no_default = 'dog'
+      @records.indexed_field_no_default__2.should == 'dog'
+      @records.indexed_field_no_default__1.should == nil  #should still be nil because it was already set
 
-        @records.indexed_field_with_default.should == 'cow'
-        @records.indexed_field_with_default__1.should == 'cow'
-        @records.indexed_field_with_default = 'cat'
-        @records.indexed_field_with_default__2.should == 'cat'
-        @records.indexed_field_with_default__1.should == 'cow' #should still be 'cow' because it was already set
-      end
-    
+      @records.indexed_field_with_default.should == 'cow'
+      @records.indexed_field_with_default__1.should == 'cow'
+      @records.indexed_field_with_default = 'cat'
+      @records.indexed_field_with_default__2.should == 'cat'
+      @records.indexed_field_with_default__1.should == 'cow' #should still be 'cow' because it was already set
+    end
   end
   
-  describe "(testing last_answer)" do
-    it "should return nil when no matching records will be found within last_answer"  do
-       nr = Record.locate(:first, :index => :any)
-       Record.locate(nr.id,:index => :any,:fields => ['breastfeeding'], :return_answers_hash => true).should == nil
-       nr.last_answer("breastfeeding").should == nil
+  describe "indexing utility methods" do
+    before(:each) do
+      @record = Record.make(SampleForm.new,'new_entry')
     end
-    
-    it "should get highest index value of field"  do
-       @record = Record.make('SampleForm','new_entry')
-       @record[:breastfeeding] = 'A'    #Only one baby, first PP visit
-       @record[:breastfeeding,1] = 'B'  #Only one baby, second PP visit
-       @record[:breastfeeding,2] = 'C'  #Only one baby, third PP visit
-       @record[:breastfeeding,3] = 'D'  #Only one baby, fourth PP visit
-       @record.save('new_entry')
-       nr = Record.locate(:first, :index => :any)
-       nr.last_answer("breastfeeding").should == 'D'
-    end
-    
-    
-    it "should get the highest index non-nil value of a field" do
-      @record = Record.make('SampleForm','new_entry')
-      @record[:breastfeeding] = 'A'    #Only one baby, first PP visit
-      @record[:breastfeeding,1] = 'B'  #Only one baby, second PP visit
-      @record[:breastfeeding,2] = 'C'  #Only one baby, third PP visit
-      @record[:breastfeeding,3] = nil  #Only one baby, fourth PP visit
+    def after_init_save_and_get_from_locate
+      yield if block_given?
       @record.save('new_entry')
       nr = Record.locate(:first, :index => :any)
-      nr.last_answer("breastfeeding").should == 'C'
-    end    
-  
-    it "should get highest index array when the answer is multi-dimensional" do
-       @record = Record.make('SampleForm','new_entry')
-       @record[:breastfeeding,1,1] = 'A'    #Three babies, first PP visit, first baby
-       @record[:breastfeeding,1,2] = 'a'    #Three babies, first PP visit, second baby
-       @record[:breastfeeding,1,3] = '1'    #Three babies, first PP visit, third baby
-       @record[:breastfeeding,2,1] = 'B'    #Three babies, second PP visit, first baby
-       @record[:breastfeeding,2,2] = 'b'    #Three babies, second PP visit, second baby
-       @record[:breastfeeding,2,3] = '2'    #Three babies, second PP visit, third baby
-       @record[:breastfeeding,3,1] = 'C'    #Three babies, third PP visit, first baby
-       @record[:breastfeeding,3,2] = 'c'    #Three babies, third PP visit, second baby
-       @record[:breastfeeding,3,3] = '3'    #Three babies, third PP visit, third baby
-       @record.save('new_entry')
-       nr = Record.locate(:first, :index => :any)    
-       nr.last_answer("breastfeeding").should == [nil,'C','c','3']
-     end
-   
-     it "should get highest index value when the answer is multi-dimensional and an index is passed in" do
-        @record = Record.make('SampleForm','new_entry')
-        @record[:breastfeeding,1,1] = 'A'    #Three babies, first PP visit, first baby
-        @record[:breastfeeding,1,2] = 'a'    #Three babies, first PP visit, second baby
-        @record[:breastfeeding,1,3] = '1'    #Three babies, first PP visit, third baby
-        @record[:breastfeeding,2,1] = 'B'    #Three babies, second PP visit, first baby
-        @record[:breastfeeding,2,2] = 'b'    #Three babies, second PP visit, second baby
-        @record[:breastfeeding,2,3] = '2'    #Three babies, second PP visit, third baby
-        @record[:breastfeeding,3,1] = 'C'    #Three babies, third PP visit, first baby
-        @record[:breastfeeding,3,2] = 'c'    #Three babies, third PP visit, second baby
-        @record[:breastfeeding,3,3] = '3'    #Three babies, third PP visit, third baby
-        @record.save('new_entry')
-        nr = Record.locate(:first, :index => :any)    
-        nr.last_answer("breastfeeding",2).should == 'c'
+    end
+
+    describe "#last_answer" do
+      it "should return nil when no matching records will be found within last_answer"  do
+        nr = after_init_save_and_get_from_locate
+        Record.locate(nr.id,:index => :any,:fields => ['breastfeeding'], :return_answers_hash => true).should == nil
+        nr.last_answer("breastfeeding").should == nil
       end
-    
-      it "should get highest index non-nil value when the answer is multi-dimensional and an index is passed in" do
-         @record = Record.make('SampleForm','new_entry')
-         @record[:breastfeeding,1,1] = 'A'    #Three babies, first PP visit, first baby
-         @record[:breastfeeding,1,2] = 'a'    #Three babies, first PP visit, second baby
-         @record[:breastfeeding,1,3] = '1'    #Three babies, first PP visit, third baby
-         @record[:breastfeeding,2,1] = 'B'    #Three babies, second PP visit, first baby
-         @record[:breastfeeding,2,2] = 'b'    #Three babies, second PP visit, second baby
-         @record[:breastfeeding,2,3] = '2'    #Three babies, second PP visit, third baby
-         @record[:breastfeeding,3,1] = 'C'    #Three babies, third PP visit, first baby
-         # @record[:breastfeeding,3,2] = 'c'    #Three babies, third PP visit, second baby
-         @record[:breastfeeding,3,3] = '3'    #Three babies, third PP visit, third baby
-         @record.save('new_entry')
-         nr = Record.locate(:first, :index => :any)    
-         nr.last_answer("breastfeeding",2).should == 'b'
-       end
-     end    
-  
-  describe "(testing answer_num)" do
-    
-    it "should return nil when no matching records will be found within answer_num"  do
-       nr = Record.locate(:first, :index => :any)
-       Record.locate(nr.id,:index => :any,:fields => ['breastfeeding'], :return_answers_hash => true).should == nil
-       nr.answer_num("breastfeeding",'Z').should == nil
-    end
-    
-    it "should return 0 when there are no matching answers for a given field"  do
-       @record = Record.make('SampleForm','new_entry')
-       @record[:breastfeeding] = 'A'    #Only one baby, first PP visit
-       @record[:breastfeeding,1] = 'B'  #Only one baby, second PP visit
-       @record[:breastfeeding,2] = 'C'  #Only one baby, third PP visit
-       @record[:breastfeeding,3] = 'D'  #Only one baby, fourth PP visit
-       @record.save('new_entry')
-       nr = Record.locate(:first, :index => :any)
-       nr.answer_num("breastfeeding",'Z').should == 0
-    end
-    
-    it "should return 1 when that number of matches answers for a given field"  do
-       @record = Record.make('SampleForm','new_entry')
-       @record[:breastfeeding] = 'A'    #Only one baby, first PP visit
-       @record[:breastfeeding,1] = 'B'  #Only one baby, second PP visit
-       @record[:breastfeeding,2] = 'C'  #Only one baby, third PP visit
-       @record[:breastfeeding,3] = 'D'  #Only one baby, fourth PP visit
-       @record.save('new_entry')
-       nr = Record.locate(:first, :index => :any)
-       nr.answer_num("breastfeeding",'B').should == 1
-    end
-    
-    it "should return 2 when that number of matches answers for a given field"  do
-       @record = Record.make('SampleForm','new_entry')
-       @record[:breastfeeding] = 'A'    #Only one baby, first PP visit
-       @record[:breastfeeding,1] = 'B'  #Only one baby, second PP visit
-       @record[:breastfeeding,2] = 'B'  #Only one baby, third PP visit
-       @record[:breastfeeding,3] = 'D'  #Only one baby, fourth PP visit
-       @record.save('new_entry')
-       nr = Record.locate(:first, :index => :any)
-       nr.answer_num("breastfeeding",'B').should == 2
-    end
-    
-    it "should return 1 when that is the correct number of matching arrays and the answer is multi-dimensional" do
-       @record = Record.make('SampleForm','new_entry')
-       @record[:breastfeeding,1,1] = 'A'    #Three babies, first PP visit, first baby
-       @record[:breastfeeding,1,2] = 'a'    #Three babies, first PP visit, second baby
-       @record[:breastfeeding,1,3] = '1'    #Three babies, first PP visit, third baby
-       @record[:breastfeeding,2,1] = 'B'    #Three babies, second PP visit, first baby
-       @record[:breastfeeding,2,2] = 'b'    #Three babies, second PP visit, second baby
-       @record[:breastfeeding,2,3] = '2'    #Three babies, second PP visit, third baby
-       @record[:breastfeeding,3,1] = 'C'    #Three babies, third PP visit, first baby
-       @record[:breastfeeding,3,2] = 'c'    #Three babies, third PP visit, second baby
-       @record[:breastfeeding,3,3] = '3'    #Three babies, third PP visit, third baby
-       @record.save('new_entry')
-       nr = Record.locate(:first, :index => :any)    
-       nr.answer_num("breastfeeding",[nil,'A','a','1']).should == 1
-     end
-     
-     it "should return 2 when that is the correct number of matching arrays and the answer is multi-dimensional" do
-        @record = Record.make('SampleForm','new_entry')
-        @record[:breastfeeding,1,1] = 'A'    #Three babies, first PP visit, first baby
-        @record[:breastfeeding,1,2] = 'a'    #Three babies, first PP visit, second baby
-        @record[:breastfeeding,1,3] = '1'    #Three babies, first PP visit, third baby
-        @record[:breastfeeding,2,1] = 'A'    #Three babies, second PP visit, first baby
-        @record[:breastfeeding,2,2] = 'a'    #Three babies, second PP visit, second baby
-        @record[:breastfeeding,2,3] = '1'    #Three babies, second PP visit, third baby
-        @record[:breastfeeding,3,1] = 'C'    #Three babies, third PP visit, first baby
-        @record[:breastfeeding,3,2] = 'c'    #Three babies, third PP visit, second baby
-        @record[:breastfeeding,3,3] = '3'    #Three babies, third PP visit, third baby
-        @record.save('new_entry')
-        nr = Record.locate(:first, :index => :any)    
-        nr.answer_num("breastfeeding",[nil,'A','a','1']).should == 2
+      it "should get highest index value of field"  do
+        nr = after_init_save_and_get_from_locate do
+          @record[:breastfeeding] = 'A'    #Only one baby, first PP visit
+          @record[:breastfeeding,1] = 'B'  #Only one baby, second PP visit
+          @record[:breastfeeding,2] = 'C'  #Only one baby, third PP visit
+          @record[:breastfeeding,3] = 'D'  #Only one baby, fourth PP visit
+        end
+        nr.last_answer("breastfeeding").should == 'D'
       end
-   
-     it "should get return 1 when there is 1 matching answer for the given index and the answer is multi-dimensional and an index is passed in" do
-          @record = Record.make('SampleForm','new_entry')
+      it "should get the highest index non-nil value of a field" do
+        nr = after_init_save_and_get_from_locate do
+          @record[:breastfeeding] = 'A'    #Only one baby, first PP visit
+          @record[:breastfeeding,1] = 'B'  #Only one baby, second PP visit
+          @record[:breastfeeding,2] = 'C'  #Only one baby, third PP visit
+          @record[:breastfeeding,3] = nil  #Only one baby, fourth PP visit
+        end
+        nr.last_answer("breastfeeding").should == 'C'
+      end    
+      it "should get highest index array when the answer is multi-dimensional" do
+        nr = after_init_save_and_get_from_locate do
           @record[:breastfeeding,1,1] = 'A'    #Three babies, first PP visit, first baby
           @record[:breastfeeding,1,2] = 'a'    #Three babies, first PP visit, second baby
           @record[:breastfeeding,1,3] = '1'    #Three babies, first PP visit, third baby
@@ -484,38 +364,151 @@ describe Record do
           @record[:breastfeeding,3,1] = 'C'    #Three babies, third PP visit, first baby
           @record[:breastfeeding,3,2] = 'c'    #Three babies, third PP visit, second baby
           @record[:breastfeeding,3,3] = '3'    #Three babies, third PP visit, third baby
-          @record.save('new_entry')
-          nr = Record.locate(:first, :index => :any)    
-          nr.answer_num("breastfeeding",'b',2).should == 1
         end
-        
-        it "should get return 2 when there are 2 matching answers for the given index and the answer is multi-dimensional and an index is passed in" do
-             @record = Record.make('SampleForm','new_entry')
-             @record[:breastfeeding,1,1] = 'A'    #Three babies, first PP visit, first baby
-             @record[:breastfeeding,1,2] = 'a'    #Three babies, first PP visit, second baby
-             @record[:breastfeeding,1,3] = '1'    #Three babies, first PP visit, third baby
-             @record[:breastfeeding,2,1] = 'B'    #Three babies, second PP visit, first baby
-             @record[:breastfeeding,2,2] = 'b'    #Three babies, second PP visit, second baby
-             @record[:breastfeeding,2,3] = '2'    #Three babies, second PP visit, third baby
-             @record[:breastfeeding,3,1] = 'C'    #Three babies, third PP visit, first baby
-             @record[:breastfeeding,3,2] = 'b'    #Three babies, third PP visit, second baby
-             @record[:breastfeeding,3,3] = '3'    #Three babies, third PP visit, third baby
-             @record.save('new_entry')
-             nr = Record.locate(:first, :index => :any)    
-             nr.answer_num("breastfeeding",'b',2).should == 2
+        nr.last_answer("breastfeeding").should == [nil,'C','c','3']
+      end
+      it "should get highest index value when the answer is multi-dimensional and an index is passed in" do
+        nr = after_init_save_and_get_from_locate do
+          @record[:breastfeeding,1,1] = 'A'    #Three babies, first PP visit, first baby
+          @record[:breastfeeding,1,2] = 'a'    #Three babies, first PP visit, second baby
+          @record[:breastfeeding,1,3] = '1'    #Three babies, first PP visit, third baby
+          @record[:breastfeeding,2,1] = 'B'    #Three babies, second PP visit, first baby
+          @record[:breastfeeding,2,2] = 'b'    #Three babies, second PP visit, second baby
+          @record[:breastfeeding,2,3] = '2'    #Three babies, second PP visit, third baby
+          @record[:breastfeeding,3,1] = 'C'    #Three babies, third PP visit, first baby
+          @record[:breastfeeding,3,2] = 'c'    #Three babies, third PP visit, second baby
+          @record[:breastfeeding,3,3] = '3'    #Three babies, third PP visit, third baby
         end
-   end
+        nr.last_answer("breastfeeding",2).should == 'c'
+      end
+      it "should get highest index non-nil value when the answer is multi-dimensional and an index is passed in" do
+        nr = after_init_save_and_get_from_locate do
+          @record[:breastfeeding,1,1] = 'A'    #Three babies, first PP visit, first baby
+          @record[:breastfeeding,1,2] = 'a'    #Three babies, first PP visit, second baby
+          @record[:breastfeeding,1,3] = '1'    #Three babies, first PP visit, third baby
+          @record[:breastfeeding,2,1] = 'B'    #Three babies, second PP visit, first baby
+          @record[:breastfeeding,2,2] = 'b'    #Three babies, second PP visit, second baby
+          @record[:breastfeeding,2,3] = '2'    #Three babies, second PP visit, third baby
+          @record[:breastfeeding,3,1] = 'C'    #Three babies, third PP visit, first baby
+          # @record[:breastfeeding,3,2] = 'c'    #Three babies, third PP visit, second baby
+          @record[:breastfeeding,3,3] = '3'    #Three babies, third PP visit, third baby
+        end
+        nr.last_answer("breastfeeding",2).should == 'b'
+      end
+    end    
   
-  describe "(calculated fields fields)" do
+    describe "#answer_num" do
+      it "should return nil when no matching records will be found within answer_num"  do
+        nr = after_init_save_and_get_from_locate
+        Record.locate(nr.id,:index => :any,:fields => ['breastfeeding'], :return_answers_hash => true).should == nil
+        nr.answer_num("breastfeeding",'Z').should == nil
+      end
+
+      it "should return 0 when there are no matching answers for a given field"  do
+        nr = after_init_save_and_get_from_locate do
+          @record[:breastfeeding] = 'A'    #Only one baby, first PP visit
+          @record[:breastfeeding,1] = 'B'  #Only one baby, second PP visit
+          @record[:breastfeeding,2] = 'C'  #Only one baby, third PP visit
+          @record[:breastfeeding,3] = 'D'  #Only one baby, fourth PP visit
+        end
+        nr.answer_num("breastfeeding",'Z').should == 0
+      end
+
+      it "should return 1 when that number of matches answers for a given field"  do
+        nr = after_init_save_and_get_from_locate do
+          @record[:breastfeeding] = 'A'    #Only one baby, first PP visit
+          @record[:breastfeeding,1] = 'B'  #Only one baby, second PP visit
+          @record[:breastfeeding,2] = 'C'  #Only one baby, third PP visit
+          @record[:breastfeeding,3] = 'D'  #Only one baby, fourth PP visit
+        end
+        nr.answer_num("breastfeeding",'B').should == 1
+      end
+
+      it "should return 2 when that number of matches answers for a given field"  do
+        nr = after_init_save_and_get_from_locate do
+          @record[:breastfeeding] = 'A'    #Only one baby, first PP visit
+          @record[:breastfeeding,1] = 'B'  #Only one baby, second PP visit
+          @record[:breastfeeding,2] = 'B'  #Only one baby, third PP visit
+          @record[:breastfeeding,3] = 'D'  #Only one baby, fourth PP visit
+        end
+        nr.answer_num("breastfeeding",'B').should == 2
+      end
+
+      it "should return 1 when that is the correct number of matching arrays and the answer is multi-dimensional" do
+        nr = after_init_save_and_get_from_locate do
+          @record[:breastfeeding,1,1] = 'A'    #Three babies, first PP visit, first baby
+          @record[:breastfeeding,1,2] = 'a'    #Three babies, first PP visit, second baby
+          @record[:breastfeeding,1,3] = '1'    #Three babies, first PP visit, third baby
+          @record[:breastfeeding,2,1] = 'B'    #Three babies, second PP visit, first baby
+          @record[:breastfeeding,2,2] = 'b'    #Three babies, second PP visit, second baby
+          @record[:breastfeeding,2,3] = '2'    #Three babies, second PP visit, third baby
+          @record[:breastfeeding,3,1] = 'C'    #Three babies, third PP visit, first baby
+          @record[:breastfeeding,3,2] = 'c'    #Three babies, third PP visit, second baby
+          @record[:breastfeeding,3,3] = '3'    #Three babies, third PP visit, third baby
+        end
+        nr.answer_num("breastfeeding",[nil,'A','a','1']).should == 1
+      end
+
+      it "should return 2 when that is the correct number of matching arrays and the answer is multi-dimensional" do
+        nr = after_init_save_and_get_from_locate do
+          @record[:breastfeeding,1,1] = 'A'    #Three babies, first PP visit, first baby
+          @record[:breastfeeding,1,2] = 'a'    #Three babies, first PP visit, second baby
+          @record[:breastfeeding,1,3] = '1'    #Three babies, first PP visit, third baby
+          @record[:breastfeeding,2,1] = 'A'    #Three babies, second PP visit, first baby
+          @record[:breastfeeding,2,2] = 'a'    #Three babies, second PP visit, second baby
+          @record[:breastfeeding,2,3] = '1'    #Three babies, second PP visit, third baby
+          @record[:breastfeeding,3,1] = 'C'    #Three babies, third PP visit, first baby
+          @record[:breastfeeding,3,2] = 'c'    #Three babies, third PP visit, second baby
+          @record[:breastfeeding,3,3] = '3'    #Three babies, third PP visit, third baby
+        end
+        nr.answer_num("breastfeeding",[nil,'A','a','1']).should == 2
+      end
+
+      it "should get return 1 when there is 1 matching answer for the given index and the answer is multi-dimensional and an index is passed in" do
+        nr = after_init_save_and_get_from_locate do
+          @record[:breastfeeding,1,1] = 'A'    #Three babies, first PP visit, first baby
+          @record[:breastfeeding,1,2] = 'a'    #Three babies, first PP visit, second baby
+          @record[:breastfeeding,1,3] = '1'    #Three babies, first PP visit, third baby
+          @record[:breastfeeding,2,1] = 'B'    #Three babies, second PP visit, first baby
+          @record[:breastfeeding,2,2] = 'b'    #Three babies, second PP visit, second baby
+          @record[:breastfeeding,2,3] = '2'    #Three babies, second PP visit, third baby
+          @record[:breastfeeding,3,1] = 'C'    #Three babies, third PP visit, first baby
+          @record[:breastfeeding,3,2] = 'c'    #Three babies, third PP visit, second baby
+          @record[:breastfeeding,3,3] = '3'    #Three babies, third PP visit, third baby
+        end
+        nr.answer_num("breastfeeding",'b',2).should == 1
+      end
+
+      it "should get return 2 when there are 2 matching answers for the given index and the answer is multi-dimensional and an index is passed in" do
+        nr = after_init_save_and_get_from_locate do
+          @record[:breastfeeding,1,1] = 'A'    #Three babies, first PP visit, first baby
+          @record[:breastfeeding,1,2] = 'a'    #Three babies, first PP visit, second baby
+          @record[:breastfeeding,1,3] = '1'    #Three babies, first PP visit, third baby
+          @record[:breastfeeding,2,1] = 'B'    #Three babies, second PP visit, first baby
+          @record[:breastfeeding,2,2] = 'b'    #Three babies, second PP visit, second baby
+          @record[:breastfeeding,2,3] = '2'    #Three babies, second PP visit, third baby
+          @record[:breastfeeding,3,1] = 'C'    #Three babies, third PP visit, first baby
+          @record[:breastfeeding,3,2] = 'b'    #Three babies, third PP visit, second baby
+          @record[:breastfeeding,3,3] = '3'    #Three babies, third PP visit, third baby
+        end
+        nr.answer_num("breastfeeding",'b',2).should == 2
+      end
+    end
+  end
+
+  describe "-- calculated fields fields" do
     before(:each) do
       #TODO- think about this.  Record needs to have the form prepared for build... hmmmm...
       @initial_values = {:name =>'Bob Smith',:occupation => 'Boss'}
-      @record = Record.make('SampleForm','new_entry',@initial_values)
-      @form = FormProxy.new('SampleForm'.gsub(/ /,'_'))
-      SampleForm.prepare_for_build(@record,@form,nil)
+      @form = SampleForm.new
+      @record = Record.make(@form,'new_entry',@initial_values)
+#      @form = FormProxy.new('SampleForm'.gsub(/ /,'_'))
+#      SampleForm.prepare_for_build(@record,@form,nil)
     end
     it "should do the calculation when accessed" do
-      @record.reverse_name_and_job.should == "ssoBhtimS boB"
+      @form.with_record(@record) do
+        @record.reverse_name_and_job.should == "ssoBhtimS boB"
+      end
     end
     it "should raise and exception if you try to store a value it" do
       lambda {

@@ -4,7 +4,7 @@
 # type of interface for the controller and the views, but really it's pulling it's data
 # from FormInstances and FieldInstances
 
-require 'metaform/form_proxy'
+#require 'form_proxy'
 
 
 class Record
@@ -164,7 +164,7 @@ class Record
   # creating a new Record happens either because we pass in a given FormInstance
   # or we create a raw new one here
 
-  def initialize(the_instance = nil,attributes = nil,options = {})
+  def initialize(the_instance = nil,the_form = nil,attributes = nil,presentation_name=nil,options = {})
     #puts "INITIALIZE"
     #puts "the_instance = #{the_instance.inspect}"
     #puts "attributes = #{attributes.inspect}"
@@ -172,15 +172,49 @@ class Record
     reset_attributes
     the_instance = FormInstance.new if !the_instance
     @form_instance = the_instance
+    
+    #TODO this is bogus!!
+    #what about adding with_record here?  more bogusness
+    if the_form.nil?
+      the_form = get_cached_or_new_form(the_instance.form)
+    end
+      
+    @form = the_form
+    
     # if attributes
     #   set_attributes(attributes,options)
     # end
-    set_attributes(attributes,options)
+    set_attributes(attributes,presentation_name,options)
   end
   
+  @@last_form_date = nil
+  def get_cached_or_new_form(form_class)
+    form_name = form_class.to_s
+    the_form = nil
+    # in development mode we reload the forms if there have been any changes
+    # in the forms directory
+    if RAILS_ENV == 'development'
+      require 'find'
+      forms_date = Time.at(0)
+      Find.find(Zform.forms_dir) do |f|
+        m = File.new(f).stat.mtime
+        forms_date = m if m > forms_date
+      end
+      if forms_date == @@last_form_date
+        the_form = Zform.cache[form_name]
+      else
+        @@last_form_date = forms_date
+        Zform.cache[form_name] = nil
+      end
+    else
+      the_form = Zform.cache[form_name]
+    end
+    the_form ||= form_class.new
+  end
+    
   ######################################################################################
   # set the attributes from a hash optionally converting from HTML
-  def set_attributes(attributes,options = {})
+  def set_attributes(attributes,presentation_name,options = {})
     reset_attributes
     
     if options[:multi_index]
@@ -200,9 +234,9 @@ class Record
         # setup and we check to make sure that the questions exist in this presentation
         # as a santity check.  TODO.  This check should be moved elsewhere!!
         if convert_from_html
-        	q = form.get_question(attribute)
+        	q = form.get_presentation_question(presentation_name,attribute)
           raise MetaformException,"unknown question #{attribute}" if !q
-          value = Widget.fetch(q.appearance).convert_html_value(value,q.params)
+          value = Widget.fetch(q.widget).convert_html_value(value,q.params)
         end
         set_attribute(attribute,value,index)
       end if a
@@ -260,7 +294,8 @@ class Record
   end
   
   def form
-    form_instance.form
+    @form
+#    form_instance.form
   end
 
   def workflow
@@ -386,9 +421,8 @@ class Record
   end
   
   def build_html(presentation = 0,current=nil,index=nil)
-    f = FormProxy.new(form.name.gsub(/ /,'_'))
     if form.presentation_exists?(presentation)
-      form.build(presentation,self,f,index)
+      form.build(presentation,self,index)
 #    p = form.find_presentation(presentation_id)
 #    if p
 #      p.build_html(f,self,current)
@@ -439,21 +473,13 @@ class Record
   # that are what actually are the "attributes."  The attributes parameter should be a 
   # hash where the keys are the FieldInstance ids and the values are the answers
   def update_attributes(attribs,presentation = 0,meta_data = nil,options={})
-    form.setup(presentation,self)
-    set_attributes(attribs,options)
+#    form.setup(presentation,self)
+    set_attributes(attribs,presentation,options)
     _update_attributes(presentation,meta_data)
   end
 
   def _update_attributes(presentation,meta_data)
     
-    #TODO this is screwey right now because form.verify call has to come first
-    # to initialize the form object so any actions taken will have all the 
-    # data set up in the form.  This is part of how things are currently screwy and
-    # form should be an instance created by new, which initializes all the data or
-    # something like that.  i.e. form = V3form.new(@presentation,@form_instance)
-    # then all the stuff that is currently stored as a class variable in form
-    # can be simple object instance variables.
-
     #TODO by moving the workflow action stuff to the begining here I've introduced a 
     # transactionality problem.  I.e. if the workflow changes state info and then the 
     # field instance values can't be saved, then the record is in a screwed up state.
@@ -461,16 +487,18 @@ class Record
     # by the transactionality handling I added up in save, but then we we should also add it to
     # to update_attributes.
     if meta_data && meta_data[:workflow_action] && meta_data[:workflow_action] != ''
-      form.verify(presentation,self,attributes)
       meta_data[:record] = self
-      self.action_result = form.do_workflow_action(meta_data[:workflow_action],self,meta_data)
+      #TODO-Eric :setup is really the wrong phase, but so is build. New phase?
+      form.with_record(self,:setup) do
+        self.action_result = form.do_workflow_action(meta_data[:workflow_action],meta_data)
+      end
       if self.action_result[:next_state]
         form_instance.update_attributes({:workflow_state => self.action_result[:next_state]})
       else
         return false
       end
     else
-      form.setup(presentation,self)
+#      form.setup(presentation,self)
     end
 
     #TODO scalability.  This could be responsible for slowness.  Why check all the indexes!?!
@@ -755,9 +783,9 @@ class Record
     url
   end
   
-  def Record.make(form_name,presentation,attribs = {},options ={})
+  def Record.make(the_form,presentation,attribs = {},options ={})
     #puts "RECORD.make attribs = #{attribs.inspect}"
-    the_form = Form.find(form_name)
+#    the_form = Form.find(form_name)
     #TODO there is a circularity problem here.  To set up the form we call it with a presentation
     # but part of the setup gets us the default presentation if we don't have one!
 
@@ -767,14 +795,14 @@ class Record
     # in Record#update_attributes
     fi = FormInstance.new
     #puts "Record.make fi = #{fi.inspect}"
-    fi.form_id = the_form.to_s
+    fi.form_id = the_form.class.to_s
     fi.workflow = the_form.workflow_for_new_form(presentation)
-    the_form.setup(presentation,nil)
+#    the_form.setup(presentation,nil)
     #puts "Record.make fi = #{fi.inspect}"
     #puts "Record.make attribs = #{attribs.inspect}"
     #puts "Record.make options = #{options.inspect}"
     
-    @record = Record.new(fi,attribs,options)    
+    @record = Record.new(fi,the_form,attribs,presentation,options)    
   end
   
   

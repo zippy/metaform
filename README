@@ -15,26 +15,26 @@ the widget generates javascript to get the true date value out of the widget dir
 
 == Getting Started (Installation)
 
-* You may need to add this line:
+1. You may need to add this line:
 
  config.plugins = [ :all, :metaform ] 
 
 into your environment.rb file to make metaform load last in the load order.
 
-* Add the code from example/routes.rb into your config/routes.rb file.
+2. Add the code from example/routes.rb into your config/routes.rb file.
 
-* Use the generator:
+3. Use the generator:
 
  ./script/generate metaform
 
 This will add:
- - two migrations (which you need to rake db:migrate for) 
- - the "forms" directory where you will define your forms using the metaform DSL (see below)
- - a javascript file to your public/javascripts
- - the default css stylesheet to public/stylesheets
- - records/show.rhtml and records/new.rhtml to app/views/ as sample views that use metaform to create forms
+* two migrations (which you need to rake db:migrate for) 
+* the "forms" directory where you will define your forms using the metaform DSL (see below)
+* a javascript file to your public/javascripts
+* the default css stylesheet to public/stylesheets
+* records/show.rhtml and records/new.rhtml to app/views/ as sample views that use metaform to create forms
 
-* Include the following helper in the head of your application layout:
+4. Include the following helper in the head of your application layout:
  <%= include_metaform_assets %>
 This will load the javascripts and the stylesheets when needed.  To tell this function when to load the assets
 simply add: 

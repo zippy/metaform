@@ -1,4 +1,8 @@
-
+# TODO-Eric finish implementing tear-offs (saving to db)
+# TODO-Eric explanations in verification
+# TODO-Eric Proc verificatin separated from "required" constraint
+# TODO-Eric Calling verificaiton anywhere (will be integrated with properties)
+# TODO-Eric Factor out @@record in Form to use any data storage model
 ################################################################################
 ################################################################################
 # Form is a base class which allows the creation of Form and Workflows using
@@ -11,12 +15,13 @@
 # which are run-time helper function, which are the user hooks (build, verify, setup), etc
 
 require 'yaml'
-require 'metaform/form_helper'
-require 'metaform/utilities'
+#require 'metaform/form_helper'
+#require 'metaform/utilities'
 
 class Form
   cattr_accessor :forms_dir
   @@forms_dir = 'forms'
+  @@property_appearances = nil
   
   FieldTypes = ['string','integer','float','decimal','boolean','date','datetime','time','text']
   
@@ -102,10 +107,12 @@ class Form
     # define a groupd of fields all to have a constraint (typically "required")
     # TODO-LISA make this work so that you can nest def_fields.  Also, make sure that
     # nested constraints properlly override constraints from the nesting group, etc.
-    def def_fields(constraints = nil)
+    def def_fields(constraints = nil,properties = nil)
+      @@properties = properties
       @@constraints = constraints
       yield
       @@constraints = nil
+      @@properties = nil
     end
     
     #################################################################################
@@ -121,7 +128,6 @@ class Form
 # boolean_TxCCTpTf     
 #      raise "unknown field type #{field_type}" if !FieldTypes.include?(field_type)
       
-      field = Struct.new(:name, :label, :type, :constraints,:followups,:followup_name_map,:default,:indexed_default_from_null_index,:calculated)
       c = @@constraints
       c ||= {}
       if constraints
@@ -130,9 +136,15 @@ class Form
       else
         c = c.clone
       end
+      p = @@properties
+      p ||= {}
+      p.update(options[:properties]) if options[:properties]
+      opts = options.clone
+      opts[:properties] = p if p.size>0
 #TODO reinstate this line once we fix the dups created in V1Form
 #      raise "#{field_name} already defined" if self.fields.has_key?(field_name)
-      self.fields[field_name] = field[field_name,label,field_type,c,nil,nil,options[:default],options[:indexed_default_from_null_index],options[:calculated]]
+      attribs = {:name => field_name, :label =>label, :type=>field_type, :constraints=>c}.update(opts)
+      self.fields[field_name] = Field.new(attribs)
     end
     
     #################################################################################
@@ -163,9 +175,9 @@ class Form
       options = {
         :legal_states => :any
       }.update(opts)
-      pres = Struct.new(:block,:options,:initialized)
-      legal_viewing_states = [legal_viewing_states]  if legal_viewing_states != :any && legal_viewing_states.class != Array
-      self.presentations[presentation_name] = pres[block,options,false]
+# TODO see if the fact that the line below is orphaned (and now commented out) breaks anything
+#      legal_viewing_states = [legal_viewing_states]  if legal_viewing_states != :any && legal_viewing_states.class != Array
+      self.presentations[presentation_name] = Presentation.new(:name=>presentation_name,:block=>block,:options => options)
     end
         
     #################################################################################
@@ -175,9 +187,7 @@ class Form
       if qs[field_name]
         current_question = qs[field_name]
       else
-        question = Struct.new(:appearance,:params)
-        current_question = question[appearance_type,appearance_parameters]
-        qs[field_name] = current_question        
+        qs[field_name] = Question.new(:appearance=>appearance_type,:params=>appearance_parameters)        
       end
     end
         
@@ -348,12 +358,22 @@ class Form
       css_class ||= 'question'
       css_class = %Q| class="#{css_class}"|
       if options[:erb]
-        body ERB.new(options[:erb]).result(binding)
+        h = ERB.new(options[:erb]).result(binding)
       else
-        body %Q|<div id="question_#{field_name}"#{css_class}#{initially_hidden ? ' style="display:none"' : ""}>#{field_html}</div>|
+        h =  %Q|<div id="question_#{field_name}"#{css_class}#{initially_hidden ? ' style="display:none"' : ""}>#{field_html}</div>|
       end
+      if @@property_appearances
+        if the_field.properties
+          props = {}
+#TODO property value should be cached instead of calculated each time.
+#TODO properties should be implemented as a class.
+          the_field.properties.each {|p,proc| props[p] = proc.call(self)}
+          h = @@property_appearances.call(h,props)
+        end
+      end
+      body h
       
-      #TODO-LISA find some way that the "followup" css spec can be passed in as part of the followup
+      #TODO-Eric find some way that the "followup" css spec can be passed in as part of the followup
       # appearance specification, and also to pass in a css_class specification for the followup question
       # itself
       if followup_appearances 
@@ -482,6 +502,10 @@ YAML
         pres.block.call
       end
       body "</div>"
+    end
+
+    def property_appearances(&block)
+      @@property_appearances = block
     end
 
     ###############################################

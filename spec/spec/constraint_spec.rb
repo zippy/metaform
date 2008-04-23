@@ -5,11 +5,14 @@ describe Constraints do
     it "should trigger when value is nil" do
       Constraints.verify({'regex' => 'a.c'}, nil, SampleForm).should == ["value does not match regular expression a.c"]
     end
-    it "should trigger when value is " do
+    it "should not trigger when value matches regex " do
       Constraints.verify({'regex' =>'a.c'}, 'abc', SampleForm).should == []
     end
     it "should not trigger when value is not nil or ''" do
       Constraints.verify({'regex' =>'a.c'}, 'abd', SampleForm).should == ["value does not match regular expression a.c"]
+    end
+    it "should accept regex objects as the value" do
+      Constraints.verify({'regex' =>/a.c/}, 'abc', SampleForm).should == []
     end
   end
   describe 'required' do

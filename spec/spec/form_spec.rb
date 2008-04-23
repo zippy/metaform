@@ -66,6 +66,10 @@ describe Form do
         SampleForm.q 'name', 'TextField',nil,nil,:read_only => true
         SampleForm.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><span id=\"record[name]\">Bob Smith</span></div>"]
       end
+      it "should add question html to the body in read-only mode if it is specified as :erb" do
+        SampleForm.q 'name', 'TextField',nil,nil,:read_only => true,:erb =>%Q|<tr><td class='field_label'><%=field_label%></td><td><%=field_element%></td></tr>|
+        SampleForm.get_body.should == ["<tr><td class='field_label'>Name:</td><td><span id=\"record[name]\">Bob Smith</span></td></tr>"]
+      end
 
       describe "-- with verification" do
         it "should add the verification html if q specifies the :force_verify option" do
@@ -151,6 +155,13 @@ describe Form do
           "var simple = new indexedItems;simple.elem_id=\"presentation_simple_items\";simple.delete_text=\"Delete this name\";simple.self_name=\"simple\";",
           "function doAddsimple() {simple.addItem(\"<div id=\\\"question_name\\\" class=\\\"question\\\"><label class=\\\"label\\\" for=\\\"record[name]\\\">Name:</label><input id=\\\"record[name]\\\" name=\\\"record[name]\\\" type=\\\"text\\\" value=\\\"Bob Smith\\\" /></div>\")}"
           ]
+      end
+    end
+    describe "--properties" do
+      it "should display according to defined properties" do
+        @record[:name] = 'Al Capone'
+        SampleForm.q 'name', 'TextField'
+        SampleForm.get_body.should == ["<div class=\"shady\"><div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record[name]\" name=\"record[name]\" type=\"text\" value=\"Al Capone\" /></div></div>"]
       end
     end
   end

@@ -1,8 +1,19 @@
-class SampleForm < Form
+class OldSampleForm < Form
   
   labeling(:postfix => ':')
+
+  property_appearances do |q_html,properties|
+    q_result = q_html
+    if properties[:invalid]
+      q_result << %Q|<span class="errors">#{properties[:invalid]}</span>|
+    end
+    if properties[:shady]
+      q_result = %Q|<div class="shady">#{q_result}</div>|
+    end
+    q_result
+  end
   
-  def_fields do
+  def_fields(nil,{:shady => Proc.new {|form| (form.field_value('name') =~ /Capone/) }}) do
     f 'name', 'Name', 'string', {"required"=>true}
     f 'due_date', 'Due Date', 'date'
     f 'education', 'Post-secondary formal education (years)', 'integer', {"range"=>"0-14"}
