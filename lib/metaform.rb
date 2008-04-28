@@ -48,9 +48,9 @@ if File.directory?(Zform.forms_dir)
       end
     end
   end
-#  requires.each do |file| 
-#    require File.join(Zform.forms_dir, file)
-#  end
+  requires.each do |file|
+    require File.join(Zform.forms_dir, file)
+  end
   forms.each do |klass|
     file = Zform.forms_dir+'/'+klass+'.rb'
     file_contents = IO.read(file)
