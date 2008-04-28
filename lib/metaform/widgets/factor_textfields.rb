@@ -48,7 +48,7 @@ EOHTML
   end
 
   ################################################################################
-  def self.javascript_build_observe_function(field_instance_id,script,constraints)
+  def self.javascript_build_observe_function(field_instance_id,script,options)
     result = ""
     %w(first_box second_box).each do |field|
       result << %Q|Event.observe('#{build_html_multi_id(field_instance_id,field)}', 'change', function(e){ #{script} });\n|

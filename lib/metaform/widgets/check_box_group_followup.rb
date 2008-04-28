@@ -69,11 +69,19 @@ class CheckBoxGroupFollowupWidget < Widget
   end
 
   ################################################################################
-  def self.javascript_build_observe_function(field_instance_id,script,constraints)
-    e = enumeration(constraints)
+  def self.javascript_build_observe_function(field_instance_id,script,options)
+
+    params = options[:params].split(/,/)
+    sub_label = params.shift
+
+    e = enumeration(options[:constraints])
     result = ""
     e.each do |key,value|
       result << %Q|Event.observe('#{build_html_multi_id(field_instance_id,value)}', 'change', function(e){ #{script} });\n|
+      params.each do |i|
+        idx = "_#{value}-#{i}"
+        result << %Q|Event.observe('#{build_html_multi_id(field_instance_id,idx)}', 'change', function(e){ #{script} });\n|
+      end
     end
     result
   end

@@ -16,7 +16,7 @@ class CheckBoxWidget < Widget
   end
 
   ################################################################################
-  def self.javascript_build_observe_function(field_instance_id,script,constraints)
+  def self.javascript_build_observe_function(field_instance_id,script,options)
     %Q|var watcher_#{build_html_multi_id(field_instance_id,"Y")} = new WidgetWatcher('#{build_html_multi_id(field_instance_id,"Y")}', function(e){ #{script} });\n|
   end
 

@@ -733,7 +733,8 @@ class Zform
           q = questions[question_name]
           field_name = q.field.name
           widget = q.get_widget
-          observer_function = widget.javascript_build_observe_function(field_name,"check_#{field_name}()",q.field.constraints)
+          widget_options = {:constraints => q.field.constraints, :params => q.params}
+          observer_function = widget.javascript_build_observe_function(field_name,"check_#{field_name}()",widget_options)
           value_function = widget.javascript_get_value_function(field_name)
           scripts = ""
           jsc.each {|action| scripts << "if (#{action[:condition]}) {#{action[:script]}"}

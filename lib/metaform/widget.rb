@@ -85,7 +85,7 @@ class Widget
   end
   
   ################################################################################
-  def self.javascript_build_observe_function(field_instance_id,script,constraints)
+  def self.javascript_build_observe_function(field_instance_id,script,options)
     %Q|Event.observe('#{build_html_id(field_instance_id)}', 'change', function(e){ #{script} });|
   end
 

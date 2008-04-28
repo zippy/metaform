@@ -36,8 +36,8 @@ class RadioButtonsWidget < Widget
   end
 
   ################################################################################
-  def self.javascript_build_observe_function(field_instance_id,script,constraints)
-    e = enumeration(constraints)
+  def self.javascript_build_observe_function(field_instance_id,script,options)
+    e = enumeration(options[:constraints])
     result = ""
     e.each do |key,value|
       result << %Q|var watcher_#{build_html_multi_id(field_instance_id,value)} = new WidgetWatcher('#{build_html_multi_id(field_instance_id,value)}', function(e){ #{script} });\n|
