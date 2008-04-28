@@ -234,12 +234,15 @@ class Zform
     options = {
       :legal_states => :any
     }.update(opts)
+    raise MetaformException,'presentations can not be defined inside presentations' if @_in_presentation
+    @_in_presentation = true
     the_presentation = Presentation.new(:name=>presentation_name,:block=>block)
     options.each { |option_name,v| set_option_by_class(the_presentation,option_name,v)}
     presentations[presentation_name] = the_presentation
     in_phase :setup do
       p(presentation_name)
     end
+    @_in_presentation = false
   end
 
   #################################################################################
@@ -719,9 +722,10 @@ class Zform
   def build(presentation_name,record=nil,index=nil)
     prepare_for_build(index)
     with_record(record,:build) do
-      @_meta = {}
       p(presentation_name)
-      body %Q|<input type="hidden" name="meta[workflow_action]" id="meta_workflow_action">| if !@_stuff[:added_workflow_action_widget]
+      if !@_stuff[:added_workflow_action_widget]
+        body %Q|<input type="hidden" name="meta[workflow_action]" id="meta_workflow_action">| 
+      end
       
       ojs = get_observer_jscripts
       if ojs
@@ -840,6 +844,10 @@ class Zform
 
   def get_observer_jscripts
     @_stuff[:observer_js]
+  end
+
+  def get_record
+    @record
   end
   
   #TODO this doesn't find questions from nested presentation
