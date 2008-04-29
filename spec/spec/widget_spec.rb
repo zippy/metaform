@@ -18,11 +18,11 @@ describe Widget do
   describe TextFieldWidget do
     it "should render an html input text with a label" do
       TextFieldWidget.render_form_object(@form,1,'value',{}).should == 
-        "<input id=\"record[1]\" name=\"record[1]\" type=\"text\" value=\"value\" />"
+        "<input id=\"record_1\" name=\"record[1]\" type=\"text\" value=\"value\" />"
     end
     it "should render an html input text with a size parameter" do
       TextFieldWidget.render_form_object(@form,1,'value',{:params=>'3'}).should == 
-        "<input class=\"textfield_3\" id=\"record[1]\" name=\"record[1]\" size=\"3\" type=\"text\" value=\"value\" />"
+        "<input class=\"textfield_3\" id=\"record_1\" name=\"record[1]\" size=\"3\" type=\"text\" value=\"value\" />"
     end
     it "should render value as text with a read_only parameter" do
       TextFieldWidget.render_form_object_read_only(@form,1,'value',{}).should == 

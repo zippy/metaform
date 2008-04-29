@@ -352,8 +352,13 @@ class Zform
           #TODO-LISA make this work if the field value is an array (which it would be for a set instead of an enum)
           opts[:condition] = %Q|field_value.match(#{value})|
         else
-          opts[:value] = value
-          opts[:operator] = the_q.get_widget.is_multi_value? ? :in : '=='
+          if value =~ /^\!(.*)/
+            opts[:value] = $1
+            opts[:operator] = the_q.get_widget.is_multi_value? ? :not_in : '!='
+          else
+            opts[:value] = value
+            opts[:operator] = the_q.get_widget.is_multi_value? ? :in : '=='
+          end
         end
         javascript_show_hide_if(field_name,opts) do
           q followup_field_name,followup_question_options
@@ -678,6 +683,8 @@ class Zform
     case operator
     when :in
       %Q|"#{value}" in oc(field_value)|
+    when :not_in
+      %Q|"!(#{value}" in oc(field_value))|
     else
       %Q|field_value #{operator} "#{value}"|
     end

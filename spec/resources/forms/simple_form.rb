@@ -25,7 +25,7 @@ class SimpleForm < Zform
         f 'name'
         def_fields :constraints=>{"range"=>"1-100"} do
           f 'age'
-          f 'higher_ed_years',:constraints=>{'range'=>'0-10'}
+          f 'higher_ed_years',:constraints=>{'range'=>'0-10'},:followups=>{'/../' => f('degree'),'!0'=>f('no_ed_reason')}
         end
       end
       f 'eye_color',

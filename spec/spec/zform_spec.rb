@@ -15,7 +15,7 @@ describe SimpleForm do
         @form.label_options[:postfix].should == ":"
       end
       it "should render labels with the default postfix" do
-        @name_q.render(@form).should == "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record[name]\" name=\"record[name]\" type=\"text\" /></div>"
+        @name_q.render(@form).should == "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" /></div>"
       end
       it "should render questions that override the postfix" do
         mq = @form.get_questions_by_field_name('married')[0]
@@ -102,10 +102,10 @@ describe SimpleForm do
         @name_q.params.should == nil
       end
       it "should render without a value" do
-       @name_q.render(@form).should == "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record[name]\" name=\"record[name]\" type=\"text\" /></div>"
+       @name_q.render(@form).should == "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" /></div>"
       end
       it "should render with a value" do
-        @name_q.render(@form,'Bob Smith').should == "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record[name]\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>"
+        @name_q.render(@form,'Bob Smith').should == "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>"
       end
       it "should render an enumeration based widget" do
         mq = @form.get_presentation_question('married_questions','married')
@@ -117,7 +117,7 @@ describe SimpleForm do
       end
       it "should render erb" do
         nq = @form.get_questions_by_field_name('age')[0]
-        nq.render(@form,'22').should == "<tr><td class='field_label'>Age:</td><td><input id=\"record[age]\" name=\"record[age]\" type=\"text\" value=\"22\" /></td></tr>"
+        nq.render(@form,'22').should == "<tr><td class='field_label'>Age:</td><td><input id=\"record_age\" name=\"record[age]\" type=\"text\" value=\"22\" /></td></tr>"
       end
       it "should render erb in read only mode" do
         nq = @form.get_questions_by_field_name('higher_ed_years')[0]
@@ -146,28 +146,40 @@ describe SimpleForm do
           setup_q do
             @form.q 'eye_color', :followups => [{'other_eye_color' => {:widget=>'TextArea'}}]
           end
-          @form.get_body.should==["<div id=\"question_eye_color\" class=\"question\"><label class=\"label\" for=\"record[eye_color]\">Eye color:</label><input id=\"record[eye_color]\" name=\"record[eye_color]\" type=\"text\" value=\"x\" /></div>", "<div id=\"uid_1\" class=\"followup\">", "<div id=\"question_other_eye_color\" class=\"question\"><label class=\"label\" for=\"record[other_eye_color]\">Other eye color:</label><textarea id=\"record[other_eye_color]\" name=\"record[other_eye_color]\"></textarea></div>", "</div>"]
+          @form.get_body.should==["<div id=\"question_eye_color\" class=\"question\"><label class=\"label\" for=\"record[eye_color]\">Eye color:</label><input id=\"record_eye_color\" name=\"record[eye_color]\" type=\"text\" value=\"x\" /></div>", "<div id=\"uid_1\" class=\"followup\">", "<div id=\"question_other_eye_color\" class=\"question\"><label class=\"label\" for=\"record[other_eye_color]\">Other eye color:</label><textarea id=\"record_other_eye_color\" name=\"record[other_eye_color]\"></textarea></div>", "</div>"]
           @form.get_observer_jscripts.should == {"eye_color"=>[{:condition=>"((field_value == \"x\"))", :script=>"Element.show('uid_1');;} else {Element.hide('uid_1');;}"}]}
         end
         it "should accept a single hash if there is only one followup" do
           setup_q do
             @form.q 'eye_color', :followups => {'other_eye_color' => {:widget=>'TextArea'}}
           end
-          @form.get_body.should==["<div id=\"question_eye_color\" class=\"question\"><label class=\"label\" for=\"record[eye_color]\">Eye color:</label><input id=\"record[eye_color]\" name=\"record[eye_color]\" type=\"text\" value=\"x\" /></div>", "<div id=\"uid_1\" class=\"followup\">", "<div id=\"question_other_eye_color\" class=\"question\"><label class=\"label\" for=\"record[other_eye_color]\">Other eye color:</label><textarea id=\"record[other_eye_color]\" name=\"record[other_eye_color]\"></textarea></div>", "</div>"]
+          @form.get_body.should==["<div id=\"question_eye_color\" class=\"question\"><label class=\"label\" for=\"record[eye_color]\">Eye color:</label><input id=\"record_eye_color\" name=\"record[eye_color]\" type=\"text\" value=\"x\" /></div>", "<div id=\"uid_1\" class=\"followup\">", "<div id=\"question_other_eye_color\" class=\"question\"><label class=\"label\" for=\"record[other_eye_color]\">Other eye color:</label><textarea id=\"record_other_eye_color\" name=\"record[other_eye_color]\"></textarea></div>", "</div>"]
         end
         it "should accept a single hash with a string value that is the widget" do
           setup_q do
             @form.q 'eye_color', :followups => {'other_eye_color' => 'TextArea'}
           end
-          @form.get_body.should==["<div id=\"question_eye_color\" class=\"question\"><label class=\"label\" for=\"record[eye_color]\">Eye color:</label><input id=\"record[eye_color]\" name=\"record[eye_color]\" type=\"text\" value=\"x\" /></div>", "<div id=\"uid_1\" class=\"followup\">", "<div id=\"question_other_eye_color\" class=\"question\"><label class=\"label\" for=\"record[other_eye_color]\">Other eye color:</label><textarea id=\"record[other_eye_color]\" name=\"record[other_eye_color]\"></textarea></div>", "</div>"]
+          @form.get_body.should==["<div id=\"question_eye_color\" class=\"question\"><label class=\"label\" for=\"record[eye_color]\">Eye color:</label><input id=\"record_eye_color\" name=\"record[eye_color]\" type=\"text\" value=\"x\" /></div>", "<div id=\"uid_1\" class=\"followup\">", "<div id=\"question_other_eye_color\" class=\"question\"><label class=\"label\" for=\"record[other_eye_color]\">Other eye color:</label><textarea id=\"record_other_eye_color\" name=\"record[other_eye_color]\"></textarea></div>", "</div>"]
         end
         it "should accept a string value which is just the field and assumes all default options" do
           setup_q do
             @form.q 'eye_color', :followups => 'other_eye_color'
           end
-          @form.get_body.should==["<div id=\"question_eye_color\" class=\"question\"><label class=\"label\" for=\"record[eye_color]\">Eye color:</label><input id=\"record[eye_color]\" name=\"record[eye_color]\" type=\"text\" value=\"x\" /></div>", "<div id=\"uid_1\" class=\"followup\">", "<div id=\"question_other_eye_color\" class=\"question\"><label class=\"label\" for=\"record[other_eye_color]\">Other eye color:</label><input id=\"record[other_eye_color]\" name=\"record[other_eye_color]\" type=\"text\" /></div>", "</div>"] 
+          @form.get_body.should==["<div id=\"question_eye_color\" class=\"question\"><label class=\"label\" for=\"record[eye_color]\">Eye color:</label><input id=\"record_eye_color\" name=\"record[eye_color]\" type=\"text\" value=\"x\" /></div>", "<div id=\"uid_1\" class=\"followup\">", "<div id=\"question_other_eye_color\" class=\"question\"><label class=\"label\" for=\"record[other_eye_color]\">Other eye color:</label><input id=\"record_other_eye_color\" name=\"record[other_eye_color]\" type=\"text\" /></div>", "</div>"] 
         end
-      end
+        it "should produce the correct javascript for regex based followups " do
+          @form.with_record(@record) do
+            @form.q 'higher_ed_years',:followups => 'degree'
+            @form.get_observer_jscripts.should == {"higher_ed_years"=>[{:condition=>"((field_value.match(/../)))", :script=>"Element.show('uid_1');;} else {Element.hide('uid_1');;}"}]}
+          end
+        end
+        it "should produce the correct javascript for negated value followups " do
+          @form.with_record(@record) do
+            @form.q 'higher_ed_years',:followups => 'no_ed_reason'
+            @form.get_observer_jscripts.should == {"higher_ed_years"=>[{:condition=>"((field_value != \"0\"))", :script=>"Element.show('uid_1');;} else {Element.hide('uid_1');;}"}]}
+          end
+        end
+      end # q:followups
       it "should raise an error if followups option specified for a field not defined with followups" do
         lambda {@form.q 'name',:followups =>{}}.should raise_error("no followups defined for field 'name'")
       end
@@ -189,13 +201,13 @@ describe SimpleForm do
           @record.name = ''
           @form.with_record(@record) do
             @form.q('name',:force_verify => true)
-            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record[name]\" name=\"record[name]\" type=\"text\" value=\"\" /><span class=\"errors\">this field is required</span></div>"]
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /><span class=\"errors\">this field is required</span></div>"]
           end
         end
         it "should not add the verification html if q specifies the :force_verify option but the value of the field is ok" do
           @form.with_record(@record) do
             @form.q('name',:force_verify => true)
-            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record[name]\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>"]
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>"]
           end
         end
         it "should add the verification html for an erb question"
@@ -205,7 +217,7 @@ describe SimpleForm do
 #          @record.workflow_state= 'verifying'
 #          SampleForm.prepare_for_build(@record,@form,nil)
 #          SampleForm.q 'name', 'TextField'
-#          SampleForm.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record[name]\" name=\"record[name]\" type=\"text\" value=\"\" /><span class=\"errors\">this field is required</span></div>"]
+#          SampleForm.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /><span class=\"errors\">this field is required</span></div>"]
 #        end
       end
     end # q
@@ -223,13 +235,13 @@ describe SimpleForm do
       it "should render the contents of a presentation" do
         @form.in_phase(:build) do
           @form.p('create')
-          @form.get_body.should == ["<div id=\"presentation_create\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record[name]\" name=\"record[name]\" type=\"text\" /></div>", "</div>"]
+          @form.get_body.should == ["<div id=\"presentation_create\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" /></div>", "</div>"]
         end
       end
       it "should render presentations with sub-presentations" do
         @form.in_phase(:build) do
           @form.p('container')
-          @form.get_body.should == ["<div id=\"presentation_container\" class=\"presentation\">", "<div id=\"presentation_name_only\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record[name]\" name=\"record[name]\" type=\"text\" /></div>", "</div>", "<div id=\"presentation_education_info\" class=\"presentation\">", "<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">Higher ed years:</label><input id=\"record[higher_ed_years]\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>", "<div id=\"question_age_plus_education\" class=\"question\"><label class=\"label\" for=\"record[age_plus_education]\">Age plus education:</label><span id=\"record[age_plus_education]\"></span>g question!</div>", "</div>", "</div>"]
+          @form.get_body.should == ["<div id=\"presentation_container\" class=\"presentation\">", "<div id=\"presentation_name_only\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" /></div>", "</div>", "<div id=\"presentation_education_info\" class=\"presentation\">", "<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">Higher ed years:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>", "<div id=\"question_age_plus_education\" class=\"question\"><label class=\"label\" for=\"record[age_plus_education]\">Age plus education:</label><span id=\"record[age_plus_education]\"></span>g question!</div>", "</div>", "</div>"]
         end
       end
     end #p
@@ -255,7 +267,7 @@ describe SimpleForm do
           "<div id=\"presentation_name_only\" class=\"presentation_indexed\">",
             "<ul id=\"presentation_name_only_items\">",
               "<li id=\"item_0\" class=\"presentation_indexed_item\">",
-                "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record[name]\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>",
+                "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>",
                 "<input type=\"button\" value=\"Delete this name\" onclick=\"name_only.removeItem($(this).up())\">",
               "</li>",
             "</ul>",
@@ -270,11 +282,11 @@ describe SimpleForm do
           "<div id=\"presentation_name_only\" class=\"presentation_indexed\">",
             "<ul id=\"presentation_name_only_items\">",
               "<li id=\"item_0\" class=\"presentation_indexed_item\">",
-                "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record[name]\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>",
+                "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>",
                 "<input type=\"button\" value=\"Delete this name\" onclick=\"name_only.removeItem($(this).up())\">",
               "</li>",
               "<li id=\"item_1\" class=\"presentation_indexed_item\">",
-                "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record[name]\" name=\"record[name]\" type=\"text\" value=\"Herbert Fink\" /></div>",
+                "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Herbert Fink\" /></div>",
                 "<input type=\"button\" value=\"Delete this name\" onclick=\"name_only.removeItem($(this).up())\">",
               "</li>",
             "</ul>",
@@ -286,20 +298,20 @@ describe SimpleForm do
         do_p
         @form.get_jscripts.should == [
           "var name_only = new indexedItems;name_only.elem_id=\"presentation_name_only_items\";name_only.delete_text=\"Delete this name\";name_only.self_name=\"name_only\";",
-          "function doAddname_only() {name_only.addItem(\"<div id=\\\"question_name\\\" class=\\\"question\\\"><label class=\\\"label\\\" for=\\\"record[name]\\\">Name:</label><input id=\\\"record[name]\\\" name=\\\"record[name]\\\" type=\\\"text\\\" value=\\\"Bob Smith\\\" /></div>\")}"
+          "function doAddname_only() {name_only.addItem(\"<div id=\\\"question_name\\\" class=\\\"question\\\"><label class=\\\"label\\\" for=\\\"record[name]\\\">Name:</label><input id=\\\"record_name\\\" name=\\\"record[name]\\\" type=\\\"text\\\" value=\\\"Bob Smith\\\" /></div>\")}"
           ]
       end
     end #p-indexed
 
     describe "qp (display a question and a javascript activated sub-presentation)" do
-      it "should render a complicated bunch of html and add an observer javascript" do
+      it "should render a complicated bunch of html and add observer javascripts" do
         @form.in_phase(:build) do
           @form.qp('age',:presentation_name => 'education_info',:show_hide_options=>{:value => '18',:operator => '>'})
           @form.get_body.should == [
-            "<div id=\"question_age\" class=\"question\"><label class=\"label\" for=\"record[age]\">Age:</label><input id=\"record[age]\" name=\"record[age]\" type=\"text\" />g question!</div>",
+            "<div id=\"question_age\" class=\"question\"><label class=\"label\" for=\"record[age]\">Age:</label><input id=\"record_age\" name=\"record[age]\" type=\"text\" />g question!</div>",
             "<div id=\"uid_1\" class=\"hideable_box_with_border\">",
               "<div id=\"presentation_education_info\" class=\"presentation\">",
-                "<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">Higher ed years:</label><input id=\"record[higher_ed_years]\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>",
+                "<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">Higher ed years:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>",
                 "<div id=\"question_age_plus_education\" class=\"question\"><label class=\"label\" for=\"record[age_plus_education]\">Age plus education:</label><span id=\"record[age_plus_education]\"></span>g question!</div>",
               "</div>",
             "</div>"]
@@ -383,7 +395,7 @@ describe SimpleForm do
       it "should add the elements from the block into the div" do
         @form.in_phase(:build) do
           @form.p('married_questions')
-          @form.get_body.should == ["<div id=\"presentation_married_questions\" class=\"presentation\">", "<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record[married]\">Married?</label><select name=\"record[married]\" id=\"record_married\">\n   <option value=\"y\">Yes</option>\n<option value=\"n\">No</option>\n</select>\n</div>", "<div id=\"uid_1\" class=\"hideable_box_with_border\">", "<div id=\"question_children\" class=\"question\"><label class=\"label\" for=\"record[children]\">Children:</label><input id=\"record[children]\" name=\"record[children]\" type=\"text\" /></div>", "</div>", "</div>"]
+          @form.get_body.should == ["<div id=\"presentation_married_questions\" class=\"presentation\">", "<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record[married]\">Married?</label><select name=\"record[married]\" id=\"record_married\">\n   <option value=\"y\">Yes</option>\n<option value=\"n\">No</option>\n</select>\n</div>", "<div id=\"uid_1\" class=\"hideable_box_with_border\">", "<div id=\"question_children\" class=\"question\"><label class=\"label\" for=\"record[children]\">Children:</label><input id=\"record_children\" name=\"record[children]\" type=\"text\" /></div>", "</div>", "</div>"]
         end
       end
     end #javascript_show_hide_if
@@ -498,13 +510,13 @@ describe SimpleForm do
     describe "build (render form)" do
       it "should generate html for a simple presentation" do
         @form.build('name_only').should == [
-          "<div id=\"presentation_name_only\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record[name]\" name=\"record[name]\" type=\"text\" /></div>\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">",
+          "<div id=\"presentation_name_only\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" /></div>\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">",
           ""
         ]
       end
       it "should generate all the html and javascript for a complex presentation" do
         @form.build('married_questions').should == [
-          "<div id=\"presentation_married_questions\" class=\"presentation\">\n<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record[married]\">Married?</label><select name=\"record[married]\" id=\"record_married\">\n   <option value=\"y\">Yes</option>\n<option value=\"n\">No</option>\n</select>\n</div>\n<div id=\"uid_1\" class=\"hideable_box_with_border\">\n<div id=\"question_children\" class=\"question\"><label class=\"label\" for=\"record[children]\">Children:</label><input id=\"record[children]\" name=\"record[children]\" type=\"text\" /></div>\n</div>\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">",
+          "<div id=\"presentation_married_questions\" class=\"presentation\">\n<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record[married]\">Married?</label><select name=\"record[married]\" id=\"record_married\">\n   <option value=\"y\">Yes</option>\n<option value=\"n\">No</option>\n</select>\n</div>\n<div id=\"uid_1\" class=\"hideable_box_with_border\">\n<div id=\"question_children\" class=\"question\"><label class=\"label\" for=\"record[children]\">Children:</label><input id=\"record_children\" name=\"record[children]\" type=\"text\" /></div>\n</div>\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">",
           "            Event.observe('record_married', 'change', function(e){ check_married() });\n            function check_married() {\n              var field_value = $F('record_married');\n              if (((field_value == \"y\"))) {Element.show('uid_1');;} else {Element.hide('uid_1');;}\n            }\n            check_married();\n"
         ]
       end
