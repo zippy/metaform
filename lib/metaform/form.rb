@@ -1,5 +1,5 @@
 
-class Zform
+class Form
   include Utilities
   include FormHelper
 
@@ -881,7 +881,7 @@ class Zform
   #################################################################################
   # helper function to allow separating the DSL commands into multiple files
   def include_definitions(file)
-    fn = Zform.forms_dir+'/'+file
+    fn = Form.forms_dir+'/'+file
     file_contents = IO.read(fn)
     eval(file_contents,nil,fn)
   end
@@ -889,9 +889,9 @@ class Zform
   #################################################################################
   # helper function to allow separating the DSL commands into multiple files
   def include_helpers(file)
-    fn = Zform.forms_dir+'/'+file
+    fn = Form.forms_dir+'/'+file
     file_contents = IO.read(fn)
-    Zform.class_eval(file_contents,fn)
+    Form.class_eval(file_contents,fn)
   end
 
   #################################################################################

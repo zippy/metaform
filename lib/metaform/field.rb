@@ -37,6 +37,9 @@ class Presentation < Bin
 end
 
 class Question < Bin
+  #TODO -FIXME!!  FormProxy should totally disapear
+  @@form_proxy = FormProxy.new('SampleForm'.gsub(/ /,'_'))
+
   def bins
     {
       :field => nil,
@@ -67,14 +70,12 @@ class Question < Bin
     postfix ||= form.label_options[:postfix] if form.label_options.has_key?(:postfix)
     field_label = field_label + postfix if postfix
 
-    #TODO -FIXME!!  FormProxy should totally disapear
-    form_proxy = FormProxy.new('SampleForm'.gsub(/ /,'_'))
     if erb
       field_element = read_only ?
-        w.render_form_object_read_only(form_proxy,field_name,value,widget_options) :
-        w.render_form_object(form_proxy,field_name,value,widget_options)
+        w.render_form_object_read_only(@@form_proxy,field_name,value,widget_options) :
+        w.render_form_object(@@form_proxy,field_name,value,widget_options)
     end
-    field_html = w.render(form_proxy,field_name,value,field_label,widget_options)
+    field_html = w.render(@@form_proxy,field_name,value,field_label,widget_options)
 
     css_class_html = %Q| class="#{css_class}"| if css_class
     

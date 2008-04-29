@@ -13,8 +13,8 @@ require 'metaform/form_helper'
 require 'metaform/bin'
 require 'metaform/property'
 require 'metaform/field'
-require 'metaform/forms'
-require 'metaform/zform'
+#require 'metaform/forms'
+require 'metaform/form'
 require 'metaform/listings'
 require 'metaform/reports'
 require 'metaform/constraints'
@@ -36,10 +36,10 @@ end
 ################################################################################
 =end
 
-if File.directory?(Zform.forms_dir)
+if File.directory?(Form.forms_dir)
   forms = []
   requires = []
-  Dir.foreach(Zform.forms_dir) do |file|
+  Dir.foreach(Form.forms_dir) do |file|
     if file =~ /(.*)\.rb$/
       if file =~ /(.*form)\.rb$/i
         forms << $1
@@ -49,13 +49,13 @@ if File.directory?(Zform.forms_dir)
     end
   end
   requires.each do |file|
-    require File.join(Zform.forms_dir, file)
+    require File.join(Form.forms_dir, file)
   end
   forms.each do |klass|
-    file = Zform.forms_dir+'/'+klass+'.rb'
+    file = Form.forms_dir+'/'+klass+'.rb'
     file_contents = IO.read(file)
     new_class = <<-EORUBY
-    class #{klass} < Zform
+    class #{klass} < Form
       def setup
         #{file_contents}
       end

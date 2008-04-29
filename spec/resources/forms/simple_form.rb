@@ -11,7 +11,7 @@ class FieldNameHasG < Property
   end
 end
 
-class SimpleForm < Zform
+class SimpleForm < Form
   def setup
 
     def_tabs 'simple_tabs' do

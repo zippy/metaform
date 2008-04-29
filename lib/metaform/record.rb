@@ -196,18 +196,18 @@ class Record
     if RAILS_ENV == 'development'
       require 'find'
       forms_date = Time.at(0)
-      Find.find(Zform.forms_dir) do |f|
+      Find.find(Form.forms_dir) do |f|
         m = File.new(f).stat.mtime
         forms_date = m if m > forms_date
       end
       if forms_date == @@last_form_date
-        the_form = Zform.cache[form_name]
+        the_form = Form.cache[form_name]
       else
         @@last_form_date = forms_date
-        Zform.cache[form_name] = nil
+        Form.cache[form_name] = nil
       end
     else
-      the_form = Zform.cache[form_name]
+      the_form = Form.cache[form_name]
     end
     the_form ||= form_class.new
   end
@@ -785,7 +785,6 @@ class Record
   
   def Record.make(the_form,presentation,attribs = {},options ={})
     #puts "RECORD.make attribs = #{attribs.inspect}"
-#    the_form = Form.find(form_name)
     #TODO there is a circularity problem here.  To set up the form we call it with a presentation
     # but part of the setup gets us the default presentation if we don't have one!
 

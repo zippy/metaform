@@ -18,7 +18,7 @@ require 'yaml'
 #require 'metaform/form_helper'
 #require 'metaform/utilities'
 
-class Form
+class FormOld
   cattr_accessor :forms_dir
   @@forms_dir = 'forms'
   @@property_appearances = nil
