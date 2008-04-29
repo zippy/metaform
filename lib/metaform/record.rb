@@ -197,8 +197,11 @@ class Record
       require 'find'
       forms_date = Time.at(0)
       Find.find(Form.forms_dir) do |f|
-        m = File.new(f).stat.mtime
-        forms_date = m if m > forms_date
+        begin
+          m = File.new(f).stat.mtime
+          forms_date = m if m > forms_date
+        rescue
+        end
       end
       if forms_date == @@last_form_date
         the_form = Form.cache[form_name]
