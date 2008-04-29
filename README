@@ -41,44 +41,76 @@ simply add:
  <%@metaform_include_assets = true%>
 to the top of the view that shows a form.
 
-== The Metaform Domain Specific Language (DSL)
+= The Metaform Domain Specific Language (DSL)
 
 Metaform defines an abstraction that separates data definition from data display.  Much like you are
-used to in rails data model and views.
+used to in rails data model and views.  To use the metaform definition language simply create a +forms+ 
+directory in your rails app, with a file in it that ends in "form.rb" Metaform will auto-create a form
+class by the name of the file from definitions in the file.
 
-=== Defining the data model
-def_fields
-	f <field_name>,<field_type>,<constraints>,<options (:default,:indexed_default_from_null_index)>
-	fwf <field_name>,<field_type>,<constraints>,<options> (must include a :followups option)
-end
+== Defining the data model-- fields with constraints, and workflows
 
-constraints:
-	required
-	regex
-	range
-	set
-	enumeration
+=== fields
 
-def_workflows <work_flow_name>
-	def_normal_states <state_name>...
-	def_verification_states <state_name>...
-	action <name>,[<legal_states>...] do
-		...
-		state <state_name>
+	def_fields <field_options> do
+		f <field_name>,<field_options>
 	end
-end
 
-=== Defining presentations
+<field_options> are:
+	:type => <field_type>
+	:constrants => <constraints>
+	:default => true | false
+	:indexed_default_from_null_index => true|false
+	:followups => {
+		<value> | !<value> | /<regex>/ => f(<field_name>, <field_options>)
+	}
 
-presentation <presentation_name>,<options (:legal_state, :indexed)> do
-	<q>...
-	<p>...
-end
+<constraints> are a hash of key value pairs:
+	'required' => true | false
+	'regex' => '<regex>'
+	'range' => '<start>-<end>'
+	'set' => <value_label_pairs>
+	'enumeration' => <value_label_pairs>
 
-=== Listings
+<value_label_pairs> are an array of key value pairs of the form:
+  [{<value> => <human_label>},...]
+  
+=== workflows
 
-=== Reports
+	def_workflows <work_flow_name> do
+		def_normal_states <state_name>...
+		def_verification_states <state_name>...
+		action <name>,[<legal_states>...] do
+			...
+			state <state_name>
+		end
+	end
+
+=== directives
+
+To load additional form definitions use:
+
+  include_definitions(<path>)  
+
+To load definitions at the class level (constants, helper methods etc) use:
+
+  include_helpers(<path>)
+
+== Defining display appearance == presentations, questions, and tabs
+
+  presentation <presentation_name>,<options (:legal_state, :indexed)> do
+  	<q>...
+  	<p>...
+  end
+
+== Listings
+
+TBD
+
+== Reports
 	
+TBD
+
 -----
 
 Copyright (c) 2007 Harris-Braun Enterprises, LLC (eric -at- harris-braun.com) released under the MIT license
