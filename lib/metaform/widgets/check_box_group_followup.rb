@@ -71,8 +71,8 @@ class CheckBoxGroupFollowupWidget < Widget
             on_click_string = %Q|onClick="if ($('#{id}').checked) {mapCheckboxGroupFollowup('#{build_html_name(field_instance_id)}','_#{val}',$('metaForm'),function(e,val){if (val != '#{param}') {e.checked=false}})}"|
           elsif none_fields_followup.length > 0
             none_js = ''
-            none_fields_followup.each {
-              none_id = build_html_multi_id(field_instance_id,"_#{val}-#{none_fields_followup[0]}")
+            none_fields_followup.each { |none_field_val|
+              none_id = build_html_multi_id(field_instance_id,"_#{val}-#{none_field_val}")
               none_js << <<-EOJS
                 if ($('#{none_id}')) {
                   $('#{none_id}').checked = false;
