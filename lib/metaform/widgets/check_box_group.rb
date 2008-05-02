@@ -1,4 +1,10 @@
 ################################################################################
+#This widget assumes that if a checkbox has a value of 'none', then that checkbox
+#should be a special type that un-checks all other checkboxes in the group.  Also,
+#any other checkbox in the group will un-check a 'none' checkbox.  The user can
+#make any checkbox a act like 'none' by putting a '*' at the end of its value.
+#For example, value = 'none__sometimes*' and value = 'none__never*' will have the
+#stripped off and then act as none.
 class CheckBoxGroupWidget < Widget
   ################################################################################
   def self.render_form_object(form,field_instance_id,value,options)

@@ -450,6 +450,11 @@ class Form
   # * :presentation_name
   # * :question_options options to pass through to the question
   # * :show_hide_options options to pass through to the javascript_show_hide_if
+  
+   # Note that this behavior fails on IE6&7 on page re-load.  IE seems to update the value
+   # of a form input after the page is rendered and after window.onLoad is called.
+   # This means that we can't use the input value to cue follow-up display, since
+   # that value will be incorrect. 
   #################################################################################
   def qp(field_name,opts = {})
     options = {:show_hide_options => {},:question_options=>{}}.update(opts)
