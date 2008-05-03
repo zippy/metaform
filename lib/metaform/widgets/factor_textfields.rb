@@ -9,18 +9,20 @@ class FactorTextFieldsWidget < Widget
    params = options[:params]
     if params
       (factor,first_label,second_label) = params.split(/,/)
+      result = ''
       if value
         (first_value,second_value) = parse_value(value,factor)
-      	<<-EOHTML
+      	result <<  <<-EOHTML
 <input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'first_box')}" id="#{build_html_multi_id(field_instance_id,'first_box')}" value="#{first_value}" /> #{first_label}
 <input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'second_box')}" id="#{build_html_multi_id(field_instance_id,'second_box')}" value="#{second_value}" /> #{second_label}
 EOHTML
       else
-      	<<-EOHTML
+      	result << <<-EOHTML
 <input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'first_box')}" id="#{build_html_multi_id(field_instance_id,'first_box')}"/> #{first_label}
 <input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'second_box')}" id="#{build_html_multi_id(field_instance_id,'second_box')}"  /> #{second_label}
 EOHTML
       end
+      result << %Q|<input type="hidden" name="#{build_html_multi_name(field_instance_id,'factor')}"  id="#{build_html_multi_id(field_instance_id,'factor')}"/ value="#{factor}">|
     end
   end
 
@@ -44,7 +46,7 @@ EOHTML
 
   ################################################################################
   def self.javascript_get_value_function (field_instance_id)
-    %Q|$DF('#{build_html_id(field_instance_id)}')|
+    %Q|parseInt($F('#{build_html_multi_id(field_instance_id,'first_box')}')) * parseFloat($F('#{build_html_multi_id(field_instance_id,'factor')}')) + parseInt($F('#{build_html_multi_id(field_instance_id,'second_box')}')) |
   end
 
   ################################################################################
