@@ -611,7 +611,7 @@ class Form
   # Options: see #javascript_show_hide_if
   #
   # Example: 
-  #   javascript_show_hide_if('married','==',y') do
+  #   javascript_show_hide_if('married','==','y') do
   #     q 'children'
   #   end
   ###############################################      
