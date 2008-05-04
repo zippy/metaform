@@ -116,3 +116,12 @@ function myCallBackOnFinish(obj){
 		}
 	);
 
+function arrayMatch(array,regex){
+	for (var index = 0, len = array.length; index < len; ++index) {
+	  var fv = array[index];
+	  if (fv.match(regex)) {
+			return true;
+		}
+	}
+	return false;
+}

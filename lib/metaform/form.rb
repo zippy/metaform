@@ -349,8 +349,11 @@ class Form
         if value == :answered
           opts[:condition] = %Q|field_value != null && field_value != ""|
         elsif value =~ /^\/(.*)\/$/
-          #TODO-LISA make this work if the field value is an array (which it would be for a set instead of an enum)
-          opts[:condition] = %Q|field_value.match(#{value})|
+          if the_q.get_widget.is_multi_value?
+            opts[:condition] = %Q|arrayMatch(field_value,#{value})|
+          else
+            opts[:condition] = %Q|field_value.match(#{value})|
+          end 
         else
           if value =~ /^\!(.*)/
             opts[:value] = $1
