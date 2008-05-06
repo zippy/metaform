@@ -1,39 +1,17 @@
+require "metaform/widget_date_time_helper"
 ################################################################################
 class DateWidget < Widget
+  class <<self
+    include DateHelper
+  end
   ################################################################################
   def self.render_form_object(form,field_instance_id,value,options)
-    date = parse_value(value)
-    if date
-      <<-EOHTML
-<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'month')}" id="#{build_html_multi_id(field_instance_id,'month')}" value="#{date.month}" /> /
-<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'day')}" id="#{build_html_multi_id(field_instance_id,'day')}" value="#{date.day}" /> /
-<input type="text" size=4 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'year')}" id="#{build_html_multi_id(field_instance_id,'year')}" value="#{date.year.to_s[2..3]}" /> <span class=\"instructions\">(MM/DD/YYYY)</span>
-EOHTML
-    else
-      <<-EOHTML
-<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'month')}" id="#{build_html_multi_id(field_instance_id,'month')}"/> /
-<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'day')}" id="#{build_html_multi_id(field_instance_id,'day')}"  /> /
-<input type="text" size=4 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'year')}" id="#{build_html_multi_id(field_instance_id,'year')}"  /> <span class=\"instructions\">(MM/DD/YYYY)</span>
-EOHTML
-    end
-  end
-
-  ################################################################################
-  def self.parse_value(value)
-    require 'parsedate'
-    date = nil
-    if value && (d = ParseDate.parsedate(value))[0]
-      date = Date.new(*d[0..2])
-    end
-    date
+    date_html(field_instance_id,value,options)
   end
 
   ################################################################################
   def self.humanize_value(value,options=nil)
-    date = parse_value(value)
-    if date
-      "#{date.month}/#{date.day}/#{date.year}"
-    end
+    humanize_date_value(value,options)
   end
 
   ################################################################################
@@ -43,21 +21,12 @@ EOHTML
 
   ################################################################################
   def self.javascript_build_observe_function(field_instance_id,script,options)
-    result = ""
-    %w(month year day).each do |field|
-      result << %Q|Event.observe('#{build_html_multi_id(field_instance_id,field)}', 'change', function(e){ #{script} });\n|
-    end
-    result
+    javascript_date_build_observe_function(field_instance_id,script,options)
   end
 
   ################################################################################
   def self.convert_html_value(value,params={})
-    begin
-      date = Date.new(('20'+value['year']).to_i,value['month'].to_i,value['day'].to_i)      
-      date.to_s
-    rescue
-      nil
-    end
+    convert_date_html_value(value,params).to_s
   end
 
 end

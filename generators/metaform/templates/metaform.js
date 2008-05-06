@@ -24,12 +24,21 @@ function $DF(name){
 	return (d == "Invalid Date") ? null : d;
 }
 
-function $TF(name){
-    var first_box = parseFloat($F(name+'_first_box'));
-    var second_box = parseFloat($F(name+'_second_box'));
+function $FTF(name){
+	var first_box = parseFloat($F(name+'_first_box'));
+	var second_box = parseFloat($F(name+'_second_box'));
 	if (isNaN(first_box)) {first_box=0};
 	if (isNaN(second_box)) {second_box=0};
 	return first_box * parseFloat($F(name+'_factor')) + second_box;
+}
+
+function $TF(name){
+	var hours = $F(name+'_hours');
+	if ($F(name+'_am_pm') == 'pm' && hours != "12") {
+		hours = parseInt(hours) + 12;		
+	}
+	var d = new Date("1/1/1970 "+hours + ":" + $F(name+'_minutes'));
+	return (d == "Invalid Date") ? null : d;
 }
 
 function getRadioGroupValue(radioGroupName,form) {

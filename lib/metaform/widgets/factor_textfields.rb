@@ -46,7 +46,7 @@ EOHTML
 
   ################################################################################
   def self.javascript_get_value_function (field_instance_id)
-    %Q|$TF('#{build_html_id(field_instance_id)}')|
+    %Q|$FTF('#{build_html_id(field_instance_id)}')|
   end
 
   ################################################################################
