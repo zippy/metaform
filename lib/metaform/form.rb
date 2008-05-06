@@ -193,6 +193,10 @@ class Form
   # * :index
   #################################################################################
   def tab(presentation_name,opts={})
+    body tab_html(presentation_name,opts)
+  end    
+  
+  def tab_html(presentation_name,opts)
     options = {
       :label => nil,
       :index => -1
@@ -202,9 +206,9 @@ class Form
     url = Record.url(@record.id,presentation_name,@tabs_name,index)
     label = options[:label]
     label ||= presentation_name.humanize
-    id_text = 'id="current"' if @_index.to_s == index.to_s && @current_tab == presentation_name
-    body %Q|<li #{id_text} class="tab_#{presentation_name}"> <a href="#" onClick="return submitAndRedirect('#{url}')" title="Click here to go to #{label}"><span>#{label}</span></a> </li>|
-  end    
+    current_text = (@_index.to_s == index.to_s && @current_tab == presentation_name) ? "current" : ""
+    %Q|<li class=\"#{current_text} tab_#{presentation_name}\"> <a href=\"#\" onClick=\"return submitAndRedirect('#{url}')\" title=\"Click here to go to #{label}\"><span>#{label}</span></a> </li>|
+  end
 
   #################################################################################
   #################################################################################
@@ -543,6 +547,36 @@ class Form
     body %Q|<input type="button" value="#{name}"#{css_class} onclick="#{js}">|
   end
   
+  #################################################################################
+  def javascript_tab_changer(field,opts={})
+    if @phase == :build
+      options = {
+      }.update(opts)
+      q = questions[get_field_question_name(field)]
+      value_function = q.get_widget.javascript_get_value_function(q.field.name)
+      if options[:multi]
+        tab_html_options = {:label => "#{options[:label]} NUM", :index => "INDEX"}
+        tab_num_string = "#{value_function} - 1"
+        mutli_string = "true"
+      else
+        tab_html_options = {:label => options[:label], :index => options[:index]}
+        tab_num_string = "1"
+        mutli_string = "false"
+      end
+      html_string = tab_html(options[:tab],tab_html_options).gsub(/'/, '\\\\\'')
+      before_css_string = ".tab_#{options[:before]}"
+      js = <<-EOJS
+        $$(".tab_#{options[:tab]}").invoke('remove');
+        var field_value = #{value_function};
+        if (#{options[:condition]}) {
+          insert_tabs('#{html_string}','#{before_css_string}',#{tab_num_string},#{mutli_string});
+        }
+      }
+      EOJS
+      add_observer_javascript(get_field_question_name(field),"true",js)    
+    end
+  end
+
   #################################################################################
   # Add a block of elements that will appear conditionally 
   # at runtime on the browser depending on other form field values as specified
