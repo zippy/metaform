@@ -70,7 +70,7 @@ def setup
   end
   
   presentation 'indexed_sub_presentation' do
-    p 'simple',:indexed => {:appearance => :list, :add_button_text => 'Add a name', :delete_button_text => 'Delete this name'}
+    p 'simple',:indexed => {:appearance => :list, :add_button_text => 'Add a name', :delete_button_text => 'Delete this name', :reference_field=>'name'}
   end
   
 	presentation 'update_entry',:legal_states =>'logged' do
