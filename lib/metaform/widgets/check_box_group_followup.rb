@@ -40,7 +40,13 @@ class CheckBoxGroupFollowupWidget < Widget
     js = <<-EOJS
        function do_click_#{field_instance_id}_none(theCheckbox,theValue) {
            if (theCheckbox.checked) {  
-             mapCheckboxGroup('#{build_html_name(field_instance_id)}',$('metaForm'),function(e,val){if (val != theValue) {e.checked=false};var followup_id='#{field_instance_id}_'+val;var h = $(followup_id);if (h != null) {Effect.BlindUp(h, {duration:.5})}})
+             $$('.#{field_instance_id}').each(function(cb){
+              var val = cb.value;
+              if (val != theValue) {cb.checked = false};
+              var followup_id='#{field_instance_id}_'+val;
+              var h = $(followup_id);
+              if (h != null) {Effect.BlindUp(h, {duration:.5})}
+             });
            }
     		}  
     		function do_click_#{field_instance_id}_regular(theCheckbox,theValue,theFollowupID) {
@@ -50,7 +56,7 @@ class CheckBoxGroupFollowupWidget < Widget
             #{js_none}
           } else {
             Effect.BlindUp(e, {duration:.5});
-            mapCheckboxGroup('record[#{field_instance_id}][_'+theValue+'-',$('metaForm'),function(el,val){el.checked=false})
+            $$('.#{field_instance_id}_'+theValue+'_followup').each(function(cb){cb.checked=false});
           }           
    		  }
         
@@ -70,7 +76,7 @@ class CheckBoxGroupFollowupWidget < Widget
           id = build_html_multi_id(field_instance_id,idx)
           checked_string = (checked && checked.include?(param)) ? 'checked' : ''
           if none_fields_followup.include?(param)
-            on_click_string = %Q|onClick="if ($('#{id}').checked) {mapCheckboxGroupFollowup('#{build_html_name(field_instance_id)}','_#{val}',$('metaForm'),function(e,val){if (val != '#{param}') {e.checked=false}})}"|
+            on_click_string = %Q|onClick="if ($('#{id}').checked) {$$('.#{field_instance_id}_#{val}_followup').each(function(cb){if (cb.value != '#{param}') {cb.checked=false}})}"|
           elsif none_fields_followup.length > 0
             none_js = ''
             none_fields_followup.each { |none_field_val|
@@ -84,7 +90,7 @@ class CheckBoxGroupFollowupWidget < Widget
             }
           end
           followups << <<-EOHTML
-          <input name="#{build_html_multi_name(field_instance_id,idx)}" id="#{id}" type="checkbox" value="#{param}" #{checked_string} #{on_click_string}> #{param.humanize}
+          <input name="#{build_html_multi_name(field_instance_id,idx)}" id="#{id}" class="#{field_instance_id}_#{val}_followup" type="checkbox" value="#{param}" #{checked_string} #{on_click_string}> #{param.humanize}
           EOHTML
         end  
         followup_span = <<-EOHTML 
@@ -94,13 +100,10 @@ class CheckBoxGroupFollowupWidget < Widget
         EOHTML
         # Javscript: hide/show the followup (unchecking all items in the followup if hiding, and unchecking the none value if showing)
         javascript = "do_click_#{field_instance_id}_regular(this,'#{val}','#{followup_id}')"
-        js << <<-EOJS
-       		do_click_#{field_instance_id}_regular($('#{build_html_multi_id(field_instance_id,val)}'),'#{val}','#{followup_id}');
-          EOJS
       end  
       result << <<-EOHTML 
       <input name="#{build_html_multi_name(field_instance_id,'__none__')}" id="#{build_html_multi_id(field_instance_id,'__none__')}" type="hidden"}>
-      <span class="check_box_followup_input"><input name="#{build_html_multi_name(field_instance_id,val)}" id="#{build_html_multi_id(field_instance_id,val)}" type="checkbox" value="#{val}" #{checked ? 'checked' : ''}
+      <span class="check_box_followup_input"><input name="#{build_html_multi_name(field_instance_id,val)}" id="#{build_html_multi_id(field_instance_id,val)}" class="#{field_instance_id}" type="checkbox" value="#{val}" #{checked ? 'checked' : ''}
         onClick="#{javascript}">
         #{value_label}</span>
         #{followup_span}
@@ -118,26 +121,16 @@ class CheckBoxGroupFollowupWidget < Widget
 
   ################################################################################
   def self.javascript_get_value_function (field_instance_id)
-    %Q|$CF('#{build_html_name(field_instance_id)}')|
+    %Q|$CF('.#{field_instance_id}')|
   end
 
   ################################################################################
   def self.javascript_build_observe_function(field_instance_id,script,options)
-
-    params = options[:params].split(/,/)
-    sub_label = params.shift
-
     e = enumeration(options[:constraints])
     result = ""
     e.each do |key,value|
       new_val = value.chomp('*')
-      result << %Q|Event.observe('#{build_html_multi_id(field_instance_id,new_val)}', 'change', function(e){ #{script} });\n|
-      if (new_val == value) && (new_val != 'none')
-        params.each do |i|
-          idx = "_#{new_val.chomp('*')}-#{i}"
-          result << %Q|Event.observe('#{build_html_multi_id(field_instance_id,idx)}', 'change', function(e){ #{script} });\n|
-        end
-      end
+      result << %Q|Event.observe('#{build_html_multi_id(field_instance_id,new_val)}', 'click', function(e){#{script} });\n|
     end
     result
   end

@@ -10,12 +10,13 @@ function $XF(el, radioGroup) {
 	));
 }
 
-function $CF(el){
-	return getCheckboxGroupValue(el,$('metaForm'))
+function $CF(cb_class){
+	return $$(cb_class).findAll(function(cb) {return cb.checked}).pluck("value");
 }
 
-function $RF(el){
-	return getRadioGroupValue(el,$('metaForm'))
+function $RF(rb_class){
+	var chosen_element = $$(rb_class).find(function(rb){return rb.checked});
+	return (chosen_element != null) ? chosen_element.value : null;
 }
 
 function $DF(name){
@@ -49,6 +50,13 @@ function mapCheckboxGroup(checkboxGroupName,form,func) {
 		func(item,item.name.replace(checkboxGroupName,'').gsub(/[\[\]]/,''));
 	} });
 }
+function mapCheckboxGroupFollowup(group_name,val,form,func) {
+	form.getInputs("checkbox").findAll(function(item) 
+	{if ((item.name.indexOf(group_name) === 0) && (item.name.indexOf(val) > -1)) {
+		func(item,item.name.replace(group_name,'').replace(val,'').gsub(/[\[\]\[-]/,'').gsub(/[\]]/,''));
+	} });
+}
+
 
 function oc(a)
 {
@@ -72,19 +80,6 @@ function submitAndRedirect(url)
 		return false;
 	}
 }
-
-var WidgetWatcher = Class.create();
-WidgetWatcher.prototype = {
-	initialize: function(widget,my_function) {
-		this.widget = $(widget);
-		this.my_function = my_function;
-		this.widget.onclick = this.do_onclick.bindAsEventListener(this);
-	},	
-	
-	do_onclick: function(evt) {
-		this.my_function();
-	}
-};
 
 var indexedItems = Class.create();
 indexedItems.prototype = {
@@ -115,6 +110,7 @@ function myCallBackOnFinish(obj){
 		$(i).id = 'item_'+index;
 		}
 	);
+}
 
 function arrayMatch(array,regex){
 	for (var index = 0, len = array.length; index < len; ++index) {
@@ -124,7 +120,7 @@ function arrayMatch(array,regex){
 		}
 	}
 	return false;
-}
+}		
 
 function insert_tabs(tab_html,before_css,desired_tab_num,multi) {
 	next_tabs = $$(before_css);

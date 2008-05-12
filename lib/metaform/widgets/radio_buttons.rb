@@ -6,7 +6,7 @@ class RadioButtonsWidget < Widget
     e = enumeration(options[:constraints])
     result = []
     e.each do |key,val|
-      result << %Q|<input name="#{build_html_name(field_instance_id)}" id="#{build_html_multi_id(field_instance_id,val)}" type="radio" value="#{val}" #{value==val ? 'checked' : ''}> #{key}|
+      result << %Q|<input name="#{build_html_name(field_instance_id)}" id="#{build_html_multi_id(field_instance_id,val)}" class="#{field_instance_id}" type="radio" value="#{val}" #{value==val ? 'checked' : ''}> #{key}|
     end
     params = options[:params]
     if params
@@ -32,7 +32,7 @@ class RadioButtonsWidget < Widget
   
   ################################################################################
   def self.javascript_get_value_function (field_instance_id)
-    %Q|$RF('#{build_html_name(field_instance_id)}')|
+    %Q|$RF('.#{field_instance_id}')| 
   end
 
   ################################################################################
@@ -40,7 +40,7 @@ class RadioButtonsWidget < Widget
     e = enumeration(options[:constraints])
     result = ""
     e.each do |key,value|
-      result << %Q|var watcher_#{build_html_multi_id(field_instance_id,value)} = new WidgetWatcher('#{build_html_multi_id(field_instance_id,value)}', function(e){ #{script} });\n|
+      result << %Q|Event.observe('#{build_html_multi_id(field_instance_id,value)}', 'click', function(e){#{script} });\n| 
     end
     result
   end

@@ -6,18 +6,18 @@ class CheckBoxWidget < Widget
     result = []
     result << %Q|<input name="#{build_html_multi_name(field_instance_id,"Y")}" id="#{build_html_multi_id(field_instance_id,"Y")}" type="checkbox" #{checked}>|
     result << "\n"
-    result << %Q|<input name="#{build_html_multi_name(field_instance_id,'__none__')}" id="#{build_html_multi_id(field_instance_id,'__none__')}" type="hidden"}>|
+    result << %Q|<input name="#{build_html_multi_name(field_instance_id,'__none__')}" id="#{build_html_multi_id(field_instance_id,'__none__')}" class="#{field_instance_id}" type="hidden"}>|
     result
   end 
    
    ################################################################################
   def self.javascript_get_value_function (field_instance_id)
-    %Q|$CF('#{build_html_name(field_instance_id)}')|
+    %Q|$CF('.#{field_instance_id}')|
   end
 
   ################################################################################
   def self.javascript_build_observe_function(field_instance_id,script,options)
-    %Q|var watcher_#{build_html_multi_id(field_instance_id,"Y")} = new WidgetWatcher('#{build_html_multi_id(field_instance_id,"Y")}', function(e){ #{script} });\n|
+    %Q|Event.observe('#{build_html_multi_id(field_instance_id,"Y")}', 'click', function(e){ #{script} });\n| 
   end
 
   ################################################################################
