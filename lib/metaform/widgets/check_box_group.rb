@@ -36,16 +36,18 @@ class CheckBoxGroupWidget < Widget
           if (checked) {#{js_none}}           
     		}
     		EOJS
+    	js << <<-EOJS
+           function do_click_#{field_instance_id}_none(checked,theValue) {
+               if (checked) {  
+                 $$('.#{field_instance_id}').each(function(cb) {
+                   if (cb.value != theValue) {cb.checked = false}
+                 });
+               }
+        		}          
+      EOJS
+      js = form.javascript_tag(js)
     end
-    js << <<-EOJS
-       function do_click_#{field_instance_id}_none(checked,theValue) {
-           if (checked) {  
-             $$('.#{field_instance_id}').each(function(cb) {
-               if (cb.value != theValue) {cb.checked = false}
-             });
-           }
-    		}          
-    	EOJS
+
 
     e.each do |key,val|
       if none_fields.include?(val) 
@@ -55,7 +57,7 @@ class CheckBoxGroupWidget < Widget
           # Javscript: uncheck all none items in this checkbox group if the users clicks on a regular value.
           javascript = (none_fields.length > 0) ? "do_click_#{field_instance_id}_regular(this.checked)" : ""
       end
-      result << %Q|<input name="#{build_html_multi_name(field_instance_id,val)}" id="#{build_html_multi_id(field_instance_id,val)}" class="#{field_instance_id}" type="checkbox" value="#{val}" #{checked.include?(val) ? 'checked' : ''} onClick="#{javascript}"> #{key}|
+      result << %Q|<input name="#{build_html_multi_name(field_instance_id,val)}" id="#{build_html_multi_id(field_instance_id,val)}" class="#{field_instance_id}" type="checkbox" value="#{val}" #{checked.include?(val) ? 'checked ' : ''}onClick="#{javascript}"> #{key}|
     end
     params = options[:params]
     if params 
@@ -65,7 +67,7 @@ class CheckBoxGroupWidget < Widget
     else
       result = result.join("\n")
     end
-    result + %Q|<input name="#{build_html_multi_name(field_instance_id,'__none__')}" id="#{build_html_multi_id(field_instance_id,'__none__')}" type="hidden"}>| +  "#{form.javascript_tag(js)}" 
+    result + %Q|<input name="#{build_html_multi_name(field_instance_id,'__none__')}" id="#{build_html_multi_id(field_instance_id,'__none__')}" type="hidden"}>| +  js 
   end
 
   def self.humanize_value(value,options=nil)
