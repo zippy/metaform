@@ -70,7 +70,7 @@ describe Widget do
   describe FactorTextFieldsWidget do
     it "should render two html input texts and lables from params" do
       FactorTextFieldsWidget.render_form_object(@form,1,"500",{:params=>"5,FirstLabel,SecondLabel"}).should == 
-        "<input type=\"text\" size=2 name=\"record[1][first_box]\" id=\"record_1_first_box\" value=\"100\" /> FirstLabel\n<input type=\"text\" size=2 name=\"record[1][second_box]\" id=\"record_1_second_box\" value=\"0\" /> SecondLabel\n"
+        "<input type=\"text\" size=2 name=\"record[1][first_box]\" id=\"record_1_first_box\" value=\"100\" /> FirstLabel\n<input type=\"text\" size=2 name=\"record[1][second_box]\" id=\"record_1_second_box\" value=\"0\" /> SecondLabel\n<input type=\"hidden\" name=\"record[1][factor]\"  id=\"record_1_factor\"/ value=\"5\">"
     end
     it "should render factor value as text if read_only" do
       FactorTextFieldsWidget.render_form_object_read_only(@form,1,"500",{:params=>"5,FirstLabel,SecondLabel"}).should == 
@@ -92,7 +92,7 @@ describe Widget do
   describe CheckBoxWidget do
     it "should render an html checkbox " do
       CheckBoxWidget.render_form_object(@form,1,"Y",{}).should == 
-        ["<input name=\"record[1][Y]\" id=\"record_1_y\" type=\"checkbox\" checked>", "\n", "<input name=\"record[1][__none__]\" id=\"record_1___none__\" type=\"hidden\"}>"]
+        ["<input name=\"record[1][Y]\" id=\"record_1_y\" type=\"checkbox\" checked>", "\n", "<input name=\"record[1][__none__]\" id=\"record_1___none__\" class=\"1\" type=\"hidden\"}>"]
     end
     it "should render 'Y' checked and read_only" do
       CheckBoxWidget.render_form_object_read_only(@form,1,"Y",{}).should == 
@@ -107,7 +107,7 @@ describe Widget do
      
     it "should render html checkboxes with a custom label" do
       CheckBoxGroupWidget.render(@form,1,"val1",'the label',@options).should == 
-      "<span class=\"label\">the label</span><input name=\"record[1][val1]\" id=\"record_1_val1\" type=\"checkbox\" value=\"val1\" checked> Value 1\n<input name=\"record[1][val2]\" id=\"record_1_val2\" type=\"checkbox\" value=\"val2\" > Value 2\n<input name=\"record[1][val3]\" id=\"record_1_val3\" type=\"checkbox\" value=\"val3\" > Value 3<input name=\"record[1][__none__]\" id=\"record_1___none__\" type=\"hidden\"}>"
+      "<span class=\"label\">the label</span><input name=\"record[1][val1]\" id=\"record_1_val1\" class=\"1\" type=\"checkbox\" value=\"val1\" checked onClick=\"\"> Value 1\n<input name=\"record[1][val2]\" id=\"record_1_val2\" class=\"1\" type=\"checkbox\" value=\"val2\" onClick=\"\"> Value 2\n<input name=\"record[1][val3]\" id=\"record_1_val3\" class=\"1\" type=\"checkbox\" value=\"val3\" onClick=\"\"> Value 3<input name=\"record[1][__none__]\" id=\"record_1___none__\" type=\"hidden\"}>"
     end
     it "should render the list of human enumerations values if read_only" do
       CheckBoxGroupWidget.render_form_object_read_only(@form,1,"val1,val3",@options).should == 
@@ -122,7 +122,7 @@ describe Widget do
      
     it "should render html checkboxes with a custom label" do
       RadioButtonsWidget.render(@form,1,"val1",'the label',@options).should == 
-        "<span class=\"label\">the label</span><input name=\"record[1]\" id=\"record_1_val1\" type=\"radio\" value=\"val1\" checked> Value 1\n<input name=\"record[1]\" id=\"record_1_val2\" type=\"radio\" value=\"val2\" > Value 2\n<input name=\"record[1]\" id=\"record_1_val3\" type=\"radio\" value=\"val3\" > Value 3"
+        "<span class=\"label\">the label</span><input name=\"record[1]\" id=\"record_1_val1\" class=\"1\" type=\"radio\" value=\"val1\" checked> Value 1\n<input name=\"record[1]\" id=\"record_1_val2\" class=\"1\" type=\"radio\" value=\"val2\" > Value 2\n<input name=\"record[1]\" id=\"record_1_val3\" class=\"1\" type=\"radio\" value=\"val3\" > Value 3"
     end
     it "should render the human enumerations value if read_only" do
       RadioButtonsWidget.render_form_object_read_only(@form,1,"val2",@options).should == 
@@ -153,7 +153,7 @@ describe Widget do
   describe WeightWidget do
     it "should render an html input text with a label" do
       TextFieldWidget.render_form_object(@form,1,'2000',{}).should == 
-        "<input id=\"record[1]\" name=\"record[1]\" type=\"text\" value=\"2000\" />"
+        "<input id=\"record_1\" name=\"record[1]\" type=\"text\" value=\"2000\" />"
     end
     it "should render value as text with a read_only parameter" do
       WeightWidget.render_form_object_read_only(@form,1,'2000',{}).should == 
