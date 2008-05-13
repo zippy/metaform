@@ -54,7 +54,7 @@ class Widget
   end
   
   def self.render_form_object_read_only(form,field_instance_id,value,options)
-    "<span id=\"record[#{field_instance_id}]\">#{humanize_value(value,options)}</span>"
+    "<span id=\"#{build_html_id(field_instance_id)}\">#{humanize_value(value,options)}</span>"
   end
 
   def self.humanize_value(value,options=nil)

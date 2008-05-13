@@ -8,7 +8,7 @@ describe Widget do
   describe 'default methods for all widgets' do
     it "should include a default #render_form_object_read_only" do
       Widget.render_form_object_read_only(@form,1,'value',{}).should == 
-        "<span id=\"record[1]\">value</span>"
+        "<span id=\"record_1\">value</span>"
     end
     it "should include #humanize_value" do
       Widget.humanize_value('value').should == 'value'
@@ -26,7 +26,7 @@ describe Widget do
     end
     it "should render value as text with a read_only parameter" do
       TextFieldWidget.render_form_object_read_only(@form,1,'value',{}).should == 
-        "<span id=\"record[1]\">value</span>"
+        "<span id=\"record_1\">value</span>"
     end
   end
 
@@ -37,7 +37,7 @@ describe Widget do
     end
     it "should render date value as text with a read_only parameter" do
       DateWidget.render_form_object_read_only(@form,1,"2004-10-23",{}).should == 
-        "<span id=\"record[1]\">10/23/2004</span>"
+        "<span id=\"record_1\">10/23/2004</span>"
     end
   end
   
@@ -48,11 +48,11 @@ describe Widget do
     end
     it "should render time value as text with a read_only parameter" do
       TimeWidget.render_form_object_read_only(@form,1,"3:22",{}).should == 
-        "<span id=\"record[1]\">3:22 am</span>"
+        "<span id=\"record_1\">3:22 am</span>"
     end
     it "should render low min time values with a preceeding 0 text if read_only" do
       TimeWidget.render_form_object_read_only(@form,1,"13:02",{}).should == 
-        "<span id=\"record[1]\">1:02 pm</span>"
+        "<span id=\"record_1\">1:02 pm</span>"
     end
   end
 
@@ -63,7 +63,7 @@ describe Widget do
     end
     it "should render interval value as text if read_only" do
       TimeIntervalWidget.render_form_object_read_only(@form,1,"500",{}).should == 
-        "<span id=\"record[1]\">8 hours, 20 minutes</span>"
+        "<span id=\"record_1\">8 hours, 20 minutes</span>"
     end
   end
   
@@ -74,7 +74,7 @@ describe Widget do
     end
     it "should render factor value as text if read_only" do
       FactorTextFieldsWidget.render_form_object_read_only(@form,1,"500",{:params=>"5,FirstLabel,SecondLabel"}).should == 
-        "<span id=\"record[1]\">100 FirstLabel 0 SecondLabel</span>"
+        "<span id=\"record_1\">100 FirstLabel 0 SecondLabel</span>"
     end
   end
 
@@ -85,7 +85,7 @@ describe Widget do
     end
     it "should render date value as text with a read_only parameter" do
       MonthYearWidget.render_form_object_read_only(@form,1,"2004-10-23",{}).should == 
-        "<span id=\"record[1]\">10/2004</span>"
+        "<span id=\"record_1\">10/2004</span>"
     end
   end
 
@@ -96,7 +96,7 @@ describe Widget do
     end
     it "should render 'Y' checked and read_only" do
       CheckBoxWidget.render_form_object_read_only(@form,1,"Y",{}).should == 
-        "<span id=\"record[1]\">Y</span>"
+        "<span id=\"record_1\">Y</span>"
     end
   end
 
@@ -111,7 +111,7 @@ describe Widget do
     end
     it "should render the list of human enumerations values if read_only" do
       CheckBoxGroupWidget.render_form_object_read_only(@form,1,"val1,val3",@options).should == 
-        "<span id=\"record[1]\">Value 1, Value 3</span>"
+        "<span id=\"record_1\">Value 1, Value 3</span>"
     end
   end
 
@@ -126,7 +126,7 @@ describe Widget do
     end
     it "should render the human enumerations value if read_only" do
       RadioButtonsWidget.render_form_object_read_only(@form,1,"val2",@options).should == 
-        "<span id=\"record[1]\">Value 2</span>"
+        "<span id=\"record_1\">Value 2</span>"
     end
   end
 
@@ -146,7 +146,7 @@ describe Widget do
     end
     it "should render the human enumerations value if read_only" do
       PopUpWidget.render_form_object_read_only(@form,1,"val2",@options).should == 
-        "<span id=\"record[1]\">Value 2</span>"
+        "<span id=\"record_1\">Value 2</span>"
     end
   end
 
@@ -157,7 +157,7 @@ describe Widget do
     end
     it "should render value as text with a read_only parameter" do
       WeightWidget.render_form_object_read_only(@form,1,'2000',{}).should == 
-        "<span id=\"record[1]\">2000 grams</span>"
+        "<span id=\"record_1\">2000 grams</span>"
     end
   end
 end
