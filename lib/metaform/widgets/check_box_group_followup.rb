@@ -29,26 +29,33 @@ class CheckBoxGroupFollowupWidget < Widget
       new_val
     }
     js_none = ""
-    none_fields_regular.each { |none_val|
-      none_id = build_html_multi_id(field_instance_id,none_val)
-      js_none << <<-EOJS
-       if ($('#{none_id}')) {
-         $('#{none_id}').checked = false;
+    js = ""
+    if none_fields_regular.length > 0 
+      none_fields_regular.each { |none_val|
+        none_id = build_html_multi_id(field_instance_id,none_val)
+        js_none << <<-EOJS
+         if ($('#{none_id}')) {
+           $('#{none_id}').checked = false;
+         }
+         EOJS
        }
-       EOJS
-     }
-    js = <<-EOJS
-       function do_click_#{field_instance_id}_none(theCheckbox,theValue) {
-           if (theCheckbox.checked) {  
-             $$('.#{field_instance_id}').each(function(cb){
-              var val = cb.value;
-              if (val != theValue) {cb.checked = false};
-              var followup_id='#{field_instance_id}_'+val;
-              var h = $(followup_id);
-              if (h != null) {Effect.BlindUp(h, {duration:.5})}
-             });
-           }
-    		}  
+      js = <<-EOJS
+        function do_click_#{field_instance_id}_none(theCheckbox,theValue) {
+            if (theCheckbox.checked) {  
+              $$('.#{field_instance_id}').each(function(cb){
+               var val = cb.value;
+               if (val != theValue) {cb.checked = false};
+               var followup_id='#{field_instance_id}_'+val;
+               var h = $(followup_id);
+               if (h != null) {
+                 $$('.'+followup_id+'_followup').each(function(cb){cb.checked=false});
+                 Effect.BlindUp(h, {duration:.5})}
+              });
+            }
+     		}
+      EOJS
+    end
+    js << <<-EOJS
     		function do_click_#{field_instance_id}_regular(theCheckbox,theValue,theFollowupID) {
           var e = $(theFollowupID); 
           if (theCheckbox.checked) {
@@ -58,8 +65,7 @@ class CheckBoxGroupFollowupWidget < Widget
             Effect.BlindUp(e, {duration:.5});
             $$('.#{field_instance_id}_'+theValue+'_followup').each(function(cb){cb.checked=false});
           }           
-   		  }
-        
+   		  }        
     	EOJS
     
     e.each do |value_label,val|
