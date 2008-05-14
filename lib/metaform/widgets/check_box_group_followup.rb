@@ -121,6 +121,27 @@ class CheckBoxGroupFollowupWidget < Widget
   end
 
   ################################################################################
+  def self.humanize_value(value,options=nil)
+    e = enumeration(options[:constraints])
+    set_values = YAML.load(value) if value
+    set_values ||= {}
+    params =  options[:params].split(/,/)
+    sub_label = params.shift
+    params.map!{|val|
+      new_val = val.chomp('*')
+      new_val
+    }
+    e = Hash[*e.collect {|r| 
+      r[1] = r[1].chomp('*')
+      r.reverse}.flatten]
+    result = []
+    set_values.each {|key,value|
+      result << e[key] + ':  ' + value.collect!{|v| v.humanize}.join(', ')
+    }
+    result.join('\n')
+  end
+  
+  ################################################################################
   def self.render_label (label,field_instance_id,form_object)
     %Q|<span class="label">#{label}</span><br />#{form_object}|
   end

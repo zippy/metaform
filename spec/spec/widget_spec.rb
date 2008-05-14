@@ -120,6 +120,21 @@ describe Widget do
      end
   end
   
+  describe CheckBoxGroupFollowupWidget do
+    before(:each) do
+      @options = {:constraints => {'set'=>[{'val1'=>'Value 1'},{'val2'=>'Value 2'}]}, :params => "param_label,param1,param2"}
+    end
+     
+    it "should render html checkboxes with a custom label" do
+      CheckBoxGroupFollowupWidget.render(@form,1,"val1",'the label',@options).should == 
+      "<span class=\"label\">the label</span><br />      <input name=\"record[1][__none__]\" id=\"record_1___none__\" type=\"hidden\"}>\n      <span class=\"check_box_followup_input\"><input name=\"record[1][val1]\" id=\"record_1_val1\" class=\"1\" type=\"checkbox\" value=\"val1\" checked\n        onClick=\"do_click_1_regular(this,'val1','1_val1')\">\n        Value 1</span>\n                  <span id=\"1_val1\" class=\"checkbox_followups\" style=\"display:inline\">\n          &nbsp;&nbsp; param_label           <input name=\"record[1][_val1-param1]\" id=\"record_1__val1param1\" class=\"1_val1_followup\" type=\"checkbox\" value=\"param1\"  > Param1\n\n          <input name=\"record[1][_val1-param2]\" id=\"record_1__val1param2\" class=\"1_val1_followup\" type=\"checkbox\" value=\"param2\"  > Param2\n\n          </span>\n\n<br />      <input name=\"record[1][__none__]\" id=\"record_1___none__\" type=\"hidden\"}>\n      <span class=\"check_box_followup_input\"><input name=\"record[1][val2]\" id=\"record_1_val2\" class=\"1\" type=\"checkbox\" value=\"val2\" \n        onClick=\"do_click_1_regular(this,'val2','1_val2')\">\n        Value 2</span>\n                  <span id=\"1_val2\" class=\"checkbox_followups\" style=\"display:none\">\n          &nbsp;&nbsp; param_label           <input name=\"record[1][_val2-param1]\" id=\"record_1__val2param1\" class=\"1_val2_followup\" type=\"checkbox\" value=\"param1\"  > Param1\n\n          <input name=\"record[1][_val2-param2]\" id=\"record_1__val2param2\" class=\"1_val2_followup\" type=\"checkbox\" value=\"param2\"  > Param2\n\n          </span>\n\n<div class=\"clear\"></div><script type=\"text/javascript\">\n//<![CDATA[\n    \t\tfunction do_click_1_regular(theCheckbox,theValue,theFollowupID) {\n          var e = $(theFollowupID); \n          if (theCheckbox.checked) {\n            Effect.BlindDown(e, {duration:.5});\n            \n          } else {\n            Effect.BlindUp(e, {duration:.5});\n            $$('.1_'+theValue+'_followup').each(function(cb){cb.checked=false});\n          }           \n   \t\t  }        \n\n//]]>\n</script>" 
+    end
+    it "should render the list of human enumerations values if read_only, including followups" do
+      CheckBoxGroupFollowupWidget.render_form_object_read_only(@form,1,"val1: \n- param2\nval2: \n- param1\n- param2\n",@options).should == 
+        "<span id=\"record_1\">Value 1:  Param2\\nValue 2:  Param1, Param2</span>"
+    end
+  end
+
   describe RadioButtonsWidget do
     before(:each) do
       @options = {:constraints => {'enumeration'=>[{'val1'=>'Value 1'},{'val2'=>'Value 2'},{'val3'=>'Value 3'}]}}
