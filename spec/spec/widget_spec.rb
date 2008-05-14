@@ -113,8 +113,13 @@ describe Widget do
       CheckBoxGroupWidget.render_form_object_read_only(@form,1,"val1,val3",@options).should == 
         "<span id=\"record_1\">Value 1, Value 3</span>"
     end
+    it "should render the list of human enumerations values if read_only and one field is a *-indicated none field" do
+      @options = {:constraints => {'set'=>[{'val1*'=>'Value 1'},{'val2'=>'Value 2'},{'val3'=>'Value 3'}]}}
+       CheckBoxGroupWidget.render_form_object_read_only(@form,1,"val1,val3",@options).should == 
+         "<span id=\"record_1\">Value 1, Value 3</span>"
+     end
   end
-
+  
   describe RadioButtonsWidget do
     before(:each) do
       @options = {:constraints => {'enumeration'=>[{'val1'=>'Value 1'},{'val2'=>'Value 2'},{'val3'=>'Value 3'}]}}

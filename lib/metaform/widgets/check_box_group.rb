@@ -70,11 +70,14 @@ class CheckBoxGroupWidget < Widget
     result + %Q|<input name="#{build_html_multi_name(field_instance_id,'__none__')}" id="#{build_html_multi_id(field_instance_id,'__none__')}" type="hidden"}>| +  js 
   end
 
+  ################################################################################
   def self.humanize_value(value,options=nil)
     e = enumeration(options[:constraints])
     checked = value.split(/,/) if value
     checked ||= []
-    e = Hash[*e.collect {|r| r.reverse}.flatten]
+    e = Hash[*e.collect {|r| 
+      r[1] = r[1].chomp('*')
+      r.reverse}.flatten]
     checked.collect {|c| e[c]}.join(', ')
   end
   
