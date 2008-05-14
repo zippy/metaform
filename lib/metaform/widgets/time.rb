@@ -46,7 +46,8 @@ class TimeWidget < Widget
 
   ################################################################################
   def self.javascript_get_value_function (field_instance_id)
-    %Q|$DF('#{build_html_id(field_instance_id)}')|
+    #TO-DO:  Lisa Write this funcion
+    %Q|'';alert('time#javascript_get_function not yet written')|
   end
 
   ################################################################################

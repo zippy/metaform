@@ -46,7 +46,9 @@ EOHTML
 
   ################################################################################
   def self.javascript_get_value_function (field_instance_id)
-    %Q|parseInt($F('#{build_html_multi_id(field_instance_id,'first_box')}')) * parseFloat($F('#{build_html_multi_id(field_instance_id,'factor')}')) + parseInt($F('#{build_html_multi_id(field_instance_id,'second_box')}')) |
+    # %Q|parseInt($F('#{build_html_multi_id(field_instance_id,'first_box')}')) * parseFloat($F('#{build_html_multi_id(field_instance_id,'factor')}')) + parseInt($F('#{build_html_multi_id(field_instance_id,'second_box')}')) |
+    #TO-DO:  Lisa Write this funcion
+    %Q|'';alert('factor_textfields#javascript_get_function not yet written')|
   end
 
   ################################################################################

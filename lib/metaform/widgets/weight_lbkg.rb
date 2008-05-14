@@ -43,7 +43,7 @@ class WeightLbkgWidget < Widget
 
   ################################################################################
   def self.javascript_get_value_function (field_instance_id)
-    %Q|$DF('#{build_html_id(field_instance_id)}')|
+    %Q|$F("#{build_html_multi_id(field_instance_id,'grams_box')}")|
   end
 
   ################################################################################
