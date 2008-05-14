@@ -9,10 +9,13 @@ class HeightWidget < Widget
 					if (change_meters) {
 						var feet = parseFloat($F('#{build_html_multi_id(field_instance_id,'feet_box')}')); 
 						var inches = parseFloat($F('#{build_html_multi_id(field_instance_id,'inches_box')}')); 
-						var meters = Math.round((feet * 12 + inches) *  2.54)/100; 
+						if (isNaN(feet)) {feet=0};
+						if (isNaN(inches)) {inches=0};
+  					var meters = Math.round((feet * 12 + inches) *  2.54)/100; 
 						$('#{build_html_multi_id(field_instance_id,'meters_box')}').value = meters;
 					} else {
 						var meters = parseFloat($F('#{build_html_multi_id(field_instance_id,'meters_box')}')); 
+						if (isNaN(meters)) {meters=0};
 						var total_inches = meters * 39.370079;
 						$('#{build_html_multi_id(field_instance_id,'feet_box')}').value = Math.floor(total_inches / 12);
 						$('#{build_html_multi_id(field_instance_id,'inches_box')}').value = Math.round(total_inches % 12);

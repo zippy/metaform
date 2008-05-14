@@ -8,10 +8,12 @@ class WeightLbkgWidget < Widget
 			function #{build_html_multi_id(field_instance_id,'update_height')}(change_kilograms) {
 					if (change_kilograms) {
 						var pounds = parseFloat($F('#{build_html_multi_id(field_instance_id,'pounds_box')}')); 
+						if (isNaN(pounds)) {pounds=0};
 						var kilograms = Math.round(pounds *  4.5359237)/10; 
 						$('#{build_html_multi_id(field_instance_id,'kilograms_box')}').value = kilograms;
 					} else {
 						var kilograms = parseFloat($F('#{build_html_multi_id(field_instance_id,'kilograms_box')}')); 
+						if (isNaN(kilograms)) {kilograms=0};
 						var pounds = kilograms * 2.20462262;
 						$('#{build_html_multi_id(field_instance_id,'pounds_box')}').value = Math.round(pounds);
 					}
