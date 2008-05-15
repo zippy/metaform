@@ -187,7 +187,7 @@ describe SimpleForm do
       end
       it "should render in read-only mode" do
         nq = @form.get_questions_by_field_name('name')[1]
-        nq.render(@form,'Bob Smith').should == "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><span id=\"record[name]\">Bob Smith</span></div>"
+        nq.render(@form,'Bob Smith').should == "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><span id=\"record_name\">Bob Smith</span></div>"
       end
       it "should render erb" do
         nq = @form.get_questions_by_field_name('age')[0]
@@ -195,7 +195,7 @@ describe SimpleForm do
       end
       it "should render erb in read only mode" do
         nq = @form.get_questions_by_field_name('higher_ed_years')[0]
-        nq.render(@form,'5').should == "<tr><td class='field_label'>Higher ed years:</td><td><span id=\"record[higher_ed_years]\">5</span></td></tr>"
+        nq.render(@form,'5').should == "<tr><td class='field_label'>Higher ed years:</td><td><span id=\"record_higher_ed_years\">5</span></td></tr>"
       end
       it "should render a property" do
         (@form.questions['age'].render(@form) =~ /g question!/).should_not == nil
@@ -263,7 +263,7 @@ describe SimpleForm do
           @record.higher_ed_years = 4
           @form.with_record(@record) do
             @form.q('age_plus_education',:read_only => true)
-            @form.get_body.should == ["<div id=\"question_age_plus_education\" class=\"question\"><label class=\"label\" for=\"record[age_plus_education]\">Age plus education:</label><span id=\"record[age_plus_education]\">36</span>g question!</div>"]
+            @form.get_body.should == ["<div id=\"question_age_plus_education\" class=\"question\"><label class=\"label\" for=\"record[age_plus_education]\">Age plus education:</label><span id=\"record_age_plus_education\">36</span>g question!</div>"]
           end
         end
         it "should raise an exception if used in non-read-only mode" do
@@ -300,7 +300,7 @@ describe SimpleForm do
       it "should be a short-hand for adding the :read_only option to a q" do
         @form.in_phase(:build) do
           @form.qro('name')
-          @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><span id=\"record[name]\"></span></div>"]
+          @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><span id=\"record_name\"></span></div>"]
         end
       end
     end #qro
@@ -315,7 +315,7 @@ describe SimpleForm do
       it "should render presentations with sub-presentations" do
         @form.in_phase(:build) do
           @form.p('container')
-          @form.get_body.should == ["<div id=\"presentation_container\" class=\"presentation\">", "<div id=\"presentation_name_only\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" /></div>", "</div>", "<div id=\"presentation_education_info\" class=\"presentation\">", "<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">Higher ed years:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>", "<div id=\"question_age_plus_education\" class=\"question\"><label class=\"label\" for=\"record[age_plus_education]\">Age plus education:</label><span id=\"record[age_plus_education]\"></span>g question!</div>", "</div>", "</div>"]
+          @form.get_body.should == ["<div id=\"presentation_container\" class=\"presentation\">", "<div id=\"presentation_name_only\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" /></div>", "</div>", "<div id=\"presentation_education_info\" class=\"presentation\">", "<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">Higher ed years:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>", "<div id=\"question_age_plus_education\" class=\"question\"><label class=\"label\" for=\"record[age_plus_education]\">Age plus education:</label><span id=\"record_age_plus_education\"></span>g question!</div>", "</div>", "</div>"]
         end
       end
     end #p
@@ -386,7 +386,7 @@ describe SimpleForm do
             "<div id=\"uid_1\" class=\"hideable_box_with_border\">",
               "<div id=\"presentation_education_info\" class=\"presentation\">",
                 "<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">Higher ed years:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>",
-                "<div id=\"question_age_plus_education\" class=\"question\"><label class=\"label\" for=\"record[age_plus_education]\">Age plus education:</label><span id=\"record[age_plus_education]\"></span>g question!</div>",
+                "<div id=\"question_age_plus_education\" class=\"question\"><label class=\"label\" for=\"record[age_plus_education]\">Age plus education:</label><span id=\"record_age_plus_education\"></span>g question!</div>",
               "</div>",
             "</div>"]
           @form.get_observer_jscripts.should == {"age=18"=>{:pos=>["Element.hide('uid_1');"], :neg=>["Element.show('uid_1');"]}}
