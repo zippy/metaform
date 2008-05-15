@@ -26,8 +26,7 @@ class TimeIntervalWidget < Widget
 
   ################################################################################
   def self.javascript_get_value_function (field_instance_id)
-    #TO-DO:  Lisa Write this funcion
-    %Q|'';alert('time_interval#javascript_get_function not yet written')|
+    %Q|$TIF('#{build_html_id(field_instance_id)}')|
   end
 
   ################################################################################

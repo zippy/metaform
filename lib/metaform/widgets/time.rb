@@ -23,6 +23,7 @@ class TimeWidget < Widget
   def self.javascript_build_observe_function(field_instance_id,script,options)
     javascript_build_time_observe_function(field_instance_id,script,options)
   end
+  
 
   ################################################################################
   def self.convert_html_value(value,params={})
