@@ -486,13 +486,13 @@ describe SimpleForm do
     describe "tab (render a tab)" do
       it "should render a tab with default options" do
         @form.with_record(@record) do
-          @form.tab('view').should == "<li  class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view')\" title=\"Click here to go to View\"><span>View</span></a> </li>"
+          @form.tab('view').should == "<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view')\" title=\"Click here to go to View\"><span>View</span></a> </li>"
         end
       end
       it "should render a tab with specified options" do
         @record[:name,1] = "Herb Monkel"
         @form.with_record(@record) do
-          @form.tab('view',:label => 'The View',:index => 1).should == "<li  class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view/1')\" title=\"Click here to go to The View\"><span>The View</span></a> </li>"
+          @form.tab('view',:label => 'The View',:index => 1).should == "<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view/1')\" title=\"Click here to go to The View\"><span>The View</span></a> </li>"
         end
       end
     end #tab
