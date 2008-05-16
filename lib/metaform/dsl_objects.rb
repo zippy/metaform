@@ -134,7 +134,7 @@ class Condition < Bin
         when '=','=='
           %Q|:#{field_name} == "#{field_value}"|
         when '!=','=!'
-          %Q|:#{field_name} != '#{field_value}"|
+          %Q|:#{field_name} != "#{field_value}"|
         when '=~'
           multi ? %Q|arrayMatch(:#{field_name},#{field_value})| :
           %Q|:#{field_name}.match('#{field_value}')"|

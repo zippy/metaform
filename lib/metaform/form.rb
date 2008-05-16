@@ -703,9 +703,7 @@ class Form
       div_id = "uid_#{@_unique_ids += 1}"
     end
     condition = options[:condition]
-    if !condition
-      condition = c("#{field} #{options[:operator]} #{options[:value]}")
-    elsif condition.instance_of?(String)
+    if condition.instance_of?(String)
       condition = c(condition)
     end
     rase MetaformException "condition must be defined" if !condition.instance_of?(Condition)
@@ -906,7 +904,7 @@ EOJS
       q = questions[question_name]
       field_name = q.field.name
       w = q.get_widget
-      raise MetaformException,"Ouch! two different widgets for the same field!" if field_widget_map[field_name] && field_widget_map[field_name] != w
+      raise MetaformException,"Ouch! two different widgets for field #{field_name} (#{field_widget_map[field_name].inspect} && #{w.inspect})" if field_widget_map[field_name] && field_widget_map[field_name][0] != w
       field_widget_map[field_name] = [w,{:constraints => q.field.constraints, :params => q.params}]        
     end
     field_widget_map

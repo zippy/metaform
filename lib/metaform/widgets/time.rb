@@ -26,7 +26,7 @@ class TimeWidget < Widget
 
   ################################################################################
   def self.convert_html_value(value,params={})
-    date = convert_html_value(value,params)
+    date = convert_time_html_value(value,params)
     date.strftime('%H:%M') if !date.nil?
   end
 end
