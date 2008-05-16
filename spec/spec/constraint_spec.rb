@@ -6,18 +6,61 @@ describe Constraints do
   end
   describe 'regex' do
     it "should trigger when value is nil" do
-      Constraints.verify({'regex' => 'a.c'}, nil, @form).should == ["value does not match regular expression a.c"]
+      Constraints.verify({'regex' => 'a.c'}, nil, @form).should == ["value must match regular expression a.c"]
     end
     it "should not trigger when value matches regex " do
       Constraints.verify({'regex' =>'a.c'}, 'abc', @form).should == []
     end
     it "should not trigger when value is not nil or ''" do
-      Constraints.verify({'regex' =>'a.c'}, 'abd', @form).should == ["value does not match regular expression a.c"]
+      Constraints.verify({'regex' =>'a.c'}, 'abd', @form).should == ["value must match regular expression a.c"]
     end
     it "should accept regex objects as the value" do
       Constraints.verify({'regex' =>/a.c/}, 'abc', @form).should == []
     end
   end
+
+  describe '-- using a Proc' do
+    before(:each) do
+      @theProc = Proc.new {|value,form| value == 'squidness' ? 'no sqiddyiness' : nil}
+    end
+    it "should trigger when the given proc returns an error message" do
+      Constraints.verify({'proc' =>@theProc}, 'squidness', @form).should == ['no sqiddyiness']
+    end
+    it "should trigger not when the given proc returns no error message" do
+      Constraints.verify({'proc' =>@theProc}, 'cow', @form).should == []
+    end
+  end
+  describe '-- using a Proc to test against other form values' do
+    before(:each) do
+      @record = Record.make(@form,'new_entry',{:occupation =>'cowherd'})
+      @theProc = Proc.new {|value,form| form.field_value('name') =~ /Smith$/ && form.field_value('occupation') == 'cowherd' ? 'no Smith cowherds when value of the field is boink' : nil}
+    end
+    it "should trigger when the given proc returns an error message" do
+      @record.name = "Bob Smith"
+      @form.with_record(@record) do
+        Constraints.verify({'proc' =>@theProc}, 'boink', @form).should == ['no Smith cowherds when value of the field is boink']
+      end
+    end
+    it "should trigger when the given proc returns an error message" do
+      @record.name = "Bob Smith"
+      @form.with_record(@record) do
+        Constraints.verify({'proc' =>@theProc}, 'squidness', @form).should == ['no Smith cowherds when value of the field is boink']
+      end
+    end
+    it "should trigger not when the given proc returns no error message" do
+      @record.name = "Bob Jones"
+      @form.with_record(@record) do
+        Constraints.verify({'proc' =>@theProc}, 'cow', @form).should == []
+      end
+    end
+    it "should trigger not when the given proc returns no error message" do
+      @record.name = "Bob Jones"
+      @form.with_record(@record) do
+        Constraints.verify({'proc' =>@theProc}, 'voink', @form).should == []
+      end
+    end
+  end
+
   describe 'required' do
     it "should trigger when value is nil" do
       Constraints.verify({'required' =>true}, nil, @form).should == ["this field is required"]
@@ -54,47 +97,6 @@ describe Constraints do
       it "should not trigger when related field has different value from stated regex" do
         @form.with_record(@record) do
           Constraints.verify({'required' =>'name=~^x$'}, nil, @form).should == []
-        end
-      end
-    end
-    describe '-- using a Proc' do
-      before(:each) do
-        @theProc = Proc.new {|value,form| value == 'squidness' ? 'no sqiddyiness' : nil}
-      end
-      it "should trigger when the given proc returns an error message" do
-        Constraints.verify({'required' =>@theProc}, 'squidness', @form).should == ['no sqiddyiness']
-      end
-      it "should trigger not when the given proc returns no error message" do
-        Constraints.verify({'required' =>@theProc}, 'cow', @form).should == []
-      end
-    end
-    describe '-- using a Proc to test against other form values' do
-      before(:each) do
-        @record = Record.make(@form,'new_entry',{:occupation =>'cowherd'})
-        @theProc = Proc.new {|value,form| form.field_value('name') =~ /Smith$/ && form.field_value('occupation') == 'cowherd' ? 'no Smith cowherds when value of the field is boink' : nil}
-      end
-      it "should trigger when the given proc returns an error message" do
-        @record.name = "Bob Smith"
-        @form.with_record(@record) do
-          Constraints.verify({'required' =>@theProc}, 'boink', @form).should == ['no Smith cowherds when value of the field is boink']
-        end
-      end
-      it "should trigger when the given proc returns an error message" do
-        @record.name = "Bob Smith"
-        @form.with_record(@record) do
-          Constraints.verify({'required' =>@theProc}, 'squidness', @form).should == ['no Smith cowherds when value of the field is boink']
-        end
-      end
-      it "should trigger not when the given proc returns no error message" do
-        @record.name = "Bob Jones"
-        @form.with_record(@record) do
-          Constraints.verify({'required' =>@theProc}, 'cow', @form).should == []
-        end
-      end
-      it "should trigger not when the given proc returns no error message" do
-        @record.name = "Bob Jones"
-        @form.with_record(@record) do
-          Constraints.verify({'required' =>@theProc}, 'voink', @form).should == []
         end
       end
     end

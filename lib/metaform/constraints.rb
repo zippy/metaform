@@ -5,46 +5,50 @@ module Constraints
     return constraint_errors if !constraints
     constraints.each do |type, constraint|
       next if type =~ /^err_/
+      
+      # if this constraint is conditional, then evaluate the constraint condition
+      # before attempting to apply the constraint!
+      if constraint.instance_of?(ConstraintCondition)
+        next if !constraint.condition.evaluate
+        constraint = constraint.constraint_value
+        condition_extra_err = " when #{constraint.condition.humanize}"
+      else
+        condition_extra_err = ""
+      end
+      
       err_override = constraints["err_#{type}"]
       case type
+      when "proc"
+        raise MetaformException,"value of proc constraint must be a Proc!" if !constraint.instance_of?(Proc)
+        e = constraint.call(value,form)
+        constraint_errors << e if e
       when "regex"
         #for the required constraint the value will be the regex to match the value against
         r = Regexp.new(constraint)
         if r !~ value
-          constraint_errors << (err_override || "value does not match regular expression #{constraint}")
+          constraint_errors << (err_override || "value must match regular expression #{constraint}#{condition_extra_err}")
         end
       when "range"
         #for the range constraint the value must be a string "X-Y" where X<Y
         (low,hi) = constraint.split("-")
         if value.to_i < low.to_i || value.to_i > hi.to_i
-          constraint_errors << (err_override || "value out of range, must be between #{low} and #{hi}")
+          constraint_errors << (err_override || "value out of range, must be between #{low} and #{hi}#{condition_extra_err}")
         end
       when "required"
-        #for the required constraint the value will be true or false or a proc to run
-        # the proc will get the value as a parameter and must return an error string if the
-        # field was required or nil if it isn't
-        case
-        when constraint.instance_of?(Proc)
-          e = constraint.call(value,form)
-          constraint_errors << e if e
-        when constraint.class == String
-          #for the required_if constraint the value must be a string of the form "field_name=value" or "field_name=~value" for regex matching
-          constraint =~ /(.*)(=~{0,1})(.*)/
-          (field_name,op,field_value) = [$1,$2,$3]
-#          raise "(field_name,op,field_value) = #{[$1,$2,$3].inspect}"
-          case op
-          when '='
-            if form.field_value(field_name) == field_value && (value == nil || value == '')
-              constraint_errors << (err_override || "this field is required when #{field_name} is #{field_value}")
-            end
-          when '=~'
-            r = Regexp.new(field_value)
-            if r =~ form.field_value(field_name)
-              constraint_errors << (err_override || "this field is required when #{field_name} matches regex #{field_value}")
-            end
-          end
-        when constraint && (value == nil || value == "")
-          constraint_errors << (err_override || "this field is required")
+        # if the constraint is a string instead of (true | false) then build a condition on the fly
+        case constraint
+        when String
+          cond = form.c constraint
+          next if !cond.evaluate
+          condition_extra_err = " when #{cond.humanize}"
+          constraint = true
+        when TrueClass
+        when FalseClass
+        else
+          raise MetaformException,"value of required constraint must be a true, false or a condition string!"
+        end
+        if constraint && (value == nil || value == "")
+          constraint_errors << (err_override || "this field is required#{condition_extra_err}")
         end
       when "set"
         #for the set constraint the value will be an array of strings or of hashes of the form:

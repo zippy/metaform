@@ -50,10 +50,10 @@ describe Record do
       @record[:name,'y']='Name y'
       @record.save('new_entry')
       nr = Record.locate(:first, :index => :any)
+      nr.name.should == 'Bob Smith'
       nr[:name,9].should == 'Name 9'
       nr[:name,'x'].should == 'Name x'
       nr[:name,'y'].should =='Name y'
-      nr.name.should == 'Bob Smith'
     end
     
     it "should be able to return an answers hash" do

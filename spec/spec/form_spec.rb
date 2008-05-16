@@ -22,6 +22,54 @@ describe SimpleForm do
         mq.render(@form).should == "<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record[married]\">Married?</label><select name=\"record[married]\" id=\"record_married\">\n   <option value=\"y\">Yes</option>\n<option value=\"n\">No</option>\n</select>\n</div>"
       end
     end
+    
+    describe "c (define a condition)" do
+      it "should provide access to conditions via a #conditions accessor" do
+        @form.conditions['age_is_nil'].instance_of?(Condition).should == true
+      end
+      it "should evaluate correctly in ruby" do
+        @form.with_record(@record) do
+          @form.conditions['age_is_nil'].evaluate.should == true
+          @record.age = '44'
+          @form.conditions['age_is_nil'].evaluate.should == false
+        end
+      end
+      it "should return the created condition" do
+        the_c = @form.c 'eye_color=ffffff',:description => "has black eyes"
+        the_c.instance_of?(Condition).should == true
+      end
+      it "should assign the default condition ruby and javascript for simple conditions" do
+        the_c = @form.c 'eye_color=ffffff',:description => "has black eyes"
+        the_c.humanize.should == "has black eyes"
+        the_c.instance_of?(Condition).should == true
+        the_c.ruby.should == nil
+        the_c.generate_javascript_function({'eye_color'=>[TextFieldWidget,nil]})[0].should == "function has_black_eyes() {return $F('record_eye_color') == \"ffffff\"}"
+        @form.with_record(@record) do
+          the_c.evaluate.should == false
+          @record.eye_color = 'ffffff'
+          the_c.evaluate.should == true
+        end
+      end
+    end
+    
+    describe "if_c (define a constraint condition)" do
+      it "should define a ConstraintCondition object" do
+        cc = @form.if_c('age=60',true)
+        cc.instance_of?(ConstraintCondition).should == true
+        cc.constraint_value.should == true
+        cc.condition.instance_of?(Condition).should == true
+        cc.condition.field_value.should == '60'
+        cc.condition.humanize.should == 'age is 60'
+      end
+    end
+    
+    describe "cs (define a constraint)" do
+      it "should add constraints to specified fields" do
+#        @form.cs :fields=> ['senior'], :constraints => {'required' => true}
+        @form.fields['senior'].constraints['required'].should == true
+      end
+    end
+    
     describe "f (define a field)" do
       it "should create a form with a name field" do
         @form.fields['name'].class.should == Field
@@ -48,19 +96,45 @@ describe SimpleForm do
       it "should raise an error for unknown field types" do
         lambda {@form.f('fish',:type => 'squid')}.should raise_error("Unknown field type: squid")
       end
-      
-      describe ":folowups option"do
+            
+      describe ":followups option"do
         before(:each) do
           @followup = @form.fields['other_eye_color']
         end
         it "should define the followup field" do
           @followup.class.should == Field
         end
-        it "should set the followup field to be required depending on the value of the main field" do
-          @followup.constraints['required'].should == 'eye_color=x'
+        it "should set a force_nil_if condition for sub fields" do
+          f = @form.fields['eye_color'].force_nil_if
+          f.keys[0].object_id.should == @form.c('eye_color=x').object_id
+          f[f.keys[0]].should == ['other_eye_color']
         end
-        it "should create a followup name map" do
-          @form.fields['eye_color'].followup_name_map.should == {"other_eye_color"=>"x"}
+        it "should generate condition objects to trigger followup fields" do
+          @form.fields['eye_color'].followup_conditions.should == {"other_eye_color"=>@form.c("eye_color=x")}
+        end
+      end
+      
+      describe ":groups option" do
+        it "should add field to the group" do
+          @form.groups['basic_info']['name'].should == true
+        end
+        it "should not add field to groups not specified" do
+          @form.groups['basic_info']['married'].should == nil
+        end
+        it "should add field to additional groups" do
+          @form.groups['kids']['children'].should == true
+          @form.groups['family_info']['children'].should == true
+        end
+      end
+      describe ":force_nil_if option" do
+        it "should force listed fields to nil if the condition is true" do
+          @form.with_record(@record) do
+            @record.children = '4'
+            @record.oldest_child_age = '12'
+            @record.oldest_child_age.should == '12'
+            @record.children = 0
+            @record.oldest_child_age.should == nil
+          end
         end
       end
     end # f
@@ -137,8 +211,8 @@ describe SimpleForm do
       end
       describe "-- :followups option" do
         def setup_q
-          @record.eye_color = 'x'
           @form.with_record(@record) do
+            @record.eye_color = 'x'
             yield
           end
         end
@@ -147,7 +221,7 @@ describe SimpleForm do
             @form.q 'eye_color', :followups => [{'other_eye_color' => {:widget=>'TextArea'}}]
           end
           @form.get_body.should==["<div id=\"question_eye_color\" class=\"question\"><label class=\"label\" for=\"record[eye_color]\">Eye color:</label><input id=\"record_eye_color\" name=\"record[eye_color]\" type=\"text\" value=\"x\" /></div>", "<div id=\"uid_1\" class=\"followup\">", "<div id=\"question_other_eye_color\" class=\"question\"><label class=\"label\" for=\"record[other_eye_color]\">Other eye color:</label><textarea id=\"record_other_eye_color\" name=\"record[other_eye_color]\"></textarea></div>", "</div>"]
-          @form.get_observer_jscripts.should == {"eye_color"=>[{:condition=>"((field_value == \"x\"))", :script=>"Element.show('uid_1');;} else {Element.hide('uid_1');;}"}]}
+          @form.get_observer_jscripts.should == {"eye_color=x"=>{:neg=>["Element.hide('uid_1');"], :pos=>["Element.show('uid_1');"]}}
         end
         it "should accept a single hash if there is only one followup" do
           setup_q do
@@ -170,13 +244,13 @@ describe SimpleForm do
         it "should produce the correct javascript for regex based followups " do
           @form.with_record(@record) do
             @form.q 'higher_ed_years',:followups => 'degree'
-            @form.get_observer_jscripts.should == {"higher_ed_years"=>[{:condition=>"((field_value.match(/../)))", :script=>"Element.show('uid_1');;} else {Element.hide('uid_1');;}"}]}
+            @form.get_observer_jscripts.should == {"higher_ed_years=/../"=>{:neg=>["Element.hide('uid_1');"], :pos=>["Element.show('uid_1');"]}}
           end
         end
         it "should produce the correct javascript for negated value followups " do
           @form.with_record(@record) do
             @form.q 'higher_ed_years',:followups => 'no_ed_reason'
-            @form.get_observer_jscripts.should == {"higher_ed_years"=>[{:condition=>"((field_value != \"0\"))", :script=>"Element.show('uid_1');;} else {Element.hide('uid_1');;}"}]}
+            @form.get_observer_jscripts.should == {"higher_ed_years=!0"=>{:neg=>["Element.hide('uid_1');"], :pos=>["Element.show('uid_1');"]}}
           end
         end
       end # q:followups
@@ -245,7 +319,7 @@ describe SimpleForm do
         end
       end
     end #p
-    
+        
     describe "p (display an indexed presentation)" do
       def do_p
         @form.with_record(@record) do
@@ -306,7 +380,7 @@ describe SimpleForm do
     describe "qp (display a question and a javascript activated sub-presentation)" do
       it "should render a complicated bunch of html and add observer javascripts" do
         @form.in_phase(:build) do
-          @form.qp('age',:presentation_name => 'education_info',:show_hide_options=>{:value => '18',:operator => '>'})
+          @form.qp('age',:presentation_name => 'education_info',:show_hide_options=>{:condition => "age=18"})
           @form.get_body.should == [
             "<div id=\"question_age\" class=\"question\"><label class=\"label\" for=\"record[age]\">Age:</label><input id=\"record_age\" name=\"record[age]\" type=\"text\" />g question!</div>",
             "<div id=\"uid_1\" class=\"hideable_box_with_border\">",
@@ -315,8 +389,7 @@ describe SimpleForm do
                 "<div id=\"question_age_plus_education\" class=\"question\"><label class=\"label\" for=\"record[age_plus_education]\">Age plus education:</label><span id=\"record[age_plus_education]\"></span>g question!</div>",
               "</div>",
             "</div>"]
-          @form.get_observer_jscripts.should == 
-            {"age"=>[{:condition=>"(!(field_value > \"18\"))", :script=>"Element.show('uid_1');;} else {Element.hide('uid_1');;}"}]}
+          @form.get_observer_jscripts.should == {"age=18"=>{:pos=>["Element.hide('uid_1');"], :neg=>["Element.show('uid_1');"]}}
         end
       end
     end #qp
@@ -360,36 +433,34 @@ describe SimpleForm do
     describe "javascript_show_hide_if (display a block conditionally at 'runtime' on the browser)" do
       it "should produce body html and observer javascripts" do
         @form.in_phase(:build) do
-          @form.javascript_show_hide_if('married',{:operator => '==',:value => 'y'})
+          @form.javascript_show_hide_if(:condition => 'married=y')
           @form.get_body.should == ["<div id=\"uid_1\" class=\"hideable_box_with_border\" style=\"display:none\">", "</div>"]
           @form.get_observer_jscripts.should == 
-            {"married"=>[{:condition=>"((field_value == \"y\"))", :script=>"Element.show('uid_1');;} else {Element.hide('uid_1');;}"}]}
+            {"married=y"=>{:neg=>["Element.hide('uid_1');"], :pos=>["Element.show('uid_1');"]}}
         end
       end
       it "should be able to use a custom div id" do
         @form.in_phase(:build) do
-          @form.javascript_show_hide_if('married',{:operator => '==',:value => 'y',:div_id => 'special_div'})
+          @form.javascript_show_hide_if(:condition => 'married=y',:div_id => 'special_div')
           @form.get_body.should == ["<div id=\"special_div\" class=\"hideable_box_with_border\" style=\"display:none\">", "</div>"]
-          @form.get_observer_jscripts.should == {"married"=>[{:condition=>"((field_value == \"y\"))", :script=>"Element.show('special_div');;} else {Element.hide('special_div');;}"}]}
         end
       end
       it "should be able to use a custom div id and css class" do
         @form.in_phase(:build) do
-          @form.javascript_show_hide_if('married',{:div_id => 'special_div',:css_class=>'shiny_box',:operator => '==',:value => 'y'})
+          @form.javascript_show_hide_if(:condition => 'married=y',:div_id => 'special_div',:css_class=>'shiny_box')
           @form.get_body.should == ["<div id=\"special_div\" class=\"shiny_box\" style=\"display:none\">","</div>"]
-          @form.get_observer_jscripts.should == {"married"=>[{:condition=>"((field_value == \"y\"))", :script=>"Element.show('special_div');;} else {Element.hide('special_div');;}"}]}
         end
       end
-      it "should be able to use a custom condition instead of value and operator" do
+      it "should be able to use a condition object instead of a condition string" do
         @form.in_phase(:build) do
-          @form.javascript_show_hide_if('married',{:condition => %Q|field_value != null && field_value != ""|})
-          @form.get_observer_jscripts.should == {"married"=>[{:condition=>"((field_value != null && field_value != \"\"))", :script=>"Element.show('uid_1');;} else {Element.hide('uid_1');;}"}]}
+          @form.javascript_show_hide_if(:condition => @form.c("age=12"))
+          @form.get_observer_jscripts.should == {"age=12"=>{:neg=>["Element.hide('uid_1');"], :pos=>["Element.show('uid_1');"]}}
         end
       end
       it "should be able to hide by default instead of show" do
         @form.in_phase(:build) do
-          @form.javascript_show_hide_if('married',{:operator => '==',:value => 'y',:show => false})
-          @form.get_observer_jscripts.should == {"married"=>[{:condition=>"(!(field_value == \"y\"))", :script=>"Element.show('uid_1');;} else {Element.hide('uid_1');;}"}]}
+          @form.javascript_show_hide_if(:condition => 'married=y',:show => false)
+          @form.get_observer_jscripts.should == {"married=y"=>{:neg=>["Element.show('uid_1');"], :pos=>["Element.hide('uid_1');"]}}
         end
       end      
       it "should add the elements from the block into the div" do
@@ -402,18 +473,18 @@ describe SimpleForm do
     describe "javascript_show_if (show a block conditionally at 'runtime' on the browser)" do
       it "should be like calling javascript_show_hide_if" do
         @form.in_phase(:build) do
-          @form.javascript_show_if('married','==','y')
+          @form.javascript_show_if('married=y')
           @form.get_body.should == ["<div id=\"uid_1\" class=\"hideable_box\" style=\"display:none\">", "</div>"]
-          @form.get_observer_jscripts.should == {"married"=>[{:condition=>"((field_value == \"y\"))", :script=>"Element.show('uid_1');;} else {Element.hide('uid_1');;}"}]}
+          @form.get_observer_jscripts.should == {"married=y"=>{:pos=>["Element.show('uid_1');"], :neg=>["Element.hide('uid_1');"]}}
         end
       end
     end #javascript_show_if
     describe "javascript_hide_if (hide a block conditionally at 'runtime' on the browser)" do
       it "should be like calling javascript_show_hide_if with :show=>false" do
         @form.in_phase(:build) do
-          @form.javascript_hide_if('married','==','y')
+          @form.javascript_hide_if('married=y')
           @form.get_body.should == ["<div id=\"uid_1\" class=\"hideable_box\" style=\"display:none\">", "</div>"]
-          @form.get_observer_jscripts.should == {"married"=>[{:condition=>"(!(field_value == \"y\"))", :script=>"Element.show('uid_1');;} else {Element.hide('uid_1');;}"}]}
+          @form.get_observer_jscripts.should == {"married=y"=>{:pos=>["Element.hide('uid_1');"], :neg=>["Element.show('uid_1');"]}}
         end
       end
     end #javascript_hide_if
@@ -447,19 +518,6 @@ describe SimpleForm do
           end
         end
       end #javascript_submit
-      describe "build_javascript_boolean_expression" do
-        it "should generate a boolean expression" do
-          @form.in_phase(:build) do
-            @form.build_javascript_boolean_expression('!=','abcd').should == 
-              "field_value != \"abcd\""
-          end
-        end
-        it "should generate a function call to oc if the operator is the symbol :in" do
-          @form.in_phase(:build) do
-            @form.build_javascript_boolean_expression(:in,'a').should == "\"a\" in oc(field_value)"
-          end
-        end
-      end #build_javascript_boolean_expression
     end #javascript
     
     
@@ -501,13 +559,17 @@ describe SimpleForm do
   describe "generators" do
     describe "build_tabs (render a tab group)" do
       it "should render a tab group with the current tab identified" do
-        @form.build_tabs('simple_tabs','simple',@record).should == "<div class=\"tabs\"> <ul>\n<li id=\"current\" class=\"tab_simple\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//simple/simple_tabs')\" title=\"Click here to go to Edit\"><span>Edit</span></a> </li>\n<li  class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view/simple_tabs')\" title=\"Click here to go to View\"><span>View</span></a> </li>\n</ul></div>"
+        @form.build_tabs('simple_tabs','simple',@record).should == "<div class=\"tabs\"> <ul>\n<li class=\"current tab_simple\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//simple/simple_tabs')\" title=\"Click here to go to Edit\"><span>Edit</span></a> </li>\n<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view/simple_tabs')\" title=\"Click here to go to View\"><span>View</span></a> </li>\n</ul></div>"
       end
       it "should raise an error for tab group that doesn't exist" do
         lambda {@form.build_tabs('sss','',@record)}.should raise_error("tab group 'sss' doesn't exist")
       end
     end # build_tabs
     describe "build (render form)" do
+      it "should collect up a list of all the questions encountered during the build" do
+        @form.build('container')
+        @form.get_questions_built.should == ['name','higher_ed_years']
+      end
       it "should generate html for a simple presentation" do
         @form.build('name_only').should == [
           "<div id=\"presentation_name_only\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" /></div>\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">",
@@ -515,9 +577,10 @@ describe SimpleForm do
         ]
       end
       it "should generate all the html and javascript for a complex presentation" do
-        @form.build('married_questions').should == [
-          "<div id=\"presentation_married_questions\" class=\"presentation\">\n<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record[married]\">Married?</label><select name=\"record[married]\" id=\"record_married\">\n   <option value=\"y\">Yes</option>\n<option value=\"n\">No</option>\n</select>\n</div>\n<div id=\"uid_1\" class=\"hideable_box_with_border\">\n<div id=\"question_children\" class=\"question\"><label class=\"label\" for=\"record[children]\">Children:</label><input id=\"record_children\" name=\"record[children]\" type=\"text\" /></div>\n</div>\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">",
-          "            Event.observe('record_married', 'change', function(e){ check_married() });\n            function check_married() {\n              var field_value = $F('record_married');\n              if (((field_value == \"y\"))) {Element.show('uid_1');;} else {Element.hide('uid_1');;}\n            }\n            check_married();\n"
+        r = @form.build('simple')
+        r.should == [
+          "<div id=\"presentation_simple\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" /></div>\n<div id=\"question_age\" class=\"question\"><label class=\"label\" for=\"record[age]\">Age:</label><input id=\"record_age\" name=\"record[age]\" type=\"text\" />g question!</div>\n<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">Higher ed years:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>\n<div id=\"question_eye_color\" class=\"question\"><label class=\"label\" for=\"record[eye_color]\">Eye color:</label><input id=\"record_eye_color\" name=\"record[eye_color]\" type=\"text\" /></div>\n<div id=\"uid_1\" class=\"followup\">\n<div id=\"question_other_eye_color\" class=\"question\"><label class=\"label\" for=\"record[other_eye_color]\">Other eye color:</label><textarea id=\"record_other_eye_color\" name=\"record[other_eye_color]\"></textarea></div>\n</div>\n<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record[married]\">Married?</label><input id=\"record_married\" name=\"record[married]\" type=\"text\" /></div>\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">", 
+          "Event.observe('record_eye_color', 'change', function(e){ actions_for_eye_color_is_x() });\nfunction actions_for_eye_color_is_x() {\n  if (eye_color_is_x()) {Element.show('uid_1');}\n  else {Element.hide('uid_1');}\n}\nactions_for_eye_color_is_x();\n\nfunction eye_color_is_x() {return $F('record_eye_color') == \"x\"}"
         ]
       end
     end # build
@@ -562,6 +625,18 @@ describe SimpleForm do
       it "should test whether a presentations has been defined" do
         @form.presentation_exists?('simple').should == true
         @form.presentation_exists?('piggy').should == false
+      end
+    end
+    describe "#find_conditions_with_fields" do
+      it "should return a list of conditions that depend on the given fields" do
+        conds = @form.find_conditions_with_fields(['eye_color'])
+        conds.size.should == 1
+        conds[0].name.should == 'eye_color=x'
+        the_c = @form.c 'eye_color=ffffff',:description => "has black eyes"
+        conds = @form.find_conditions_with_fields(['eye_color'])
+        conds.size.should == 2
+        conds[0].name.should == 'eye_color=ffffff'
+        conds[1].name.should == 'eye_color=x'
       end
     end
   end

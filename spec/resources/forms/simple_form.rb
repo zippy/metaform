@@ -21,12 +21,13 @@ class SimpleForm < Form
 
     labeling(:postfix => ':')
     def_fields :properties=>[FieldNameHasG] do
-      def_fields :constraints=>{'required' => true} do
+      def_fields :constraints=>{'required' => true}, :group => 'basic_info' do
         f 'name'
         def_fields :constraints=>{"range"=>"1-100"} do
           f 'age'
           f 'higher_ed_years',:constraints=>{'range'=>'0-10'},:followups=>{'/../' => f('degree'),'!0'=>f('no_ed_reason')}
         end
+        f 'senior'
       end
       f 'eye_color',
         :constraints=>{'enumeration' => [{'ffffff' => 'black'},{'00ff00'=>'green'},{'0000ff'=>'blue'},{'x'=>'other'}]},
@@ -35,8 +36,26 @@ class SimpleForm < Form
         :proc => Proc.new { |form,index| (form.field_value('age',index).to_i+form.field_value('higher_ed_years',index).to_i).to_s}
       }
     end
-    f 'married', :constraints=>{'enumeration' => [{'y' => 'Yes'},{'n'=>'No'}]}
-    f 'children', :type=>'integer'
+    
+    def_conditions do
+      c 'age_is_nil', :description=> 'age is nil',:javascript => ':age == ""' do
+        field_value("age").nil?
+      end
+      c 'no_children', :description=> 'no children',:javascript => ':children != "" && parseInt(:children)>0' do
+        field_value("children").to_i <= 0
+      end
+    end
+    
+    def_fields :groups => ['family_info'] do
+      f 'married', :constraints=>{'enumeration' => [{'y' => 'Yes'},{'n'=>'No'}]}
+      f 'children', :type=>'integer', :group => 'kids', :force_nil_if => { c('no_children') => ['oldest_child_age']}
+      f 'oldest_child_age', :type=>'integer', :group => 'kids'
+    end
+        
+ #  def_constraints do
+ #    cs :fields=> ['senior'],:constraints => {'must_be' => if_c('Flg!=Y',nil)}, :force_on_save => true
+##     cs :group => 'intrapartum',:condition => mom_died_AP || pregnancy_ended_before13,:constraints => {'must_be' => nil, :force_on_save => true}
+ #  end
 
     presentation 'create', :create_with_workflow =>'standard' do
       q 'name'
@@ -66,7 +85,7 @@ class SimpleForm < Form
 
     presentation 'married_questions' do
       q 'married',:widget=>'PopUp',:labeling => {:postfix => '?'}
-      javascript_show_hide_if('married',:value => 'y') do
+      javascript_show_hide_if(:condition => 'married=y') do
         q 'children'
       end
     end
@@ -96,3 +115,92 @@ class SimpleForm < Form
     
   end
 end
+
+
+
+
+# def_group_relations do
+#   g 'start'
+#   g 'demographic'
+#   g 'history'
+#   g 'pregnancy'
+#   unless pregnancy_ended_before9
+#     unless pregnancy_ended_before13
+#       unless mom_died_AP
+#         g 'intrapartum', :label => 'Labor & Birth'
+#       end
+#     end
+#     if transferred_care(:any)
+#       g 'transfer_of_care', :label => 'Transfer of Care'
+#     end
+#     if transported
+#       g 'transport'
+#     end
+#     unless mom_died_AP
+#       unless mom_died_IP
+#         g 'postpartum_maternal', :label => 'Postpartum-Maternal'
+#       end
+#     end
+#     unless pregnancy_ended_before20
+#       g 'postpartum_newborn', :label => 'Postpartum-Newborn'
+#     end
+#   end
+# end
+# 
+# g 'intrapartum', :constraints => {'must_be' => if_c([mom_died_AP || pregnancy_ended_before13],nil)}
+# g 'transfer_of_care', :requires => transferred_care(:any) && !pregnancy_ended_before9
+# g 'transport', :requires => transported && !pregnancy_ended_before9
+# g 'postpartum_maternal', :requires => !mom_died_IP && !mom_died_AP && !pregnancy_ended_before9
+# g 'postpartum_newborn', :requires => !pregnancy_ended_before20 && !pregnancy_ended_before9
+#
+# def_groups do
+#   g 'start'
+#   g 'demographic'
+#   g 'history'
+#   g 'pregnancy'
+#   def_groups :constraints => {!pregnancy_ended_before9} do
+#     g 'intrapartum', :requires => !mom_died_AP && !pregnancy_ended_before13 && !pregnancy_ended_before9
+#     g 'transfer_of_care', :requires => transferred_care(:any) && !pregnancy_ended_before9
+#     g 'transport', :requires => transported && !pregnancy_ended_before9
+#     g 'postpartum_maternal', :requires => !mom_died_IP && !mom_died_AP && !pregnancy_ended_before9
+#     g 'postpartum_newborn', :requires => !pregnancy_ended_before20 && !pregnancy_ended_before9
+#   end
+# end
+# 
+# 
+#  
+#    def pregnancy_ended_before9
+#      v = field_value("Prg_LossBefore20Wk")
+#      v && v != '' && v.to_i < 9
+#    end
+#
+#    def pregnancy_ended_before13
+#      v = field_value("Prg_LossBefore20Wk")
+#      v && v != '' && v.to_i < 13
+#    end
+#
+#    def pregnancy_ended_before20
+#      v= field_value("Prg_LossBefore20_Flg")
+#      v && v == 'Y'
+#    end
+#
+#    def mom_died_AP
+#      v= field_value("AP_MaternalDeath_Flg")
+#      v && v == 'Y'
+#    end
+#
+#    def mom_died_IP
+#      v= field_value("IP_MaternalDeath_Flg")
+#      v && v == 'Y'
+#    end
+#
+#    def baby_dead_at_birth
+#      v = field_value('Prg_LossAfter20_Flg')
+#      v2 = field_value('IP_FetalDemise_Flg')
+#      (v or v2) && (v == 'Y' or v2 == 'Y')
+#    end
+#
+#    def consented
+#      v = field_value("Book_ConsentHashCode")
+#      v && v != nil
+#  end

@@ -10,12 +10,14 @@ class Form
 
   FieldTypes = ['string','integer','float','decimal','boolean','date','datetime','time','text']
 
-  attr_accessor :fields, :questions, :presentations, :workflows, :listings, :tabs, :label_options
+  attr_accessor :fields, :conditions, :questions, :presentations, :groups, :workflows, :listings, :tabs, :label_options
 
   def initialize
     @fields = {}
+    @conditions = {}
     @questions = {}
     @presentations = {}
+    @groups = {}
     @workflows = {}
     @listings = {}
     @tabs = {}
@@ -83,6 +85,36 @@ class Form
   end
 
   #################################################################################
+  # a placeholder for defining a bunch of conditions
+  def def_conditions()
+    yield
+  end
+
+  #################################################################################
+  #################################################################################
+  # defines conditions
+  # The options for a condition definition are:
+  # * :javascript - which is pseudo javascript (field names are preceeded with 
+  #   colons and will re replaced with javascript necessary to get values frome
+  #   the field widget at runtime)
+  # * :overwrite - normally calling c will not overwrite a condition that has 
+  #   allready been defined.  use :overwrite to force redefining a condition
+  #################################################################################
+  def c(name,opts = {},&block)
+    if !conditions.has_key?(name) || opts.has_key?(:overwrite)
+      options = {:form => self}.update(opts)
+      if block_given?
+        options[:ruby] = block
+      end
+      options[:name] = name
+      the_condition = Condition.new(options)
+      conditions[name] = the_condition
+    else
+      conditions[name]
+    end
+  end
+
+  #################################################################################
   #################################################################################
   # defines fields
   # The options for a field definition are:
@@ -95,7 +127,7 @@ class Form
   #   see Constraints for details
   # * :followups - a list of fields that are require depending on the value of
   #   this field.  Followups are specified as key value pairs, where the value is
-  #   the field definition of the followup field, and the key is either
+  #   the list of field definitions of followup fields, and the key is either
   # 1. the symbol :answered, in which case the followup is required if the field
   #     has any value.
   # 2. a string value, in which case the followup is required if the field has
@@ -106,12 +138,19 @@ class Form
   #   hash are the property name, and the values of the hash are a Proc object to execute
   #   at runtime that determines whether the field does or does not have the property.
   #   Note: constraints are simply parameters that are passed to the :valid property.
+  # * :group - a string name of a group the field is a member of
+  # * :groups - a list of string names of groups the field is a member of
   # * :calculated - this field is not stored but calculated from other values.
   #################################################################################
   def f(name,opts = {})
     options = {
       :type => 'string'
     }.update(opts)
+
+    if options.has_key?(:group)
+      options[:groups] = [options[:group]]
+      options.delete(:group)
+    end
     
     the_field = Field.new(:name=>name,:type=>options[:type])
     options.delete(:type)
@@ -124,19 +163,43 @@ class Form
     #TODO handle user defined types
     raise MetaformException,"Unknown field type: #{the_field[:type]}" unless FieldTypes.include?(the_field.type)
 
+    if the_field.groups
+      the_field.groups.each { |g| groups[g] ||= {}; groups[g][name] = true }
+    end
+
     if options.has_key?(:followups)
-      map = {}
-      the_field.followups.each do |field_answer,followup_fields|
+      conds = {}
+      the_field.followups.each do |followup_condition,followup_fields|
         fields = arrayify(followup_fields)
+        case followup_condition
+        when String
+          if followup_condition =~ Condition::OperatorMatch
+            cond = c(followup_condition)
+          else
+            if the_field.constraints && the_field.constraints['set']
+              cond = c("#{name} includes #{followup_condition}")
+            else
+              cond = c("#{name}=#{followup_condition}")
+            end
+          end
+        when Condition
+          cond = followup_condition
+        when :answered
+          cond = c("#{name} answered")
+        else
+          raise MetaformException, "followup key '#{followup_condition.inspect}' is invalid.  It must be a value, a full string condition defintion or a condition defined by c(...)"
+        end
+          
+        the_field.force_nil_if = {cond,fields.collect {|f| f.name}}
         fields.each do |field|
-          map[field.name] = field_answer
-          field.constraints ||= {}
-          #TODO this constraints needs to distinguish between enumerations and sets it currently
-          # is assuming that the contraints is just and enumeration.
-          field.constraints['required'] = "#{name}=#{field_answer}"
+          conds[field.name] = cond
+#TODO-Eric
+#TODO-Ellen  constraints auto-defined for followups?  Required?
+#          field.constraints ||= {}
+#          field.constraints['required'] = "#{name}=#{field_answer}"
         end 
       end
-      the_field.followup_name_map = map
+      the_field.followup_conditions = conds
     end
     fields[name] = the_field
   end
@@ -168,9 +231,32 @@ class Form
   #   end
   #################################################################################
   def def_fields(common_options = {})
+    if common_options.has_key?(:group)
+      common_options[:groups] = []
+      common_options[:groups] << common_options[:group]
+      common_options.delete(:group)
+    end
     common_options.each {|option_name,option_value| @_commons[option_name] ||= [];@_commons[option_name].push option_value}
     yield
     common_options.each {|option_name,option_value| @_commons[option_name].pop;@_commons.delete(option_name) if @_commons[option_name].size == 0}
+  end
+
+  #################################################################################
+  # a placeholder for defining a bunch of constraitns
+  def def_constraints()
+    yield
+  end
+
+  #################################################################################
+  #################################################################################
+  # defines constraints
+  # The options for a constraint definition are:
+  # * :fields - a list of fields to add the constraints to
+  # * :constraints - a hash of the constraints
+  #################################################################################
+  def cs(opts = {})
+    field_list = opts[:fields]
+    field_list.each { |f| fields[f].constraints.update(opts[:constraints])} if opts[:constraints]
   end
 
   #################################################################################
@@ -206,8 +292,8 @@ class Form
     url = Record.url(@record.id,presentation_name,@tabs_name,index)
     label = options[:label]
     label ||= presentation_name.humanize
-    current_text = (@_index.to_s == index.to_s && @current_tab == presentation_name) ? "current" : ""
-    %Q|<li class=\"#{current_text} tab_#{presentation_name}\"> <a href=\"#\" onClick=\"return submitAndRedirect('#{url}')\" title=\"Click here to go to #{label}\"><span>#{label}</span></a> </li>|
+    current_text = (@_index.to_s == index.to_s && @current_tab == presentation_name) ? "current " : ""
+    %Q|<li class=\"#{current_text}tab_#{presentation_name}\"> <a href=\"#\" onClick=\"return submitAndRedirect('#{url}')\" title=\"Click here to go to #{label}\"><span>#{label}</span></a> </li>|
   end
 
   #################################################################################
@@ -296,7 +382,8 @@ class Form
     else
       question_name = field_name
     end
-    
+    @_questions_built << question_name if @_questions_built && ! options[:read_only]
+        
     # save the field name/question name mapping into the presentation so that we can get it out later 
     # when we are trying to figure out which widget to use to render it a given field
     if cur_pres = @_presentation #@_stuff[:current_presentation]
@@ -347,27 +434,11 @@ class Form
           raise MetaformException,"followups must be specified with a String or a Hash"
         end
           
-        map = the_q.field.followup_name_map
-        value = map[followup_field_name]
-        opts = {:css_class => 'followup'}
-        if value == :answered
-          opts[:condition] = %Q|field_value != null && field_value != ""|
-        elsif value =~ /^\/(.*)\/$/
-          if the_q.get_widget.is_multi_value?
-            opts[:condition] = %Q|arrayMatch(field_value,#{value})|
-          else
-            opts[:condition] = %Q|field_value.match(#{value})|
-          end 
-        else
-          if value =~ /^\!(.*)/
-            opts[:value] = $1
-            opts[:operator] = the_q.get_widget.is_multi_value? ? :not_in : '!='
-          else
-            opts[:value] = value
-            opts[:operator] = the_q.get_widget.is_multi_value? ? :in : '=='
-          end
-        end
-        javascript_show_hide_if(field_name,opts) do
+        conds = the_q.field.followup_conditions
+        cond = conds[followup_field_name]
+        opts = {:css_class => 'followup',:condition=>cond}
+#        opts.update(cond.generate_show_hide_js_options(the_q.get_widget.is_multi_value?))
+        javascript_show_hide_if(opts) do
           q followup_field_name,followup_question_options
         end
       end    
@@ -448,9 +519,10 @@ class Form
 
   #################################################################################
   #################################################################################
-  # Question with sub-presentation.  Use this to declare a question which if the value
-  # of the question is "value" (defaults to "N") then display a sub-presentation
-  # it assumes that the presentation name is the same as the field name unless
+  # Question with sub-presentation.  Use this to declare a question which if the 
+  # given condition is true then display a sub-presentation.  The default condition
+  # is <field_name>=N
+  # It assumes that the presentation name is the same as the field name unless
   # the :presentation_name option is used
   #
   # Options:
@@ -466,14 +538,13 @@ class Form
   def qp(field_name,opts = {})
     options = {:show_hide_options => {},:question_options=>{}}.update(opts)
     show_hide_options = {
-      :operator => '==',
-      :value => 'N',
+      :condition => "#{field_name}=N",
       :show => false
     }.update(options[:show_hide_options])
     q field_name, options[:question_options]
     presentation_name = options[:presentation_name]
     presentation_name ||= field_name
-    javascript_show_hide_if(field_name,show_hide_options) do
+    javascript_show_hide_if(show_hide_options) do
       p presentation_name
     end      
   end
@@ -523,7 +594,8 @@ class Form
   def q_meta_workflow_state(label,widget_type,states)
     widget = Widget.fetch(widget_type)
     #TODO FIXME!!!  @@form needs to go away!
-    w = widget.render(@@form,'workflow_state',workflow_state,label,:constraints => {"enumeration"=>states}) #TODO , :params => widget_parameters
+    #TODO , :params => widget_parameters
+    w = widget.render(@@form,'workflow_state',workflow_state,label,:constraints => {"enumeration"=>states})
     #TODO this is a cheat and we need to fix it in widget to generalize it, but it works ok!
     w = w.gsub(/record(.)workflow_state/,'meta\1workflow_state')
     html w
@@ -573,7 +645,9 @@ class Form
         }
       }
       EOJS
-      add_observer_javascript(get_field_question_name(field),"true",js)    
+      #TODO-Eric make an way to create an "allways" observer javascript that is associated with a particular field
+#      add_observer_javascript("#{field}=1",js)    
+#      add_observer_javascript("#{field}!=1",js)    
     end
   end
 
@@ -601,7 +675,7 @@ class Form
   #   end
   # 
   #################################################################################
-  def javascript_show_hide_if(field,opts={})
+  def javascript_show_hide_if(opts={})
     options = {
      :operator => '==',
      :value => nil,
@@ -629,8 +703,14 @@ class Form
       div_id = "uid_#{@_unique_ids += 1}"
     end
     condition = options[:condition]
-    condition ||= build_javascript_boolean_expression(options[:operator],options[:value])
-    add_observer_javascript(get_field_question_name(field),%Q|(#{!show ? "!" : ""}(#{condition}))|,"Element.show('#{div_id}');#{options[:jsaction_show]};} else {Element.hide('#{div_id}');#{options[:jsaction_hide]};}")
+    if !condition
+      condition = c("#{field} #{options[:operator]} #{options[:value]}")
+    elsif condition.instance_of?(String)
+      condition = c(condition)
+    end
+    rase MetaformException "condition must be defined" if !condition.instance_of?(Condition)
+    add_observer_javascript(condition.name,"Element.show('#{div_id}');#{options[:jsaction_show]}",!show)
+    add_observer_javascript(condition.name,"Element.hide('#{div_id}');#{options[:jsaction_hide]}",show)
 
     div = %Q|<div id="#{div_id}"|
     div << %Q| class="#{css_class}"| if css_class
@@ -648,16 +728,16 @@ class Form
   # Options: see #javascript_show_hide_if
   #
   # Example: 
-  #   javascript_show_hide_if('married','==','y') do
+  #   javascript_show_if('married=y') do
   #     q 'children'
   #   end
   ###############################################      
-  def javascript_show_if(field,operator,value,opts={},&block)
+  def javascript_show_if(condition,opts={},&block)
     options = {
       :css_class=>"hideable_box"
     }.update(opts)
-    options.update({:operator => operator,:value => value,:show=>true})
-    javascript_show_hide_if(field,options,&block)
+    options.update({:condition => condition,:show=>true})
+    javascript_show_hide_if(options,&block)
   end
 
   ###############################################
@@ -665,12 +745,12 @@ class Form
   # (convenience function to javascript_show_hide_if)
   #
   # Options: see #javascript_show_hide_if
-  def javascript_hide_if(field,operator,value,opts={},&block)
+  def javascript_hide_if(condition,opts={},&block)
     options = {
       :css_class=>"hideable_box"
     }.update(opts)
-    options.update({:operator => operator,:value => value,:show=>false})
-    javascript_show_hide_if(field,options,&block)
+    options.update({:condition => condition,:show=>false})
+    javascript_show_hide_if(options,&block)
   end
 
 #################################################################################
@@ -683,6 +763,8 @@ class Form
   # returns a script check to do something if the value 
   # of one of the fields in the form matches an expression
   #################################################################################
+  #TODO-Eric make this match new syntax for conditions i.e. one string with :fieldname and get 
+  # figure out the widgets on the fly
   def javascript_if_field(field_name,expr,value)
     save_context(:js) do
       widget = questions[get_field_question_name(field_name)].get_widget
@@ -717,21 +799,6 @@ class Form
       javascript js
     end
   end
-
-    
-  ###############################################
-  #
-  def build_javascript_boolean_expression(operator,value)
-    case operator
-    when :in
-      %Q|"#{value}" in oc(field_value)|
-    when :not_in
-      %Q|"!(#{value}" in oc(field_value))|
-    else
-      %Q|field_value #{operator} "#{value}"|
-    end
-  end      
-  
    
   #################################################################################
   #################################################################################
@@ -764,6 +831,7 @@ class Form
   def prepare_for_build(index)
     @_index = index
     @_stuff = {}
+    @_questions_built = []
   end
 
   #################################################################################
@@ -776,33 +844,72 @@ class Form
         body %Q|<input type="hidden" name="meta[workflow_action]" id="meta_workflow_action">| 
       end
       
+      jscripts = []
+      hiddens_added = {}
+
+      field_widget_map = questions_field_widget_map(get_questions_built)
       ojs = get_observer_jscripts
       if ojs
-        jscripts = ojs.collect do |question_name,jsc|
-          q = questions[question_name]
-          field_name = q.field.name
-          widget = q.get_widget
-          widget_options = {:constraints => q.field.constraints, :params => q.params}
-          observer_function = widget.javascript_build_observe_function(field_name,"check_#{field_name}()",widget_options)
-          value_function = widget.javascript_get_value_function(field_name)
-          scripts = ""
-          jsc.each {|action| scripts << "if (#{action[:condition]}) {#{action[:script]}"}
-          script = <<-EOJS
-            #{observer_function}
-            function check_#{field_name}() {
-              var field_value = #{value_function};
-              #{scripts}
-            }
-            check_#{field_name}();
-          EOJS
+        ojs.collect do |condition_name,actions|
+#          q = questions[question_name]
+#          field_name = q.field.name
+#          widget = q.get_widget
+#          widget_options = {:constraints => q.field.constraints, :params => q.params}
+#          observer_function = widget.javascript_build_observe_function(field_name,"check_#{field_name}()",widget_options)
+#          value_function = widget.javascript_get_value_function(field_name)
+
+          cond = conditions[condition_name]
+          raise condition_name if cond.nil?
+          fnname = 'actions_for_'+cond.js_function_name
+          cond.fields_used.each do |field_name|
+            if field_widget_map.has_key?(field_name)
+              (widget,widget_options) = field_widget_map[field_name];
+              jscripts << widget.javascript_build_observe_function(field_name,"#{fnname}()",widget_options)
+            end
+          end
+          jscripts << <<-EOJS
+function #{fnname}() {
+  if (#{cond.js_function_name}()) {#{actions[:pos].join(";")}}
+  else {#{actions[:neg].join(";")}}
+}
+#{fnname}();
+EOJS
+          (js,hiddens) = cond.generate_javascript_function(field_widget_map)
+          jscripts << js
+          hiddens.each { |h| body %Q|<input type="hidden" name="___#{h}" id="___#{h}"> value="#{field_value(h)}"| if !hiddens_added[h];hiddens_added[h]=true }
         end
       end
-      jscripts ||= []
       js = get_jscripts
       jscripts << js if js
-  
+      
+#     field_widget_map.each do |field_name,w|
+#       (widget,widget_options) = w;
+#       jscripts.unshift widget.javascript_build_observe_function(field_name,"check_#{field_name}()",widget_options)
+#     end
+
+#     conds = find_conditions_with_fields(field_widget_map.keys)
+#     conds.each do |cond|
+#       (js,hiddens) = cond.generate_javascript_function(field_widget_map)
+#       jscripts << js
+#       hiddens.each { |h|  body %Q|<input type="hidden" name="___#{h}" id="___#{h}"> value="#{field_value(h)}"| }
+#     end
+
       [get_body.join("\n"),jscripts.join("\n")]
     end
+  end
+    
+  # build a field_name to widget mapping so that we can pass it into the conditions
+  # to build the necessary javascript
+  def questions_field_widget_map(question_list)
+    field_widget_map = {}
+    question_list.each do |question_name|
+      q = questions[question_name]
+      field_name = q.field.name
+      w = q.get_widget
+      raise MetaformException,"Ouch! two different widgets for the same field!" if field_widget_map[field_name] && field_widget_map[field_name] != w
+      field_widget_map[field_name] = [w,{:constraints => q.field.constraints, :params => q.params}]        
+    end
+    field_widget_map
   end
 
   # the meta information that will be available to an action is:
@@ -896,6 +1003,10 @@ class Form
     @_stuff[:observer_js]
   end
 
+  def get_questions_built
+    @_questions_built
+  end
+
   def get_record
     @record
   end
@@ -912,6 +1023,12 @@ class Form
     set.each {|h| k = h.keys[0];e[k]=h[k]}
     e
   end    
+  
+  def find_conditions_with_fields(field_list)
+    conds = []
+    conditions.each { |name,c| conds << c if c.uses_fields(field_list) }
+    conds
+  end
   
   #################################################################################
   #################################################################################
@@ -934,6 +1051,16 @@ class Form
     fn = Form.forms_dir+'/'+file
     file_contents = IO.read(fn)
     Form.class_eval(file_contents,fn)
+  end
+  
+  def if_c(condition,condition_value)
+    case condition
+    when Condition
+      cond = c
+    else
+      cond = c(condition.to_s) 
+    end
+    ConstraintCondition.new(cond,condition_value)
   end
 
   #################################################################################
@@ -975,14 +1102,14 @@ class Form
   ###############################################
   # for a given field, add a javascript boolean condition and the script to run if it's true
   # into the list of scripts that will be added to the end of the rendered form.
-  def add_observer_javascript(question_name,condition,script)
+  def add_observer_javascript(condition_name,script,negate = false)
     #we collect up all the conditions/functions pairs by field because Event.Observer can
     # only be called once per field id.  Thus we have to collect all the javascript bits we want to execute on the
     # observed field, and then generate the javascript call to Event.Observe down in the #build method
 
     @_stuff[:observer_js] ||= {}
-    @_stuff[:observer_js][question_name] ||= []
-    @_stuff[:observer_js][question_name] << {:condition => condition, :script => script}
+    @_stuff[:observer_js][condition_name] ||= {:pos => [],:neg =>[]}
+    @_stuff[:observer_js][condition_name][negate ? :neg : :pos] << script
   end
 
   ###########################################################
