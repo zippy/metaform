@@ -679,7 +679,9 @@ class Form
     options = {
      :operator => '==',
      :value => nil,
-     :div_id =>nil,
+     :wrapper_element => 'div',
+     :wrapper_id =>nil,
+     :invoke_on_class => nil,
      :show => true,
      :css_class => "hideable_box_with_border",
      :condition => nil,
@@ -695,28 +697,45 @@ class Form
     end
 
     show = options[:show]
-    div_id = options[:div_id]
+    wrapper_id = options[:wrapper_id]
     css_class = options[:css_class]
 
-    if !div_id
+    if !wrapper_id
       @_unique_ids ||= 0
-      div_id = "uid_#{@_unique_ids += 1}"
+      wrapper_id = "uid_#{@_unique_ids += 1}"
     end
     condition = options[:condition]
     if condition.instance_of?(String)
       condition = c(condition)
     end
     rase MetaformException "condition must be defined" if !condition.instance_of?(Condition)
-    add_observer_javascript(condition.name,"Element.show('#{div_id}');#{options[:jsaction_show]}",!show)
-    add_observer_javascript(condition.name,"Element.hide('#{div_id}');#{options[:jsaction_hide]}",show)
-
-    div = %Q|<div id="#{div_id}"|
-    div << %Q| class="#{css_class}"| if css_class
-    div << %Q| style="display:none"| unless block_given?
-    div << '>'
-    body div
+    show_actions = []
+    hide_actions = []
+    show_actions << options[:jsaction_show] if options[:jsaction_show]
+    hide_actions << options[:jsaction_hide] if options[:jsaction_hide]
+    if invoke_on_class = options[:invoke_on_class]
+      show_actions << %Q|$$(".#{invoke_on_class}").invoke("show")|
+      hide_actions << %Q|$$(".#{invoke_on_class}").invoke("hide")|
+    else
+      show_actions << "Element.show('#{wrapper_id}')"
+      hide_actions << "Element.hide('#{wrapper_id}')"
+    end
+    add_observer_javascript(condition.name,show_actions.join(';'),!show)
+    add_observer_javascript(condition.name,hide_actions.join(';'),show)
+    
+    cond_value = condition.evaluate
+    hide = !block_given? || (show && !cond_value) || (!show && cond_value)
+    @_hiding_js = hide
+    if wrapper_element = options[:wrapper_element]
+      wrapper = %Q|<#{wrapper_element} id="#{wrapper_id}"|
+      wrapper << %Q| class="#{css_class}"| if css_class
+      wrapper << %Q| style="display:none"| if hide
+      wrapper << '>'
+      body wrapper
+    end
     yield if block_given?
-    body '</div>'
+    body "</#{wrapper_element}>" if wrapper_element
+    @_hiding_js = nil
   end
   
   ###############################################
@@ -849,13 +868,6 @@ class Form
       ojs = get_observer_jscripts
       if ojs
         ojs.collect do |condition_name,actions|
-#          q = questions[question_name]
-#          field_name = q.field.name
-#          widget = q.get_widget
-#          widget_options = {:constraints => q.field.constraints, :params => q.params}
-#          observer_function = widget.javascript_build_observe_function(field_name,"check_#{field_name}()",widget_options)
-#          value_function = widget.javascript_get_value_function(field_name)
-
           cond = conditions[condition_name]
           raise condition_name if cond.nil?
           fnname = 'actions_for_'+cond.js_function_name
@@ -870,8 +882,9 @@ function #{fnname}() {
   if (#{cond.js_function_name}()) {#{actions[:pos].join(";")}}
   else {#{actions[:neg].join(";")}}
 }
-#{fnname}();
 EOJS
+#{fnname}();
+
           (js,hiddens) = cond.generate_javascript_function(field_widget_map)
           jscripts << js
           hiddens.each { |h| body %Q|<input type="hidden" name="___#{h}" id="___#{h}"> value="#{field_value(h)}"| if !hiddens_added[h];hiddens_added[h]=true }
@@ -879,18 +892,6 @@ EOJS
       end
       js = get_jscripts
       jscripts << js if js
-      
-#     field_widget_map.each do |field_name,w|
-#       (widget,widget_options) = w;
-#       jscripts.unshift widget.javascript_build_observe_function(field_name,"check_#{field_name}()",widget_options)
-#     end
-
-#     conds = find_conditions_with_fields(field_widget_map.keys)
-#     conds.each do |cond|
-#       (js,hiddens) = cond.generate_javascript_function(field_widget_map)
-#       jscripts << js
-#       hiddens.each { |h|  body %Q|<input type="hidden" name="___#{h}" id="___#{h}"> value="#{field_value(h)}"| }
-#     end
 
       [get_body.join("\n"),jscripts.join("\n")]
     end
@@ -1007,6 +1008,10 @@ EOJS
 
   def get_record
     @record
+  end
+  
+  def hiding_js?
+    @_hiding_js
   end
   
   #TODO this doesn't find questions from nested presentation

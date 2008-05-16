@@ -30,7 +30,7 @@ class Field < Bin
 end
 
 class Condition < Bin
-  OperatorMatch = /(\w*)\s*((!=)|(=!)|(=~)|(!~)|(~!)|(=+)|(includes)|(answered))\s*(.*)/
+  OperatorMatch = /(\w*)\s*((!=)|(=!)|(=~)|(!~)|(~!)|(=+)|(includes)|(!includes)|(answered)|(!answered))\s*(.*)/
   def bins 
     { :form => nil,:name => nil, :description => nil, :ruby => nil,:javascript => nil,:operator =>nil,:field_value =>nil,:field_name =>nil }
   end
@@ -43,7 +43,7 @@ class Condition < Bin
     if name =~ OperatorMatch
       self.field_name = $1
       self.operator = $2
-      self.field_value = $11
+      self.field_value = $13
     else
       raise MetaformException, "javascript not defined or definable for condition '#{name}'" if javascript.nil?
     end
@@ -62,8 +62,12 @@ class Condition < Bin
       "#{field_name} does not match regex #{field_value}"
     when 'includes'
       "#{field_name} includes #{field_value}"
+    when '!includes'
+      "#{field_name} does not include #{field_value}"
     when 'answered'
       "#{field_name} is answered"
+    when '!answered'
+      "#{field_name} is not answered"
     else
       name.gsub(/_/,' ')
     end
@@ -93,8 +97,12 @@ class Condition < Bin
         r !~ cur_val
       when 'includes'
         field_value.split(/,/).include?(cur_val)
+      when '!includes'
+        !field_value.split(/,/).include?(cur_val)
       when 'answered'
         cur_val && cur_val != nil
+      when '!answered'
+        cur_val.nil? || cur_val == ''
       end
     end
   end
@@ -143,8 +151,12 @@ class Condition < Bin
           %Q|!:#{field_name}.match('#{field_value}')"|
         when 'includes'
           %Q|"#{field_value}" in oc(:#{field_name})|
+        when '!includes'
+          %Q|"!(#{field_value}" in oc(:#{field_name}))|
         when 'answered'
           %Q|:#{field_name} != null && :#{field_name} != ""|
+        when '!answered'
+          %Q*:#{field_name} == null || :#{field_name} == ""*
       end
     end
     hiddens = []
@@ -243,6 +255,7 @@ class Question < Bin
       field_element = read_only ?
         w.render_form_object_read_only(@@form_proxy,field_name,value,widget_options) :
         w.render_form_object(@@form_proxy,field_name,value,widget_options)
+      hiding_js = form.hiding_js?
     end
     field_html = w.render(@@form_proxy,field_name,value,field_label,widget_options)
 
