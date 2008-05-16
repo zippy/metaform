@@ -101,8 +101,10 @@ class Record
     
     # this probably needs to have yield block so that we can count any property
     # not just which ones aren't nil
-    def count
-      @value.compact.size
+    def count(expr = nil)
+      answers = @value
+      answers.map!{|answer| eval(expr)  ? answer : nil } if expr
+      answers.compact.size 
     end
     
     def exists?
