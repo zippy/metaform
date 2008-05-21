@@ -34,13 +34,22 @@ describe SimpleForm do
           @form.conditions['age_is_nil'].evaluate.should == false
         end
       end
-      # it "should evaluate correctly == in ruby" do
-      #   @form.with_record(@record) do
-      #     @form.conditions['age_is_nil'].evaluate.should == true
-      #     @record.age = '44'
-      #     @form.conditions['age_is_nil'].evaluate.should == false
-      #   end
-      # end
+      it "should evaluate correctly == in ruby for integers" do
+        @form.with_record(@record) do
+          @form.conditions['age=44'].evaluate.should == false
+          @record.age = '44'
+          @form.conditions['age=44'].evaluate.should == true
+        end
+      end
+      it "should evaluate correctly < in ruby for integers" do
+         @form.with_record(@record) do
+           @form.conditions['age<44'].evaluate.should == false
+           @record.age = '43'
+           @form.conditions['age<44'].evaluate.should == true
+           @record.age = '45'
+           @form.conditions['age<44'].evaluate.should == false
+         end
+      end
       it "should return the created condition" do
         the_c = @form.c 'eye_color=ffffff',:description => "has black eyes"
         the_c.instance_of?(Condition).should == true

@@ -30,7 +30,7 @@ class Field < Bin
 end
 
 class Condition < Bin
-  OperatorMatch = /(\w*)\s*((!=)|(=!)|(=~)|(!~)|(~!)|(=+)|(includes)|(!includes)|(answered)|(!answered))\s*(.*)/
+  OperatorMatch = /(\w*)\s*((<)|(>)|(!=)|(=!)|(=~)|(!~)|(~!)|(=+)|(includes)|(!includes)|(answered)|(!answered))\s*(.*)/
   def bins 
     { :form => nil,:name => nil, :description => nil, :ruby => nil,:javascript => nil,:operator =>nil,:field_value =>nil,:field_name =>nil }
   end
@@ -43,7 +43,7 @@ class Condition < Bin
     if name =~ OperatorMatch
       self.field_name = $1
       self.operator = $2
-      self.field_value = $13
+      self.field_value = $15
     else
       raise MetaformException, "javascript not defined or definable for condition '#{name}'" if javascript.nil?
     end
@@ -56,6 +56,10 @@ class Condition < Bin
      "#{field_name} is #{field_value}"
     when '!=','=!'
       "#{field_name} is not #{field_value}"
+    when '<'
+      "#{field_name} is less than #{field_value}"
+    when '>'
+      "#{field_name} is greater than #{field_value}"
     when '=~'
       "#{field_name} matches regex #{field_value}"
     when '!~','~!'
@@ -80,6 +84,7 @@ class Condition < Bin
   end
   
   def evaluate
+    puts "field_value = #{field_value}"
     if ruby
       ruby.call(self)
     else
@@ -89,6 +94,10 @@ class Condition < Bin
        cur_val == field_value
       when '!=','=!'
         cur_val != field_value
+      when '<'
+        !cur_val.nil? && (cur_val.to_i < field_value.to_i)
+      when '>'
+        !cur_val.nil? && (cur_val.to_i > field_value.to_i)
       when '=~'
         r = Regexp.new(field_value)
         r =~ cur_val
@@ -143,6 +152,10 @@ class Condition < Bin
           %Q|:#{field_name} == "#{field_value}"|
         when '!=','=!'
           %Q|:#{field_name} != "#{field_value}"|
+        when '<'
+          %Q|:#{field_name} < "#{field_value.to_i}"|
+        when '>'
+          %Q|:#{field_name} > "#{field_value.to_i}"|
         when '=~'
           if field_value =~ /^\/(.*)\/$/
             field_value = $1

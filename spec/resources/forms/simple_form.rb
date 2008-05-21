@@ -44,6 +44,8 @@ class SimpleForm < Form
       c 'no_children', :description=> 'no children',:javascript => ':children != "" && parseInt(:children)>0' do
         field_value("children").to_i <= 0
       end
+      c 'age=44'
+      c 'age<44'
     end
     
     def_fields :groups => ['family_info'] do
