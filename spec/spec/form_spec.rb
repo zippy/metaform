@@ -27,13 +27,20 @@ describe SimpleForm do
       it "should provide access to conditions via a #conditions accessor" do
         @form.conditions['age_is_nil'].instance_of?(Condition).should == true
       end
-      it "should evaluate correctly in ruby" do
+      it "should evaluate 'is nil' correctly in ruby" do
         @form.with_record(@record) do
           @form.conditions['age_is_nil'].evaluate.should == true
           @record.age = '44'
           @form.conditions['age_is_nil'].evaluate.should == false
         end
       end
+      # it "should evaluate correctly == in ruby" do
+      #   @form.with_record(@record) do
+      #     @form.conditions['age_is_nil'].evaluate.should == true
+      #     @record.age = '44'
+      #     @form.conditions['age_is_nil'].evaluate.should == false
+      #   end
+      # end
       it "should return the created condition" do
         the_c = @form.c 'eye_color=ffffff',:description => "has black eyes"
         the_c.instance_of?(Condition).should == true
@@ -247,7 +254,7 @@ describe SimpleForm do
         it "should produce the correct javascript for regex based followups " do
           @form.with_record(@record) do
             @form.q 'higher_ed_years',:followups => 'degree'
-            @form.get_observer_jscripts.should == {"higher_ed_years=~/../"=>{:neg=>["Element.hide('uid_1')"], :pos=>["Element.show('uid_1')"]}}
+            @form.get_observer_jscripts.should == {"higher_ed_years=/../"=>{:neg=>["Element.hide('uid_1')"], :pos=>["Element.show('uid_1')"]}}
           end
         end
         it "should produce the correct javascript for negated value followups " do
@@ -381,8 +388,8 @@ describe SimpleForm do
       it "should add javascript initialization to the javascripts" do
         do_p
         @form.get_jscripts.should == [
-            "var name_only = new indexedItems;name_only.elem_id=\"presentation_name_only_items\";name_only.delete_text=\"Delete this name\";name_only.self_name=\"name_only\";", 
-            "            function doAddname_only() {\n              var t = \"<div id=\\\"question_name\\\" class=\\\"question\\\"><label class=\\\"label\\\" for=\\\"record[_%X%_name]\\\">Name:<\\/label><input id=\\\"record__%X%_name\\\" name=\\\"record[_%X%_name]\\\" type=\\\"text\\\" \\/><\\/div>\";\n              var idx = parseInt($F('multi_index'));\n              t = t.replace(/%X%/g,idx);\n              $('multi_index').value = idx+1;\n              name_only.addItem(t);\n            }\n"
+          "var name_only = new indexedItems;name_only.elem_id=\"presentation_name_only_items\";name_only.delete_text=\"Delete this name\";name_only.self_name=\"name_only\";", 
+          "function doAddname_only() {name_only.addItem(\"<div id=\\\"question_name\\\" class=\\\"question\\\"><label class=\\\"label\\\" for=\\\"record[name]\\\">Name:<\\/label><input id=\\\"record_name\\\" name=\\\"record[name]\\\" type=\\\"text\\\" value=\\\"Bob Smith\\\" \\/><\\/div>\")}"
           ]
       end
     end #p-indexed

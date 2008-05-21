@@ -1,0 +1,26 @@
+From 48ccfb8fab42b16cc612500848233ceb327627a7 Mon Sep 17 00:00:00 2001
+From: Lisa Sawin <lsawin@optonline.net>
+Date: Wed, 21 May 2008 15:03:13 -0400
+Subject: Fixed syntax for storage of hidden values for conditions on the page
+
+---
+ lib/metaform/form.rb |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/lib/metaform/form.rb b/lib/metaform/form.rb
+index 1c4dd857751a99252c9811d738a0d9ca7c501ae2..1dc48519a09e7dc4187299db0c8d27b5a2fdd20e 100644
+--- a/lib/metaform/form.rb
++++ b/lib/metaform/form.rb
+@@ -887,7 +887,7 @@ EOJS
+ 
+           (js,hiddens) = cond.generate_javascript_function(field_widget_map)
+           jscripts << js
+-          hiddens.each { |h| body %Q|<input type="hidden" name="___#{h}" id="___#{h}"> value="#{field_value(h)}"| if !hiddens_added[h];hiddens_added[h]=true }
++          hiddens.each { |h| body %Q|<input type="hidden" name="___#{h}" id="___#{h}" value="#{field_value(h)}">| if !hiddens_added[h];hiddens_added[h]=true }
+         end
+       end
+       js = get_jscripts
+-- 
+1.5.4.5
+
+

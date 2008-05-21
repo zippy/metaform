@@ -1,0 +1,252 @@
+From 72fe7b22c5a0d7c5acb1e6148e5acfb2417fe7c5 Mon Sep 17 00:00:00 2001
+From: Lisa Sawin <lsawin@optonline.net>
+Date: Thu, 29 May 2008 10:19:58 -0400
+Subject: A bunch of changes to make javascript_tab_changer work, plus some specs on it
+
+---
+ generators/metaform/templates/metaform.js        |   19 +++++++++++++++----
+ lib/metaform/form.rb                             |   19 +++++++++++--------
+ lib/metaform/widgets/check_box_group_followup.rb |   20 ++++++++++++++------
+ spec/resources/forms/simple_form.rb              |   15 +++++++++++----
+ spec/spec/form_spec.rb                           |   17 ++++++++++++-----
+ 5 files changed, 63 insertions(+), 27 deletions(-)
+
+diff --git a/generators/metaform/templates/metaform.js b/generators/metaform/templates/metaform.js
+index 4e932cf67ce1b03a9021abe9128713f1796b5935..fd06b1ad7154de0fd6ac5856dcb16a5bd44d60e7 100644
+--- a/generators/metaform/templates/metaform.js
++++ b/generators/metaform/templates/metaform.js
+@@ -148,9 +148,9 @@ function arrayMatch(array,regex){
+ 	return false;
+ }		
+ 
+-function insert_tabs(tab_html,before_css,desired_tab_num,multi) {
+-	next_tabs = $$(before_css);
+-    current_tab_num = 0;
++function insert_tabs(tab_html,anchor_css,before_anchor,desired_tab_num,multi) {
++	next_tabs = $$(anchor_css);
++	current_tab_num = 0;
+ 	while (current_tab_num < desired_tab_num) {
+ 		this_tab_html = tab_html;
+ 		current_tab_num = current_tab_num + 1;
+@@ -158,6 +158,17 @@ function insert_tabs(tab_html,before_css,desired_tab_num,multi) {
+ 			display_num = current_tab_num + 1;
+ 			this_tab_html = this_tab_html.gsub(/NUM/,' '+display_num).gsub(/INDEX/,display_num);
+ 		}
+-		next_tabs.invoke('insert',{before:  this_tab_html});
++		before_anchor ? next_tabs.invoke('insert',{before:  this_tab_html}) : next_tabs.invoke('insert',{after:  this_tab_html});
++		
+ 	}
++}
++
++function update_cbgf_hash(followup_id,values) {
++	$$('.'+followup_id).each(function(s) {
++		var the_value = s.value;
++		var value_string = ""
++		$$('#' + followup_id + '_' + the_value + ' input').find(function(c){if (c.checked) value_string = value_string + c.value});
++		values.set(the_value,value_string);
++	});
++	
+ }
+\ No newline at end of file
+diff --git a/lib/metaform/form.rb b/lib/metaform/form.rb
+index e6a281a884987ac7169fb042b47c333a017fb4c6..96a2d971a856e79fef4bf0b5d1e2d497c4df13e0 100644
+--- a/lib/metaform/form.rb
++++ b/lib/metaform/form.rb
+@@ -285,14 +285,16 @@ class Form
+   def tab_html(presentation_name,opts)
+     options = {
+       :label => nil,
+-      :index => -1
++      :index => -1,
++      :tabs_name => @tabs_name,
++      :current_tab => @current_tab
+     }.update(opts)
+     index = options[:index]
+     index = index == -1 ? @_index : index
+-    url = Record.url(@record.id,presentation_name,@tabs_name,index)
++    url = Record.url(@record.id,presentation_name,options[:tabs_name],index)
+     label = options[:label]
+     label ||= presentation_name.humanize
+-    current_text = (@_index.to_s == index.to_s && @current_tab == presentation_name) ? "current " : ""
++    current_text = (@_index.to_s == index.to_s && options[:current_tab] == presentation_name) ? "current " : ""
+     %Q|<li class=\"#{current_text}tab_#{presentation_name}\"> <a href=\"#\" onClick=\"return submitAndRedirect('#{url}')\" title=\"Click here to go to #{label}\"><span>#{label}</span></a> </li>|
+   end
+ 
+@@ -620,29 +622,30 @@ class Form
+   end
+   
+   #################################################################################
+-  def javascript_tab_changer(opts={})
++  def javascript_tab_changer(opts={})  #FIX THIS WHOLE METHOD 
+     if @phase == :build
+       options = {
+         :condition => nil,
++        :before_anchor => true
+       }.update(opts)
+       condition = options[:condition]
+       if condition.instance_of?(String)
+         condition = c(condition)
+       end
+       raise MetaformException "condition must be defined" if !condition.instance_of?(Condition)
++      raise MetaformException "tabs_name must be defined" if !options[:tabs_name]
+       if options[:multi]
+-        tab_html_options = {:label => "#{options[:label]} NUM", :index => "INDEX"}
++        tab_html_options = {:label => "#{options[:label]} NUM", :index => "INDEX", :current_tab => options[:current_tab]}  
+         tab_num_string = "value_#{options[:multi]}()-1"
+         multi_string = "true"
+       else
+-        tab_html_options = {:label => options[:label], :index => options[:index]}
++        tab_html_options = {:label => options[:label], :index => options[:index], :tabs_name => options[:tabs_name], :current_tab => options[:current_tab]}
+         tab_num_string = "1"
+         multi_string = "false"
+       end
+       html_string = tab_html(options[:tab],tab_html_options).gsub(/'/, '\\\\\'')
+-      before_css_string = ".tab_#{options[:before]}"
+       js_remove = %Q|$$(".tab_#{options[:tab]}").invoke('remove');|
+-      js_add = %Q|insert_tabs('#{html_string}','#{before_css_string}',#{tab_num_string},#{multi_string});|
++      js_add = %Q|insert_tabs('#{html_string}','.tab_#{options[:anchor_css]}',#{options[:before_anchor]},#{tab_num_string},#{multi_string});|
+       add_observer_javascript(condition.name,js_remove+js_add,false)
+       add_observer_javascript(condition.name,js_remove,true)
+       javascript <<-EOJS
+diff --git a/lib/metaform/widgets/check_box_group_followup.rb b/lib/metaform/widgets/check_box_group_followup.rb
+index 071bb6af1625ce87cb90dfb2d52a1b8c7a9cdaed..feb3d9a5ab200848325466a1341abdc2cf242aad 100644
+--- a/lib/metaform/widgets/check_box_group_followup.rb
++++ b/lib/metaform/widgets/check_box_group_followup.rb
+@@ -82,7 +82,12 @@ class CheckBoxGroupFollowupWidget < Widget
+           id = build_html_multi_id(field_instance_id,idx)
+           checked_string = (checked && checked.include?(param)) ? 'checked' : ''
+           if none_fields_followup.include?(param)
+-            on_click_string = %Q|onClick="if ($('#{id}').checked) {$$('.#{field_instance_id}_#{val}_followup').each(function(cb){if (cb.value != '#{param}') {cb.checked=false}})}"|
++            on_click_string = <<-EOJS
++              onClick="  
++                if ($('#{id}').checked) {$$('.#{field_instance_id}_#{val}_followup').each(function(cb){if (cb.value != '#{param}') {cb.checked=false}})};
++                update_cbgf_hash('#{field_instance_id}',values_for_#{field_instance_id});
++                try{tab_changing_actions_for_#{field_instance_id}();}catch(err){};"
++              EOJS
+           elsif none_fields_followup.length > 0
+             none_js = ''
+             none_fields_followup.each { |none_field_val|
+@@ -92,8 +97,13 @@ class CheckBoxGroupFollowupWidget < Widget
+                   $('#{none_id}').checked = false;
+                 }              
+               EOJS
+-              on_click_string = %Q|onClick="#{none_js}"| 
+             }
++            on_click_string = <<-EOJS
++              onClick="
++                #{none_js};
++                update_cbgf_hash('#{field_instance_id}',values_for_#{field_instance_id});
++                try{tab_changing_actions_for_#{field_instance_id}();}catch(err){};"
++            EOJS
+           end
+           followups << <<-EOHTML
+           <input name="#{build_html_multi_name(field_instance_id,idx)}" id="#{id}" class="#{field_instance_id}_#{val}_followup" type="checkbox" value="#{param}" #{checked_string} #{on_click_string}> #{param.humanize}
+@@ -110,14 +120,12 @@ class CheckBoxGroupFollowupWidget < Widget
+       result << <<-EOHTML 
+       <input name="#{build_html_multi_name(field_instance_id,'__none__')}" id="#{build_html_multi_id(field_instance_id,'__none__')}" type="hidden"}>
+       <span class="check_box_followup_input"><input name="#{build_html_multi_name(field_instance_id,val)}" id="#{build_html_multi_id(field_instance_id,val)}" class="#{field_instance_id}" type="checkbox" value="#{val}" #{checked ? 'checked' : ''}
+-        onClick="#{javascript}">
++        onClick="#{javascript};update_cbgf_hash('#{field_instance_id}',values_for_#{field_instance_id});try{tab_changing_actions_for_#{field_instance_id}();}catch(err){};">
+         #{value_label}</span>
+         #{followup_span}
+       EOHTML
+     end
+-
+-    result.join("<br />") + '<div class="clear"></div>' + "#{form.javascript_tag(js)}" 
+-    
++    result.join("<br />") + '<div class="clear"></div>' + "#{form.javascript_tag(js)}"     
+   end
+ 
+   ################################################################################
+diff --git a/spec/resources/forms/simple_form.rb b/spec/resources/forms/simple_form.rb
+index 4f281ded42285edef9d41e9d1c0d68a52a9ac10d..a5137bd5cc2fbb496b34e8aedd97482923a8e3cc 100644
+--- a/spec/resources/forms/simple_form.rb
++++ b/spec/resources/forms/simple_form.rb
+@@ -46,6 +46,9 @@ class SimpleForm < Form
+       end
+       c 'age=44'
+       c 'age<44'
++      c 'Sue_is_Old', :javascript => ':name == "Sue" && :age > 60' do
++        field_value("name") == "Sue" && field_value("age") > 60 
++      end
+     end
+     
+     def_fields :groups => ['family_info'] do
+@@ -100,20 +103,24 @@ class SimpleForm < Form
+     
+     presentation 'tab_changer_field_on_page' do
+       q 'name'
+-      javascript_tab_changer(:condition => 'name=Sue', :tab => 'this_tab', :before => 'finish')
++      javascript_tab_changer(:condition => 'name=Sue', :tab => 'this_tab', :anchor_css => 'finish', :tabs_name => 'simple_form', :current_tab => 'tab_changer_field_on_page')
+     end
+ 
+     presentation 'tab_changer_field_not_on_page' do
+-      javascript_tab_changer(:condition => 'name=Sue', :tab => 'this_tab', :before => 'finish')
++      javascript_tab_changer(:condition => 'name=Sue', :tab => 'this_tab', :anchor_css => 'finish', :tabs_name => 'simple_form', :current_tab => 'tab_changer_field_not_on_page')
+     end
+     
+     presentation 'tab_changer_multiple_field_on_page' do
+       q 'higher_ed_years'
+-      javascript_tab_changer(:condition => 'higher_ed_years>0', :tab => 'this_tab', :before => 'finish', :multi => 'higher_ed_years')
++      javascript_tab_changer(:condition => 'higher_ed_years>0', :tab => 'this_tab', :anchor_css => 'finish', :multi => 'higher_ed_years', :tabs_name => 'simple_form', :current_tab => 'tab_changer_multiple_field_on_page')
+     end
+ 
+     presentation 'tab_changer_multiple_field_not_on_page' do
+-      javascript_tab_changer(:condition => 'higher_ed_years>0', :tab => 'this_tab', :before => 'finish', :multi => 'higher_ed_years')
++      javascript_tab_changer(:condition => 'higher_ed_years>0', :tab => 'this_tab', :anchor_css => 'finish', :multi => 'higher_ed_years', :tabs_name => 'simple_form', :current_tab => 'tab_changer_multiple_field_not_on_page')
++    end
++    
++    presentation 'tab_changer_complex_condition' do      
++      javascript_tab_changer(:condition => 'Sue_is_Old', :tab => 'this_tab', :anchor_css => 'finish', :tabs_name => 'simple_form', :current_tab => 'tab_changer_complex_condition')
+     end
+ 
+     workflow 'standard' do
+diff --git a/spec/spec/form_spec.rb b/spec/spec/form_spec.rb
+index c47060cad7df4d67c5389ea67c608ac75f157bb9..7ee01f5ead5a080fd305263722f733a0ab11786c 100644
+--- a/spec/spec/form_spec.rb
++++ b/spec/spec/form_spec.rb
+@@ -672,14 +672,14 @@ describe SimpleForm do
+       r = @form.build('tab_changer_field_on_page',@record)
+       r.should == [
+         "<div id=\"presentation_tab_changer_field_on_page\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">",
+-        "Event.observe('record_name', 'change', function(e){ actions_for_name_is_Sue() });\nfunction actions_for_name_is_Sue() {\n  if (name_is_Sue()) {$$(\".tab_this_tab\").invoke('remove');insert_tabs('<li class=\"tab_this_tab\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//this_tab\\')\" title=\"Click here to go to This tab\"><span>This tab</span></a> </li>','.tab_finish',1,false);}\n  else {$$(\".tab_this_tab\").invoke('remove');}\n}\n\nfunction value_name() {return $F('record_name')};function name_is_Sue() {return value_name() == \"Sue\"}\n        actions_for_name_is_Sue();\n"
+-      ] 
++        "Event.observe('record_name', 'change', function(e){ actions_for_name_is_Sue() });\nfunction actions_for_name_is_Sue() {\n  if (name_is_Sue()) {$$(\".tab_this_tab\").invoke('remove');insert_tabs('<li class=\"tab_this_tab\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//this_tab/simple_form\\')\" title=\"Click here to go to This tab\"><span>This tab</span></a> </li>','.tab_finish',true,1,false);}\n  else {$$(\".tab_this_tab\").invoke('remove');}\n}\n\nfunction value_name() {return $F('record_name')};function name_is_Sue() {return value_name() == \"Sue\"}\n        actions_for_name_is_Sue();\n"
++      ]
+     end    
+     it "should create the correct html and javascript when the condition-related field in not on the page" do
+       r = @form.build('tab_changer_field_not_on_page',@record)
+       r.should == [
+         "<div id=\"presentation_tab_changer_field_not_on_page\" class=\"presentation\">\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">\n<input type=\"hidden\" name=\"___name\" id=\"___name\" value=\"Bob Smith\">",
+-        "function actions_for_name_is_Sue() {\n  if (name_is_Sue()) {$$(\".tab_this_tab\").invoke('remove');insert_tabs('<li class=\"tab_this_tab\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//this_tab\\')\" title=\"Click here to go to This tab\"><span>This tab</span></a> </li>','.tab_finish',1,false);}\n  else {$$(\".tab_this_tab\").invoke('remove');}\n}\n\nfunction value_name() {return $F('___name')};function name_is_Sue() {return value_name() == \"Sue\"}\n        actions_for_name_is_Sue();\n"
++        "function actions_for_name_is_Sue() {\n  if (name_is_Sue()) {$$(\".tab_this_tab\").invoke('remove');insert_tabs('<li class=\"tab_this_tab\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//this_tab/simple_form\\')\" title=\"Click here to go to This tab\"><span>This tab</span></a> </li>','.tab_finish',true,1,false);}\n  else {$$(\".tab_this_tab\").invoke('remove');}\n}\n\nfunction value_name() {return $F('___name')};function name_is_Sue() {return value_name() == \"Sue\"}\n        actions_for_name_is_Sue();\n"
+       ]
+     end
+     it "should create the correct html and javascript for 'multiple' tabs, when the condition-related field is on the page" do
+@@ -687,14 +687,21 @@ describe SimpleForm do
+       r = @form.build('tab_changer_multiple_field_on_page',@record)
+       r.should == [
+         "<div id=\"presentation_tab_changer_multiple_field_on_page\" class=\"presentation\">\n<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">Higher ed years:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" value=\"3\" />g question!</div>\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">",
+-        "Event.observe('record_higher_ed_years', 'change', function(e){ actions_for_higher_ed_years_is_greater_than_0() });\nfunction actions_for_higher_ed_years_is_greater_than_0() {\n  if (higher_ed_years_is_greater_than_0()) {$$(\".tab_this_tab\").invoke('remove');insert_tabs('<li class=\"tab_this_tab\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//this_tab/INDEX\\')\" title=\"Click here to go to  NUM\"><span> NUM</span></a> </li>','.tab_finish',value_higher_ed_years()-1,true);}\n  else {$$(\".tab_this_tab\").invoke('remove');}\n}\n\nfunction value_higher_ed_years() {return $F('record_higher_ed_years')};function higher_ed_years_is_greater_than_0() {return value_higher_ed_years() > 0}\n        actions_for_higher_ed_years_is_greater_than_0();\n"
++        "Event.observe('record_higher_ed_years', 'change', function(e){ actions_for_higher_ed_years_is_greater_than_0() });\nfunction actions_for_higher_ed_years_is_greater_than_0() {\n  if (higher_ed_years_is_greater_than_0()) {$$(\".tab_this_tab\").invoke('remove');insert_tabs('<li class=\"tab_this_tab\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//this_tab/INDEX\\')\" title=\"Click here to go to  NUM\"><span> NUM</span></a> </li>','.tab_finish',true,value_higher_ed_years()-1,true);}\n  else {$$(\".tab_this_tab\").invoke('remove');}\n}\n\nfunction value_higher_ed_years() {return $F('record_higher_ed_years')};function higher_ed_years_is_greater_than_0() {return value_higher_ed_years() > 0}\n        actions_for_higher_ed_years_is_greater_than_0();\n"
+       ]
+     end
+     it "should create the correct html and javascript for 'multiple' tabs, when the condition-related field is not on the page" do
+       r = @form.build('tab_changer_multiple_field_not_on_page',@record)
+       r.should == [
+         "<div id=\"presentation_tab_changer_multiple_field_not_on_page\" class=\"presentation\">\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">\n<input type=\"hidden\" name=\"___higher_ed_years\" id=\"___higher_ed_years\" value=\"\">",
+-        "function actions_for_higher_ed_years_is_greater_than_0() {\n  if (higher_ed_years_is_greater_than_0()) {$$(\".tab_this_tab\").invoke('remove');insert_tabs('<li class=\"tab_this_tab\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//this_tab/INDEX\\')\" title=\"Click here to go to  NUM\"><span> NUM</span></a> </li>','.tab_finish',value_higher_ed_years()-1,true);}\n  else {$$(\".tab_this_tab\").invoke('remove');}\n}\n\nfunction value_higher_ed_years() {return $F('___higher_ed_years')};function higher_ed_years_is_greater_than_0() {return value_higher_ed_years() > 0}\n        actions_for_higher_ed_years_is_greater_than_0();\n"
++        "function actions_for_higher_ed_years_is_greater_than_0() {\n  if (higher_ed_years_is_greater_than_0()) {$$(\".tab_this_tab\").invoke('remove');insert_tabs('<li class=\"tab_this_tab\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//this_tab/INDEX\\')\" title=\"Click here to go to  NUM\"><span> NUM</span></a> </li>','.tab_finish',true,value_higher_ed_years()-1,true);}\n  else {$$(\".tab_this_tab\").invoke('remove');}\n}\n\nfunction value_higher_ed_years() {return $F('___higher_ed_years')};function higher_ed_years_is_greater_than_0() {return value_higher_ed_years() > 0}\n        actions_for_higher_ed_years_is_greater_than_0();\n"
++      ]
++    end
++    it "should create the correct html and javascript when the condition is based on 2 field values" do
++      r = @form.build('tab_changer_complex_condition',@record)
++      r.should == [
++        "<div id=\"presentation_tab_changer_complex_condition\" class=\"presentation\">\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">\n<input type=\"hidden\" name=\"___name\" id=\"___name\" value=\"Bob Smith\">\n<input type=\"hidden\" name=\"___age\" id=\"___age\" value=\"\">",
++        "function actions_for_Sue_is_Old() {\n  if (Sue_is_Old()) {$$(\".tab_this_tab\").invoke('remove');insert_tabs('<li class=\"tab_this_tab\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//this_tab/simple_form\\')\" title=\"Click here to go to This tab\"><span>This tab</span></a> </li>','.tab_finish',true,1,false);}\n  else {$$(\".tab_this_tab\").invoke('remove');}\n}\n\nfunction value_name() {return $F('___name')};function value_age() {return $F('___age')};function Sue_is_Old() {return value_name() == \"Sue\" && value_age() > 60}\n        actions_for_Sue_is_Old();\n"
+       ]
+     end
+   end
+-- 
+1.5.4.5
+

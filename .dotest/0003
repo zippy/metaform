@@ -1,0 +1,125 @@
+From 4b260b9bc3df8c651b8be8100a426c2a4e1d29c5 Mon Sep 17 00:00:00 2001
+From: Lisa Sawin <lsawin@optonline.net>
+Date: Wed, 21 May 2008 14:17:12 -0400
+Subject: Added in spec for condition with < and wrote code in dsl_objects to support
+
+---
+ lib/metaform/dsl_objects.rb         |   17 +++++++++++++++--
+ spec/resources/forms/simple_form.rb |    2 ++
+ spec/spec/form_spec.rb              |   23 ++++++++++++++++-------
+ 3 files changed, 33 insertions(+), 9 deletions(-)
+
+diff --git a/lib/metaform/dsl_objects.rb b/lib/metaform/dsl_objects.rb
+index 32eaed4548d3d4506da4af5e2221b20b90fe2da5..38de680f1510656137f94c73b7f2e60af0bbe94f 100644
+--- a/lib/metaform/dsl_objects.rb
++++ b/lib/metaform/dsl_objects.rb
+@@ -30,7 +30,7 @@ class Field < Bin
+ end
+ 
+ class Condition < Bin
+-  OperatorMatch = /(\w*)\s*((!=)|(=!)|(=~)|(!~)|(~!)|(=+)|(includes)|(!includes)|(answered)|(!answered))\s*(.*)/
++  OperatorMatch = /(\w*)\s*((<)|(>)|(!=)|(=!)|(=~)|(!~)|(~!)|(=+)|(includes)|(!includes)|(answered)|(!answered))\s*(.*)/
+   def bins 
+     { :form => nil,:name => nil, :description => nil, :ruby => nil,:javascript => nil,:operator =>nil,:field_value =>nil,:field_name =>nil }
+   end
+@@ -43,7 +43,7 @@ class Condition < Bin
+     if name =~ OperatorMatch
+       self.field_name = $1
+       self.operator = $2
+-      self.field_value = $13
++      self.field_value = $15
+     else
+       raise MetaformException, "javascript not defined or definable for condition '#{name}'" if javascript.nil?
+     end
+@@ -56,6 +56,10 @@ class Condition < Bin
+      "#{field_name} is #{field_value}"
+     when '!=','=!'
+       "#{field_name} is not #{field_value}"
++    when '<'
++      "#{field_name} is less than #{field_value}"
++    when '>'
++      "#{field_name} is greater than #{field_value}"
+     when '=~'
+       "#{field_name} matches regex #{field_value}"
+     when '!~','~!'
+@@ -80,6 +84,7 @@ class Condition < Bin
+   end
+   
+   def evaluate
++    puts "field_value = #{field_value}"
+     if ruby
+       ruby.call(self)
+     else
+@@ -89,6 +94,10 @@ class Condition < Bin
+        cur_val == field_value
+       when '!=','=!'
+         cur_val != field_value
++      when '<'
++        !cur_val.nil? && (cur_val.to_i < field_value.to_i)
++      when '>'
++        !cur_val.nil? && (cur_val.to_i > field_value.to_i)
+       when '=~'
+         r = Regexp.new(field_value)
+         r =~ cur_val
+@@ -143,6 +152,10 @@ class Condition < Bin
+           %Q|:#{field_name} == "#{field_value}"|
+         when '!=','=!'
+           %Q|:#{field_name} != "#{field_value}"|
++        when '<'
++          %Q|:#{field_name} < "#{field_value.to_i}"|
++        when '>'
++          %Q|:#{field_name} > "#{field_value.to_i}"|
+         when '=~'
+           multi ? %Q|arrayMatch(:#{field_name},#{field_value})| :
+           %Q|:#{field_name}.match('#{field_value}')"|
+diff --git a/spec/resources/forms/simple_form.rb b/spec/resources/forms/simple_form.rb
+index 7596e585ff57b39a56625842cbfc7d970aee7c17..b0295114c8d2b1eaa9d4a9d576cf7660f99e0961 100644
+--- a/spec/resources/forms/simple_form.rb
++++ b/spec/resources/forms/simple_form.rb
+@@ -44,6 +44,8 @@ class SimpleForm < Form
+       c 'no_children', :description=> 'no children',:javascript => ':children != "" && parseInt(:children)>0' do
+         field_value("children").to_i <= 0
+       end
++      c 'age=44'
++      c 'age<44'
+     end
+     
+     def_fields :groups => ['family_info'] do
+diff --git a/spec/spec/form_spec.rb b/spec/spec/form_spec.rb
+index c0c99ea211bb15443af0d097bfbca95f7184801e..1cb1ec9762a83a3a9451fa3ba3fddc4d6ae8a75a 100644
+--- a/spec/spec/form_spec.rb
++++ b/spec/spec/form_spec.rb
+@@ -34,13 +34,22 @@ describe SimpleForm do
+           @form.conditions['age_is_nil'].evaluate.should == false
+         end
+       end
+-      # it "should evaluate correctly == in ruby" do
+-      #   @form.with_record(@record) do
+-      #     @form.conditions['age_is_nil'].evaluate.should == true
+-      #     @record.age = '44'
+-      #     @form.conditions['age_is_nil'].evaluate.should == false
+-      #   end
+-      # end
++      it "should evaluate correctly == in ruby for integers" do
++        @form.with_record(@record) do
++          @form.conditions['age=44'].evaluate.should == false
++          @record.age = '44'
++          @form.conditions['age=44'].evaluate.should == true
++        end
++      end
++      it "should evaluate correctly < in ruby for integers" do
++         @form.with_record(@record) do
++           @form.conditions['age<44'].evaluate.should == false
++           @record.age = '43'
++           @form.conditions['age<44'].evaluate.should == true
++           @record.age = '45'
++           @form.conditions['age<44'].evaluate.should == false
++         end
++      end
+       it "should return the created condition" do
+         the_c = @form.c 'eye_color=ffffff',:description => "has black eyes"
+         the_c.instance_of?(Condition).should == true
+-- 
+1.5.4.5
+
+

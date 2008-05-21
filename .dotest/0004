@@ -1,0 +1,25 @@
+From ee65a0f2a5f1c8ab0a057b4baa15e4c0593e6e13 Mon Sep 17 00:00:00 2001
+From: Lisa Sawin <lsawin@optonline.net>
+Date: Wed, 21 May 2008 14:29:21 -0400
+Subject: Same as last commit, but taking out a comment
+
+---
+ lib/metaform/dsl_objects.rb |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
+
+diff --git a/lib/metaform/dsl_objects.rb b/lib/metaform/dsl_objects.rb
+index 38de680f1510656137f94c73b7f2e60af0bbe94f..e3624434c6868c382216cc33f34c9f72f3299304 100644
+--- a/lib/metaform/dsl_objects.rb
++++ b/lib/metaform/dsl_objects.rb
+@@ -84,7 +84,6 @@ class Condition < Bin
+   end
+   
+   def evaluate
+-    puts "field_value = #{field_value}"
+     if ruby
+       ruby.call(self)
+     else
+-- 
+1.5.4.5
+
+
