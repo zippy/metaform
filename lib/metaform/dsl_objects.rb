@@ -84,7 +84,6 @@ class Condition < Bin
   end
   
   def evaluate
-    puts "field_value = #{field_value}"
     if ruby
       ruby.call(self)
     else
