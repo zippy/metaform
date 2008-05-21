@@ -39,7 +39,7 @@ class Listings
       wsf = wsf.flatten
       locate_options[:workflow_state_filter] = wsf if wsf.size > 0
       locate_options[:filters] = options[:filters] if options[:filters]
-      
+
       forms = Record.locate(:all,locate_options)
 
       # TODO-LISA

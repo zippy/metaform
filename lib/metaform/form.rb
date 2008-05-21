@@ -635,34 +635,34 @@ class Form
   end
   
   #################################################################################
-  def javascript_tab_changer(field,opts={})
+  def javascript_tab_changer(opts={})
     if @phase == :build
       options = {
+        :condition => nil,
       }.update(opts)
-      q = questions[get_field_question_name(field)]
-      value_function = q.get_widget.javascript_get_value_function(q.field.name)
+      condition = options[:condition]
+      if condition.instance_of?(String)
+        condition = c(condition)
+      end
+      raise MetaformException "condition must be defined" if !condition.instance_of?(Condition)
       if options[:multi]
         tab_html_options = {:label => "#{options[:label]} NUM", :index => "INDEX"}
-        tab_num_string = "#{value_function} - 1"
-        mutli_string = "true"
+        tab_num_string = "$('record_#{options[:multi]}').value - 1"
+        multi_string = "true"
       else
         tab_html_options = {:label => options[:label], :index => options[:index]}
         tab_num_string = "1"
-        mutli_string = "false"
+        multi_string = "false"
       end
       html_string = tab_html(options[:tab],tab_html_options).gsub(/'/, '\\\\\'')
       before_css_string = ".tab_#{options[:before]}"
-      js = <<-EOJS
-        $$(".tab_#{options[:tab]}").invoke('remove');
-        var field_value = #{value_function};
-        if (#{options[:condition]}) {
-          insert_tabs('#{html_string}','#{before_css_string}',#{tab_num_string},#{mutli_string});
-        }
-      }
+      js_remove = %Q|$$(".tab_#{options[:tab]}").invoke('remove');|
+      js_add = %Q|insert_tabs('#{html_string}','#{before_css_string}',#{tab_num_string},#{multi_string});|
+      add_observer_javascript(condition.name,js_remove+js_add,false)
+      add_observer_javascript(condition.name,js_remove,true)
+      javascript <<-EOJS
+        actions_for_#{condition.js_function_name}();
       EOJS
-      #TODO-Eric make an way to create an "allways" observer javascript that is associated with a particular field
-#      add_observer_javascript("#{field}=1",js)    
-#      add_observer_javascript("#{field}!=1",js)    
     end
   end
 
@@ -724,7 +724,7 @@ class Form
     if condition.instance_of?(String)
       condition = c(condition)
     end
-    rase MetaformException "condition must be defined" if !condition.instance_of?(Condition)
+    raise MetaformException "condition must be defined" if !condition.instance_of?(Condition)
     show_actions = []
     hide_actions = []
     show_actions << options[:jsaction_show] if options[:jsaction_show]
