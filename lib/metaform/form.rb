@@ -906,7 +906,7 @@ EOJS
 
           (js,hiddens) = cond.generate_javascript_function(field_widget_map)
           jscripts << js
-          hiddens.each { |h| body %Q|<input type="hidden" name="___#{h}" id="___#{h}"> value="#{field_value(h)}"| if !hiddens_added[h];hiddens_added[h]=true }
+          hiddens.each { |h| body %Q|<input type="hidden" name="___#{h}" id="___#{h}" value="#{field_value(h)}">| if !hiddens_added[h];hiddens_added[h]=true }
         end
       end
 
