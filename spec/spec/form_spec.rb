@@ -110,7 +110,10 @@ describe SimpleForm do
           f[f.keys[0]].should == ['other_eye_color']
         end
         it "should generate condition objects to trigger followup fields" do
-          @form.fields['eye_color'].followup_conditions.should == {"other_eye_color"=>@form.c("eye_color=x")}
+          @form.fields['eye_color'].followup_conditions["other_eye_color"].should == @form.c("eye_color=x")
+        end
+        it "should generate regex condition objects" do
+          @form.fields['higher_ed_years'].followup_conditions['degree'].should == @form.c('higher_ed_years=~/../')
         end
       end
       

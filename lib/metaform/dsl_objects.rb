@@ -144,11 +144,17 @@ class Condition < Bin
         when '!=','=!'
           %Q|:#{field_name} != "#{field_value}"|
         when '=~'
+          if field_value =~ /^\/(.*)\/$/
+            field_value = $1
+          end
           multi ? %Q|arrayMatch(:#{field_name},#{field_value})| :
-          %Q|:#{field_name}.match('#{field_value}')"|
+          %Q|:#{field_name}.match('#{field_value}')|
         when '!~','~!'
+          if field_value =~ /^\/(.*)\/$/
+            field_value = $1
+          end
           multi ? %Q|!arrayMatch(:#{field_name},#{field_value})| :
-          %Q|!:#{field_name}.match('#{field_value}')"|
+          %Q|!:#{field_name}.match('#{field_value}')|
         when 'includes'
           %Q|"#{field_value}" in oc(:#{field_name})|
         when '!includes'

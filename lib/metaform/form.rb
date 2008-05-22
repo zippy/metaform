@@ -179,7 +179,13 @@ class Form
             if the_field.constraints && the_field.constraints['set']
               cond = c("#{name} includes #{followup_condition}")
             else
-              cond = c("#{name}=#{followup_condition}")
+              if followup_condition =~ /^\/.*\/$/
+                cond = c("#{name}=~#{followup_condition}")
+              elsif followup_condition =~ /^!\/.*\/$/
+                  cond = c("#{name}!~#{followup_condition}")
+              else
+                cond = c("#{name}=#{followup_condition}")
+              end
             end
           end
         when Condition
