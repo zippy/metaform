@@ -647,7 +647,7 @@ class Form
       raise MetaformException "condition must be defined" if !condition.instance_of?(Condition)
       if options[:multi]
         tab_html_options = {:label => "#{options[:label]} NUM", :index => "INDEX"}
-        tab_num_string = "$('record_#{options[:multi]}').value - 1"
+        tab_num_string = "value_#{options[:multi]}()-1"
         multi_string = "true"
       else
         tab_html_options = {:label => options[:label], :index => options[:index]}

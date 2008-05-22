@@ -152,9 +152,9 @@ class Condition < Bin
         when '!=','=!'
           %Q|:#{field_name} != "#{field_value}"|
         when '<'
-          %Q|:#{field_name} < "#{field_value.to_i}"|
+          %Q|:#{field_name} < #{field_value.to_i}|
         when '>'
-          %Q|:#{field_name} > "#{field_value.to_i}"|
+          %Q|:#{field_name} > #{field_value.to_i}|
         when '=~'
           if field_value =~ /^\/(.*)\/$/
             field_value = $1
@@ -178,17 +178,19 @@ class Condition < Bin
       end
     end
     hiddens = []
+    variable_declarations = []
     js = js.gsub(/:(\w+)/) do |m|
       f = $1
       if field_widget_map.has_key?(f)
         (widget,widget_options) = field_widget_map[f]
-        widget.javascript_get_value_function(f)
+        variable_declarations << "function value_#{f}() {return #{widget.javascript_get_value_function(f)}}"
       else
         hiddens << f
-        "$('___#{f}')"
+        variable_declarations << "function value_#{f}() {return $F('___#{f}')}"
       end
+      "value_#{f}()"
     end
-    ["function #{js_function_name}() {return #{js}}",hiddens]
+    ["#{variable_declarations.join(';')};function #{js_function_name}() {return #{js}}",hiddens]
   end
 #  def generate_show_hide_js_options(value_is_array)
 #    if value == :answered

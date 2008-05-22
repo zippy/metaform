@@ -66,7 +66,7 @@ class SimpleForm < Form
     presentation 'name_only' do
       q 'name'
     end
-
+        
     presentation 'education_info' do
       q 'higher_ed_years'
       qro 'age_plus_education'
@@ -96,6 +96,24 @@ class SimpleForm < Form
       q 'name',:read_only => true
       q 'age',:erb =>%Q|<tr><td class='field_label'><%=field_label%></td><td><%=field_element%></td></tr>|
       q 'higher_ed_years',:read_only => true,:erb =>%Q|<tr><td class='field_label'><%=field_label%></td><td><%=field_element%></td></tr>|
+    end
+    
+    presentation 'tab_changer_field_on_page' do
+      q 'name'
+      javascript_tab_changer(:condition => 'name=Sue', :tab => 'this_tab', :before => 'finish')
+    end
+
+    presentation 'tab_changer_field_not_on_page' do
+      javascript_tab_changer(:condition => 'name=Sue', :tab => 'this_tab', :before => 'finish')
+    end
+    
+    presentation 'tab_changer_multiple_field_on_page' do
+      q 'higher_ed_years'
+      javascript_tab_changer(:condition => 'higher_ed_years>0', :tab => 'this_tab', :before => 'finish', :multi => 'higher_ed_years')
+    end
+
+    presentation 'tab_changer_multiple_field_not_on_page' do
+      javascript_tab_changer(:condition => 'higher_ed_years>0', :tab => 'this_tab', :before => 'finish', :multi => 'higher_ed_years')
     end
 
     workflow 'standard' do
