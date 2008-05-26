@@ -954,6 +954,17 @@ EOJS
     field_names.collect {|f| self.questions[f]}
   end
 
+  def field_valid(field_names)
+    return true
+#    field_names = arrayify(field_names)
+#    field_names.each do |field_name|
+#      field = fields[field_name]
+#      p = field.properties[0]
+#      return false if p.evaluate(self,field,field_value(field_name))
+#    end
+#    true
+  end
+
   def field_value(field_name,index = -1)
     return if @phase == :setup
     raise MetaformException,"attempting to get field value of '#{field_name}' with no record" if @record.nil?

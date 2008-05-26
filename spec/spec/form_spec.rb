@@ -608,6 +608,9 @@ describe SimpleForm do
         lambda {@form.field_value('name').should}.should raise_error("attempting to get field value of 'name' with no record")
       end
     end
+    describe "#field_valid" do
+      it "should return whether a field is valid or not"
+    end
     describe '#get_questions_by_field_name' do
       it "should find all questions defined on the named field" do
         mqs = @form.get_questions_by_field_name('married')
