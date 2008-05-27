@@ -417,6 +417,19 @@ describe SimpleForm do
         end
       end
     end #t
+
+    describe "tip (add a tool-tip)" do
+      it "should add an 'info' icon with a tool-tip" do
+        @form.in_phase(:build) do
+          @form.tip('this is the text of the first tip').should == '<img src="/images/info_circle.gif" alt="info" id="tip_1">'
+          @form.tip('this is the text of the "second" tip').should == '<img src="/images/info_circle.gif" alt="info" id="tip_2">'
+          @form.get_jscripts.should == [
+            %q|new Tip('tip_1',"this is the text of the first tip")|,
+            %q|new Tip('tip_2',"this is the text of the \"second\" tip")|
+          ]
+        end
+      end
+    end    
     
     describe "function_button (display a javascript button)" do
       it "should render a button" do

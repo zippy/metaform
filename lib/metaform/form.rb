@@ -593,7 +593,7 @@ class Form
     text = %Q|<#{element}#{css_class}>#{text}</#{element}>| if element
     body text
   end
-  
+
   #################################################################################
   #################################################################################
   # add in a workflow state widget
@@ -896,10 +896,18 @@ EOJS
           hiddens.each { |h| body %Q|<input type="hidden" name="___#{h}" id="___#{h}"> value="#{field_value(h)}"| if !hiddens_added[h];hiddens_added[h]=true }
         end
       end
+
+      b = get_body.join("\n")
+      b.gsub!(/<info>(.*?)<\/info>/) {|match| tip($1)}
+
+      if @_tip_id
+        b = javascript_include_tag("prototip-min") + stylesheet_link_tag('prototip',:media => "screen")+b
+      end
+
       js = get_jscripts
       jscripts << js if js
-
-      [get_body.join("\n"),jscripts.join("\n")]
+      
+      [b,jscripts.join("\n")]
     end
   end
     
@@ -933,6 +941,20 @@ EOJS
     raise MetaformException,"action #{action_name} is not allowed when form is in state #{workflow_state}" if !a.legal_states.include?(:any) && !a.legal_states.include?(@record.workflow_state)
     a.block.call(meta)
     @_action_result
+  end
+  
+  #################################################################################
+  #################################################################################
+  # add a "tool tip"
+  #################################################################################
+  def tip(text,opts={})
+#    options = {
+#    }.update(opts)
+    @_tip_id ||= 1
+    tip_id = "tip_#{@_tip_id}"
+    javascript %Q|new Tip('#{tip_id}',"#{quote_for_javascript(text)}")|
+    @_tip_id += 1
+    %Q|<img src="/images/info_circle.gif" alt="info" id="#{tip_id}">|
   end
 
   #################################################################################
