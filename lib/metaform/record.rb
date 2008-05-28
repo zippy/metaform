@@ -221,12 +221,18 @@ class Record
   # set the attributes from a hash optionally converting from HTML
   def set_attributes(attributes,presentation_name,options = {})
     reset_attributes
-    
+
     if options[:multi_index]
       attribs = attributes
+      if attribs.has_key?(0)
+        attribs[nil] = attribs[0]
+        attribs.delete(0)
+      end
     else
       if options[:index]
-        attribs = {options[:index].to_i=>attributes} 
+        idx = options[:index].to_i
+        idx = nil if idx == 0
+        attribs = {idx=>attributes}
       else
         attribs = {nil => attributes}
       end
@@ -240,7 +246,7 @@ class Record
         # as a santity check.  TODO.  This check should be moved elsewhere!!
         if convert_from_html
         	q = form.get_presentation_question(presentation_name,attribute)
-          raise MetaformException,"unknown question #{attribute}" if !q
+          raise MetaformException,"question #{attribute} was not found in presentation #{presentation_name}" if !q
           value = Widget.fetch(q.widget).convert_html_value(value,q.params)
         end
         set_attribute(attribute,value,index)
@@ -336,10 +342,17 @@ class Record
   # the field_value is either pulled from the attributes hash if it exists or from the database
   # TODO we need to make a system where field_instance values can be pre-loaded for a full presentation, otherwise
   # this causes one hit to the database per field per page.
+  # TODO the use of :any here is kind of weird and needs to be refactored out and unified with
+  #  all the Answer stuff.  Also the way in which this code loads in the instances should be refactored
+  #  into a generalized "load" function that can be shared with how Locate loads in information too.
   def [](attribute,*index)
     #puts "[] attribute = #{attribute.inspect}"
     #puts "[] index = #{index.inspect}"
-    index = normalize(index)
+    if index == [:any]
+      index = :any
+    else
+      index = normalize(index)
+    end
     field_name = attribute.to_s
     return get_attribute(field_name,index) if attribute_exists(field_name,index)
     raise MetaformUndefinedFieldError, field_name if !form.field_exists?(field_name)
@@ -357,21 +370,41 @@ class Record
           break
         end
       end
-      field_instance ||= FieldInstance.find(:first, :conditions => ["form_instance_id = ? and field_id = ? and idx #{index ? '=' : 'is'} ?",@form_instance.id,field_name,index])
+      conditions = ["form_instance_id = ? and field_id = ?",@form_instance.id,field_name]
+      if index
+        if index != :any
+          conditions[0] <<  " and idx = ?"
+          conditions << index
+        end
+      else
+        conditions[0] <<  " and idx is null"
+      end
+      field_instances ||= FieldInstance.find(:all, :conditions => conditions)
     end
 
     # use the database value or get the default value
-    if field_instance
-      value = field_instance.answer
+    if field_instances
+      values = []
+      field_instances.each do |field_instance|
+        value = field_instance.answer
+        #cache the value in the attributes hash
+        values << set_attribute(field_name,value,field_instance.idx,true)
+      end
+      if index == :any
+        values
+      else
+        values[0]
+      end
     else
+      index = nil if index == :any
       if index && form.fields[field_name].indexed_default_from_null_index
         value = self[attribute,nil]
       else
         value = form.fields[field_name].default
       end
+      #cache the value in the attributes hash
+      set_attribute(field_name,value,index,true)
     end
-    #cache the value in the attributes hash
-    set_attribute(field_name,value,index,true)
   end
   
   def []=(attribute,*args)
@@ -485,6 +518,9 @@ class Record
   def update_attributes(attribs,presentation = 0,meta_data = nil,options={})
 #    form.setup(presentation,self)
     set_attributes(attribs,presentation,options)
+    if zap_fields = options[:clear_indexes]
+      FieldInstance.destroy_all(["form_instance_id = ? and field_id in (?)",@form_instance.id,zap_fields])
+    end
     _update_attributes(presentation,meta_data)
   end
 

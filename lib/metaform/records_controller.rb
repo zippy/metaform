@@ -60,18 +60,55 @@ class RecordsController < ApplicationController
       if !params[:record] && !params[:meta]
         redirect_url = params[:_redirect_url] if params[:_redirect_url]
         format.html { redirect_url ? redirect_to(redirect_url) : render(:action => "show") }
-        format.xml  { head :ok }        
-      elsif @record.update_attributes(params[:record],@presentation,get_meta_data,:convert_from_html=>true,:index=>@index)
-        after_update_record(@record) if respond_to?(:after_update_record)
-        after_save_record(@record) if respond_to?(:after_save_record)
-        flash[:notice] = 'Record was successfully updated.'
-        redirect_url = @record.action_result[:redirect_url] if @record.action_result
-        redirect_url = params[:_redirect_url] if !redirect_url  && params[:_redirect_url]
-        format.html { redirect_url ? redirect_to(redirect_url) : render(:action => "show") }
         format.xml  { head :ok }
       else
-        format.html { render :action => "show" }
-        format.xml  { render :xml => @updated.errors.to_xml }
+        opts = {:convert_from_html=>true}
+        if @index
+          attribs = params[:record]
+          opts[:index] = @index
+        elsif params[:multi_index]
+          opts[:multi_index] = true
+          attrs = []
+          zap_fields = []
+          attribs = {0=>{}}
+          params[:record].each do |k,v|
+            if k =~ /_([0-9]+)_(.*)/
+              idx = $1.to_i
+              fn = $2
+              zap_fields << fn
+              attrs[idx] ||= {}
+              attrs[idx][fn] = v
+            else
+              attribs[0][k] = v
+            end
+          end
+
+          # compact all the attributes into a hash ignoring the actual index given
+          # this handles all the issues of deleting indexes
+          attrs = attrs.compact
+          # first merge the 0th items into attribs (because there could have been other)
+          # non indexed items on the page at the 0th level
+          if attrs[0]
+            attribs[0].update(attrs[0])
+            attrs.shift
+          end
+          #then copy in any indexed items
+          x = 1
+          attrs.each {|a| attribs[x]=a;x+=1}
+          opts[:clear_indexes] = zap_fields
+        end
+        if @record.update_attributes(attribs,@presentation,get_meta_data,opts)
+          after_update_record(@record) if respond_to?(:after_update_record)
+          after_save_record(@record) if respond_to?(:after_save_record)
+          flash[:notice] = 'Record was successfully updated.'
+          redirect_url = @record.action_result[:redirect_url] if @record.action_result
+          redirect_url = params[:_redirect_url] if !redirect_url  && params[:_redirect_url]
+          format.html { redirect_url ? redirect_to(redirect_url) : render(:action => "show") }
+          format.xml  { head :ok }
+        else
+          format.html { render :action => "show" }
+          format.xml  { render :xml => @updated.errors.to_xml }
+        end
       end
     end
   end

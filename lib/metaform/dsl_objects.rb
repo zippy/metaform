@@ -257,13 +257,17 @@ class Question < Bin
     postfix ||= form.label_options[:postfix] if form.label_options.has_key?(:postfix)
     field_label = field_label + postfix if postfix
 
+    field_id = field_name
+    if idx = form.index
+      field_id = "_#{idx}_#{field_name}"
+    end
     if erb
       field_element = read_only ?
-        w.render_form_object_read_only(@@form_proxy,field_name,value,widget_options) :
-        w.render_form_object(@@form_proxy,field_name,value,widget_options)
+        w.render_form_object_read_only(@@form_proxy,field_id,value,widget_options) :
+        w.render_form_object(@@form_proxy,field_id,value,widget_options)
       hiding_js = form.hiding_js?
     end
-    field_html = w.render(@@form_proxy,field_name,value,field_label,widget_options)
+    field_html = w.render(@@form_proxy,field_id,value,field_label,widget_options)
 
     css_class_html = %Q| class="#{css_class}"| if css_class
     

@@ -487,22 +487,31 @@ class Form
       css_class = indexed ? 'presentation_indexed' : 'presentation'
       body %Q|<div id="presentation_#{presentation_name}" class="#{css_class}">|
       if indexed
-        template = save_context(:body) do
-          pres.block.call
-        end
         raise MetaformException,"reference_field option must be defined" if !indexed[:reference_field]
-
         if @phase == :build
+          orig_index = @_index
+          @_index = '%X%'
+          template = save_context(:body) do
+            pres.block.call
+          end
           template = quote_for_javascript(template.join(''))
+
           javascript %Q|var #{presentation_name} = new indexedItems;#{presentation_name}.elem_id="presentation_#{presentation_name}_items";#{presentation_name}.delete_text="#{indexed[:delete_button_text]}";#{presentation_name}.self_name="#{presentation_name}";|
-          javascript %Q|function doAdd#{presentation_name}() {#{presentation_name}.addItem("#{template}")}|
+          javascript <<-EOJS
+            function doAdd#{presentation_name}() {
+              var t = "#{template}";
+              var idx = parseInt($F('multi_index'));
+              t = t.replace(/%X%/g,idx);
+              $('multi_index').value = idx+1;
+              #{presentation_name}.addItem(t);
+            }
+          EOJS
           add_button_html = %Q|<input type="button" onclick="doAdd#{presentation_name}()" value="#{indexed[:add_button_text]}">|
           body add_button_html if indexed[:add_button_position] != 'bottom'
           body %Q|<ul id="presentation_#{presentation_name}_items">|
-          answers = @record.answers_hash(indexed[:reference_field])
-          answer = answers[indexed[:reference_field]]
-          orig_index = @_index
-          (0..answer.size-1).each do |i|
+          answers = @record[indexed[:reference_field],:any]
+          @_use_multi_index = answers ? answers.size : 0
+          (0..@_use_multi_index-1).each do |i|
             @_index = i
             body %Q|<li id="item_#{i}" class="presentation_indexed_item">|
             pres.block.call
@@ -665,8 +674,9 @@ class Form
   # Options:
   # * :operator - the javascript operator to use to compare (defaults to '==')  
   # * :value - the value to compare the field to (defaults to nil)
-  # * :div_id - set a custom id for the div that gets generated.  By default it will
-  #   simply auto-generate a unique id for the div.  Note that if you use a custom
+  # * :wrapper_element - set a custom wrapper element.  Default is 'div'
+  # * :wrapper_id - set a custom id for the wrapper element that gets generated.  By default it will
+  #   simply auto-generate a unique id for the element.  Note that if you use a custom
   #   id it must be unique or the Javascript won't work.
   # * :show - used to specify whether the condition should show or hide the block (defaults to true i.e. "show")
   # * :css_class - a class for the generated div (defaults to "hideable_box_with_border")  
@@ -866,6 +876,9 @@ class Form
       if !@_stuff[:added_workflow_action_widget]
         body %Q|<input type="hidden" name="meta[workflow_action]" id="meta_workflow_action">| 
       end
+      if use_multi_index?
+        body %Q|<input type="hidden" name="multi_index" id="multi_index" value="#{@_use_multi_index}">|
+      end
       
       jscripts = []
       hiddens_added = {}
@@ -1053,6 +1066,14 @@ EOJS
     @_hiding_js
   end
   
+  def use_multi_index?
+    @_use_multi_index
+  end
+
+  def index
+    @_index
+  end
+
   #TODO this doesn't find questions from nested presentation
   def get_presentation_question(presentation_name,field_name)
     p = presentations[presentation_name]

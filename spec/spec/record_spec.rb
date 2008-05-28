@@ -69,6 +69,22 @@ describe Record do
       answer[5].should == 'Squid Smith'
     end
     
+    it "should be able to return all indexes" do
+      @record[:name,1]='Herbert Smith'
+      @record[:name,5]='Squid Smith'
+      @record.save('new_entry')
+      @record[:name,:any].should == ['Bob Smith','Herbert Smith','Squid Smith']
+    end
+
+    it "should be able to clear indexes on update" do
+      @record[:name,1]='Herbert Smith'
+      @record[:name,5]='Squid Smith'
+      @record.save('new_entry')
+      nr = Record.locate(:first,{:index => :any})
+      nr.update_attributes({:name => 'John Doe'},'new_entry',nil,:clear_indexes =>['name'])
+      @record[:name,:any].should == ['John Doe']
+    end
+
   end
   describe "-- setting_fields without initializing index" do
     
@@ -174,9 +190,10 @@ describe Record do
     it "should correctly set fields when initializing with :multi_index option" do
        @record = Record.make(SampleForm.new,'new_entry', {
           2 => {:name =>'Bob Smith 2',:fruit => 'apple'},
-          1 => {:name =>'Bob Smith 1',:fruit => 'banana'}
+          1 => {:name =>'Bob Smith 1',:fruit => 'banana'},
+          0 => {:name =>'Bob Smith 0'}
           },:multi_index => true)
-        @record.name.should == nil
+        @record.name.should == 'Bob Smith 0'
         @record.name__1.should == 'Bob Smith 1'
         @record.name__2.should == 'Bob Smith 2'
         @record.fruit.should == nil
