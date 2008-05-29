@@ -291,14 +291,16 @@ class Form
   def tab_html(presentation_name,opts)
     options = {
       :label => nil,
-      :index => -1
+      :index => -1,
+      :tabs_name => @tabs_name,
+      :current_tab => @current_tab
     }.update(opts)
     index = options[:index]
     index = index == -1 ? @_index : index
-    url = Record.url(@record.id,presentation_name,@tabs_name,index)
+    url = Record.url(@record.id,presentation_name,options[:tabs_name],index)
     label = options[:label]
     label ||= presentation_name.humanize
-    current_text = (@_index.to_s == index.to_s && @current_tab == presentation_name) ? "current " : ""
+    current_text = (@_index.to_s == index.to_s && options[:current_tab] == presentation_name) ? "current " : ""
     %Q|<li class=\"#{current_text}tab_#{presentation_name}\"> <a href=\"#\" onClick=\"return submitAndRedirect('#{url}')\" title=\"Click here to go to #{label}\"><span>#{label}</span></a> </li>|
   end
 
@@ -635,29 +637,30 @@ class Form
   end
   
   #################################################################################
-  def javascript_tab_changer(opts={})
+  def javascript_tab_changer(opts={})  #FIX THIS WHOLE METHOD 
     if @phase == :build
       options = {
         :condition => nil,
+        :before_anchor => true
       }.update(opts)
       condition = options[:condition]
       if condition.instance_of?(String)
         condition = c(condition)
       end
       raise MetaformException "condition must be defined" if !condition.instance_of?(Condition)
+      raise MetaformException "tabs_name must be defined" if !options[:tabs_name]
       if options[:multi]
-        tab_html_options = {:label => "#{options[:label]} NUM", :index => "INDEX"}
+        tab_html_options = {:label => "#{options[:label]} NUM", :index => "INDEX", :current_tab => options[:current_tab]}  
         tab_num_string = "value_#{options[:multi]}()-1"
         multi_string = "true"
       else
-        tab_html_options = {:label => options[:label], :index => options[:index]}
+        tab_html_options = {:label => options[:label], :index => options[:index], :tabs_name => options[:tabs_name], :current_tab => options[:current_tab]}
         tab_num_string = "1"
         multi_string = "false"
       end
       html_string = tab_html(options[:tab],tab_html_options).gsub(/'/, '\\\\\'')
-      before_css_string = ".tab_#{options[:before]}"
       js_remove = %Q|$$(".tab_#{options[:tab]}").invoke('remove');|
-      js_add = %Q|insert_tabs('#{html_string}','#{before_css_string}',#{tab_num_string},#{multi_string});|
+      js_add = %Q|insert_tabs('#{html_string}','.tab_#{options[:anchor_css]}',#{options[:before_anchor]},#{tab_num_string},#{multi_string});|
       add_observer_javascript(condition.name,js_remove+js_add,false)
       add_observer_javascript(condition.name,js_remove,true)
       javascript <<-EOJS

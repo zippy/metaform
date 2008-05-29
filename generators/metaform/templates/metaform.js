@@ -148,9 +148,9 @@ function arrayMatch(array,regex){
 	return false;
 }		
 
-function insert_tabs(tab_html,before_css,desired_tab_num,multi) {
-	next_tabs = $$(before_css);
-    current_tab_num = 0;
+function insert_tabs(tab_html,anchor_css,before_anchor,desired_tab_num,multi) {
+	next_tabs = $$(anchor_css);
+	current_tab_num = 0;
 	while (current_tab_num < desired_tab_num) {
 		this_tab_html = tab_html;
 		current_tab_num = current_tab_num + 1;
@@ -158,6 +158,17 @@ function insert_tabs(tab_html,before_css,desired_tab_num,multi) {
 			display_num = current_tab_num + 1;
 			this_tab_html = this_tab_html.gsub(/NUM/,' '+display_num).gsub(/INDEX/,display_num);
 		}
-		next_tabs.invoke('insert',{before:  this_tab_html});
+		before_anchor ? next_tabs.invoke('insert',{before:  this_tab_html}) : next_tabs.invoke('insert',{after:  this_tab_html});
+		
 	}
+}
+
+function update_cbgf_hash(followup_id,values) {
+	$$('.'+followup_id).each(function(s) {
+		var the_value = s.value;
+		var value_string = ""
+		$$('#' + followup_id + '_' + the_value + ' input').find(function(c){if (c.checked) value_string = value_string + c.value});
+		values.set(the_value,value_string);
+	});
+	
 }

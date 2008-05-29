@@ -46,6 +46,9 @@ class SimpleForm < Form
       end
       c 'age=44'
       c 'age<44'
+      c 'Sue_is_Old', :javascript => ':name == "Sue" && :age > 60' do
+        field_value("name") == "Sue" && field_value("age") > 60 
+      end
     end
     
     def_fields :groups => ['family_info'] do
@@ -100,20 +103,24 @@ class SimpleForm < Form
     
     presentation 'tab_changer_field_on_page' do
       q 'name'
-      javascript_tab_changer(:condition => 'name=Sue', :tab => 'this_tab', :before => 'finish')
+      javascript_tab_changer(:condition => 'name=Sue', :tab => 'this_tab', :anchor_css => 'finish', :tabs_name => 'simple_form', :current_tab => 'tab_changer_field_on_page')
     end
 
     presentation 'tab_changer_field_not_on_page' do
-      javascript_tab_changer(:condition => 'name=Sue', :tab => 'this_tab', :before => 'finish')
+      javascript_tab_changer(:condition => 'name=Sue', :tab => 'this_tab', :anchor_css => 'finish', :tabs_name => 'simple_form', :current_tab => 'tab_changer_field_not_on_page')
     end
     
     presentation 'tab_changer_multiple_field_on_page' do
       q 'higher_ed_years'
-      javascript_tab_changer(:condition => 'higher_ed_years>0', :tab => 'this_tab', :before => 'finish', :multi => 'higher_ed_years')
+      javascript_tab_changer(:condition => 'higher_ed_years>0', :tab => 'this_tab', :anchor_css => 'finish', :multi => 'higher_ed_years', :tabs_name => 'simple_form', :current_tab => 'tab_changer_multiple_field_on_page')
     end
 
     presentation 'tab_changer_multiple_field_not_on_page' do
-      javascript_tab_changer(:condition => 'higher_ed_years>0', :tab => 'this_tab', :before => 'finish', :multi => 'higher_ed_years')
+      javascript_tab_changer(:condition => 'higher_ed_years>0', :tab => 'this_tab', :anchor_css => 'finish', :multi => 'higher_ed_years', :tabs_name => 'simple_form', :current_tab => 'tab_changer_multiple_field_not_on_page')
+    end
+    
+    presentation 'tab_changer_complex_condition' do      
+      javascript_tab_changer(:condition => 'Sue_is_Old', :tab => 'this_tab', :anchor_css => 'finish', :tabs_name => 'simple_form', :current_tab => 'tab_changer_complex_condition')
     end
 
     workflow 'standard' do
