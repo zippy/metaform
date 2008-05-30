@@ -85,8 +85,7 @@ class CheckBoxGroupFollowupWidget < Widget
             on_click_string = <<-EOJS
               onClick="  
                 if ($('#{id}').checked) {$$('.#{field_instance_id}_#{val}_followup').each(function(cb){if (cb.value != '#{param}') {cb.checked=false}})};
-                update_cbgf_hash('#{field_instance_id}',values_for_#{field_instance_id});
-                try{tab_changing_actions_for_#{field_instance_id}();}catch(err){};"
+                try{update_cbgf_hash('#{field_instance_id}',values_for_#{field_instance_id});tab_changing_actions_for_#{field_instance_id}();}catch(err){};"
               EOJS
           elsif none_fields_followup.length > 0
             none_js = ''
@@ -101,8 +100,7 @@ class CheckBoxGroupFollowupWidget < Widget
             on_click_string = <<-EOJS
               onClick="
                 #{none_js};
-                update_cbgf_hash('#{field_instance_id}',values_for_#{field_instance_id});
-                try{tab_changing_actions_for_#{field_instance_id}();}catch(err){};"
+                try{update_cbgf_hash('#{field_instance_id}',values_for_#{field_instance_id});tab_changing_actions_for_#{field_instance_id}();}catch(err){};"
             EOJS
           end
           followups << <<-EOHTML
@@ -120,7 +118,7 @@ class CheckBoxGroupFollowupWidget < Widget
       result << <<-EOHTML 
       <input name="#{build_html_multi_name(field_instance_id,'__none__')}" id="#{build_html_multi_id(field_instance_id,'__none__')}" type="hidden"}>
       <span class="check_box_followup_input"><input name="#{build_html_multi_name(field_instance_id,val)}" id="#{build_html_multi_id(field_instance_id,val)}" class="#{field_instance_id}" type="checkbox" value="#{val}" #{checked ? 'checked' : ''}
-        onClick="#{javascript};update_cbgf_hash('#{field_instance_id}',values_for_#{field_instance_id});try{tab_changing_actions_for_#{field_instance_id}();}catch(err){};">
+        onClick="#{javascript};try{update_cbgf_hash('#{field_instance_id}',values_for_#{field_instance_id});tab_changing_actions_for_#{field_instance_id}();}catch(err){};">
         #{value_label}</span>
         #{followup_span}
       EOHTML
