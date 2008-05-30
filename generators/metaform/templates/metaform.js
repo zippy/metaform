@@ -158,7 +158,11 @@ function insert_tabs(tab_html,anchor_css,before_anchor,desired_tab_num,multi) {
 			display_num = current_tab_num + 1;
 			this_tab_html = this_tab_html.gsub(/NUM/,' '+display_num).gsub(/INDEX/,display_num);
 		}
-		before_anchor ? next_tabs.invoke('insert',{before:  this_tab_html}) : next_tabs.invoke('insert',{after:  this_tab_html});
+		if (next_tabs.length == 0) {
+			$$(".tabs ul").invoke('insert', {bottom: this_tab_html});
+		}else{
+			before_anchor ? next_tabs.invoke('insert',{before:  this_tab_html}) : next_tabs.invoke('insert',{after:  this_tab_html});
+		}
 		
 	}
 }
