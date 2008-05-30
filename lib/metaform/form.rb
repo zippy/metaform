@@ -496,8 +496,10 @@ class Form
           template = save_context(:body) do
             pres.block.call
           end
-          
+
           template = quote_for_javascript(template.join(''))
+          @_multi_index_fields ||= {}
+          template.scan(/\[_%X%_(.*?)\]/) {|f| @_multi_index_fields[f] = true}
 
           #TODO-Eric for now this just removes info icons from newly created items, but in the future
           # we should make the javascript be able to create tool-tips on the fly for any info items that
@@ -887,6 +889,7 @@ class Form
       end
       if use_multi_index?
         body %Q|<input type="hidden" name="multi_index" id="multi_index" value="#{@_use_multi_index}">|
+        body %Q|<input type="hidden" name="multi_index_fields" id="multi_index_fields" value="#{@_multi_index_fields.keys.join(',')}">|
       end
       
       jscripts = []
