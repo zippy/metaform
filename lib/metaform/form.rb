@@ -521,6 +521,7 @@ class Form
           body %Q|<ul id="presentation_#{presentation_name}_items">|
           answers = @record[indexed[:reference_field],:any]
           @_use_multi_index = answers ? answers.size : 0
+          @_use_multi_index = 1 if @_use_multi_index == 0
           (0..@_use_multi_index-1).each do |i|
             @_index = i
             body %Q|<li id="item_#{i}" class="presentation_indexed_item">|
