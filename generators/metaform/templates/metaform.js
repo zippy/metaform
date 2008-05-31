@@ -146,7 +146,7 @@ function arrayMatch(array,regex){
 		}
 	}
 	return false;
-}		
+}
 
 function insert_tabs(tab_html,anchor_css,before_anchor,desired_tab_num,multi) {
 	next_tabs = $$(anchor_css);
