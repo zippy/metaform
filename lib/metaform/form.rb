@@ -646,16 +646,12 @@ class Form
   end
   
   #################################################################################
-  def javascript_tab_changer(opts={})  #FIX THIS WHOLE METHOD 
+  def js_conditional_tab(opts={})  
     if @phase == :build
       options = {
-        :condition => nil,
         :before_anchor => true
       }.update(opts)
-      condition = options[:condition]
-      if condition.instance_of?(String)
-        condition = c(condition)
-      end
+      condition = c("#{options[:tab]}_changer")
       raise MetaformException "condition must be defined" if !condition.instance_of?(Condition)
       raise MetaformException "tabs_name must be defined" if !options[:tabs_name]
       if options[:multi]
@@ -672,9 +668,6 @@ class Form
       js_add = %Q|insert_tabs('#{html_string}','.tab_#{options[:anchor_css]}',#{options[:before_anchor]},#{tab_num_string},#{multi_string});|
       add_observer_javascript(condition.name,js_remove+js_add,false)
       add_observer_javascript(condition.name,js_remove,true)
-      javascript <<-EOJS
-        actions_for_#{condition.js_function_name}();
-      EOJS
     end
   end
 

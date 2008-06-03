@@ -94,9 +94,9 @@ class Condition < Bin
       when '!=','=!'
         cur_val != field_value
       when '<'
-        !cur_val.nil? && (cur_val.to_i < field_value.to_i)
+        !cur_val.nil? && (cur_val != '') && (cur_val.to_i < field_value.to_i)
       when '>'
-        !cur_val.nil? && (cur_val.to_i > field_value.to_i)
+        !cur_val.nil? && (cur_val != '') && (cur_val.to_i > field_value.to_i)
       when '=~'
         r = Regexp.new(field_value)
         r =~ cur_val
@@ -152,9 +152,9 @@ class Condition < Bin
         when '!=','=!'
           %Q|:#{field_name} != "#{field_value}"|
         when '<'
-          %Q|:#{field_name} < #{field_value.to_i}|
+          %Q|(:#{field_name} != null) && (:#{field_name} != '') && (:#{field_name} < #{field_value.to_i})|
         when '>'
-          %Q|:#{field_name} > #{field_value.to_i}|
+          %Q|(:#{field_name} != null) && (:#{field_name} != '') && (:#{field_name} > #{field_value.to_i})|
         when '=~'
           if field_value =~ /^\/(.*)\/$/
             field_value = $1
