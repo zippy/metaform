@@ -96,6 +96,8 @@ class RecordsController < ApplicationController
           x = 1
           attrs.each {|a| attribs[x]=a;x+=1}
           opts[:clear_indexes] = zap_fields
+        else
+          attribs = params[:record]
         end
         if @record.update_attributes(attribs,@presentation,get_meta_data,opts)
           after_update_record(@record) if respond_to?(:after_update_record)
