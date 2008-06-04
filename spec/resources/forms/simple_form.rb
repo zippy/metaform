@@ -103,24 +103,42 @@ class SimpleForm < Form
     
     presentation 'tab_changer_field_on_page' do
       q 'name'
-      javascript_tab_changer(:condition => 'name=Sue', :tab => 'this_tab', :anchor_css => 'finish', :tabs_name => 'simple_form', :current_tab => 'tab_changer_field_on_page')
+      js_conditional_tab(:condition => 'name=Sue', :tab => 'this_tab', :anchor_css => 'finish', :tabs_name => 'simple_form', :current_tab => 'tab_changer_field_on_page')
     end
 
     presentation 'tab_changer_field_not_on_page' do
-      javascript_tab_changer(:condition => 'name=Sue', :tab => 'this_tab', :anchor_css => 'finish', :tabs_name => 'simple_form', :current_tab => 'tab_changer_field_not_on_page')
+      js_conditional_tab(:condition => 'name=Sue', :tab => 'this_tab', :anchor_css => 'finish', :tabs_name => 'simple_form', :current_tab => 'tab_changer_field_not_on_page')
     end
     
     presentation 'tab_changer_multiple_field_on_page' do
       q 'higher_ed_years'
-      javascript_tab_changer(:condition => 'higher_ed_years>0', :tab => 'this_tab', :anchor_css => 'finish', :multi => 'higher_ed_years', :tabs_name => 'simple_form', :current_tab => 'tab_changer_multiple_field_on_page')
+      js_conditional_tab(:condition => 'higher_ed_years>0', :tab => 'this_tab', :anchor_css => 'finish', :multi => 'higher_ed_years', :tabs_name => 'simple_form', :current_tab => 'tab_changer_multiple_field_on_page')
     end
 
     presentation 'tab_changer_multiple_field_not_on_page' do
-      javascript_tab_changer(:condition => 'higher_ed_years>0', :tab => 'this_tab', :anchor_css => 'finish', :multi => 'higher_ed_years', :tabs_name => 'simple_form', :current_tab => 'tab_changer_multiple_field_not_on_page')
+      js_conditional_tab(:condition => 'higher_ed_years>0', :tab => 'this_tab', :anchor_css => 'finish', :multi => 'higher_ed_years', :tabs_name => 'simple_form', :current_tab => 'tab_changer_multiple_field_not_on_page')
     end
     
     presentation 'tab_changer_complex_condition' do      
-      javascript_tab_changer(:condition => 'Sue_is_Old', :tab => 'this_tab', :anchor_css => 'finish', :tabs_name => 'simple_form', :current_tab => 'tab_changer_complex_condition')
+      js_conditional_tab(:condition => 'Sue_is_Old', :tab => 'this_tab', :anchor_css => 'finish', :tabs_name => 'simple_form', :current_tab => 'tab_changer_complex_condition')
+    end
+    
+    presentation 'if_c_user_simple' do
+      if_c 'name=Sue' do
+        t 'Her name is sue'
+      end
+    end
+    
+    presentation 'if_c_user_false' do
+      if_c('name=Sue',false) do
+        t 'Her name is sue'
+      end
+    end
+    
+    presentation 'if_c_user_complex' do
+      if_c 'Sue_is_Old' do
+        t 'She is both Sue and old'
+      end
     end
 
     workflow 'standard' do

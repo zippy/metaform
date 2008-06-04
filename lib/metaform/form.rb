@@ -1122,16 +1122,25 @@ EOJS
     Form.class_eval(file_contents,fn)
   end
   
-  def if_c(condition,condition_value)
-    case condition
-    when Condition
-      cond = c
-    else
-      cond = c(condition.to_s) 
+  def if_c(condition,condition_value=true)
+    return if @phase != :build
+    if condition.instance_of?(String)
+      condition = c(condition)
     end
-    ConstraintCondition.new(cond,condition_value)
+    raise MetaformException "condition must be defined" if !condition.instance_of?(Condition)
+    yield if (condition_value ? condition.evaluate : !condition.evaluate)
   end
-
+  
+  # def if_c(condition,condition_value)
+  #    case condition
+  #    when Condition
+  #      cond = c
+  #    else
+  #      cond = c(condition.to_s) 
+  #    end
+  #    ConstraintCondition.new(cond,condition_value)
+  #  end
+ 
   #################################################################################
   #################################################################################
   private

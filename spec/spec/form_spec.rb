@@ -68,15 +68,57 @@ describe SimpleForm do
       end
     end
     
-    describe "if_c (define a constraint condition)" do
-      it "should define a ConstraintCondition object" do
-        cc = @form.if_c('age=60',true)
-        cc.instance_of?(ConstraintCondition).should == true
-        cc.constraint_value.should == true
-        cc.condition.instance_of?(Condition).should == true
-        cc.condition.field_value.should == '60'
-        cc.condition.humanize.should == 'age is 60'
+    # describe "if_c (define a constraint condition)" do
+    #   it "should define a ConstraintCondition object" do
+    #     cc = @form.if_c('age=60',true)
+    #     cc.instance_of?(ConstraintCondition).should == true
+    #     cc.constraint_value.should == true
+    #     cc.condition.instance_of?(Condition).should == true
+    #     cc.condition.field_value.should == '60'
+    #     cc.condition.humanize.should == 'age is 60'
+    #   end
+    # end
+    
+    describe "if_c (define a constraint condition))" do
+      it "should correctly perform an if when a simple condition is false" do
+        @record.name = 'Joe'
+        r = @form.build('if_c_user_simple',@record)
+        r.should == ["<div id=\"presentation_if_c_user_simple\" class=\"presentation\">\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">", ""]
       end
+      
+      it "should correctly perform an if when a simple condition is true" do
+        @record.name = 'Sue'
+        r = @form.build('if_c_user_simple',@record)
+        r.should == ["<div id=\"presentation_if_c_user_simple\" class=\"presentation\">\n<p>Her name is sue</p>\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">", ""]
+      end
+      
+      it "should correctly perform an if when a simple condition is false and condition_value is false" do
+        @record.name = 'Joe'
+        r = @form.build('if_c_user_false',@record)
+        r.should == ["<div id=\"presentation_if_c_user_false\" class=\"presentation\">\n<p>Her name is sue</p>\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">", ""]
+      end
+      
+      it "should correctly perform an if when a simple condition is true and condition_value is false" do
+        @record.name = 'Sue'
+        r = @form.build('if_c_user_false',@record)
+        r.should == ["<div id=\"presentation_if_c_user_false\" class=\"presentation\">\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">", ""]
+      end
+      
+      it "should correctly perform an if when a complex condition is false" do
+        @record.age = 59
+        @record.name = 'Joe'
+        r = @form.build('if_c_user_complex',@record)
+        r.should == ["<div id=\"presentation_if_c_user_complex\" class=\"presentation\">\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">", ""]
+      end
+      
+      it "should correctly perform an if when a complex condition is true" do
+        @record.age = 61
+        @record.name = 'Sue'
+        r = @form.build('if_c_user_complex',@record)
+        r.should == ["<div id=\"presentation_if_c_user_complex\" class=\"presentation\">\n<p>She is both Sue and old</p>\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">", ""]
+      end
+      
+      
     end
     
     describe "cs (define a constraint)" do
@@ -698,7 +740,7 @@ describe SimpleForm do
     end
   end
   
-  describe "#javascript_tab_changer" do
+  describe "#js_conditional_tab" do
     it "should create the correct html and javascript when the condition-related field is on the page" do
       r = @form.build('tab_changer_field_on_page',@record)
       r.should == [
