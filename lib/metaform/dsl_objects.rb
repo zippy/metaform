@@ -108,7 +108,7 @@ class Condition < Bin
       when '!includes'
         !field_value.split(/,/).include?(cur_val)
       when 'answered'
-        cur_val && cur_val != nil
+        cur_val && cur_val != nil && cur_val != ''
       when '!answered'
         cur_val.nil? || cur_val == ''
       end
