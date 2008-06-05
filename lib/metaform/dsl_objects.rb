@@ -83,11 +83,11 @@ class Condition < Bin
     js = js.gsub(/\W/,'')
   end
   
-  def evaluate
+  def evaluate(index = -1)
     if ruby
       ruby.call(self)
     else
-      cur_val = form.field_value(field_name)
+      cur_val = form.field_value(field_name,index)
       case operator
       when '=','=='
        cur_val == field_value
@@ -272,7 +272,7 @@ class Question < Bin
     field_label = field_label + postfix if postfix
 
     field_id = field_name
-    if idx = form.index
+    if form.use_multi_index? && idx = form.index
       field_id = "_#{idx}_#{field_name}"
     end
     if erb

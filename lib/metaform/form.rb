@@ -870,6 +870,7 @@ class Form
     @_index = index
     @_stuff = {}
     @_questions_built = []
+    @_use_multi_index = nil
   end
 
   #################################################################################
