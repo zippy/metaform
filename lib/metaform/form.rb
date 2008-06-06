@@ -1014,10 +1014,37 @@ EOJS
     @record[field_name,index]
   end
   
+  #TODO-Eric or Lisa
+  # this meta-information is not easily accessible in the same way that questions are, and probably
+  # should be.  We need to formalize and unify the concept of meta or housekeeping information
   def workflow_state
     return if @phase == :setup
     raise MetaformException,"attempting to get workflow state with no record" if @record.nil?
     @record.workflow_state
+  end
+
+  def created_at
+    return if @phase == :setup
+    raise MetaformException,"attempting to get created_at state with no record" if @record.nil?
+    @record.created_at
+  end
+  
+  def updated_at
+    return if @phase == :setup
+    raise MetaformException,"attempting to get updated_at state with no record" if @record.nil?
+    @record.updated_at
+  end
+
+  def created_by_id
+    return if @phase == :setup
+    raise MetaformException,"attempting to get created_by_id state with no record" if @record.nil?
+    @record.created_by_id
+  end
+  
+  def updated_by_id
+    return if @phase == :setup
+    raise MetaformException,"attempting to get updated_by_id state with no record" if @record.nil?
+    @record.updated_by_id
   end
   
   def show_verification?
