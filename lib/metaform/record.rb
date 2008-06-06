@@ -331,6 +331,22 @@ class Record
     n.nil? ? '' : n.titleize
   end
   
+  def created_at
+    form_instance.created_at
+  end
+  
+  def updated_at
+    form_instance.updated_at
+  end
+
+  def created_by_id
+    form_instance.created_by_id
+  end
+  
+  def updated_by_id
+    form_instance.updated_by_id
+  end
+
   # get the default field as definined in the form
   def field_label(field_name)
     form.fields[field_name].label
