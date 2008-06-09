@@ -4,6 +4,12 @@ class TimeWidget < Widget
   class <<self
     include TimeHelper
   end
+
+  ################################################################################
+  def self.parse_value(value)
+    parse_time_value(value)
+  end
+  
   ################################################################################
   def self.render_form_object(form,field_instance_id,value,options)
     time_html(form,field_instance_id,value,options)
