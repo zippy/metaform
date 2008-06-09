@@ -212,13 +212,13 @@ describe SimpleForm do
       end
       it "should build a map between field and question names" do
         @form.presentations['simple'].question_names.should == {
-          'name' => 'name',
-          'age' => 'age',
-          'higher_ed_years' => 'higher_ed_years',
-          'eye_color' => 'eye_color210533466',
-          'other_eye_color' => 'other_eye_color-316587098',
-          'married' => 'married-208205125'
-        }
+          "name"=>"name",
+          "married"=>"married-208205125",
+          "eye_color"=>"eye_color-588049703",
+          "other_eye_color"=>"other_eye_color-316587098",
+          "higher_ed_years"=>"higher_ed_years",
+          "age"=>"age"
+          }
       end
     end # presentation
     
@@ -305,7 +305,7 @@ describe SimpleForm do
         it "should produce the correct javascript for regex based followups " do
           @form.with_record(@record) do
             @form.q 'higher_ed_years',:followups => 'degree'
-            @form.get_observer_jscripts.should == {"higher_ed_years=/../"=>{:neg=>["Element.hide('uid_1')"], :pos=>["Element.show('uid_1')"]}}
+            @form.get_observer_jscripts.should == {"higher_ed_years=~/../"=>{:neg=>["Element.hide('uid_1')"], :pos=>["Element.show('uid_1')"]}}
           end
         end
         it "should produce the correct javascript for negated value followups " do
@@ -741,42 +741,13 @@ describe SimpleForm do
   end
   
   describe "#js_conditional_tab" do
-    it "should create the correct html and javascript when the condition-related field is on the page" do
-      r = @form.build('tab_changer_field_on_page',@record)
+    it "should create the correct html and javascript when when using tab changers" do
+      r = @form.build('tab_changer',@record)
       r.should == [
-        "<div id=\"presentation_tab_changer_field_on_page\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">",
-        "Event.observe('record_name', 'change', function(e){ actions_for_name_is_Sue() });\nfunction actions_for_name_is_Sue() {\n  if (name_is_Sue()) {$$(\".tab_this_tab\").invoke('remove');insert_tabs('<li class=\"tab_this_tab\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//this_tab/simple_form\\')\" title=\"Click here to go to This tab\"><span>This tab</span></a> </li>','.tab_finish',true,1,false);}\n  else {$$(\".tab_this_tab\").invoke('remove');}\n}\n\nfunction value_name() {return $F('record_name')};function name_is_Sue() {return value_name() == \"Sue\"}\n        actions_for_name_is_Sue();\n"
-      ]
+        "<div id=\"presentation_tab_changer\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">\n<input type=\"hidden\" name=\"___age\" id=\"___age\" value=\"\">",
+        "function actions_for_multi_tab_changer() {\n  if (multi_tab_changer()) {$$(\".tab_multi_tab\").invoke('remove');insert_tabs('<li class=\"tab_multi_tab\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//multi_tab/INDEX\\')\" title=\"Click here to go to  NUM\"><span> NUM</span></a> </li>','.tab_finish',true,value_age()-1,true);}\n  else {$$(\".tab_multi_tab\").invoke('remove');}\n}\n\nfunction value_age() {return $F('___age')};function multi_tab_changer() {return value_age() > 0}\nfunction actions_for_view_changer() {\n  if (view_changer()) {$$(\".tab_view\").invoke('remove');insert_tabs('<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//view/mutliple_value_tabs\\')\" title=\"Click here to go to View\"><span>View</span></a> </li>','.tab_finish',true,1,false);}\n  else {$$(\".tab_view\").invoke('remove');}\n}\n\nfunction value_age() {return $F('___age')};function view_changer() {return value_age() > 0}\nfunction actions_for_simple_changer() {\n  if (simple_changer()) {$$(\".tab_simple\").invoke('remove');insert_tabs('<li class=\"current tab_simple\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//simple/mutliple_value_tabs\\')\" title=\"Click here to go to Simple\"><span>Simple</span></a> </li>','.tab_finish',true,1,false);}\n  else {$$(\".tab_simple\").invoke('remove');}\n}\n\nfunction value_name() {return $F('record_name')};function simple_changer() {return value_name() == Sue}\nEvent.observe('record_name', 'change', function(e){ actions_for_simple_changer(); });"
+        ]   
     end    
-    it "should create the correct html and javascript when the condition-related field in not on the page" do
-      r = @form.build('tab_changer_field_not_on_page',@record)
-      r.should == [
-        "<div id=\"presentation_tab_changer_field_not_on_page\" class=\"presentation\">\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">\n<input type=\"hidden\" name=\"___name\" id=\"___name\" value=\"Bob Smith\">",
-        "function actions_for_name_is_Sue() {\n  if (name_is_Sue()) {$$(\".tab_this_tab\").invoke('remove');insert_tabs('<li class=\"tab_this_tab\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//this_tab/simple_form\\')\" title=\"Click here to go to This tab\"><span>This tab</span></a> </li>','.tab_finish',true,1,false);}\n  else {$$(\".tab_this_tab\").invoke('remove');}\n}\n\nfunction value_name() {return $F('___name')};function name_is_Sue() {return value_name() == \"Sue\"}\n        actions_for_name_is_Sue();\n"
-      ]
-    end
-    it "should create the correct html and javascript for 'multiple' tabs, when the condition-related field is on the page" do
-      @record.higher_ed_years = 3
-      r = @form.build('tab_changer_multiple_field_on_page',@record)
-      r.should == [
-        "<div id=\"presentation_tab_changer_multiple_field_on_page\" class=\"presentation\">\n<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">Higher ed years:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" value=\"3\" />g question!</div>\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">",
-        "Event.observe('record_higher_ed_years', 'change', function(e){ actions_for_higher_ed_years_is_greater_than_0() });\nfunction actions_for_higher_ed_years_is_greater_than_0() {\n  if (higher_ed_years_is_greater_than_0()) {$$(\".tab_this_tab\").invoke('remove');insert_tabs('<li class=\"tab_this_tab\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//this_tab/INDEX\\')\" title=\"Click here to go to  NUM\"><span> NUM</span></a> </li>','.tab_finish',true,value_higher_ed_years()-1,true);}\n  else {$$(\".tab_this_tab\").invoke('remove');}\n}\n\nfunction value_higher_ed_years() {return $F('record_higher_ed_years')};function higher_ed_years_is_greater_than_0() {return value_higher_ed_years() > 0}\n        actions_for_higher_ed_years_is_greater_than_0();\n"
-      ]
-    end
-    it "should create the correct html and javascript for 'multiple' tabs, when the condition-related field is not on the page" do
-      r = @form.build('tab_changer_multiple_field_not_on_page',@record)
-      r.should == [
-        "<div id=\"presentation_tab_changer_multiple_field_not_on_page\" class=\"presentation\">\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">\n<input type=\"hidden\" name=\"___higher_ed_years\" id=\"___higher_ed_years\" value=\"\">",
-        "function actions_for_higher_ed_years_is_greater_than_0() {\n  if (higher_ed_years_is_greater_than_0()) {$$(\".tab_this_tab\").invoke('remove');insert_tabs('<li class=\"tab_this_tab\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//this_tab/INDEX\\')\" title=\"Click here to go to  NUM\"><span> NUM</span></a> </li>','.tab_finish',true,value_higher_ed_years()-1,true);}\n  else {$$(\".tab_this_tab\").invoke('remove');}\n}\n\nfunction value_higher_ed_years() {return $F('___higher_ed_years')};function higher_ed_years_is_greater_than_0() {return value_higher_ed_years() > 0}\n        actions_for_higher_ed_years_is_greater_than_0();\n"
-      ]
-    end
-    it "should create the correct html and javascript when the condition is based on 2 field values" do
-      r = @form.build('tab_changer_complex_condition',@record)
-      r.should == [
-        "<div id=\"presentation_tab_changer_complex_condition\" class=\"presentation\">\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">\n<input type=\"hidden\" name=\"___name\" id=\"___name\" value=\"Bob Smith\">\n<input type=\"hidden\" name=\"___age\" id=\"___age\" value=\"\">",
-        "function actions_for_Sue_is_Old() {\n  if (Sue_is_Old()) {$$(\".tab_this_tab\").invoke('remove');insert_tabs('<li class=\"tab_this_tab\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//this_tab/simple_form\\')\" title=\"Click here to go to This tab\"><span>This tab</span></a> </li>','.tab_finish',true,1,false);}\n  else {$$(\".tab_this_tab\").invoke('remove');}\n}\n\nfunction value_name() {return $F('___name')};function value_age() {return $F('___age')};function Sue_is_Old() {return value_name() == \"Sue\" && value_age() > 60}\n        actions_for_Sue_is_Old();\n"
-      ]
-    end
   end
   
 end

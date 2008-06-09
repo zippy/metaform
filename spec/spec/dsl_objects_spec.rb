@@ -107,7 +107,7 @@ describe Condition do
   describe "#generate_javascript_function" do
     it "should javascript for simple conditions with no widget" do
       c = Condition.new(:name=>'age=~/^[0-9]+$/',:form=>'x')
-      c.generate_javascript_function({}).should == ["function value_age() {return $F('___age')};function age_matches_regex_0_9() {return value_age().match('/^[0-9]+$/')\"}", ["age"]]
+      c.generate_javascript_function({}).should == ["function value_age() {return $F('___age')};function age_matches_regex_0_9() {return value_age().match('^[0-9]+$')}", ["age"]]
     end
     it "should javascript for custom conditions with a widget" do
       c = Condition.new(:name=>'collies_owned_by_joe',:form=>'x',:javascript => ":dog_type == 'collie' && :owner == 'joe'")

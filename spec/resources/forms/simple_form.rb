@@ -18,6 +18,14 @@ class SimpleForm < Form
       tab 'simple', :label => 'Edit'
       tab 'view'
     end
+    
+    def_tabs 'mutliple_value_tabs' do
+      tab 'simple', :label => 'Edit'
+      tab 'view'
+      if_c 'multi_tab_changer' do
+         (2..field_value('age',nil).to_i).each {|i| tab 'multi_tab', :label => 'Multiple #'<< i.to_s,:index => i}
+      end
+    end
 
     labeling(:postfix => ':')
     def_fields :properties=>[FieldNameHasG] do
@@ -38,6 +46,15 @@ class SimpleForm < Form
     end
     
     def_conditions do
+      c 'simple_changer', :javascript => ":name == Sue" do
+        field_value("name") == 'Sue'
+      end 
+      c 'view_changer', :javascript => ":age > 0" do
+        field_value("age") > 0
+      end
+      c 'multi_tab_changer', :javascript => ":age > 0" do
+        field_value('age') > 0
+      end
       c 'age_is_nil', :description=> 'age is nil',:javascript => ':age == ""' do
         field_value("age").nil?
       end
@@ -84,7 +101,7 @@ class SimpleForm < Form
       q 'name'
       q 'age'
       q 'higher_ed_years'
-      q 'eye_color', :followups => [{'other_eye_color' => {:widget=>'TextArea'}}]
+      q 'eye_color', :followups => [{'other_eye_color' => 'TextArea'}]
       q 'married',:labeling => {:postfix => '?'}
     end
 
@@ -101,28 +118,13 @@ class SimpleForm < Form
       q 'higher_ed_years',:read_only => true,:erb =>%Q|<tr><td class='field_label'><%=field_label%></td><td><%=field_element%></td></tr>|
     end
     
-    presentation 'tab_changer_field_on_page' do
+    presentation 'tab_changer' do
       q 'name'
-      js_conditional_tab(:condition => 'name=Sue', :tab => 'this_tab', :anchor_css => 'finish', :tabs_name => 'simple_form', :current_tab => 'tab_changer_field_on_page')
+      js_conditional_tab(:tab => 'simple', :anchor_css => 'finish', :tabs_name => 'mutliple_value_tabs', :current_tab => 'simple')
+      js_conditional_tab(:tab => 'view', :anchor_css => 'finish', :tabs_name => 'mutliple_value_tabs', :current_tab => 'simple')
+      js_conditional_tab(:tab => 'multi_tab', :anchor_css => 'finish', :multi => 'age', :tabs_name => 'mutliple_value_tabs', :current_tab => 'simple')
     end
 
-    presentation 'tab_changer_field_not_on_page' do
-      js_conditional_tab(:condition => 'name=Sue', :tab => 'this_tab', :anchor_css => 'finish', :tabs_name => 'simple_form', :current_tab => 'tab_changer_field_not_on_page')
-    end
-    
-    presentation 'tab_changer_multiple_field_on_page' do
-      q 'higher_ed_years'
-      js_conditional_tab(:condition => 'higher_ed_years>0', :tab => 'this_tab', :anchor_css => 'finish', :multi => 'higher_ed_years', :tabs_name => 'simple_form', :current_tab => 'tab_changer_multiple_field_on_page')
-    end
-
-    presentation 'tab_changer_multiple_field_not_on_page' do
-      js_conditional_tab(:condition => 'higher_ed_years>0', :tab => 'this_tab', :anchor_css => 'finish', :multi => 'higher_ed_years', :tabs_name => 'simple_form', :current_tab => 'tab_changer_multiple_field_not_on_page')
-    end
-    
-    presentation 'tab_changer_complex_condition' do      
-      js_conditional_tab(:condition => 'Sue_is_Old', :tab => 'this_tab', :anchor_css => 'finish', :tabs_name => 'simple_form', :current_tab => 'tab_changer_complex_condition')
-    end
-    
     presentation 'if_c_user_simple' do
       if_c 'name=Sue' do
         t 'Her name is sue'
