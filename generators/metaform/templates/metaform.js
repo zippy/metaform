@@ -150,6 +150,13 @@ function arrayMatch(array,regex){
 
 function insert_tabs(tab_html,anchor_css,before_anchor,desired_tab_num,multi) {
 	next_tabs = $$(anchor_css);
+	// If your anchor tab isn't there, then put the tab before the last tab in the group.
+	if (next_tabs.length == 0){
+		before_anchor = true;
+		$$(".tabs ul").each(function(tab_ul) {
+		  next_tabs.push(tab_ul.childElements().last());
+		});
+	}
 	current_tab_num = 0;
 	while (current_tab_num < desired_tab_num) {
 		this_tab_html = tab_html;
@@ -158,11 +165,7 @@ function insert_tabs(tab_html,anchor_css,before_anchor,desired_tab_num,multi) {
 			display_num = current_tab_num + 1;
 			this_tab_html = this_tab_html.gsub(/NUM/,' '+display_num).gsub(/INDEX/,display_num);
 		}
-		if (next_tabs.length == 0) {
-			$$(".tabs ul").invoke('insert', {bottom: this_tab_html});
-		}else{
-			before_anchor ? next_tabs.invoke('insert',{before:  this_tab_html}) : next_tabs.invoke('insert',{after:  this_tab_html});
-		}
+		before_anchor ? next_tabs.invoke('insert',{before:  this_tab_html}) : next_tabs.invoke('insert',{after:  this_tab_html});
 		
 	}
 }
