@@ -892,16 +892,16 @@ class Form
 
       field_widget_map = questions_field_widget_map(get_questions_built)
       ojs = get_observer_jscripts
-      if ojs
+       if ojs
+        field_name_action_hash = {}
         ojs.collect do |condition_name,actions|
           cond = conditions[condition_name]
           raise condition_name if cond.nil?
           fnname = 'actions_for_'+cond.js_function_name
           cond.fields_used.each do |field_name|
             if field_widget_map.has_key?(field_name)
-              (widget,widget_options) = field_widget_map[field_name];
-              jscripts << widget.javascript_build_observe_function(field_name,"#{fnname}()",widget_options)
-            end
+              field_name_action_hash.key?(field_name) ? field_name_action_hash[field_name] << fnname : field_name_action_hash[field_name] = [fnname]
+             end
           end
           jscripts << <<-EOJS
 function #{fnname}() {
@@ -914,6 +914,10 @@ EOJS
           (js,hiddens) = cond.generate_javascript_function(field_widget_map)
           jscripts << js
           hiddens.each { |h| body %Q|<input type="hidden" name="___#{h}" id="___#{h}" value="#{field_value(h)}">| if !hiddens_added[h];hiddens_added[h]=true }
+        end
+        field_name_action_hash.each do |the_field_name,the_functions|
+          (widget,widget_options) = field_widget_map[the_field_name];
+          jscripts << widget.javascript_build_observe_function(the_field_name,"#{the_functions.join('();')}();",widget_options)
         end
       end
 
