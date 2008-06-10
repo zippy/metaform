@@ -10,9 +10,10 @@ class RadioButtonsWidget < Widget
     end
     params = options[:params]
     if params
-      (rows,cols) = params.split(/,/)
+      (rows,cols,table_class) = params.split(/,/)
+      table_class ||= 'radio_buttons'
       result = unflatten(result,rows.to_i).collect {|col| col.join("<br />") }
-      %Q|<table class="radio_buttons"><tr><td class="radio_buttons" valign="top">#{result.join('</td><td class="radio_buttons" valign="top">')}</td></tr></table>|
+      %Q|<table class="#{table_class}"><tr><td class="radio_buttons" valign="top">#{result.join('</td><td class="radio_buttons" valign="top">')}</td></tr></table>|
     else
       result.join("\n")
     end
