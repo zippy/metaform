@@ -124,7 +124,7 @@ class Record
       # puts "other_answer.value is #{other_answer.value.nil?}"
       if !@value.nil? && !other_answer.value.nil?
         # puts "1"
-        puts "@value.zip(other_answer.value) = #{@value.zip(other_answer.value).inspect}"
+#        puts "@value.zip(other_answer.value) = #{@value.zip(other_answer.value).inspect}"
         if block
           # puts "3"
           @value.zip(other_answer.value) {|a| block.call(a)} 
