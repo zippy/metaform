@@ -148,14 +148,18 @@ function arrayMatch(array,regex){
 	return false;
 }
 
-function insert_tabs(tab_html,anchor_css,before_anchor,desired_tab_num,multi) {
+function insert_tabs(tab_html,anchor_css,before_anchor,default_anchor_css,desired_tab_num,multi) {
 	next_tabs = $$(anchor_css);
-	// If your anchor tab isn't there, then put the tab before the last tab in the group.
+	// If your anchor tab isn't there, then put the tab before the default tab.  
+	//If that's not there, use the last tab in the group.
 	if (next_tabs.length == 0){
 		before_anchor = true;
-		$$(".tabs ul").each(function(tab_ul) {
-		  next_tabs.push(tab_ul.childElements().last());
-		});
+		next_tabs = $$(default_anchor_css);
+		if (next_tabs.length == 0) {
+			$$(".tabs ul").each(function(tab_ul) {
+		  		next_tabs.push(tab_ul.childElements().last());
+			});
+		}
 	}
 	current_tab_num = 0;
 	while (current_tab_num < desired_tab_num) {

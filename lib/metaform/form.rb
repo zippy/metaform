@@ -665,7 +665,7 @@ class Form
       end
       html_string = tab_html(options[:tab],tab_html_options).gsub(/'/, '\\\\\'')
       js_remove = %Q|$$(".tab_#{options[:tab]}").invoke('remove');|
-      js_add = %Q|insert_tabs('#{html_string}','.tab_#{options[:anchor_css]}',#{options[:before_anchor]},#{tab_num_string},#{multi_string});|
+      js_add = %Q|insert_tabs('#{html_string}','.tab_#{options[:anchor_css]}',#{options[:before_anchor]},'.tab_#{options[:default_anchor_css]}',#{tab_num_string},#{multi_string});|
       add_observer_javascript(condition.name,js_remove+js_add,false)
       add_observer_javascript(condition.name,js_remove,true)
     end
