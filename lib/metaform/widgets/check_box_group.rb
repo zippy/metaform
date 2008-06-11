@@ -64,7 +64,9 @@ class CheckBoxGroupWidget < Widget
       (rows,cols,table_class) = params.split(/,/)
       table_class ||= 'checkbox_group_table'
       result = unflatten(result,rows.to_i).collect {|col| col.join("<br />") }
-      result = %Q|<table class="#{table_class}"><tr><td class="checkbox_group_cell" valign="top">#{result.join('</td><td class="checkbox_group_cell" valign="top">')}</td></tr></table>|
+      i = 0
+      result.map!{|r| i = i + 1; "<td class='checkbox_group_cell col_#{i}' valign='top'>#{r}</td>"}
+      result = %Q|<table class="#{table_class}"><tr>#{result.join}</tr></table>|
     else
       result = result.join("\n")
     end

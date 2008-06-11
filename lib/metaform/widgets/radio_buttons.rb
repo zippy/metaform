@@ -13,7 +13,9 @@ class RadioButtonsWidget < Widget
       (rows,cols,table_class) = params.split(/,/)
       table_class ||= 'radio_buttons'
       result = unflatten(result,rows.to_i).collect {|col| col.join("<br />") }
-      %Q|<table class="#{table_class}"><tr><td class="radio_buttons" valign="top">#{result.join('</td><td class="radio_buttons" valign="top">')}</td></tr></table>|
+      i = 0
+      result.map!{|r| i = i + 1; "<td class='radio_buttons col_#{i}' valign='top'>#{r}</td>"}
+      %Q|<table class="#{table_class}"><tr>#{result.join}</tr></table>|
     else
       result.join("\n")
     end
