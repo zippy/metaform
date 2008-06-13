@@ -41,7 +41,7 @@ module TimeHelper
   end
 
   ################################################################################
-  def javascript_build_time_observe_function(field_instance_id,script,options)
+  def javascript_time_build_observe_function(field_instance_id,script,options)
     result = ""
     %w(hours minutes am_pm).each do |field|
       result << %Q|Event.observe('#{build_html_multi_id(field_instance_id,field)}', 'change', function(e){ #{script} });\n|
