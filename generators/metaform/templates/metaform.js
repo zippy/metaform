@@ -183,3 +183,9 @@ function update_cbgf_hash(followup_id,values) {
 	});
 	
 }
+
+function update_date(write_date,read_date) {
+	$('record_'+write_date+'_month').value = $F('record_'+read_date+'_month');
+	$('record_'+write_date+'_day').value = $F('record_'+read_date+'_day');
+	$('record_'+write_date+'_year').value = $F('record_'+read_date+'_year');
+}
