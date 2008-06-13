@@ -132,7 +132,7 @@ class Condition < Bin
     else
       f << field_name
     end
-    f
+    f.uniq
   end
     
   def generate_javascript_function(field_widget_map)
