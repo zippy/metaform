@@ -14,22 +14,22 @@ class VolumeWidget < Widget
 					} else {
 						var ml = parseFloat($F('#{build_html_multi_id(field_instance_id,'ml_box')}')); 
 						if (isNaN(ml)) {ml=0};
-						var total_cups = ml * 0.00422675283;
-						$('#{build_html_multi_id(field_instance_id,'cups_box')}').value = Math.round(total_cups);
+						var cups = Math.round(ml * 0.422675283) / 100; 
+						$('#{build_html_multi_id(field_instance_id,'cups_box')}').value = cups;
 					}
 			}
 			EOJS
 	  if value 
 		ml = value	
-		cups = (ml.to_i * 0.00422675283).round	
+		cups = ((ml.to_f * 0.422675283).round.to_f) / 100
 		<<-EOHTML
-		<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'cups_box')}" id="#{build_html_multi_id(field_instance_id,'cups_box')}" value="#{cups}" onchange="#{build_html_multi_id(field_instance_id,'update_volume')}(true)" /> cups
+		<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'cups_box')}" id="#{build_html_multi_id(field_instance_id,'cups_box')}" value="#{cups}" onchange="#{build_html_multi_id(field_instance_id,'update_volume')}(true)" /> cups
 		<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'ml_box')}" id="#{build_html_multi_id(field_instance_id,'ml_box')}" value="#{ml}" onchange="#{build_html_multi_id(field_instance_id,'update_volume')}(false)" /> ml
 		#{form.javascript_tag(js_update_volume)}
 		EOHTML
 	  else
 		<<-EOHTML
-		<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'cups_box')}" id="#{build_html_multi_id(field_instance_id,'cups_box')}" onchange="#{build_html_multi_id(field_instance_id,'update_volume')}(true)" /> cups
+		<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'cups_box')}" id="#{build_html_multi_id(field_instance_id,'cups_box')}" onchange="#{build_html_multi_id(field_instance_id,'update_volume')}(true)" /> cups
 		<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'ml_box')}" id="#{build_html_multi_id(field_instance_id,'ml_box')}"  onchange="#{build_html_multi_id(field_instance_id,'update_volume')}(false)" /> ml
 		#{form.javascript_tag(js_update_volume)}
 		EOHTML
@@ -58,7 +58,7 @@ class VolumeWidget < Widget
   ################################################################################
   def self.convert_html_value(value,params={})
     begin
-   		result = value['ml_box']
+   		result = value['ml_box'].to_f.round
  	rescue
  		nil
     end
