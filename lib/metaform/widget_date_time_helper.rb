@@ -70,13 +70,13 @@ module DateHelper
       <<-EOHTML
 <input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'month')}" id="#{build_html_multi_id(field_instance_id,'month')}" value="#{date.month}" /> /
 <input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'day')}" id="#{build_html_multi_id(field_instance_id,'day')}" value="#{date.day}" /> /
-<input type="text" size=4 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'year')}" id="#{build_html_multi_id(field_instance_id,'year')}" value="#{date.year.to_s[2..3]}" /> <span class=\"instructions\">(MM/DD/YYYY)</span>
+<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'year')}" id="#{build_html_multi_id(field_instance_id,'year')}" value="#{date.year.to_s[0..3]}" /> <span class=\"instructions\">(MM/DD/YYYY)</span>
 EOHTML
     else
       <<-EOHTML
 <input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'month')}" id="#{build_html_multi_id(field_instance_id,'month')}"/> /
 <input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'day')}" id="#{build_html_multi_id(field_instance_id,'day')}"  /> /
-<input type="text" size=4 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'year')}" id="#{build_html_multi_id(field_instance_id,'year')}"  /> <span class=\"instructions\">(MM/DD/YYYY)</span>
+<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'year')}" id="#{build_html_multi_id(field_instance_id,'year')}"  /> <span class=\"instructions\">(MM/DD/YYYY)</span>
 EOHTML
     end
   end
@@ -114,7 +114,7 @@ EOHTML
       year = value['year'].to_i
       year = year + 2000 if year < 70
       year = year + 1900 if year >=70 && year < 100
-      date = Time.mktime(year,value['month'].to_i,value['day'].to_i)      
+      date = Time.mktime(year,value['month'].to_i,value['day'].to_i) 
     rescue
       nil
     end
