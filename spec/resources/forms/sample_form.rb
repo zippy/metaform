@@ -88,3 +88,30 @@ def setup
   end
 end
 end
+
+class Log < Listings
+    # the conditions hash works like this.  The value portion is a mysql fragment about the field. (or array of fragments
+    # to be anded together)
+    listing 'samples', 
+      :forms => ['SampleForm'],
+#      :workflow_state_filter => ['logged'],
+#      :conditions => {'fruit' => '!= "pear"'},
+      :fields => ['name','fruit']
+end
+
+class Stats < Reports
+  def_report('fruits', 
+    :description => 'Fruits',    
+    :forms => ['SampleForm'],
+#    :fields => ['education'],
+#    :workflow_state_filter => ['logged'],
+#    :sql_conditions => {'Dem_MomAge' => '> 0'},
+    :count_queries => {
+   		:bananas => 	"count.increment if :fruit == 'banana'",
+   		:apples => "count.increment if :fruit =~ /apple*/",
+   		:painters => "count.increment if :occupation.include?('painter')",
+   		:slackers => "count.increment if :occupation.include?('unemployed')"
+  	}) { |q,forms|
+      Struct.new(*(q.keys))[*q.values]
+    }
+end
