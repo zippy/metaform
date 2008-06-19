@@ -526,7 +526,7 @@ class Form
             @_index = i
             body %Q|<li id="item_#{i}" class="presentation_indexed_item">|
             pres.block.call
-            body %Q|<input type="button" value="#{indexed[:delete_button_text]}" onclick="#{presentation_name}.removeItem($(this).up())">|
+            body %Q|<input type="button" class="float_right" value="#{indexed[:delete_button_text]}" onclick="#{presentation_name}.removeItem($(this).up())"><div class="clear"></div>|
             body '</li>'
           end
           @_index = orig_index

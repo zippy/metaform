@@ -410,7 +410,7 @@ describe SimpleForm do
             "<ul id=\"presentation_name_only_items\">",
               "<li id=\"item_0\" class=\"presentation_indexed_item\">",
                 "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[_0_name]\">Name:</label><input id=\"record__0_name\" name=\"record[_0_name]\" type=\"text\" value=\"Bob Smith\" /></div>",
-                "<input type=\"button\" value=\"Delete this name\" onclick=\"name_only.removeItem($(this).up())\">",
+                "<input type=\"button\" class=\"float_right\" value=\"Delete this name\" onclick=\"name_only.removeItem($(this).up())\"><div class=\"clear\"></div>",
               "</li>",
             "</ul>",
             "<input type=\"button\" onclick=\"doAddname_only()\" value=\"Add a name\">",
@@ -425,15 +425,15 @@ describe SimpleForm do
             "<ul id=\"presentation_name_only_items\">",
               "<li id=\"item_0\" class=\"presentation_indexed_item\">",
                 "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[_0_name]\">Name:</label><input id=\"record__0_name\" name=\"record[_0_name]\" type=\"text\" value=\"Bob Smith\" /></div>",
-                "<input type=\"button\" value=\"Delete this name\" onclick=\"name_only.removeItem($(this).up())\">",
+                "<input type=\"button\" class=\"float_right\" value=\"Delete this name\" onclick=\"name_only.removeItem($(this).up())\"><div class=\"clear\"></div>",
               "</li>",
               "<li id=\"item_1\" class=\"presentation_indexed_item\">",
                 "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[_1_name]\">Name:</label><input id=\"record__1_name\" name=\"record[_1_name]\" type=\"text\" value=\"Herbert Fink\" /></div>",
-                "<input type=\"button\" value=\"Delete this name\" onclick=\"name_only.removeItem($(this).up())\">",
+                "<input type=\"button\" class=\"float_right\" value=\"Delete this name\" onclick=\"name_only.removeItem($(this).up())\"><div class=\"clear\"></div>",
               "</li>",
             "</ul>",
-            "<input type=\"button\" onclick=\"doAddname_only()\" value=\"Add a name\">",
-          "</div>"]
+            "<input type=\"button\" onclick=\"doAddname_only()\" value=\"Add a name\">",          
+            "</div>"]
       end
       
       it "should add javascript initialization to the javascripts" do
