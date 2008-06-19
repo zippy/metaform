@@ -696,6 +696,9 @@ class Form
   #   end
   # 
   #################################################################################
+  #Note:  invoke_on_class => <class_name> requires that '<%if hiding_js%>style="display:none" <% end %>' be placed
+  #in the html tag for each element of class_name where this hiding behaviour should happen on page load.  By default,
+  #javascript will control on page action but the ruby, page-load action needs a little help.
   def javascript_show_hide_if(opts={})
     options = {
      :operator => '==',
