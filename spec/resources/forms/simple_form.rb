@@ -119,10 +119,10 @@ class SimpleForm < Form
     end
     
     presentation 'tab_changer' do
-      q 'name'
-      js_conditional_tab(:tab => 'simple', :anchor_css => 'finish', :tabs_name => 'mutliple_value_tabs', :current_tab => 'simple')
-      js_conditional_tab(:tab => 'view', :anchor_css => 'finish', :tabs_name => 'mutliple_value_tabs', :current_tab => 'simple')
-      js_conditional_tab(:tab => 'multi_tab', :anchor_css => 'finish', :multi => 'age', :tabs_name => 'mutliple_value_tabs', :current_tab => 'simple')
+      q 'name'      
+      js_conditional_tab(:tab => 'simple', :anchor_css => 'finish', :tabs_name => 'mutliple_value_tabs', :current_tab => 'simple', :default_anchor_css => 'finish')
+      js_conditional_tab(:tab => 'view', :anchor_css => 'finish', :tabs_name => 'mutliple_value_tabs', :current_tab => 'simple', :default_anchor_css => 'finish')
+      js_conditional_tab(:tab => 'multi_tab', :anchor_css => 'finish', :multi => 'age', :tabs_name => 'mutliple_value_tabs', :current_tab => 'simple', :default_anchor_css => 'finish')
     end
 
     presentation 'if_c_user_simple' do
