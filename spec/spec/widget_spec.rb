@@ -33,7 +33,7 @@ describe Widget do
   describe DateWidget do
     it "should render three html input texts and the instructions" do
       DateWidget.render_form_object(@form,1,"2004-10-23",{}).should == 
-        "<input type=\"text\" size=2 class=\"textfield_2\" name=\"record[1][month]\" id=\"record_1_month\" value=\"10\" /> /\n<input type=\"text\" size=2 class=\"textfield_2\" name=\"record[1][day]\" id=\"record_1_day\" value=\"23\" /> /\n<input type=\"text\" size=4 class=\"textfield_2\" name=\"record[1][year]\" id=\"record_1_year\" value=\"04\" /> <span class=\"instructions\">(MM/DD/YYYY)</span>\n"
+        "<input type=\"text\" size=2 class=\"textfield_2\" name=\"record[1][month]\" id=\"record_1_month\" value=\"10\" /> /\n<input type=\"text\" size=2 class=\"textfield_2\" name=\"record[1][day]\" id=\"record_1_day\" value=\"23\" /> /\n<input type=\"text\" size=4 class=\"textfield_4\" name=\"record[1][year]\" id=\"record_1_year\" value=\"2004\" /> <span class=\"instructions\">(MM/DD/YYYY)</span>\n"
     end
     it "should render date value as text with a read_only parameter" do
       DateWidget.render_form_object_read_only(@form,1,"2004-10-23",{}).should == 
