@@ -212,12 +212,12 @@ describe SimpleForm do
       end
       it "should build a map between field and question names" do
         @form.presentations['simple'].question_names.should == {
-          "name"=>"name",
-          "married"=>"married-208205125",
-          "eye_color"=>"eye_color-588049703",
-          "other_eye_color"=>"other_eye_color-316587098",
-          "higher_ed_years"=>"higher_ed_years",
-          "age"=>"age"
+            "name"=>"name",
+            "married"=>"married-208205125",
+            "eye_color"=>"eye_color-876727679",
+            "other_eye_color"=>"other_eye_color-316587098", 
+            "higher_ed_years"=>"higher_ed_years",
+            "age"=>"age"
           }
       end
     end # presentation
@@ -661,11 +661,11 @@ describe SimpleForm do
       end
       it "should generate all the html and javascript for a complex presentation" do
         @form.with_record(@record) do
-          r = @form.build('simple')
-          r.should == [
-            "<div id=\"presentation_simple\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" /></div>\n<div id=\"question_age\" class=\"question\"><label class=\"label\" for=\"record[age]\">Age:</label><input id=\"record_age\" name=\"record[age]\" type=\"text\" />g question!</div>\n<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">Higher ed years:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>\n<div id=\"question_eye_color\" class=\"question\"><label class=\"label\" for=\"record[eye_color]\">Eye color:</label><input id=\"record_eye_color\" name=\"record[eye_color]\" type=\"text\" /></div>\n<div id=\"uid_1\" class=\"followup\">\n<div id=\"question_other_eye_color\" class=\"question\"><label class=\"label\" for=\"record[other_eye_color]\">Other eye color:</label><textarea id=\"record_other_eye_color\" name=\"record[other_eye_color]\"></textarea></div>\n</div>\n<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record[married]\">Married?</label><input id=\"record_married\" name=\"record[married]\" type=\"text\" /></div>\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">", 
-            "Event.observe('record_eye_color', 'change', function(e){ actions_for_eye_color_is_x() });\nfunction actions_for_eye_color_is_x() {\n  if (eye_color_is_x()) {Element.show('uid_1');}\n  else {Element.hide('uid_1');}\n}\nactions_for_eye_color_is_x();\n\nfunction eye_color_is_x() {return $F('record_eye_color') == \"x\"}"
-          ]
+              r = @form.build('simple',@record)
+              r.should == [
+                "<div id=\"presentation_simple\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>\n<div id=\"question_age\" class=\"question\"><label class=\"label\" for=\"record[age]\">Age:</label><input id=\"record_age\" name=\"record[age]\" type=\"text\" />g question!</div>\n<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">Higher ed years:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>\n<div id=\"question_eye_color\" class=\"question\"><label class=\"label\" for=\"record[eye_color]\">Eye color:</label><input id=\"record_eye_color\" name=\"record[eye_color]\" type=\"text\" /></div>\n<div id=\"uid_1\" class=\"followup\" style=\"display:none\">\n<div id=\"question_other_eye_color\" class=\"question\"><label class=\"label\" for=\"record[other_eye_color]\">Other eye color:</label><textarea id=\"record_other_eye_color\" name=\"record[other_eye_color]\"></textarea></div>\n</div>\n<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record[married]\">Married?</label><input id=\"record_married\" name=\"record[married]\" type=\"text\" /></div>\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">",
+                "function actions_for_eye_color_is_x() {\n  if (eye_color_is_x()) {Element.show('uid_1')}\n  else {Element.hide('uid_1')}\n}\n\nfunction value_eye_color() {return $F('record_eye_color')};function eye_color_is_x() {return value_eye_color() == \"x\"}\nEvent.observe('record_eye_color', 'change', function(e){ actions_for_eye_color_is_x(); });"
+              ]
         end
       end
     end # build

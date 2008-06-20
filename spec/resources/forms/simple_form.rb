@@ -37,9 +37,10 @@ class SimpleForm < Form
         end
         f 'senior'
       end
+      	
       f 'eye_color',
         :constraints=>{'enumeration' => [{'ffffff' => 'black'},{'00ff00'=>'green'},{'0000ff'=>'blue'},{'x'=>'other'}]},
-        :followups =>{'x'=>f('other_eye_color')}
+        :followups => {'x'=>f('other_eye_color')}
       f 'age_plus_education', :calculated => {
         :proc => Proc.new { |form,index| (form.field_value('age',index).to_i+form.field_value('higher_ed_years',index).to_i).to_s}
       }
@@ -101,7 +102,7 @@ class SimpleForm < Form
       q 'name'
       q 'age'
       q 'higher_ed_years'
-      q 'eye_color', :followups => [{'other_eye_color' => 'TextArea'}]
+      q 'eye_color', :followups => {'other_eye_color' => 'TextArea'}
       q 'married',:labeling => {:postfix => '?'}
     end
 
