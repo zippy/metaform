@@ -502,14 +502,16 @@ class Form
             pres.block.call
           end
 
-          template = quote_for_javascript(template.join(''))
-          @_multi_index_fields ||= {}
-          template.scan(/\[_%X%_(.*?)\]/) {|f| @_multi_index_fields[f] = true}
+          template = template.join('')
 
           #TODO-Eric for now this just removes info icons from newly created items, but in the future
           # we should make the javascript be able to create tool-tips on the fly for any info items that
           # happen to be in the template.
           template.gsub!(/<info>(.*?)<\/info>/,'')           
+
+          template = quote_for_javascript(template)
+          @_multi_index_fields ||= {}
+          template.scan(/\[_%X%_(.*?)\]/) {|f| @_multi_index_fields[f] = true}
 
           javascript %Q|var #{presentation_name} = new indexedItems;#{presentation_name}.elem_id="presentation_#{presentation_name}_items";#{presentation_name}.delete_text="#{indexed[:delete_button_text]}";#{presentation_name}.self_name="#{presentation_name}";|
           javascript <<-EOJS
