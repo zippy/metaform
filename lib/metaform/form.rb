@@ -330,7 +330,8 @@ class Form
 
   def presentation(presentation_name,opts={}, &block)
     options = {
-      :legal_states => :any
+      :legal_states => :any,
+      :force_read_only => nil
     }.update(opts)
     raise MetaformException,'presentations can not be defined inside presentations' if @_in_presentation
     @_in_presentation = true
@@ -390,7 +391,8 @@ class Form
     else
       question_name = field_name
     end
-    @_questions_built << question_name if @_questions_built && ! options[:read_only]
+    read_only = @force_read_only>0 || options[:read_only]
+    @_questions_built << question_name if @_questions_built && ! read_only
         
     # save the field name/question name mapping into the presentation so that we can get it out later 
     # when we are trying to figure out which widget to use to render it a given field
@@ -409,7 +411,7 @@ class Form
     the_q = questions[question_name]
     unless the_q
       raise MetaformUndefinedFieldError,field_name if !field_exists?(field_name)
-      raise MetaformException,'calculated fields can only be used read-only' if fields[field_name].calculated && !options[:read_only]
+      raise MetaformException,'calculated fields can only be used read-only' if fields[field_name].calculated && !read_only
       widget_type,widget_parameters = parse_widget(widget)
       options.update({:field=>fields[field_name],:widget =>widget_type,:params =>widget_parameters})
       the_q = questions[question_name] = Question.new(options)
@@ -420,7 +422,7 @@ class Form
     when @phase == :build
       field = the_q.field
       value = @record ? @record[field.name,@_index] : nil 
-      body the_q.render(self,value)
+      body the_q.render(self,value,read_only)
     end
     
     if followups = options[:followups]
@@ -478,6 +480,8 @@ class Form
 #      if @phase == :setup
 #        return if pres.initialized
 #      end
+      @force_read_only ||= 0
+      @force_read_only += 1 if pres.force_read_only
       if @phase == :build
         legal_states = pres.legal_states
         if legal_states != :any && !arrayify(legal_states).include?(workflow_state)
@@ -538,6 +542,7 @@ class Form
       end
       body "</div>"
 #    end
+    @force_read_only -= 1 if pres.force_read_only
     if reset_pres
       @_presentation = nil
     end

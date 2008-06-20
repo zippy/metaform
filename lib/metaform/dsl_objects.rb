@@ -230,7 +230,7 @@ end
 
 class Presentation < Bin
   def bins 
-    { :name => nil, :block => nil, :legal_states => nil, :create_with_workflow => nil, :initialized => false, :question_names => {}}
+    { :name => nil, :block => nil, :legal_states => nil, :create_with_workflow => nil, :initialized => false, :question_names => {}, :force_read_only => false}
   end
   def required_bins
     [:name , :block]
@@ -257,12 +257,14 @@ class Question < Bin
     Widget.fetch(widget)
   end
   
-  def render(form,value = nil)
+  def render(form,value = nil,force_read_only = nil)
     require 'erb'
 
     w = get_widget
     widget_options = {:constraints => field.constraints, :params => params}
-    widget_options[:read_only] = read_only if !read_only.nil?
+    
+    ro = force_read_only || read_only
+    widget_options[:read_only] = ro if !ro.nil?
 
     field_label = field.label
     field_name = field.name
@@ -276,7 +278,7 @@ class Question < Bin
       field_id = "_#{idx}_#{field_name}"
     end
     if erb
-      field_element = read_only ?
+      field_element = ro ?
         w.render_form_object_read_only(@@form_proxy,field_id,value,widget_options) :
         w.render_form_object(@@form_proxy,field_id,value,widget_options)
       hiding_js = form.hiding_js?

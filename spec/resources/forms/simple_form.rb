@@ -87,6 +87,10 @@ class SimpleForm < Form
     presentation 'name_only' do
       q 'name'
     end
+
+    presentation 'name_read_only',:force_read_only => true do
+      p 'name_only'
+    end
         
     presentation 'education_info' do
       q 'higher_ed_years'

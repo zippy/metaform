@@ -242,6 +242,9 @@ describe SimpleForm do
       it "should render with a value" do
         @name_q.render(@form,'Bob Smith').should == "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>"
       end
+      it "should render read-only if forced" do
+        @name_q.render(@form,'Bob Smith',true).should == "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><span id=\"record_name\">Bob Smith</span></div>"
+      end
       it "should render an enumeration based widget" do
         mq = @form.get_presentation_question('married_questions','married')
         mq.render(@form,'y').should == "<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record[married]\">Married?</label><select name=\"record[married]\" id=\"record_married\">\n\t<option value=\"y\" selected=\"selected\">Yes</option>\n<option value=\"n\">No</option>\n</select>\n</div>"
@@ -377,6 +380,12 @@ describe SimpleForm do
         @form.in_phase(:build) do
           @form.p('container')
           @form.get_body.should == ["<div id=\"presentation_container\" class=\"presentation\">", "<div id=\"presentation_name_only\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" /></div>", "</div>", "<div id=\"presentation_education_info\" class=\"presentation\">", "<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">Higher ed years:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>", "<div id=\"question_age_plus_education\" class=\"question\"><label class=\"label\" for=\"record[age_plus_education]\">Age plus education:</label><span id=\"record_age_plus_education\"></span>g question!</div>", "</div>", "</div>"]
+        end
+      end
+      it "should render the contents readonly of a presentation with force_read_only true" do
+        @form.in_phase(:build) do
+          @form.p('name_read_only')
+          @form.get_body.should == ["<div id=\"presentation_name_read_only\" class=\"presentation\">", "<div id=\"presentation_name_only\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><span id=\"record_name\"></span></div>", "</div>", "</div>"]
         end
       end
     end #p
