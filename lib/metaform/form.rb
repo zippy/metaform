@@ -497,6 +497,7 @@ class Form
         if @phase == :build
           orig_index = @_index
           @_index = '%X%'
+          @_use_multi_index = 1
           template = save_context(:body) do
             pres.block.call
           end
