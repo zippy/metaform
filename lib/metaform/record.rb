@@ -116,20 +116,15 @@ class Record
     end
     
     def zip(other_answer,&block)
-       if !@value.nil? && !other_answer.value.nil?
-        # puts "1"
-#        puts "@value.zip(other_answer.value) = #{@value.zip(other_answer.value).inspect}"
+      if !@value.nil? && !other_answer.value.nil?
         my_value = @value.instance_of?(Array) ? @value : [@value]
         other_value = other_answer.value.instance_of?(Array) ? other_answer.value : [other_answer.value]
         if block
-          # puts "3"
           my_value.zip(other_value) {|a| block.call(a)} 
         else
-          # puts "4"
           my_value.zip(other_value)
         end
       else
-        # puts "2"
        [[nil,nil]]          
       end
     end
