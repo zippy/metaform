@@ -119,7 +119,8 @@ indexedItems.prototype = {
 		var item_id = items.length;
 		var element = new Element('li', {id:'item_'+items.length,'class':'presentation_indexed_item',style:'display:none'});
 		element.innerHTML = item;
-		$(element).appendChild(Element('input',{type:'button',value:this.delete_text,onclick:this.self_name+".removeItem($(this).up())"}));
+		$(element).appendChild(Element('input',{type:'button',value:this.delete_text,class:'float_right',onclick:this.self_name+".removeItem($(this).up())"}));
+		$(element).appendChild(Element('div', {class:'clear'}));
 		$(this.elem_id).appendChild(element);
 		Effect.toggle(element,'blind',{duration: .3});
 	},
