@@ -83,16 +83,14 @@ function mapCheckboxGroupFollowup(group_name,val,form,func) {
 	} });
 }
 
-
-function oc(a)
-{
-  var o = {};
-  for(var i=0;i<a.length;i++)
-  {
-    o[a[i]]='';
-  }
-  return o;
+function oc(a) {
+	var o = {};
+	for(var i=0;i<a.length;i++) {
+		o[a[i]]='';
+	}
+	return o;
 }
+
 
 function submitAndRedirect(url)
 {
@@ -119,8 +117,8 @@ indexedItems.prototype = {
 		var item_id = items.length;
 		var element = new Element('li', {id:'item_'+items.length,'class':'presentation_indexed_item',style:'display:none'});
 		element.innerHTML = item;
-		$(element).appendChild(Element('input',{type:'button',value:this.delete_text,class:'float_right',onclick:this.self_name+".removeItem($(this).up())"}));
-		$(element).appendChild(Element('div', {class:'clear'}));
+		$(element).appendChild(Element('input',{type:'button',value:this.delete_text,'class':'float_right',onclick:this.self_name+".removeItem($(this).up())"}));
+		$(element).appendChild(Element('div', {'class':'clear'}));
 		$(this.elem_id).appendChild(element);
 		Effect.toggle(element,'blind',{duration: .3});
 	},
@@ -140,7 +138,7 @@ function myCallBackOnFinish(obj){
 }
 
 function arrayMatch(array,regex){
-	for (var index = 0, len = array.length; index < len; ++index) {
+	for (var index = 0, len = array.length; index < len; index++) {
 	  var fv = array[index];
 	  if (fv.match(regex)) {
 			return true;
