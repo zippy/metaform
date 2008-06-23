@@ -15,11 +15,11 @@ class RecordsController < ApplicationController
   def show
     setup_record
     respond_to do |format|
-      if params[:template]
-        format.html { render :template => 'records/'<<params[:template] }
-      else
-        format.html # show.rhtml
-      end
+      options = {:template => 'records/show'}
+      options[:template] = 'records/'<<params[:template] if params[:template]
+      options[:layout] = params[:template] if FileTest.exists?("#{RAILS_ROOT}/app/views/layouts/#{params[:template]}.html.erb")
+      options[:layout] = params[:layout] if params[:layout]
+      format.html { render options}
       format.xml  { render :xml => @record.to_xml }
     end
   end
