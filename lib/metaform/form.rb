@@ -531,7 +531,7 @@ class Form
           @_use_multi_index = 1 if @_use_multi_index == 0
           (0..@_use_multi_index-1).each do |i|
             @_index = i
-            body %Q|<li id="item_#{i}" class="presentation_indexed_item">|
+            body %Q|<li class="presentation_indexed_item">|
             pres.block.call
             body %Q|<input type="button" class="float_right" value="#{indexed[:delete_button_text]}" onclick="#{presentation_name}.removeItem($(this).up())"><div class="clear"></div>|
             body '</li>'

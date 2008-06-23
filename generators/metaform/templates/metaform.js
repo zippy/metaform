@@ -114,8 +114,7 @@ indexedItems.prototype = {
 		},
 	addItem: function(item) {
 		var items = $(this.elem_id).childElements();
-		var item_id = items.length;
-		var element = new Element('li', {id:'item_'+items.length,'class':'presentation_indexed_item',style:'display:none'});
+		var element = new Element('li', {'class':'presentation_indexed_item',style:'display:none'});
 		element.innerHTML = item;
 		$(element).appendChild(Element('input',{type:'button',value:this.delete_text,'class':'float_right',onclick:this.self_name+".removeItem($(this).up())"}));
 		$(element).appendChild(Element('div', {'class':'clear'}));
@@ -128,13 +127,7 @@ indexedItems.prototype = {
 };
 
 function myCallBackOnFinish(obj){
-	var item = obj.element.id;
-	$(item).remove();
-	var items = $(this.elem_id).childElements();
-	items.each(function(i,index) {
-		$(i).id = 'item_'+index;
-		}
-	);
+	var item = obj.element.remove();
 }
 
 function arrayMatch(array,regex){
