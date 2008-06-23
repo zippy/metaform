@@ -22,6 +22,7 @@ module TimeHelper
   end
   ################################################################################
   def parse_time_value(value)
+    return nil if value.nil? 
     require 'parsedate'
     d = *ParseDate.parsedate(value)
     date = Time.local(1,1,1,d[3],d[4])      
@@ -36,8 +37,11 @@ module TimeHelper
 
   ################################################################################
   def humanize_time_value(value,options=nil)
-    (hours,minutes,meridian) = parse_value(value)
-    "#{hours}:#{minutes} #{meridian}"
+    time = parse_time_value(value)
+    if time
+      (hours,minutes,meridian) = time
+      "#{hours}:#{minutes} #{meridian}"
+    end
   end
 
   ################################################################################

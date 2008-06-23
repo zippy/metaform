@@ -13,7 +13,11 @@ class DateTimeWidget < Widget
 
   ################################################################################
   def self.humanize_value(value,options=nil)
-    humanize_time_value(value,options) + ' ' + humanize_date_value(value,options)
+    date = humanize_date_value(value,options)
+    date ||= '--'
+    time = humanize_time_value(value,options)
+    time ||= '--'
+    date  + ' ' + time
   end
 
   ################################################################################
