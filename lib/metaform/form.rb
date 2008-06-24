@@ -624,7 +624,9 @@ class Form
 
   #################################################################################
   #################################################################################
-  # add in a workflow state widget
+  # add in a workflow state widget as meta data which will be passed through
+  # to do_workflow_action.  This is used when you want to give the user explicit
+  # control over which workflow state to go to next
   def q_meta_workflow_state(label,widget_type,states)
     widget = Widget.fetch(widget_type)
     #TODO , :params => widget_parameters
@@ -632,7 +634,6 @@ class Form
     #TODO this is a cheat and we need to fix it in widget to generalize it, but it works ok!
     w = w.gsub(/record(.)workflow_state/,'meta\1workflow_state')
     html w
-    @_stuff[:added_workflow_action_widget] = true
   end
   
 
@@ -843,7 +844,10 @@ class Form
     }.update(opts)
     save_context(:js) do
       js = %Q|$('metaForm').submit();|
-      js = %Q|$('meta_workflow_action').value = '#{options[:workflow_action]}';#{js}| if options[:workflow_action]
+      if options[:workflow_action]
+        js = %Q|$('meta_workflow_action').value = '#{options[:workflow_action]}';#{js}|
+        @_stuff[:need_workflow_action] = true
+      end
       javascript js
     end
   end
@@ -889,7 +893,7 @@ class Form
     prepare_for_build(index)
     with_record(record,:build) do
       p(presentation_name)
-      if !@_stuff[:added_workflow_action_widget]
+      if @_stuff[:need_workflow_action]
         body %Q|<input type="hidden" name="meta[workflow_action]" id="meta_workflow_action">| 
       end
       if use_multi_index?
@@ -963,8 +967,8 @@ EOJS
   # meta[:request] the request object
   # meta[:session] the session object
   # meta[:record] the record object
-  # and anything put into it by a callback #meta_data_for_save that should
-  # be definined in the application controller
+  # all parameters x from the form submission that are named as "meta[x]"
+  # and anything put into it by a callback #meta_data_for_save defined in the application controller
   def do_workflow_action(action_name,meta)
     @_action_result = {}
     workflow_name = @record.workflow
