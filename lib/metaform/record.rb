@@ -841,7 +841,7 @@ class Record
     # but part of the setup gets us the default presentation if we don't have one!
 
     #TODO this is more evidence that we don't have things right.  Currently a "form instance" is spread accross
-    # Record, FormInstance, and "setting up" the class variables in V3form to work correctly.  All this needs
+    # Record, FormInstance, and "setting up" the class variables in W30L to work correctly.  All this needs
     # to be unified, because right now there will be two calls to setup.  Once here "manually" and also later
     # in Record#update_attributes
     fi = FormInstance.new

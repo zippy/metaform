@@ -41,7 +41,7 @@ if File.directory?(Form.forms_dir)
   requires = []
   Dir.foreach(Form.forms_dir) do |file|
     if file =~ /(.*)\.rb$/
-      if file =~ /(.*form)\.rb$/i
+      if file =~ /(.*)form\.rb$/i
         forms << $1
       else
         requires << file
@@ -52,7 +52,7 @@ if File.directory?(Form.forms_dir)
     require File.join(Form.forms_dir, file)
   end
   forms.each do |klass|
-    file = Form.forms_dir+'/'+klass+'.rb'
+    file = Form.forms_dir+'/'+klass+'form.rb'
     file_contents = IO.read(file)
     new_class = <<-EORUBY
     class #{klass} < Form
