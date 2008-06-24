@@ -26,6 +26,21 @@ describe Widget do
     end
   end
 
+  describe TextAreaWidget do
+    it "should render an html text area with a label" do
+      TextAreaWidget.render_form_object(1,'value',{}).should == 
+        "<textarea id=\"record_1\" name=\"record[1]\">value</textarea>"
+    end
+    it "should render an html input text with rows & columns parameters" do
+      TextAreaWidget.render_form_object(1,'value',{:params=>'10,20'}).should == 
+        "<textarea cols=\"20\" id=\"record_1\" name=\"record[1]\" rows=\"10\">value</textarea>"
+    end
+    it "should render value as text with a read_only parameter" do
+      TextAreaWidget.render_form_object_read_only(1,'value',{}).should == 
+        "<span id=\"record_1\">value</span>"
+    end
+  end
+
   describe DateWidget do
     it "should render three html input texts and the instructions" do
       DateWidget.render_form_object(1,"2004-10-23",{}).should == 

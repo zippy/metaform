@@ -10,7 +10,7 @@ class TextAreaWidget < Widget
       opts = {}
     end
     opts.update({:id => build_html_id(field_instance_id)})
-    text_area_tag(build_html_name(field_instance_id),value,opts)
+    form.text_area_tag(build_html_name(field_instance_id),value,opts)
   end
 end
 ################################################################################

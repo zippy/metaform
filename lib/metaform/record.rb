@@ -541,7 +541,6 @@ class Record
     # to update_attributes.
     if meta_data && meta_data[:workflow_action] && meta_data[:workflow_action] != ''
       meta_data[:record] = self
-      #TODO-Eric :setup is really the wrong phase, but so is build. New phase?
       form.with_record(self,:workflow_action) do
         self.action_result = form.do_workflow_action(meta_data[:workflow_action],meta_data)
       end
