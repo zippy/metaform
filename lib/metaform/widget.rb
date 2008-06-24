@@ -1,6 +1,11 @@
 # Thanks to Peter Jones (pmade.com) for inspiring this coding pattern
 ################################################################################
 class Widget
+  #TODO -FIXME!!  FormProxy should totally disapear
+  @@form_proxy = FormProxy.new('SampleForm'.gsub(/ /,'_'))
+  def self.form
+    @@form_proxy
+  end
   ################################################################################
   def self.inherited(klass)
     instance_eval { (@widgets ||= {}).store(klass.to_s.sub(/Widget/, ''), klass) }
@@ -49,11 +54,11 @@ class Widget
   end
 
   ################################################################################
-  def self.render(form,field_instance_id,value,label,options={})
-    render_label(label,field_instance_id,options[:read_only] ? render_form_object_read_only(form,field_instance_id,value,options) : render_form_object(form,field_instance_id,value,options))
+  def self.render(field_instance_id,value,label,options={})
+    render_label(label,field_instance_id,options[:read_only] ? render_form_object_read_only(field_instance_id,value,options) : render_form_object(field_instance_id,value,options))
   end
   
-  def self.render_form_object_read_only(form,field_instance_id,value,options)
+  def self.render_form_object_read_only(field_instance_id,value,options)
     "<span id=\"#{build_html_id(field_instance_id)}\">#{humanize_value(value,options)}</span>"
   end
 

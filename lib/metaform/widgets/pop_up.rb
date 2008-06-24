@@ -1,7 +1,7 @@
 ################################################################################
 class PopUpWidget < Widget
   ################################################################################
-  def self.render_form_object(form,field_instance_id,value,options)
+  def self.render_form_object(field_instance_id,value,options)
   #puts "line 1 popupwidget"
     e = enumeration(options[:constraints])
     e.unshift([options[:params],nil]) if options[:params]  # the popup widget param is the text for a nil option

@@ -7,7 +7,7 @@
 #stripped off and then act as none.
 class CheckBoxGroupWidget < Widget
   ################################################################################
-  def self.render_form_object(form,field_instance_id,value,options)
+  def self.render_form_object(field_instance_id,value,options)
     e = enumeration(options[:constraints])
     none_fields = []
     e.map!{|value_label,val|

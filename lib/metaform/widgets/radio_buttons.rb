@@ -1,7 +1,7 @@
 ################################################################################
 class RadioButtonsWidget < Widget
   ################################################################################
-  def self.render_form_object(form,field_instance_id,value,options)
+  def self.render_form_object(field_instance_id,value,options)
     result = ""
     e = enumeration(options[:constraints])
     result = []

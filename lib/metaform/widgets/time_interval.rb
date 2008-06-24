@@ -1,7 +1,7 @@
 ################################################################################
 class TimeIntervalWidget < Widget
   ################################################################################
-  def self.render_form_object(form,field_instance_id,value,options)
+  def self.render_form_object(field_instance_id,value,options)
     if value 
       hours = value.to_i / 60
       minutes = value.to_i % 60

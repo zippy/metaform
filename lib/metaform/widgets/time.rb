@@ -11,8 +11,8 @@ class TimeWidget < Widget
   end
   
   ################################################################################
-  def self.render_form_object(form,field_instance_id,value,options)
-    time_html(form,field_instance_id,value,options)
+  def self.render_form_object(field_instance_id,value,options)
+    time_html(field_instance_id,value,options)
   end
 
   ################################################################################

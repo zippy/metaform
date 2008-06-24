@@ -1,7 +1,7 @@
 ################################################################################
 class MonthYearWidget < Widget
   ################################################################################
-  def self.render_form_object(form,field_instance_id,value,options)
+  def self.render_form_object(field_instance_id,value,options)
     date = parse_value(value)
     if date
       <<-EOHTML

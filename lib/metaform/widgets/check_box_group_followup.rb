@@ -5,7 +5,7 @@
 #can have * at the end of their value to act like 'none' within the followups.
 class CheckBoxGroupFollowupWidget < Widget
   ################################################################################
-  def self.render_form_object(form,field_instance_id,value,options)
+  def self.render_form_object(field_instance_id,value,options)
     e = enumeration(options[:constraints])
     result = []
     set_values = YAML.load(value) if value

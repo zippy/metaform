@@ -2,7 +2,7 @@
 class VolumeWidget < Widget
   
   ################################################################################
-  def self.render_form_object(form,field_instance_id,value,options)
+  def self.render_form_object(field_instance_id,value,options)
 	params = options[:params]
 	js_update_volume = <<-EOJS
 			function #{build_html_multi_id(field_instance_id,'update_volume')}(change_ml) {

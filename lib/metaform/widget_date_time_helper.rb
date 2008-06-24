@@ -1,5 +1,5 @@
 module TimeHelper
-  def time_html(form,field_instance_id,value,options)
+  def time_html(field_instance_id,value,options)
     meridian_options = [ ["AM","am"] , ["PM","pm"] ]
     if value
       (hours,minutes,meridian) = parse_time_value(value)

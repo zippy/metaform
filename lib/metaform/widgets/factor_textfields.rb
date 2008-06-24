@@ -5,7 +5,7 @@
 class FactorTextFieldsWidget < Widget
   
   ################################################################################
-  def self.render_form_object(form,field_instance_id,value,options)
+  def self.render_form_object(field_instance_id,value,options)
    params = options[:params]
     if params
       (factor,first_label,second_label) = params.split(/,/)

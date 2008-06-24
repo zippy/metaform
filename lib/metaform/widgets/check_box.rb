@@ -1,7 +1,7 @@
 ################################################################################
 class CheckBoxWidget < Widget
   ################################################################################
-  def self.render_form_object(form,field_instance_id,value,options)
+  def self.render_form_object(field_instance_id,value,options)
     checked = value ? 'checked' : '' 
     result = []
     result << %Q|<input name="#{build_html_multi_name(field_instance_id,"Y")}" id="#{build_html_multi_id(field_instance_id,"Y")}" type="checkbox" #{checked}>|

@@ -5,7 +5,7 @@ class DateWidget < Widget
     include DateHelper
   end
   ################################################################################
-  def self.render_form_object(form,field_instance_id,value,options)
+  def self.render_form_object(field_instance_id,value,options)
     date_html(field_instance_id,value,options)
   end
 

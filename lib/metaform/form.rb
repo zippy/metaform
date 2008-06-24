@@ -627,9 +627,8 @@ class Form
   # add in a workflow state widget
   def q_meta_workflow_state(label,widget_type,states)
     widget = Widget.fetch(widget_type)
-    #TODO FIXME!!!  @@form needs to go away!
     #TODO , :params => widget_parameters
-    w = widget.render(@@form,'workflow_state',workflow_state,label,:constraints => {"enumeration"=>states})
+    w = widget.render('workflow_state',workflow_state,label,:constraints => {"enumeration"=>states})
     #TODO this is a cheat and we need to fix it in widget to generalize it, but it works ok!
     w = w.gsub(/record(.)workflow_state/,'meta\1workflow_state')
     html w
@@ -963,6 +962,7 @@ EOJS
   # the meta information that will be available to an action is:
   # meta[:request] the request object
   # meta[:session] the session object
+  # meta[:record] the record object
   # and anything put into it by a callback #meta_data_for_save that should
   # be definined in the application controller
   def do_workflow_action(action_name,meta)
