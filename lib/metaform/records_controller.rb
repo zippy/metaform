@@ -138,6 +138,7 @@ class RecordsController < ApplicationController
   
   def get_meta_data
     meta = params[:meta]
+    meta ||= {}
     meta[:request] = request
     meta[:session] = session
     meta.update(meta_data_for_save) if respond_to?(:meta_data_for_save)
