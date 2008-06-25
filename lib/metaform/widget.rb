@@ -30,7 +30,11 @@ class Widget
         spec = constraints[constraint_name]
         #spec[:model] can be a string or a class
         model = spec[:model].is_a?(String) ? spec[:model].constantize : spec[:model]
-        results = model.find(*spec[:find_args])
+        if spec[:find_args]
+          results = model.find(*spec[:find_args])
+        elsif spec[:func]
+          results = spec[:func].call
+        end
         enum = results.collect {|r| spec.has_key?(:proc) ? spec[:proc].call(r) : [r.name,r.id]}
 # this code does lookup within Forms, 
 #        spec = constraints["enumeration_lookup"]
