@@ -6,6 +6,7 @@ class Form
   # directory in which to auto-load form setup files
   @@forms_dir = 'forms'
   @@cache = {}
+  @@store = {}
   cattr_accessor :forms_dir,:cache
 
   FieldTypes = ['string','integer','float','decimal','boolean','date','datetime','time','text']
@@ -1151,6 +1152,14 @@ EOJS
   # loads all the files in the "forms" directory that end Form.rb as forms
   # and requires the rest
   def self.boot
+  end
+  
+  def self.set_store(key,value)
+    @@store[key] = value
+  end
+  
+  def self.get_store(key)
+    @@store[key]
   end
   
   #################################################################################
