@@ -829,9 +829,9 @@ class Record
     url
   end
   
-  def Record.listing_url(listing,order = nil)
+  def Record.listing_url(listing,params = nil)
     url = "/records/listings/#{listing}"
-    url << "?search[order]=#{order}" if order && order != ''
+    url << ("?" + params.keys.map{|k| "search[#{k}]=#{params[k]}"}.join("&")) if params
     url
   end
   
