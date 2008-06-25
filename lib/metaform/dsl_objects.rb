@@ -146,6 +146,7 @@ class Condition < Bin
         (widget,widget_options) = field_widget_map[field_name]
         multi = widget.is_multi_value?
       end
+      the_whacky_value = field_value
       js = case operator
         when '=','=='
           %Q|:#{field_name} == "#{field_value}"|
@@ -168,7 +169,8 @@ class Condition < Bin
           multi ? %Q|!arrayMatch(:#{field_name},#{field_value})| :
           %Q|!:#{field_name}.match('#{field_value}')|
         when 'includes'
-          %Q|"#{field_value}" in oc(:#{field_name})|
+          puts "field_value = #{field_value} but field_value should be #{the_whacky_value}"
+          %Q|"#{the_whacky_value}" in oc(:#{field_name})|
         when '!includes'
           %Q|"!(#{field_value}" in oc(:#{field_name}))|
         when 'answered'
@@ -256,7 +258,7 @@ class Question < Bin
   
   def render(form,value = nil,force_read_only = nil)
     require 'erb'
-
+    
     w = get_widget
     widget_options = {:constraints => field.constraints, :params => params}
     
@@ -281,7 +283,7 @@ class Question < Bin
       hiding_js = form.hiding_js?
     end
     field_html = w.render(field_id,value,field_label,widget_options)
-
+    
     css_class_html = %Q| class="#{css_class}"| if css_class
     
     properties = field.properties
