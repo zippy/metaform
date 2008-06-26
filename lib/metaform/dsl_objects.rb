@@ -87,7 +87,7 @@ class Condition < Bin
     if ruby
       ruby.call(self)
     else
-      cur_val = form.field_value(field_name,index)
+      cur_val = form.field_value(field_name,index)      
       case operator
       when '=','=='
        cur_val == field_value
@@ -104,9 +104,9 @@ class Condition < Bin
         r = Regexp.new(field_value)
         r !~ cur_val
       when 'includes'
-        field_value.split(/,/).include?(cur_val)
+        !field_value.split(/,/).find{|val| cur_val.include?(val) if cur_val}.nil?
       when '!includes'
-        !field_value.split(/,/).include?(cur_val)
+        field_value.split(/,/).find{|val| cur_val.include?(val) if cur_val}.nil?
       when 'answered'
         cur_val && cur_val != nil && cur_val != ''
       when '!answered'
@@ -146,33 +146,33 @@ class Condition < Bin
         (widget,widget_options) = field_widget_map[field_name]
         multi = widget.is_multi_value?
       end
-      the_whacky_value = field_value
+      the_field_value = field_value  #Ruby gets confused below and interprets field_value as
+      # a local variable.  This is necessary to use bin#[]=
       js = case operator
         when '=','=='
-          %Q|:#{field_name} == "#{field_value}"|
+          %Q|:#{field_name} == "#{the_field_value}"|
         when '!=','=!'
-          %Q|:#{field_name} != "#{field_value}"|
+          %Q|:#{field_name} != "#{the_field_value}"|
         when '<'
-          %Q|(:#{field_name} != null) && (:#{field_name} != '') && (:#{field_name} < #{field_value.to_i})|
+          %Q|(:#{field_name} != null) && (:#{field_name} != '') && (:#{field_name} < #{the_field_value.to_i})|
         when '>'
-          %Q|(:#{field_name} != null) && (:#{field_name} != '') && (:#{field_name} > #{field_value.to_i})|
+          %Q|(:#{field_name} != null) && (:#{field_name} != '') && (:#{field_name} > #{the_field_value.to_i})|
         when '=~'
-          if field_value =~ /^\/(.*)\/$/
-            field_value = $1
+          if the_field_value =~ /^\/(.*)\/$/
+            the_field_value = $1
           end
-          multi ? %Q|arrayMatch(:#{field_name},#{field_value})| :
-          %Q|:#{field_name}.match('#{field_value}')|
-        when '!~','~!'
-          if field_value =~ /^\/(.*)\/$/
-            field_value = $1
+          multi ? %Q|arrayMatch(:#{field_name},'#{the_field_value}')| :
+          %Q|:#{field_name}.match('#{the_field_value}')|
+        when '!~','~!'  
+          if the_field_value =~ /^\/(.*)\/$/
+            the_field_value = $1
           end
-          multi ? %Q|!arrayMatch(:#{field_name},#{field_value})| :
-          %Q|!:#{field_name}.match('#{field_value}')|
+          multi ? %Q|!arrayMatch(:#{field_name},'#{the_field_value}')| :
+          %Q|!:#{field_name}.match('#{the_field_value}')|
         when 'includes'
-          puts "field_value = #{field_value} but field_value should be #{the_whacky_value}"
-          %Q|"#{the_whacky_value}" in oc(:#{field_name})|
+          %Q|"#{the_field_value}" in oc(:#{field_name})|
         when '!includes'
-          %Q|"!(#{field_value}" in oc(:#{field_name}))|
+          %Q|"!(#{the_field_value}" in oc(:#{field_name}))|
         when 'answered'
           %Q|:#{field_name} != null && :#{field_name} != ""|
         when '!answered'
