@@ -270,7 +270,9 @@ class Question < Bin
     field_label = field_name.humanize if field_label.nil?
     postfix = labeling[:postfix] if labeling && labeling.has_key?(:postfix)
     postfix ||= form.label_options[:postfix] if form.label_options.has_key?(:postfix)
-    field_label = field_label + postfix if postfix
+    if postfix && !(field_label =~ /[.:;\?\!]$/)
+      field_label = field_label + postfix
+    end
 
     field_id = field_name
     if form.use_multi_index? && idx = form.index
