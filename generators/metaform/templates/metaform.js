@@ -115,8 +115,13 @@ indexedItems.prototype = {
 	addItem: function(item) {
 		var items = $(this.elem_id).childElements();
 		var element = new Element('li', {'class':'presentation_indexed_item',style:'display:none'});
+		var presentation = this;
 		element.innerHTML = item;
-		$(element).appendChild(Element('input',{type:'button',value:this.delete_text,'class':'float_right',onclick:this.self_name+".removeItem($(this).up())"}));
+		var other_element = new Element('input',{type:'button',value:this.delete_text,'class':'float_right'});
+		other_element.onclick = function (evt) {
+				presentation.removeItem($(this).up());
+			};
+		$(element).appendChild(other_element);
 		$(element).appendChild(Element('div', {'class':'clear'}));
 		$(this.elem_id).appendChild(element);
 		Effect.toggle(element,'blind',{duration: .3});
@@ -124,6 +129,7 @@ indexedItems.prototype = {
 	removeItem: function(item) {
 		Effect.toggle(item,'blind',{duration: .5, afterFinish: myCallBackOnFinish});
 	}
+
 };
 
 function myCallBackOnFinish(obj){
