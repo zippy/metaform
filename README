@@ -78,11 +78,13 @@ class by the name of the file from definitions in the file.
 === workflows
 
 	def_workflows <work_flow_name> do
-		def_normal_states <state_name>...
-		def_verification_states <state_name>...
-		action <name>,[<legal_states>...] do
+		action <name>,[<legal_states>...] do |meta|
+		  # the meta hash provides access to various things:
+      # meta[:request] the request object
+      # meta[:session] the session object
+      # meta[:record] the record object
 			...
-			state <state_name>
+			state <state_name>  # set the next state to go to
 		end
 	end
 

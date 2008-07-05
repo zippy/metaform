@@ -327,6 +327,11 @@ class Form
   #   the given workflow
   # The block given to this method is the list of questions (and supporting code)
   # that defines the questions to be displayed
+  #
+  # by default the presentation will be displayed in the context of the erb template:
+  # #{RAILS_ROOT}/app/views/records/show.html.erb
+  # but you can add a file of the presentation name into {RAILS_ROOT}/app/views/records
+  # and metaform will use that template instead.
   #################################################################################
 
   def presentation(presentation_name,opts={}, &block)

@@ -16,8 +16,13 @@ class RecordsController < ApplicationController
     setup_record
     respond_to do |format|
       options = {:template => 'records/show'}
-      options[:template] = 'records/'<<params[:template] if params[:template]
-      options[:layout] = params[:template] if FileTest.exists?("#{RAILS_ROOT}/app/views/layouts/#{params[:template]}.html.erb")
+      if params[:template]
+        tmpl = params[:template]
+      elsif FileTest.exists?("#{RAILS_ROOT}/app/views/records/#{@presentation}.html.erb")
+        tmpl = @presentation
+      end
+      options[:template] = 'records/'<< tmpl if tmpl
+      options[:layout] = params[:template] if FileTest.exists?("#{RAILS_ROOT}/app/views/layouts/#{tmpl}.html.erb")
       options[:layout] = params[:layout] if params[:layout]
       format.html { render options}
       format.xml  { render :xml => @record.to_xml }
