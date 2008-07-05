@@ -252,6 +252,15 @@ class Record
   def reset_attributes
     @attributes = {nil=>{}}
   end
+  def clear_attributes(*attributes)
+    @attributes.each {|idx,a| attributes.each {|f| a.delete(f)}}
+  end
+  def clear_attributes_except(*attributes)
+    exceptions = {}
+    attributes.each {|a| exceptions[a] = true}
+    @attributes.each {|idx,a| a.each {|f,v| a.delete(f) unless exceptions[f]}}
+  end
+  
   def attribute_exists(attribute,index=nil)
     #puts "attribute_exists @attributes = #{@attributes.inspect}"
     #puts "attribute_exists @index = #{@index.inspect}"
@@ -292,6 +301,16 @@ class Record
       end
     end
     h
+  end
+  
+  def delete_fields(*fields)
+    FieldInstance.destroy_all(["form_instance_id = ? and field_id in (?)",@form_instance.id,fields])
+    clear_attributes(*fields)
+  end
+
+  def delete_fields_except(*fields)
+    FieldInstance.destroy_all(["form_instance_id = ? and field_id not in (?)",@form_instance.id,fields])
+    clear_attributes_except(*fields)
   end
   
   ######################################################################################

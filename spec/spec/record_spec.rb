@@ -203,6 +203,30 @@ describe Record do
     
   end
   
+  describe "-- deleting record fields" do
+    before(:each) do
+      @initial_values = {:name =>'Bob Smith',:fruit => 'banana'}
+      @record = Record.make(SampleForm.new,'new_entry',@initial_values)
+      @record.save
+      @record['occupation'] = 'bum'
+    end
+    it "should delete specified fields" do
+      @record.delete_fields('name')
+      @nr = @record
+      @nr.name.should == nil
+      @nr.fruit.should == 'banana'
+      @nr.occupation.should == 'bum' #and not delete other things in the attributes cache
+    end
+
+    it "should delete all but the specified fields" do
+      @record.delete_fields_except('name')
+      @nr = @record
+      @nr.name.should == 'Bob Smith'
+      @nr.fruit.should == nil
+      @nr.occupation.should == nil #and also delete other things in the attributes cache
+    end
+  end
+  
   describe "-- locating records" do
     
     before(:each) do
