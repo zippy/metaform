@@ -83,39 +83,39 @@ describe SimpleForm do
       it "should correctly perform an if when a simple condition is false" do
         @record.name = 'Joe'
         r = @form.build('if_c_user_simple',@record)
-        r.should == ["<div id=\"presentation_if_c_user_simple\" class=\"presentation\">\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">", ""]
+        r.should == ["<div id=\"presentation_if_c_user_simple\" class=\"presentation\">\n</div>", ""]
       end
       
       it "should correctly perform an if when a simple condition is true" do
         @record.name = 'Sue'
         r = @form.build('if_c_user_simple',@record)
-        r.should == ["<div id=\"presentation_if_c_user_simple\" class=\"presentation\">\n<p>Her name is sue</p>\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">", ""]
+        r.should == ["<div id=\"presentation_if_c_user_simple\" class=\"presentation\">\n<p>Her name is sue</p>\n</div>", ""]
       end
       
       it "should correctly perform an if when a simple condition is false and condition_value is false" do
         @record.name = 'Joe'
         r = @form.build('if_c_user_false',@record)
-        r.should == ["<div id=\"presentation_if_c_user_false\" class=\"presentation\">\n<p>Her name is sue</p>\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">", ""]
+        r.should == ["<div id=\"presentation_if_c_user_false\" class=\"presentation\">\n<p>Her name is sue</p>\n</div>", ""]
       end
       
       it "should correctly perform an if when a simple condition is true and condition_value is false" do
         @record.name = 'Sue'
         r = @form.build('if_c_user_false',@record)
-        r.should == ["<div id=\"presentation_if_c_user_false\" class=\"presentation\">\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">", ""]
+        r.should == ["<div id=\"presentation_if_c_user_false\" class=\"presentation\">\n</div>", ""]
       end
       
       it "should correctly perform an if when a complex condition is false" do
         @record.age = 59
         @record.name = 'Joe'
         r = @form.build('if_c_user_complex',@record)
-        r.should == ["<div id=\"presentation_if_c_user_complex\" class=\"presentation\">\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">", ""]
+        r.should == ["<div id=\"presentation_if_c_user_complex\" class=\"presentation\">\n</div>", ""]
       end
       
       it "should correctly perform an if when a complex condition is true" do
         @record.age = 61
         @record.name = 'Sue'
         r = @form.build('if_c_user_complex',@record)
-        r.should == ["<div id=\"presentation_if_c_user_complex\" class=\"presentation\">\n<p>She is both Sue and old</p>\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">", ""]
+        r.should == ["<div id=\"presentation_if_c_user_complex\" class=\"presentation\">\n<p>She is both Sue and old</p>\n</div>", ""]
       end
       
       
@@ -339,7 +339,7 @@ describe SimpleForm do
           @record.name = ''
           @form.with_record(@record) do
             @form.q('name',:force_verify => true)
-            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /><span class=\"errors\">this field is required</span></div>"]
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <span class=\"errors\">this field is required</span></div>"]
           end
         end
         it "should not add the verification html if q specifies the :force_verify option but the value of the field is ok" do
@@ -495,7 +495,7 @@ describe SimpleForm do
     describe "q_meta_workflow_state (display a list of workflow states)" do
       it "should render the html element" do
         @form.with_record(@record) do
-          @form.q_meta_workflow_state('States:','PopUp').should == <label class=\"label\" for=\"meta[workflow_state]\">States:</label><select name=\"meta[workflow_state]\" id=\"meta_workflow_state\">\n   <option value=\"completed\">completed: Form Completed</option>\n<option value=\"logged\">logged: Form Logged</option>\n<option value=\"verifying\">verifying: Form in verification</option>\n</select>\n"
+          @form.q_meta_workflow_state('States:','PopUp').should == "<label class=\"label\" for=\"meta[workflow_state]\">States:</label><select name=\"meta[workflow_state]\" id=\"meta_workflow_state\">\n   <option value=\"completed\">completed: Form Completed</option>\n<option value=\"logged\">logged: Form Logged</option>\n<option value=\"verifying\">verifying: Form in verification</option>\n</select>\n"
         end
       end
     end
@@ -668,25 +668,21 @@ describe SimpleForm do
     end # build_tabs
     describe "build (render form)" do
       it "should collect up a list of all the questions encountered during the build" do
-        @form.build('container')
+        @form.build('container',@record)
         @form.get_questions_built.should == ['name','higher_ed_years']
       end
       it "should generate html for a simple presentation" do
-        @form.with_record(@record) do
-          @form.build('name_only').should == [
-            "<div id=\"presentation_name_only\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" /></div>\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">",
-            ""
-          ]
-        end
+        @form.build('name_only',@record).should == [
+          "<div id=\"presentation_name_only\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>\n</div>",
+          ""
+        ]
       end
       it "should generate all the html and javascript for a complex presentation" do
-        @form.with_record(@record) do
-              r = @form.build('simple',@record)
-              r.should == [
-                "<div id=\"presentation_simple\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>\n<div id=\"question_age\" class=\"question\"><label class=\"label\" for=\"record[age]\">Age:</label><input id=\"record_age\" name=\"record[age]\" type=\"text\" />g question!</div>\n<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">Higher ed years:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>\n<div id=\"question_eye_color\" class=\"question\"><label class=\"label\" for=\"record[eye_color]\">Eye color:</label><input id=\"record_eye_color\" name=\"record[eye_color]\" type=\"text\" /></div>\n<div id=\"uid_1\" class=\"followup\" style=\"display:none\">\n<div id=\"question_other_eye_color\" class=\"question\"><label class=\"label\" for=\"record[other_eye_color]\">Other eye color:</label><textarea id=\"record_other_eye_color\" name=\"record[other_eye_color]\"></textarea></div>\n</div>\n<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record[married]\">Married?</label><input id=\"record_married\" name=\"record[married]\" type=\"text\" /></div>\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">",
-                "function actions_for_eye_color_is_x() {\n  if (eye_color_is_x()) {Element.show('uid_1')}\n  else {Element.hide('uid_1')}\n}\n\nfunction value_eye_color() {return $F('record_eye_color')};function eye_color_is_x() {return value_eye_color() == \"x\"}\nEvent.observe('record_eye_color', 'change', function(e){ actions_for_eye_color_is_x(); });"
-              ]
-        end
+        r = @form.build('simple',@record)
+        r.should == [
+          "<div id=\"presentation_simple\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>\n<div id=\"question_age\" class=\"question\"><label class=\"label\" for=\"record[age]\">Age:</label><input id=\"record_age\" name=\"record[age]\" type=\"text\" />g question!</div>\n<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">Higher ed years:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>\n<div id=\"question_eye_color\" class=\"question\"><label class=\"label\" for=\"record[eye_color]\">Eye color:</label><input id=\"record_eye_color\" name=\"record[eye_color]\" type=\"text\" /></div>\n<div id=\"uid_1\" class=\"followup\" style=\"display:none\">\n<div id=\"question_other_eye_color\" class=\"question\"><label class=\"label\" for=\"record[other_eye_color]\">Other eye color:</label><textarea id=\"record_other_eye_color\" name=\"record[other_eye_color]\"></textarea></div>\n</div>\n<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record[married]\">Married?</label><input id=\"record_married\" name=\"record[married]\" type=\"text\" /></div>\n</div>",
+          "function actions_for_eye_color_is_x() {\n  if (eye_color_is_x()) {Element.show('uid_1')}\n  else {Element.hide('uid_1')}\n}\n\nfunction value_eye_color() {return $F('record_eye_color')};function eye_color_is_x() {return value_eye_color() == \"x\"}\nEvent.observe('record_eye_color', 'change', function(e){ actions_for_eye_color_is_x(); });"
+        ]
       end
     end # build
   end # generators
@@ -807,7 +803,7 @@ describe SimpleForm do
     it "should create the correct html and javascript when when using tab changers" do
       r = @form.build('tab_changer',@record)
       r.should == [
-        "<div id=\"presentation_tab_changer\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>\n</div>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">\n<input type=\"hidden\" name=\"___age\" id=\"___age\" value=\"\">",
+        "<div id=\"presentation_tab_changer\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>\n</div>\n<input type=\"hidden\" name=\"___age\" id=\"___age\" value=\"\">",
         "function actions_for_multi_tab_changer() {\n  if (multi_tab_changer()) {$$(\".tab_multi_tab\").invoke('remove');insert_tabs('<li class=\"tab_multi_tab\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//multi_tab/INDEX\\')\" title=\"Click here to go to  NUM\"><span> NUM</span></a> </li>','.tab_finish',true,'.tab_finish',value_age()-1,true);}\n  else {$$(\".tab_multi_tab\").invoke('remove');}\n}\n\nfunction value_age() {return $F('___age')};function multi_tab_changer() {return value_age() > 0}\nfunction actions_for_view_changer() {\n  if (view_changer()) {$$(\".tab_view\").invoke('remove');insert_tabs('<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//view/mutliple_value_tabs\\')\" title=\"Click here to go to View\"><span>View</span></a> </li>','.tab_finish',true,'.tab_finish',1,false);}\n  else {$$(\".tab_view\").invoke('remove');}\n}\n\nfunction value_age() {return $F('___age')};function view_changer() {return value_age() > 0}\nfunction actions_for_simple_changer() {\n  if (simple_changer()) {$$(\".tab_simple\").invoke('remove');insert_tabs('<li class=\"current tab_simple\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//simple/mutliple_value_tabs\\')\" title=\"Click here to go to Simple\"><span>Simple</span></a> </li>','.tab_finish',true,'.tab_finish',1,false);}\n  else {$$(\".tab_simple\").invoke('remove');}\n}\n\nfunction value_name() {return $F('record_name')};function simple_changer() {return value_name() == Sue}\nEvent.observe('record_name', 'change', function(e){ actions_for_simple_changer(); });"
       ]
     end    
