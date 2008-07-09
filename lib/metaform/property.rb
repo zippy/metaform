@@ -20,7 +20,7 @@ class Invalid < Property
   def self.render(question_html,property_value,question,form)
     if !property_value.empty? && (form.show_verification? || question.force_verify)
       errs = property_value.join("; ")
-      question_html + %Q|<span class="errors">#{errs}</span>|
+      question_html + %Q| <span class="errors">#{errs}</span>|
     else
       question_html
     end
