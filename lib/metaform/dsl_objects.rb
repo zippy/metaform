@@ -228,6 +228,21 @@ class Workflow < Bin
   def bins 
     { :actions => nil, :states => nil}
   end
+  def make_states_enumeration
+    states.collect do |name,value|
+      label = value[:label] if value.instance_of?(Hash)
+      label ||= value
+      ["#{name}: #{label}",name]
+    end
+  end
+  def should_verify?(state)
+    v = states[state]
+    v.instance_of?(Hash) ? v[:verify] : false
+  end
+  def label(state)
+    v = states[state]
+    v.instance_of?(Hash) ? v[:label] : v
+  end
 end
 
 class Presentation < Bin

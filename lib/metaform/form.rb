@@ -47,13 +47,17 @@ class Form
 
   #################################################################################
   #################################################################################
-  # define workflow
+  # define a workflow
+  # the states parameter is a hash of the form:
+  # {'state_name' => 'human readable state name'}
+  # or
+  # {'state_name' => {:label => 'human readable state name',:verify => true/false}}  
+  # if you want the state to allways display verification errors
   #################################################################################
-  def workflow(workflow_name,*states)
+  def workflow(workflow_name,states)
     @actions = {}
-#    @@states = {}
     yield
-    workflows[workflow_name] = Workflow.new(:actions => @actions)
+    workflows[workflow_name] = Workflow.new(:actions => @actions,:states => states)
   end
   
   # an action consist of a block to execute when running the action as well as a list of
@@ -633,9 +637,11 @@ class Form
   # add in a workflow state widget as meta data which will be passed through
   # to do_workflow_action.  This is used when you want to give the user explicit
   # control over which workflow state to go to next
-  def q_meta_workflow_state(label,widget_type,states)
+  def q_meta_workflow_state(label,widget_type)
+    return if @phase != :build
     widget = Widget.fetch(widget_type)
     #TODO , :params => widget_parameters
+    states = workflows[record_workflow].make_states_enumeration
     w = widget.render('workflow_state',workflow_state,label,:constraints => {"enumeration"=>states})
     #TODO this is a cheat and we need to fix it in widget to generalize it, but it works ok!
     w = w.gsub(/record(.)workflow_state/,'meta\1workflow_state')
@@ -1042,6 +1048,12 @@ EOJS
   #TODO-Eric or Lisa
   # this meta-information is not easily accessible in the same way that questions are, and probably
   # should be.  We need to formalize and unify the concept of meta or housekeeping information
+  def record_workflow
+    return if @phase == :setup
+    raise MetaformException,"attempting to get workflow with no record" if @record.nil?
+    @record.workflow
+  end
+
   def workflow_state
     return if @phase == :setup
     raise MetaformException,"attempting to get workflow state with no record" if @record.nil?

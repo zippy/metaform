@@ -9,6 +9,27 @@ describe Field do
 end
 
 describe Workflow do
+  before :each do
+    @w = Workflow.new(:name=>'standard',:states=>{'logged' => 'Form Logged','completed'=> 'Form Completed','verifying'=>{:label => 'Form in verification',:verify => true}})
+  end
+    
+  it "should build an enumeration list from the states data" do
+    @w.make_states_enumeration.should == [["completed: Form Completed", "completed"], ["logged: Form Logged", "logged"], ["verifying: Form in verification", "verifying"]]
+  end
+  it "should report verification for verify states" do
+    @w.should_verify?('verifying').should == true
+  end
+  it "should not report verification for non verify states" do
+    @w.should_verify?('completed').should_not == true
+    @w.should_verify?('logged').should_not == true
+  end
+  it "should report label for a simple state" do
+    @w.label('completed').should == 'Form Completed'
+  end
+  it "should report label for a verify state" do
+    @w.label('verifying').should == 'Form in verification'
+  end
+    
 end
 
 describe Question do

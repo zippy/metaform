@@ -336,9 +336,9 @@ class Record
     form_instance.update_attribute(:workflow_state,new_state)
   end
 
-  def workflow_state_name
-    n = workflow_state
-    n.nil? ? '' : n.titleize
+  def workflow_state_label
+    s = workflow_state
+    s.nil? ? '' : @form.workflows[workflow].label(s)
   end
   
   def created_at

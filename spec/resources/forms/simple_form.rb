@@ -148,9 +148,7 @@ class SimpleForm < Form
       end
     end
 
-    workflow 'standard' do
-#      def_states_normal :logged,:completed
-#      def_states_verification :verifying
+    workflow 'standard', {'logged' => 'Form Logged','completed'=> 'Form Completed','verifying'=>{:label => 'Form in verification',:verify => true}} do
     	action 'create',[nil] do
         state 'logged'
         redirect_url '/'

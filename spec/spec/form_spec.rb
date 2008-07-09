@@ -492,6 +492,14 @@ describe SimpleForm do
       end
     end #t
 
+    describe "q_meta_workflow_state (display a list of workflow states)" do
+      it "should render the html element" do
+        @form.with_record(@record) do
+          @form.q_meta_workflow_state('States:','PopUp').should == <label class=\"label\" for=\"meta[workflow_state]\">States:</label><select name=\"meta[workflow_state]\" id=\"meta_workflow_state\">\n   <option value=\"completed\">completed: Form Completed</option>\n<option value=\"logged\">logged: Form Logged</option>\n<option value=\"verifying\">verifying: Form in verification</option>\n</select>\n"
+        end
+      end
+    end
+
     describe "tip (add a tool-tip)" do
       it "should add an 'info' icon with a tool-tip" do
         @form.in_phase(:build) do
@@ -609,8 +617,7 @@ describe SimpleForm do
         end
       end #javascript_submit
     end #javascript
-    
-    
+
     describe "workflow (define a workflow)" do
       before(:each) do
         @workflow = @form.workflows['standard']
@@ -621,6 +628,10 @@ describe SimpleForm do
       it "should create the workflow's actions" do
         @workflow.actions.keys.sort.should == ['continue','create','finish']
       end
+      it "should create the workflow's states" do
+        @workflow.states.keys.sort.should == ['completed','logged','verifying']
+      end
+      it "should allow"
     end #workflow
 
     describe "def_tabs (define a tab group)" do
@@ -734,6 +745,38 @@ describe SimpleForm do
         conds.size.should == 2
         conds[0].name.should == 'eye_color=ffffff'
         conds[1].name.should == 'eye_color=x'
+      end
+    end
+    describe "#record_workflow" do
+      it "should return the workflow this form was created with" do
+        @form.with_record(@record) do
+          @form.record_workflow.should == 'standard'
+        end
+      end
+    end
+    describe "#workflow_state" do
+      it "should return the nil when the record is first created" do
+        @form.with_record(@record) do
+          @form.workflow_state.should == nil
+        end
+      end
+    end
+    describe "#created_at" do
+      it "should return datetime it was created" do
+        @record.save
+        @form.with_record(@record) do
+          @form.created_at.to_s.should == Time.now().to_s
+        end
+      end
+    end
+    describe "#updated_at" do
+    end
+  end
+
+  describe "-- workflow actions" do
+    it "should return the correct state after a workflow action is taken" do
+      @form.with_record(@record) do
+        @form.do_workflow_action('create',nil).should == {:next_state=>"logged", :redirect_url=>"/"}
       end
     end
   end

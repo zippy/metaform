@@ -4,7 +4,8 @@ describe Record do
 
   describe "-- creating a new one" do
     before(:each) do
-      @record = Record.make(SampleForm.new,'new_entry',{:name =>'Bob Smith'})
+      @form = SampleForm.new
+      @record = Record.make(@form,'new_entry',{:name =>'Bob Smith'})
     end
     
     it "should return values via the [] operator" do
@@ -22,8 +23,23 @@ describe Record do
     it "should complain when accessing an attribute that doesn't exist" do
       lambda { @record.fish }.should raise_error(NoMethodError)
     end
+    
+    it "should provide access to the form" do
+      @record.form.should == @form
+    end
   end
-  
+
+  describe "-- workflow" do
+    before(:each) do
+      @initial_values = {:name =>'Bob Smith',:fruit => 'banana'}
+      @record = Record.make(SampleForm.new,'new_entry',@initial_values)
+    end
+    it "should provide access to the workflow state label" do
+      @record.workflow_state = 'verifying'
+      @record.workflow_state_label.should == 'Form in verification'
+    end
+  end    
+    
   describe "-- indexed fields" do
     before(:each) do
       @initial_values = {:name =>'Bob Smith',:fruit => 'banana'}
