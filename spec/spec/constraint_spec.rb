@@ -19,6 +19,17 @@ describe Constraints do
     end
   end
 
+  describe 'range' do
+    it "should trigger when value is out of range" do
+      Constraints.verify({'range' => '1-5'}, '9', @form).should == ["value out of range, must be between 1 and 5"]
+    end
+    it "should not trigger when value is in range" do
+      Constraints.verify({'range' => '1-3'}, '1', @form).should == []
+      Constraints.verify({'range' => '1-3'}, '2', @form).should == []
+      Constraints.verify({'range' => '1-3'}, '3', @form).should == []
+    end
+  end
+
   describe '-- using a Proc' do
     before(:each) do
       @theProc = Proc.new {|value,form| value == 'squidness' ? 'no sqiddyiness' : nil}
