@@ -904,6 +904,7 @@ class Form
   def build(presentation_name,record=nil,index=nil)
     prepare_for_build(index)
     with_record(record,:build) do
+      set_verification(true) if workflows[record_workflow].should_verify?(workflow_state)
       p(presentation_name)
       if @_stuff[:need_workflow_action]
         body %Q|<input type="hidden" name="meta[workflow_action]" id="meta_workflow_action">| 
@@ -1027,15 +1028,18 @@ EOJS
     field_names.collect {|f| self.questions[f]}
   end
 
-  def field_valid(field_names)
-    return true
+  def field_valid(field_name)
+    field = fields[field_name]
+    raise MetaformException, "couldn't find field #{field_name} in fields list" if field.nil?
+    p = field.properties[0]
+    return false if p.evaluate(self,field,field_value(field_name)).size > 0
 #    field_names = arrayify(field_names)
 #    field_names.each do |field_name|
 #      field = fields[field_name]
 #      p = field.properties[0]
 #      return false if p.evaluate(self,field,field_value(field_name))
 #    end
-#    true
+    true
   end
 
   def field_value(field_name,index = -1)

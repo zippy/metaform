@@ -711,7 +711,18 @@ describe SimpleForm do
       end
     end
     describe "#field_valid" do
-      it "should return whether a field is valid or not"
+      it "should return true if a field is valid" do
+        @record.higher_ed_years = 4
+        @form.with_record(@record) do
+          @form.field_valid('higher_ed_years').should == true
+        end        
+      end
+      it "should return false if a field is invalid" do
+        @record.higher_ed_years = 99
+        @form.with_record(@record) do
+          @form.field_valid('higher_ed_years').should == false
+        end        
+      end
     end
     describe '#get_questions_by_field_name' do
       it "should find all questions defined on the named field" do
