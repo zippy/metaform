@@ -237,7 +237,7 @@ class Workflow < Bin
   end
   def should_verify?(state)
     v = states[state]
-    v.instance_of?(Hash) ? v[:verify] : false
+    v.instance_of?(Hash) ? v[:validate] : false
   end
   def label(state)
     v = states[state]

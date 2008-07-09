@@ -51,7 +51,7 @@ class Form
   # the states parameter is a hash of the form:
   # {'state_name' => 'human readable state name'}
   # or
-  # {'state_name' => {:label => 'human readable state name',:verify => true/false}}  
+  # {'state_name' => {:label => 'human readable state name',:validate => true/false}}  
   # if you want the state to allways display verification errors
   #################################################################################
   def workflow(workflow_name,states)
