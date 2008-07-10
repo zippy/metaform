@@ -17,6 +17,7 @@ class Reports
     def def_report(report_name, opts, &block)
       options = {
         :workflow_state_filter => nil,
+        :workflow_state_filter_negate => false,
         :fields => nil,
         :forms => nil,
         :filters => nil,
@@ -36,7 +37,6 @@ class Reports
       end
     end
     def get_report(report_name,options = {})
-
       r = self.reports[report_name]
       raise "unknown report #{report_name}" if !r 
       results = {}
@@ -44,6 +44,7 @@ class Reports
       locate_options = {}
       locate_options[:forms] = r.forms if r.forms
       locate_options[:workflow_state_filter] = r.workflow_state_filter if r.workflow_state_filter
+      locate_options[:workflow_state_filter_negate] = r.workflow_state_filter_negate if r.workflow_state_filter_negate
 
       # build up the list of extra fields we need to get from the database by looking in count queries
       field_list = {}
@@ -53,7 +54,12 @@ class Reports
       if options[:count_queries]
         count_queries.update(options[:count_queries])
       end
-      count_queries.each { |stat,q| q.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1} if q.is_a?(String)}
+      count_queries.each { |stat,q| 
+        if q.is_a?(String)
+          q.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1} 
+          count_queries[stat] = 'count.increment if (' + q + ')' if !q.match('count')
+        end
+        }
       
       filters = arrayify(r.filters)
       if options[:filters]
@@ -82,10 +88,13 @@ class Reports
       total = form_instances.size
       #puts "---------count_queries:" 
       count_queries.each do |stat,q|
+        #puts "stat = #{stat}"
         count = Counter.new
         form_instances.each do |f|
+          #puts "f.workflow_state = #{f['workflow_state'].inspect}"
           begin
             expr = Record.eval_field(q)
+            #puts "expr = #{expr.inspect}[0..100]"
             eval(expr)
           rescue Exception => e
             raise "Eval error '#{e.to_s}' while evaluating: #{expr}"

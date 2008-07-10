@@ -112,4 +112,30 @@ class Stats < Reports
   	}) { |q,forms|
       Struct.new(*(q.keys))[*q.values]
     }
+    
+  def_report('report_with_workflow', 
+    :description => 'Workflow Report',    
+    :forms => ['SampleForm'],
+    :workflow_state_filter => "standard%",
+     :count_queries => {
+   		:bananas => 	"count.increment if :fruit == 'banana'",
+   		:apples => "count.increment if :fruit =~ /apple*/",
+   		:bobs => "count.increment if :name =~ /^Bob/",
+   		:joes => "count.increment if :name =~ /^Joe/",
+  	}) { |q,forms|
+      Struct.new(*(q.keys))[*q.values]
+    }
+    
+    def_report('report_with_2_workflows', 
+      :description => 'Workflow Report',    
+      :forms => ['SampleForm'],
+      :workflow_state_filter => ['standard','unusual'],
+       :count_queries => {
+     		:bananas => 	"count.increment if :fruit == 'banana'",
+     		:apples => "count.increment if :fruit =~ /apple*/",
+     		:bobs => "count.increment if :name =~ /^Bob/",
+     		:joes => "count.increment if :name =~ /^Joe/",
+    	}) { |q,forms|
+        Struct.new(*(q.keys))[*q.values]
+      }
 end

@@ -707,7 +707,11 @@ class Record
     end
     
     if options.has_key?(:workflow_state_filter)
-      condition_strings << "(workflow_state in (?))"
+      if options[:workflow_state_filter].is_a?(Array)
+        condition_strings << "#{"NOT" if options[:workflow_state_filter_negate]} (workflow_state in (?))"
+      else
+        condition_strings << "(#{"NOT" if options[:workflow_state_filter_negate]} workflow_state like (?))"
+      end
       conditions_params << options[:workflow_state_filter]
     end
 
