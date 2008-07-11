@@ -1028,11 +1028,12 @@ EOJS
     field_names.collect {|f| self.questions[f]}
   end
 
-  def field_valid(field_name)
+  def field_valid(field_name,value = :get_from_form)
     field = fields[field_name]
     raise MetaformException, "couldn't find field #{field_name} in fields list" if field.nil?
     p = field.properties[0]
-    return false if p.evaluate(self,field,field_value(field_name)).size > 0
+    value = field_value(field_name) if value == :get_from_form
+    return false if p.evaluate(self,field,value).size > 0
 #    field_names = arrayify(field_names)
 #    field_names.each do |field_name|
 #      field = fields[field_name]

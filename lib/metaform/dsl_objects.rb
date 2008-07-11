@@ -247,10 +247,13 @@ end
 
 class Presentation < Bin
   def bins 
-    { :name => nil, :block => nil, :legal_states => nil, :create_with_workflow => nil, :initialized => false, :question_names => {}, :force_read_only => false}
+    { :name => nil, :block => nil, :legal_states => nil, :create_with_workflow => nil, :initialized => false, :question_names => {}, :force_read_only => false, :validation => nil}
   end
   def required_bins
     [:name , :block]
+  end
+  def fields
+    question_names.keys
   end
 end
 

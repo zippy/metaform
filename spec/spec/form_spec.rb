@@ -210,6 +210,9 @@ describe SimpleForm do
       it "should not set the create_with_workflow option if not present" do
        lambda {@form.workflow_for_new_form('simple')}.should raise_error("simple doesn't define a workflow for create!")
       end
+      it "should return a list of the fields it uses" do
+         @form.presentations['simple'].fields.should == %w(name married eye_color other_eye_color higher_ed_years age)
+      end
       it "should build a map between field and question names" do
         @form.presentations['simple'].question_names.should == {
             "name"=>"name",

@@ -54,6 +54,8 @@ module Constraints
         #for the set constraint the value will be an array of strings or of hashes of the form:
         # [{value => 'description'},{value2 => 'description'}, ...]
         ok_values = constraint[0].is_a?(String) ? constraint : constraint.collect{|h| h.is_a?(String) ? h.to_s : h.keys[0]}
+        ok_values << nil if !ok_values.include?(nil)
+        ok_values << '' if !ok_values.include?('')
         cur_values = !value ? [nil] : value.split(',')
         if not cur_values.all? {|v| ok_values.include?(v)}
           constraint_errors << (err_override || ("value out of range, must be in " << ok_values.join(', ')))
@@ -62,9 +64,9 @@ module Constraints
         #for the enumeration constraint the value will be an array of strings or of hashes of the form:
         # [{value => 'description'},{value2 => 'description'}, ...]
 
-        #TODO-LISA this doesn't yet handle when null is allowed.  Which fact also has to be added
-        # to the definition of "f" in definition.rb
         ok_values = constraint[0].is_a?(String) ? constraint : (constraint[0].is_a?(Array) ?  constraint.collect{|h| h[0]} : constraint.collect{|h| h.is_a?(String) ? h.to_s : h.keys[0]})
+        ok_values << nil if !ok_values.include?(nil)
+        ok_values << '' if !ok_values.include?('')
         if !ok_values.include?(value)
           constraint_errors << (err_override || ("value out of range, must be in " << ok_values.join(', ')))
         end

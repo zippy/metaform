@@ -552,6 +552,18 @@ class Record
 
   def _update_attributes(presentation,meta_data)
     
+    p = @form.presentations[presentation]
+    if p.validation == :before_save
+      answers = answers_hash(*p.fields)
+      answers.each do |f,a|
+        @form.with_record(self) do
+          if !@form.field_valid(f,a.value)
+            @form.set_verification(true)
+            return false
+          end
+        end
+      end
+    end
     #TODO by moving the workflow action stuff to the begining here I've introduced a 
     # transactionality problem.  I.e. if the workflow changes state info and then the 
     # field instance values can't be saved, then the record is in a screwed up state.
