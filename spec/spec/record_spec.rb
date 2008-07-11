@@ -223,7 +223,7 @@ describe Record do
     before(:each) do
       @initial_values = {:name =>'Bob Smith',:fruit => 'banana'}
       @record = Record.make(SampleForm.new,'new_entry',@initial_values)
-      @record.save
+      @record.save('new_entry')
       @record['occupation'] = 'bum'
     end
     it "should delete specified fields" do
