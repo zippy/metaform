@@ -831,21 +831,21 @@ class Record
     Record.create(forms)
   end
   def Record.eval_field(expression)
-#      #puts "---------"
-#      #puts "eval_Field:  expression=#{expression}"
+      #puts "---------"
+      #puts "eval_Field 1:  expression=#{expression}"
     expr = expression.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|zip|map|include\?)/,'f["\1"].\2')
-#      #puts "eval_field:  expr=#{expr}"
+      #puts "eval_field 2:  expr=#{expr}"
     expr = expr.gsub(/:([a-zA-Z0-9_-]+)\./,'f["\1"].value.')
-#      #puts "eval_field:  expr=#{expr}"
+      #puts "eval_field 3:  expr=#{expr}"
     expr = expr.gsub(/:([a-zA-Z0-9_-]+)\[/,'f["\1"][')
-#      #puts "eval_field:  expr=#{expr}"
+      #puts "eval_field 4:  expr=#{expr}"
     if /\.zip/.match(expr)
       expr = expr.gsub(/\.zip\(:([a-zA-Z0-9_-]+)/,'.zip(f["\1"]')
     else
       expr = expr.gsub(/:([a-zA-Z0-9_-]+)/,'(f["\1"].is_indexed? ? f["\1"].value[0] : f["\1"].value)')
     end
-      # #puts "eval_field:  expr=#{expr}"
-#      #puts "---------"
+      #puts "eval_field 5:  expr=#{expr}"
+      #puts "---------"
     expr
   end
   

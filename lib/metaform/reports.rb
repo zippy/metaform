@@ -21,7 +21,8 @@ class Reports
         :fields => nil,
         :forms => nil,
         :filters => nil,
-        :count_queries => {}
+        :count_queries => {},
+        :sum_queries => {}
       }.update(opts)
       self.reports[report_name] = Struct.new(:block,*options.keys)[block,*options.values]
     end
@@ -58,6 +59,19 @@ class Reports
         if q.is_a?(String)
           q.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1} 
           count_queries[stat] = 'count.increment if (' + q + ')' if !q.match('count')
+          #puts "count_queries[stat] = #{count_queries[stat]}"
+        end
+        }
+        
+      sum_queries = r.sum_queries
+      if options[:sum_queries]
+        sum_queries.update(options[:sum_queries])
+      end
+      sum_queries.each { |stat,q| 
+        if q.is_a?(String)
+          q.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1} 
+          sum_queries[stat] = 'count.increment(' + q + '.to_i) if (' + q + ')' if !q.match('count')
+          #puts "sum_queries[stat] = #{sum_queries[stat]}"
         end
         }
       
@@ -86,16 +100,35 @@ class Reports
       # puts "form_instances = #{form_instances.inspect}"
       
       total = form_instances.size
-      #puts "---------count_queries:" 
       count_queries.each do |stat,q|
-        #puts "stat = #{stat}"
+        #puts "count_queries:  stat = #{stat}, q = #{q}"
         count = Counter.new
         form_instances.each do |f|
-          #puts "f.workflow_state = #{f['workflow_state'].inspect}"
+          #puts "f['New_Sex'] = #{ f['New_Sex'].inspect}"
+          #puts "f['New_Grams'] = #{ f['New_Grams'].inspect}"
           begin
             expr = Record.eval_field(q)
-            #puts "expr = #{expr.inspect}[0..100]"
+            #puts "count_query expr = #{expr}"
             eval(expr)
+            #puts "count.value = #{count.value}"
+          rescue Exception => e
+            raise "Eval error '#{e.to_s}' while evaluating: #{expr}"
+          end
+        end
+        results[stat] = count.value
+      end
+      
+      sum_queries.each do |stat,q|
+        #puts "sum_queries:  stat = #{stat}, q = #{q}"
+        count = Counter.new
+        form_instances.each do |f|
+          #puts "f['New_Sex'] = #{ f['New_Sex'].inspect}"
+          #puts "f['New_Grams'] = #{ f['New_Grams'].inspect}"
+          begin
+            expr = Record.eval_field(q)
+            #puts "sum_query expr = #{expr}"
+            eval(expr)
+            #puts "count.value = #{count.value}"
           rescue Exception => e
             raise "Eval error '#{e.to_s}' while evaluating: #{expr}"
           end
