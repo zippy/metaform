@@ -22,7 +22,8 @@ class Reports
         :forms => nil,
         :filters => nil,
         :count_queries => {},
-        :sum_queries => {}
+        :sum_queries => {},
+        :default_condition => ''
       }.update(opts)
       self.reports[report_name] = Struct.new(:block,*options.keys)[block,*options.values]
     end
@@ -56,25 +57,40 @@ class Reports
         count_queries.update(options[:count_queries])
       end
       count_queries.each { |stat,q| 
+        #puts "count_query #{stat}:  q = #{q}"
         if q.is_a?(String)
           q.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1} 
-          count_queries[stat] = 'count.increment if (' + q + ')' if !q.match('count')
-          #puts "count_queries[stat] = #{count_queries[stat]}"
+          if !q.match('count') 
+            #puts "q doesn't have 'count'"
+            #puts "r.default_condition = .#{r.default_condition}."
+            if r.default_condition != ''
+              #Can't apply default condition is count was written manually
+              q = (q=='') ? r.default_condition : r.default_condition + ' && ' + q
+            end
+            count_queries[stat] = 'count.increment if (' + q + ')' 
+          end
         end
-        }
-        
+        #puts "count_queries[#{stat}] = #{count_queries[stat]}"
+        #puts "------------"
+      }
+
       sum_queries = r.sum_queries
       if options[:sum_queries]
         sum_queries.update(options[:sum_queries])
       end
       sum_queries.each { |stat,q| 
+        #puts "sum_query:  q = #{q}"
         if q.is_a?(String)
-          q.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1} 
-          sum_queries[stat] = 'count.increment(' + q + '.to_i) if (' + q + ')' if !q.match('count')
-          #puts "sum_queries[stat] = #{sum_queries[stat]}"
-        end
-        }
-      
+          if !q.match('count') 
+            q = 'count.increment(' + q + '.to_i) if ' + q  
+           end
+           q = q + ' && ' + r.default_condition if r.default_condition != ''
+           sum_queries[stat] = q
+         end
+      #puts "sum_queries[#{stat}] = #{sum_queries[stat]}"
+      #puts "------------"
+    }
+
       filters = arrayify(r.filters)
       if options[:filters]
         filters = filters.concat(arrayify(options[:filters]))

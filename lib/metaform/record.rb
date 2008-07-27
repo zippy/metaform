@@ -115,6 +115,10 @@ class Record
       @value.each {|v| block.call(v)}
     end
     
+    def to_i
+      @value.compact.inject(0){|s,v| s += v.to_i}
+    end
+    
     def zip(other_answer,&block)
       if !@value.nil? && !other_answer.value.nil?
         my_value = @value.instance_of?(Array) ? @value : [@value]
@@ -833,20 +837,20 @@ class Record
   def Record.eval_field(expression)
       #puts "---------"
       #puts "eval_Field 1:  expression=#{expression}"
-    expr = expression.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|zip|map|include\?)/,'f["\1"].\2')
+      expr = expression.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|to_i|zip|map|include\?)/,'f["\1"].\2')
       #puts "eval_field 2:  expr=#{expr}"
-    expr = expr.gsub(/:([a-zA-Z0-9_-]+)\./,'f["\1"].value.')
+      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\./,'f["\1"].value.')
       #puts "eval_field 3:  expr=#{expr}"
-    expr = expr.gsub(/:([a-zA-Z0-9_-]+)\[/,'f["\1"][')
+      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\[/,'f["\1"][')
       #puts "eval_field 4:  expr=#{expr}"
-    if /\.zip/.match(expr)
-      expr = expr.gsub(/\.zip\(:([a-zA-Z0-9_-]+)/,'.zip(f["\1"]')
-    else
-      expr = expr.gsub(/:([a-zA-Z0-9_-]+)/,'(f["\1"].is_indexed? ? f["\1"].value[0] : f["\1"].value)')
-    end
+      if /\.zip/.match(expr)
+        expr = expr.gsub(/\.zip\(:([a-zA-Z0-9_-]+)/,'.zip(f["\1"]')
+      else
+        expr = expr.gsub(/:([a-zA-Z0-9_-]+)/,'(f["\1"] ? (f["\1"].is_indexed? ? f["\1"].value[0] : f["\1"].value) : nil)')
+      end
       #puts "eval_field 5:  expr=#{expr}"
       #puts "---------"
-    expr
+      expr
   end
   
   def Record.url(record_id,presentation,tab=nil,index=nil)
