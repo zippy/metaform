@@ -82,6 +82,10 @@ class Form
     @_action_result[:redirect_url] = url
   end
 
+  def action_return_data(data)
+    @_action_result[:return_data] = data
+  end
+
 
   #################################################################################
   # a placeholder for defining a bunch of workflows
