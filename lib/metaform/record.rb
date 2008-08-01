@@ -558,10 +558,17 @@ class Record
     
     p = @form.presentations[presentation]
     if p.validation == :before_save
-      answers = answers_hash(*p.fields)
+      fields_to_validate = []
+      p.question_names.values.each do |q_name|
+        q = @form.questions[q_name]
+        fields_to_validate.push(q.field.name) if !q.read_only
+      end
+#      puts "VALIDATING FIELDS: #{fields_to_validate.inspect}"
+      answers = answers_hash(*fields_to_validate)
       answers.each do |f,a|
         @form.with_record(self) do
           if !@form.field_valid(f,a.value)
+#            puts "INVALID FIELD VALUE: #{a.value} for #{f.inspect}"
             @form.set_verification(true)
             return false
           end

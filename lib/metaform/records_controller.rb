@@ -15,16 +15,7 @@ class RecordsController < ApplicationController
   def show
     setup_record
     respond_to do |format|
-      options = {:template => 'records/show'}
-      if params[:template]
-        tmpl = params[:template]
-      elsif FileTest.exists?("#{RAILS_ROOT}/app/views/records/#{@presentation}.html.erb")
-        tmpl = @presentation
-      end
-      options[:template] = 'records/'<< tmpl if tmpl
-      options[:layout] = params[:template] if FileTest.exists?("#{RAILS_ROOT}/app/views/layouts/#{tmpl}.html.erb")
-      options[:layout] = params[:layout] if params[:layout]
-      format.html { render options}
+      format.html { render get_show_render_options}
       format.xml  { render :xml => @record.to_xml }
     end
   end
@@ -113,7 +104,7 @@ class RecordsController < ApplicationController
           format.html { redirect_url ? redirect_to(redirect_url) : render(:action => "show") }
           format.xml  { head :ok }
         else
-          format.html { render :action => "show" }
+          format.html { render get_show_render_options }
           format.xml  { render :xml => @updated.errors.to_xml }
         end
       end
@@ -129,6 +120,7 @@ class RecordsController < ApplicationController
   
   def setup_record_params
     @form = @record.form
+    @form.set_verification(false)
     @tabs = params[:tabs]
     @index = params[:index]
   end
@@ -139,6 +131,19 @@ class RecordsController < ApplicationController
     f ||= params[:form_id].constantize.new
     @record = Record.make(f,@presentation,params[:record],:convert_from_html => true,:index => params[:index])
     setup_record_params
+  end
+  
+  def get_show_render_options
+    options = {:template => 'records/show'}
+    if params[:template]
+      tmpl = params[:template]
+    elsif FileTest.exists?("#{RAILS_ROOT}/app/views/records/#{@presentation}.html.erb")
+      tmpl = @presentation
+    end
+    options[:template] = 'records/'<< tmpl if tmpl
+    options[:layout] = params[:template] if FileTest.exists?("#{RAILS_ROOT}/app/views/layouts/#{tmpl}.html.erb")
+    options[:layout] = params[:layout] if params[:layout]
+    options
   end
   
   def get_meta_data
