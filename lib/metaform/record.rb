@@ -744,13 +744,13 @@ class Record
     end
     
     if options.has_key?(:fields)
-      condition_strings << "(field_id in (?))"
+      condition_strings << "(field_instances.field_id in (?))"
       options[:fields].each {|x| field_list[x] = 1 }
       conditions_params << field_list.keys
     end
     if options.has_key?(:conditions)
       c = arrayify (options[:conditions])
-      c.each {|x| x =~ /([a-zA-Z0-9_-]+)(.*)/; condition_strings << %Q|if(field_id = '#{$1}',if (answer #{$2},true,false),false)|}
+      c.each {|x| x =~ /([a-zA-Z0-9_-]+)(.*)/; condition_strings << %Q|if(field_instances.field_id = '#{$1}',if (answer #{$2},true,false),false)|}
     end
 
     if !condition_strings.empty?
@@ -766,7 +766,6 @@ class Record
       }
     end
     find_opts ||= {}
-    #puts "find_opts = #{find_opts.inspect}"
     begin
       form_instances = FormInstance.find(what,find_opts)
     rescue
