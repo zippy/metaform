@@ -393,14 +393,12 @@ class Form
       :initially_hidden => false,
       :force_verify => false,
       :labeling => nil,
-      :read_only => nil
+      :read_only => nil,
+      :name => nil
     }.update(opts)
     widget = options[:widget]
-    if opts.size > 0
-      question_name = field_name+opts.inspect.hash.to_s
-    else
-      question_name = field_name
-    end
+    question_name = options[:name]
+    question_name ||= (opts.size > 0) ? field_name+opts.inspect.hash.to_s : field_name
     read_only = @force_read_only>0 || options[:read_only]
     @_questions_built << question_name if @_questions_built && ! read_only
         
@@ -419,10 +417,12 @@ class Form
     # get triggered in the build phase by specific values of the question.  So we must 
     # allways be ready to define a question if it wasn't already defined  
     the_q = questions[question_name]
-    unless the_q
+    widget_type,widget_parameters = parse_widget(widget)
+    if the_q
+      the_q.params = widget_parameters
+    else
       raise MetaformUndefinedFieldError,field_name if !field_exists?(field_name)
       raise MetaformException,'calculated fields can only be used read-only' if fields[field_name].calculated && !read_only
-      widget_type,widget_parameters = parse_widget(widget)
       options.update({:field=>fields[field_name],:widget =>widget_type,:params =>widget_parameters})
       the_q = questions[question_name] = Question.new(options)
     end
