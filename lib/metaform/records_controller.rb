@@ -99,7 +99,7 @@ class RecordsController < ApplicationController
           after_update_record(@record) if respond_to?(:after_update_record)
           after_save_record(@record) if respond_to?(:after_save_record)
           flash[:notice] = 'Record was successfully updated.'
-          flash[:action_result] = @record.action_result[:return_data] if @record.action_result[:return_data]
+          flash[:action_result] = @record.action_result[:return_data] if @record.action_result && @record.action_result[:return_data]
           redirect_url = @record.action_result[:redirect_url] if @record.action_result
           redirect_url = params[:_redirect_url] if !redirect_url  && params[:_redirect_url]
           format.html { redirect_url ? redirect_to(redirect_url) : render(:action => "show") }
