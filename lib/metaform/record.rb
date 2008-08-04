@@ -592,6 +592,7 @@ class Record
         return false
       end
     else
+      form_instance.update_attributes({:updated_at => Time.now})
 #      form.setup(presentation,self)
     end
 
