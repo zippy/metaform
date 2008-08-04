@@ -54,10 +54,10 @@ class Form
   # {'state_name' => {:label => 'human readable state name',:validate => true/false}}  
   # if you want the state to allways display verification errors
   #################################################################################
-  def workflow(workflow_name,states)
+  def workflow(workflow_name,order,states)
     @actions = {}
     yield
-    workflows[workflow_name] = Workflow.new(:actions => @actions,:states => states)
+    workflows[workflow_name] = Workflow.new(:actions => @actions,:order => order, :states => states)
   end
   
   # an action consist of a block to execute when running the action as well as a list of
@@ -78,7 +78,9 @@ class Form
     @_action_result[:next_state] = s
   end
 
-  def redirect_url(url)
+  def redirect_url(url) 
+    #If you need to, you can implement passing in a hash that
+    #gets turned into key-value pairs added to the url.
     @_action_result[:redirect_url] = url
   end
 

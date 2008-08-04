@@ -226,10 +226,11 @@ end
 
 class Workflow < Bin
   def bins 
-    { :actions => nil, :states => nil}
+    { :actions => nil, :order => nil, :states => nil}
   end
   def make_states_enumeration
-    states.collect do |name,value|
+    order.collect do |name|
+      value = states[name]
       label = value[:label] if value.instance_of?(Hash)
       label ||= value
       ["#{name}: #{label}",name]
