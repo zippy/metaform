@@ -998,6 +998,7 @@ EOJS
 #    raise MetaformException,"'#{@_action_result[:next_state]}' is not a state defined in the '#{workflow_state}' workflow" if !w.states.keys.include?(@_action_result[:next_state])
     raise MetaformException,"action #{action_name} is not allowed when form is in state #{workflow_state}" if !a.legal_states.include?(:any) && !a.legal_states.include?(@record.workflow_state)
     a.block.call(meta)
+    after_workflow_action(@_action_result) if respond_to?(:after_workflow_action)
     @_action_result
   end
   
