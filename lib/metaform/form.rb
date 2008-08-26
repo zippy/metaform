@@ -54,10 +54,10 @@ class Form
   # {'state_name' => {:label => 'human readable state name',:validate => true/false}}  
   # if you want the state to allways display verification errors
   #################################################################################
-  def workflow(workflow_name,order,states)
+  def workflow(workflow_name,states)
     @actions = {}
     yield
-    workflows[workflow_name] = Workflow.new(:actions => @actions,:order => order, :states => states)
+    workflows[workflow_name] = Workflow.new(:actions => @actions, :states => states)
   end
   
   # an action consist of a block to execute when running the action as well as a list of

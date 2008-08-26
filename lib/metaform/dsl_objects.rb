@@ -228,6 +228,21 @@ class Workflow < Bin
   def bins 
     { :actions => nil, :order => nil, :states => nil}
   end
+  def initialize(bins)
+    s = {}
+    o = []
+    st = bins[:states]
+    while st.size > 0
+      state = st.shift
+      value = st.shift
+      raise "States array not complete." if value.nil?
+      s[state] = value
+      o.push state
+    end
+    bins[:states] = s
+    bins[:order] = o
+    super bins
+  end
   def make_states_enumeration
     order.collect do |name|
       value = states[name]

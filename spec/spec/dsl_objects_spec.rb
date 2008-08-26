@@ -10,24 +10,39 @@ end
 
 describe Workflow do
   before :each do
-    @w = Workflow.new(:name=>'standard',:states=>{'logged' => 'Form Logged','completed'=> 'Form Completed','verifying'=>{:label => 'Form in verification',:validate => true}})
+    @w = Workflow.new(:name=>'standard',:states=>['logged', 'Form Logged', 'completed', 'Form Completed', 'verifying', {:label => 'Form in verification',:validate => true}])
   end
-    
-  it "should build an enumeration list from the states data" do
-    @w.make_states_enumeration.should == [["completed: Form Completed", "completed"], ["logged: Form Logged", "logged"], ["verifying: Form in verification", "verifying"]]
+
+  describe "initializaton" do
+    it "should not raise an error for odd number of states in initialization list" do
+      lambda {Workflow.new(:name=>'standard',:states=>['logged', 'Form Logged', 'completed', 'Completed'])}.should_not raise_error("States array not complete.")
+    end
+    it "should raise an error for even number of states in initialization list" do
+      lambda {Workflow.new(:name=>'standard',:states=>['logged', 'Form Logged', 'completed'])}.should raise_error("States array not complete.")
+    end
+    it "should initialize both order and states from a list of pairs" do
+      @w.states.should == {'logged' => 'Form Logged', 'completed' => 'Form Completed', 'verifying'=> {:label => 'Form in verification',:validate => true}}
+      @w.order.should == ['logged', 'completed', 'verifying']
+    end
   end
-  it "should report verification for validate states" do
-    @w.should_verify?('verifying').should == true
-  end
-  it "should not report verification for non validate states" do
-    @w.should_verify?('completed').should_not == true
-    @w.should_verify?('logged').should_not == true
-  end
-  it "should report label for a simple state" do
-    @w.label('completed').should == 'Form Completed'
-  end
-  it "should report label for a validate state" do
-    @w.label('verifying').should == 'Form in verification'
+
+  describe "methods" do
+    it "should build an enumeration list from the states data" do
+      @w.make_states_enumeration.should == [["logged: Form Logged", "logged"], ["completed: Form Completed", "completed"], ["verifying: Form in verification", "verifying"]]
+    end
+    it "should report verification for validate states" do
+      @w.should_verify?('verifying').should == true
+    end
+    it "should not report verification for non validate states" do
+      @w.should_verify?('completed').should_not == true
+      @w.should_verify?('logged').should_not == true
+    end
+    it "should report label for a simple state" do
+      @w.label('completed').should == 'Form Completed'
+    end
+    it "should report label for a validate state" do
+      @w.label('verifying').should == 'Form in verification'
+    end
   end
     
 end
