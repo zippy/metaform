@@ -103,11 +103,17 @@ describe Condition do
     end
   end
   describe "#humanize" do
+    before :each do
+      @form = SimpleForm.new
+    end
     it "should be able to derive a description from the a name" do
-      Condition.new(:name=>'age=~/^[0-9]+$/',:form=>'x').humanize.should == 'age matches regex /^[0-9]+$/'    
+      Condition.new(:name=>'age=~/^[0-9]+$/',:form=>@form).humanize.should == 'age matches regex /^[0-9]+$/'    
+    end
+    it "should be able to derive a description from the field label if provided" do
+      Condition.new(:name=>'higher_ed_years=1',:form=>@form).humanize.should == 'years of higher education is 1'    
     end
     it "should use the description if provided" do
-      Condition.new(:name=>'age=~/^[0-9]+$/',:form=>'x',:description=>'age is only digits').humanize.should == 'age is only digits'
+      Condition.new(:name=>'age=~/^[0-9]+$/',:form=>@form,:description=>'age is only digits').humanize.should == 'age is only digits'
     end
   end
   it "should be able to produce a javascript function name" do

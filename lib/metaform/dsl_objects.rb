@@ -51,27 +51,30 @@ class Condition < Bin
    
   def humanize
     return description if description
+    form_field = form.fields[self.field_name]
+    hfn = form_field.label if form_field
+    hfn ||= field_name
     case operator
     when '=','=='
-     "#{field_name} is #{field_value}"
+     "#{hfn} is #{field_value}"
     when '!=','=!'
-      "#{field_name} is not #{field_value}"
+      "#{hfn} is not #{field_value}"
     when '<'
-      "#{field_name} is less than #{field_value}"
+      "#{hfn} is less than #{field_value}"
     when '>'
-      "#{field_name} is greater than #{field_value}"
+      "#{hfn} is greater than #{field_value}"
     when '=~'
-      "#{field_name} matches regex #{field_value}"
+      "#{hfn} matches regex #{field_value}"
     when '!~','~!'
-      "#{field_name} does not match regex #{field_value}"
+      "#{hfn} does not match regex #{field_value}"
     when 'includes'
-      "#{field_name} includes #{field_value}"
+      "#{hfn} includes #{field_value}"
     when '!includes'
-      "#{field_name} does not include #{field_value}"
+      "#{hfn} does not include #{field_value}"
     when 'answered'
-      "#{field_name} is answered"
+      "#{hfn} is answered"
     when '!answered'
-      "#{field_name} is not answered"
+      "#{hfn} is not answered"
     else
       name.gsub(/_/,' ')
     end
