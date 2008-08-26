@@ -573,6 +573,21 @@ describe Record do
       }.should raise_error("you can't store a value to a calculated field")
     end
   end
+  
+  describe "-- explanations" do
+    before(:each) do
+      @form = SampleForm.new
+      @record = Record.make(@form,'new_entry',{:name =>'Bob Smith'})
+      @record.save('new_entry')
+    end
+    it "should return a nil explanation from a newly initialzed record" do
+      @record.explanation(:name).should == nil
+    end
+    it "should return a the explanation after being set" do
+      @record.set_explanation(:name, 'unknown')
+      @record.explanation(:name).should == 'unknown'
+    end
+  end
 
 end
 

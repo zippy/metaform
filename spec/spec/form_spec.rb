@@ -265,16 +265,20 @@ describe SimpleForm do
         nq.render(@form,'5').should == "<tr><td class='field_label'>Higher ed years:</td><td><span id=\"record_higher_ed_years\">5</span></td></tr>"
       end
       it "should render a property" do
-        (@form.questions['age'].render(@form) =~ /g question!/).should_not == nil
-        (@form.questions['higher_ed_years'].render(@form) =~ /g question!/).should_not == nil
-        (@form.questions['name'].render(@form) =~ /g question!$/).should == nil
+        @form.with_record(@record) do
+          (@form.questions['age'].render(@form) =~ /g question!/).should_not == nil
+          (@form.questions['higher_ed_years'].render(@form) =~ /g question!/).should_not == nil
+          (@form.questions['name'].render(@form) =~ /g question!$/).should == nil
+        end
       end
       it "should render multiple properties" do
         @form.set_verification(true)
-        (@form.questions['age'].render(@form,'99') =~ /g question!/).should_not == nil
-        (@form.questions['age'].render(@form,'99') =~ /<span class="errors">/).should == nil
-        (@form.questions['higher_ed_years'].render(@form,'99') =~ /g question!/).should_not == nil
-        (@form.questions['higher_ed_years'].render(@form,'99') =~ /<span class="errors">/).should_not == nil
+        @form.with_record(@record) do
+          (@form.questions['age'].render(@form,'99') =~ /g question!/).should_not == nil
+          (@form.questions['age'].render(@form,'99') =~ /<span class="errors">/).should == nil
+          (@form.questions['higher_ed_years'].render(@form,'99') =~ /g question!/).should_not == nil
+          (@form.questions['higher_ed_years'].render(@form,'99') =~ /<span class="errors">/).should_not == nil
+        end
       end
       describe "-- :followups option" do
         def setup_q
@@ -338,6 +342,23 @@ describe SimpleForm do
         end
       end
       describe "-- with verification" do
+        it "should add the verification html if record is verification mode"  do
+          @record.name = ''
+          @form.set_verification(true)
+          @form.with_record(@record) do
+            @form.q('name')
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <span class=\"errors\">this field is required: Please answer (or explain: <input id=\"explanations_name\" name=\"explanations[name]\" type=\"text\" value=\"\" />)</span></div>"]
+          end
+        end
+
+        it "should not add the verification html if record is verification mode but the field value is ok"  do
+          @form.set_verification(true)
+          @form.with_record(@record) do
+            @form.q('name')
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>"]
+          end
+        end
+        
         it "should add the verification html if q specifies the :force_verify option" do
           @record.name = ''
           @form.with_record(@record) do
@@ -352,7 +373,6 @@ describe SimpleForm do
           end
         end
         it "should add the verification html for an erb question"
-        it "should add the verification html if record is in a workflow that requires validation" 
         #do
 #          @record.name = ''
 #          @record.workflow_state= 'verifying'

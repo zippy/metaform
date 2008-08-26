@@ -20,6 +20,9 @@ class Invalid < Property
   def self.render(question_html,property_value,question,form)
     if !property_value.empty? && (form.show_verification? || question.force_verify)
       errs = property_value.join("; ")
+      fname = question.field.name
+      ex_val = form.get_record.explanation(fname)
+      errs += "; please correct (or explain: <input id=\"explanations_#{fname}\" name=\"explanations[#{fname}]\" type=\"text\" value=\"#{ex_val}\" />)"
       question_html + %Q| <span class="errors">#{errs}</span>|
     else
       question_html

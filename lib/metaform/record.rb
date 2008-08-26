@@ -596,6 +596,7 @@ class Record
 #      form.setup(presentation,self)
     end
 
+    explanations = meta_data[:explanations] if meta_data
     #TODO scalability.  This could be responsible for slowness.  Why check all the indexes!?!
     field_list = @attributes.values.collect {|a| a.keys}.flatten.uniq
     field_instances = @form_instance.field_instances.find(:all, :conditions => ["field_id in (?) and form_instance_id = ?",field_list,id])
@@ -606,8 +607,10 @@ class Record
   			f = field_instances.find {|fi| fi.field_id == field_instance_id && fi.idx == index}
   			if f != nil
   				f.answer = value
+  				f.explanation = explanations[field_instance_id] if explanations
   			else
   				f = FieldInstance.new({:answer => value, :field_id=>field_instance_id, :form_instance_id => id, :idx => index})
+  				f.explanation = explanations[field_instance_id] if explanations
   				field_instances << f
   			end
   			f.state = 'answered'		
@@ -645,6 +648,17 @@ class Record
     Record.url(id,presentation,tab,index)
   end
     
+  def explanation(field_name)
+    fi = @form_instance.field_instances.find_by_field_id_and_idx(field_name.to_s,nil)
+    fi.explanation if fi
+  end
+  
+  def set_explanation(field_name,explanation)
+    fi = @form_instance.field_instances.find_by_field_id_and_idx(field_name.to_s,nil)
+    if fi
+      fi.update_attribute(:explanation, explanation)
+    end
+  end
 
   def self.human_attribute_name(attribute_key_name) #:nodoc:
     attribute_key_name

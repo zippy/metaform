@@ -95,7 +95,9 @@ class RecordsController < ApplicationController
         else
           attribs = params[:record]
         end
-        if @record.update_attributes(attribs,@presentation,get_meta_data,opts)
+        meta_data = get_meta_data
+        meta_data[:explanations] = params[:explanations] if params[:explanations]
+        if @record.update_attributes(attribs,@presentation,meta_data,opts)
           after_update_record(@record) if respond_to?(:after_update_record)
           after_save_record(@record) if respond_to?(:after_save_record)
           flash[:action_result] = @record.action_result[:return_data] if @record.action_result && @record.action_result[:return_data]

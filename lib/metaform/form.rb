@@ -312,7 +312,14 @@ class Form
     label = options[:label]
     label ||= presentation_name.humanize
     current_text = (@_index.to_s == index.to_s && options[:current_tab] == presentation_name) ? "current " : ""
-    %Q|<li class=\"#{current_text}tab_#{presentation_name}\"> <a href=\"#\" onClick=\"return submitAndRedirect('#{url}')\" title=\"Click here to go to #{label}\"><span>#{label}</span></a> </li>|
+    invalid_count = 0
+    if show_verification?
+      presentations[presentation_name].fields.each do |f|
+        invalid_count += 1 if !Invalid.evaluate(self,fields[f],field_value(f)).empty? && get_record.explanation(f).blank?
+      end
+      presentations[presentation_name].error_count = invalid_count
+    end
+    %Q|<li class=\"#{current_text}tab_#{presentation_name}\"> <a href=\"#\" onClick=\"return submitAndRedirect('#{url}')\" title=\"Click here to go to #{label}\"><span>#{label}#{invalid_count > 0 ? "<font style='color:red'> #{invalid_count}</font>" : ''}</span></a></li>|
   end
 
   #################################################################################

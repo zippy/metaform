@@ -266,7 +266,7 @@ end
 
 class Presentation < Bin
   def bins 
-    { :name => nil, :block => nil, :legal_states => nil, :create_with_workflow => nil, :initialized => false, :question_names => {}, :force_read_only => false, :validation => nil}
+    { :name => nil, :block => nil, :legal_states => nil, :create_with_workflow => nil, :initialized => false, :question_names => {}, :force_read_only => false, :validation => nil, :error_count => nil}
   end
   def required_bins
     [:name , :block]
@@ -326,7 +326,12 @@ class Question < Bin
     css_class_html = %Q| class="#{css_class}"| if css_class
     
     properties = field.properties
-    properties.each {|p| field_html=p.render(field_html,p.evaluate(form,field,value),self,form)} if properties
+    if properties
+      properties.each do |p|
+        property_value = p.evaluate(form,field,value)
+        field_html=p.render(field_html,property_value,self,form)
+      end
+    end
   
     if erb
       field_html = ERB.new(erb).result(binding)
