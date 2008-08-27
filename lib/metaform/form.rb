@@ -108,8 +108,17 @@ class Form
   # * :javascript - which is pseudo javascript (field names are preceeded with 
   #   colons and will re replaced with javascript necessary to get values frome
   #   the field widget at runtime)
+  # * :ruby - ruby code that defines the condition.  Normally this code is supplied
+  #   not as a Proc in the options but simply as the block
   # * :overwrite - normally calling c will not overwrite a condition that has 
   #   allready been defined.  use :overwrite to force redefining a condition
+  # * :description - a human readable description of what the contition is
+  #   this value will be used by Condition#humanize if available instead of the
+  #   auto-generated text
+  # * :operator, :field_value, :field_name are options that can be supplied to
+  #   specify a condition definition.  Normally these are not supplied and instead
+  #   will be auto-parsed from the name.  i.e. c('age<18') could instead be defined
+  #   c('underage',:field_name=>'age',:operator=>'<',:field_value=>'18')
   #################################################################################
   def c(name,opts = {},&block)
     if !conditions.has_key?(name) || opts.has_key?(:overwrite)
