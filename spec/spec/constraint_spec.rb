@@ -6,13 +6,13 @@ describe Constraints do
   end
   describe 'regex' do
     it "should trigger when value is nil" do
-      Constraints.verify({'regex' => 'a.c'}, nil, @form).should == ["value must match regular expression a.c"]
+      Constraints.verify({'regex' => 'a.c'}, nil, @form).should == ["Answer must match regular expression a.c"]
     end
     it "should not trigger when value matches regex " do
       Constraints.verify({'regex' =>'a.c'}, 'abc', @form).should == []
     end
     it "should not trigger when value is not nil or ''" do
-      Constraints.verify({'regex' =>'a.c'}, 'abd', @form).should == ["value must match regular expression a.c"]
+      Constraints.verify({'regex' =>'a.c'}, 'abd', @form).should == ["Answer must match regular expression a.c"]
     end
     it "should accept regex objects as the value" do
       Constraints.verify({'regex' =>/a.c/}, 'abc', @form).should == []
@@ -21,7 +21,7 @@ describe Constraints do
 
   describe 'range' do
     it "should trigger when value is out of range" do
-      Constraints.verify({'range' => '1-5'}, '9', @form).should == ["value out of range, must be between 1 and 5"]
+      Constraints.verify({'range' => '1-5'}, '9', @form).should == ["Answer must be between 1 and 5"]
     end
     it "should not trigger when value is in range" do
       Constraints.verify({'range' => '1-3'}, '1', @form).should == []
@@ -74,10 +74,10 @@ describe Constraints do
 
   describe 'required' do
     it "should trigger when value is nil" do
-      Constraints.verify({'required' =>true}, nil, @form).should == ["this field is required"]
+      Constraints.verify({'required' =>true}, nil, @form).should == ["This field is required"]
     end
     it "should trigger when value is ''" do
-      Constraints.verify({'required' =>true}, '', @form).should == ["this field is required"]
+      Constraints.verify({'required' =>true}, '', @form).should == ["This field is required"]
     end
     it "should not trigger when value is not nil or ''" do
       Constraints.verify({'required' =>true}, 'fish', @form).should == []
@@ -90,7 +90,7 @@ describe Constraints do
     describe '-- using related field and = operator' do
       it "should trigger when related field has stated value" do
         @form.with_record(@record) do
-          Constraints.verify({'required' =>'name=Bob Smith'}, nil, @form).should == ["this field is required when name is Bob Smith"]
+          Constraints.verify({'required' =>'name=Bob Smith'}, nil, @form).should == ["This field is required when Name is Bob Smith"]
         end
       end
       it "should not trigger when related field has different value from stated value" do
@@ -102,7 +102,7 @@ describe Constraints do
     describe '-- using related field and =~ as regex operator' do
       it "should trigger when related field has stated regex" do
         @form.with_record(@record) do
-          Constraints.verify({'required' =>'name=~S.*h'}, nil, @form).should == ["this field is required when name matches regex S.*h"]
+          Constraints.verify({'required' =>'name=~S.*h'}, nil, @form).should == ["This field is required when Name matches regex S.*h"]
         end
       end
       it "should not trigger when related field has different value from stated regex" do

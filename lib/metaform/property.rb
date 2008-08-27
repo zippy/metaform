@@ -23,7 +23,7 @@ class Invalid < Property
       fname = question.field.name
       ex_val = form.get_record.explanation(fname)
       errs += "; please correct (or explain: <input id=\"explanations_#{fname}\" name=\"explanations[#{fname}]\" type=\"text\" value=\"#{ex_val}\" />)"
-      question_html + %Q| <span class="errors">#{errs}</span>|
+      question_html + %Q| <div class="errors">#{errs}</div>|
     else
       question_html
     end
