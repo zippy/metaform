@@ -569,7 +569,7 @@ class Record
         @form.with_record(self) do
           if !@form.field_valid(f,a.value)
 #            puts "INVALID FIELD VALUE: #{a.value} for #{f.inspect}"
-            @form.set_validation(:no_explanation)
+            @form.set_validating(:no_explanation)
             return false
           end
         end

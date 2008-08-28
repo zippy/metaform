@@ -272,7 +272,7 @@ describe SimpleForm do
         end
       end
       it "should render multiple properties" do
-        @form.set_validation(true)
+        @form.set_validating(true)
         @form.with_record(@record) do
           (@form.questions['age'].render(@form,'99') =~ /g question!/).should_not == nil
           (@form.questions['age'].render(@form,'99') =~ /<div class="validation_item">/).should == nil
@@ -344,7 +344,7 @@ describe SimpleForm do
       describe "-- with validation" do
         it "should add the validation html if record is validation mode"  do
           @record.name = ''
-          @form.set_validation(true)
+          @form.set_validating(true)
           @form.with_record(@record) do
             @form.q('name')
             @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">This field is required; please correct (or explain: <input id=\"explanations_name\" name=\"explanations[name]\" type=\"text\" value=\"\" />)</div></div>"]
@@ -353,7 +353,7 @@ describe SimpleForm do
 
         it "should add the validation html if record is in no_explanation validation mode"  do
           @record.name = ''
-          @form.set_validation(:no_explanation)
+          @form.set_validating(:no_explanation)
           @form.with_record(@record) do
             @form.q('name')
             @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_error\">This field is required</div></div>"]
@@ -361,7 +361,7 @@ describe SimpleForm do
         end
 
         it "should not add the validation html if record is validation mode but the field value is ok"  do
-          @form.set_validation(true)
+          @form.set_validating(true)
           @form.with_record(@record) do
             @form.q('name')
             @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>"]

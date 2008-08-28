@@ -122,7 +122,7 @@ class RecordsController < ApplicationController
   
   def setup_record_params
     @form = @record.form
-    @form.set_validation(false)
+    @form.set_validating(false)
     @tabs = params[:tabs]
     @index = params[:index]
     Form.set_store('record',@record)

@@ -322,7 +322,7 @@ class Form
     label ||= presentation_name.humanize
     current_text = (@_index.to_s == index.to_s && options[:current_tab] == presentation_name) ? "current " : ""
     invalid_count = 0
-    if show_validation?
+    if validating?
       invalid_fields = {}
       presentations[presentation_name].fields.each do |f|
         invalid = Invalid.evaluate(self,fields[f],field_value(f))
@@ -931,7 +931,18 @@ class Form
   def build(presentation_name,record=nil,index=nil)
     prepare_for_build(index)
     with_record(record,:build) do
-      set_validation(true) if workflows[record_workflow].should_validate?(workflow_state)
+      if !validating? #if someone else set the validating state globally accept that
+        v = presentations[presentation_name].validation  # otherwise use the presentation validation state
+        if !v.nil?
+          # if validation from the presentation is :before save then we set validation back to nil because
+          # we want to validation on first presentation, and record.rb sets validation if there was an error
+          v = nil if v == :before_save
+        else
+          #otherwise use the state default validation state
+          v = workflows[record_workflow].should_validate?(workflow_state)
+        end
+        set_validating(v) if v
+      end
       p(presentation_name)
       if @_stuff[:need_workflow_action]
         body %Q|<input type="hidden" name="meta[workflow_action]" id="meta_workflow_action">| 
@@ -1117,12 +1128,12 @@ EOJS
     @record.updated_by_id
   end
   
-  def show_validation?
-    @show_validation
+  def validating?
+    @validating
   end
   
-  def set_validation(val)
-    @show_validation = val
+  def set_validating(val)
+    @validating = val
   end
   
   def in_phase(phase,record=nil)

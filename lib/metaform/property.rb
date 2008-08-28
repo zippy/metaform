@@ -18,7 +18,7 @@ class Invalid < Property
     Constraints.verify(field.constraints, value, form)
   end
   def self.render(question_html,property_value,question,form)
-    if !property_value.empty? && (v = (form.show_validation? || question.force_validate))
+    if !property_value.empty? && (v = (form.validating? || question.force_validate))
       errs = property_value.join("; ")
       if v != :no_explanation
         error_class = "validation_item"
