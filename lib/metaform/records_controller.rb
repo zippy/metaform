@@ -125,6 +125,7 @@ class RecordsController < ApplicationController
     @form.set_verification(false)
     @tabs = params[:tabs]
     @index = params[:index]
+    Form.set_store('record',@record)
   end
   
   def setup_new_record
