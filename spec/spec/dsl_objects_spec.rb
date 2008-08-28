@@ -10,7 +10,7 @@ end
 
 describe Workflow do
   before :each do
-    @w = Workflow.new(:name=>'standard',:states=>['logged', 'Form Logged', 'completed', 'Form Completed', 'verifying', {:label => 'Form in verification',:validate => true}])
+    @w = Workflow.new(:name=>'standard',:states=>['logged', 'Form Logged', 'completed', 'Form Completed', 'verifying', {:label => 'Form in validation',:validate => true}])
   end
 
   describe "initializaton" do
@@ -21,19 +21,19 @@ describe Workflow do
       lambda {Workflow.new(:name=>'standard',:states=>['logged', 'Form Logged', 'completed'])}.should raise_error("States array not complete.")
     end
     it "should initialize both order and states from a list of pairs" do
-      @w.states.should == {'logged' => 'Form Logged', 'completed' => 'Form Completed', 'verifying'=> {:label => 'Form in verification',:validate => true}}
+      @w.states.should == {'logged' => 'Form Logged', 'completed' => 'Form Completed', 'verifying'=> {:label => 'Form in validation',:validate => true}}
       @w.order.should == ['logged', 'completed', 'verifying']
     end
   end
 
   describe "methods" do
     it "should build an enumeration list from the states data" do
-      @w.make_states_enumeration.should == [["logged: Form Logged", "logged"], ["completed: Form Completed", "completed"], ["verifying: Form in verification", "verifying"]]
+      @w.make_states_enumeration.should == [["logged: Form Logged", "logged"], ["completed: Form Completed", "completed"], ["verifying: Form in validation", "verifying"]]
     end
-    it "should report verification for validate states" do
+    it "should report validation for validate states" do
       @w.should_verify?('verifying').should == true
     end
-    it "should not report verification for non validate states" do
+    it "should not report validation for non validate states" do
       @w.should_verify?('completed').should_not == true
       @w.should_verify?('logged').should_not == true
     end
@@ -41,7 +41,7 @@ describe Workflow do
       @w.label('completed').should == 'Form Completed'
     end
     it "should report label for a validate state" do
-      @w.label('verifying').should == 'Form in verification'
+      @w.label('verifying').should == 'Form in validation'
     end
   end
     
@@ -117,10 +117,10 @@ describe Condition do
     end
   end
   it "should be able to produce a javascript function name" do
-    Condition.new(:name=>'age=~/^[0-9]+$/',:form=>'x').js_function_name.should == 'age_matches_regex_0_9'    
+    Condition.new(:name=>'age=~/^[0-9]+$/',:form=>SimpleForm.new).js_function_name.should == 'age_matches_regex_0_9'    
   end
   it "should use the description for deriving the javascript name if provided" do
-    Condition.new(:name=>'age=~/^[0-9]+$/',:form=>'x',:description=>'age is only digits').js_function_name.should == 'age_is_only_digits'
+    Condition.new(:name=>'age=~/^[0-9]+$/',:form=>SimpleForm.new,:description=>'age is only digits').js_function_name.should == 'age_is_only_digits'
   end
   describe "#uses_fields" do
     it "should confirm usage of field for simple conditions" do
@@ -148,11 +148,11 @@ describe Condition do
       
   describe "#generate_javascript_function" do
     it "should javascript for simple conditions with no widget" do
-      c = Condition.new(:name=>'age=~/^[0-9]+$/',:form=>'x')
+      c = Condition.new(:name=>'age=~/^[0-9]+$/',:form=>SimpleForm.new)
       c.generate_javascript_function({}).should == ["function value_age() {return $F('___age')};function age_matches_regex_0_9() {return value_age().match('^[0-9]+$')}", ["age"]]
     end
     it "should javascript for custom conditions with a widget" do
-      c = Condition.new(:name=>'collies_owned_by_joe',:form=>'x',:javascript => ":dog_type == 'collie' && :owner == 'joe'")
+      c = Condition.new(:name=>'collies_owned_by_joe',:form=>SimpleForm.new,:javascript => ":dog_type == 'collie' && :owner == 'joe'")
       c.generate_javascript_function({'dog_type'=>[Widget.fetch('TextField'),{}]}).should == ["function value_dog_type() {return $F('record_dog_type')};function value_owner() {return $F('___owner')};function collies_owned_by_joe() {return value_dog_type() == 'collie' && value_owner() == 'joe'}", ["owner"]] 
     end
   end

@@ -36,7 +36,7 @@ describe Record do
     end
     it "should provide access to the workflow state label" do
       @record.workflow_state = 'verifying'
-      @record.workflow_state_label.should == 'Form in verification'
+      @record.workflow_state_label.should == 'Form in validation'
     end
   end    
     

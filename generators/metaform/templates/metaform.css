@@ -18,7 +18,12 @@
   border: 1px solid red;
 }
 
-.errors {
+.validation_error {
+  display: inline;
+	color: #e00;
+}
+
+.validation_item {
 	color: #e00;
 }
 

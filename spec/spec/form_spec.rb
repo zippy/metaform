@@ -211,7 +211,7 @@ describe SimpleForm do
        lambda {@form.workflow_for_new_form('simple')}.should raise_error("simple doesn't define a workflow for create!")
       end
       it "should return a list of the fields it uses" do
-         @form.presentations['simple'].fields.should == %w(name married eye_color other_eye_color higher_ed_years age)
+         @form.presentations['simple'].fields.should == ["name", "eye_color", "married", "higher_ed_years", "other_eye_color", "age"]
       end
       it "should build a map between field and question names" do
         @form.presentations['simple'].question_names.should == {
@@ -262,7 +262,7 @@ describe SimpleForm do
       end
       it "should render erb in read only mode" do
         nq = @form.get_questions_by_field_name('higher_ed_years')[0]
-        nq.render(@form,'5').should == "<tr><td class='field_label'>Higher ed years:</td><td><span id=\"record_higher_ed_years\">5</span></td></tr>"
+        nq.render(@form,'5').should == "<tr><td class='field_label'>years of higher education:</td><td><span id=\"record_higher_ed_years\">5</span></td></tr>"
       end
       it "should render a property" do
         @form.with_record(@record) do
@@ -272,12 +272,12 @@ describe SimpleForm do
         end
       end
       it "should render multiple properties" do
-        @form.set_verification(true)
+        @form.set_validation(true)
         @form.with_record(@record) do
           (@form.questions['age'].render(@form,'99') =~ /g question!/).should_not == nil
-          (@form.questions['age'].render(@form,'99') =~ /<span class="errors">/).should == nil
+          (@form.questions['age'].render(@form,'99') =~ /<div class="validation_item">/).should == nil
           (@form.questions['higher_ed_years'].render(@form,'99') =~ /g question!/).should_not == nil
-          (@form.questions['higher_ed_years'].render(@form,'99') =~ /<span class="errors">/).should_not == nil
+          (@form.questions['higher_ed_years'].render(@form,'99') =~ /<div class="validation_item">/).should_not == nil
         end
       end
       describe "-- :followups option" do
@@ -341,38 +341,47 @@ describe SimpleForm do
           lambda {@form.q 'age_plus_education'}.should raise_error('calculated fields can only be used read-only')
         end
       end
-      describe "-- with verification" do
-        it "should add the verification html if record is verification mode"  do
+      describe "-- with validation" do
+        it "should add the validation html if record is validation mode"  do
           @record.name = ''
-          @form.set_verification(true)
+          @form.set_validation(true)
           @form.with_record(@record) do
             @form.q('name')
-            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <span class=\"errors\">this field is required: Please answer (or explain: <input id=\"explanations_name\" name=\"explanations[name]\" type=\"text\" value=\"\" />)</span></div>"]
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">This field is required; please correct (or explain: <input id=\"explanations_name\" name=\"explanations[name]\" type=\"text\" value=\"\" />)</div></div>"]
           end
         end
 
-        it "should not add the verification html if record is verification mode but the field value is ok"  do
-          @form.set_verification(true)
+        it "should add the validation html if record is in no_explanation validation mode"  do
+          @record.name = ''
+          @form.set_validation(:no_explanation)
+          @form.with_record(@record) do
+            @form.q('name')
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_error\">This field is required</div></div>"]
+          end
+        end
+
+        it "should not add the validation html if record is validation mode but the field value is ok"  do
+          @form.set_validation(true)
           @form.with_record(@record) do
             @form.q('name')
             @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>"]
           end
         end
         
-        it "should add the verification html if q specifies the :force_verify option" do
+        it "should add the validation html if q specifies the :force_verify option" do
           @record.name = ''
           @form.with_record(@record) do
-            @form.q('name',:force_verify => true)
-            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <span class=\"errors\">this field is required</span></div>"]
+            @form.q('name',:force_validate => true)
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">This field is required; please correct (or explain: <input id=\"explanations_name\" name=\"explanations[name]\" type=\"text\" value=\"\" />)</div></div>"]
           end
         end
-        it "should not add the verification html if q specifies the :force_verify option but the value of the field is ok" do
+        it "should not add the validation html if q specifies the :force_verify option but the value of the field is ok" do
           @form.with_record(@record) do
-            @form.q('name',:force_verify => true)
+            @form.q('name',:force_validate => true)
             @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>"]
           end
         end
-        it "should add the verification html for an erb question"
+        it "should add the validation html for an erb question"
         #do
 #          @record.name = ''
 #          @record.workflow_state= 'verifying'
@@ -402,7 +411,7 @@ describe SimpleForm do
       it "should render presentations with sub-presentations" do
         @form.in_phase(:build) do
           @form.p('container')
-          @form.get_body.should == ["<div id=\"presentation_container\" class=\"presentation\">", "<div id=\"presentation_name_only\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" /></div>", "</div>", "<div id=\"presentation_education_info\" class=\"presentation\">", "<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">Higher ed years:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>", "<div id=\"question_age_plus_education\" class=\"question\"><label class=\"label\" for=\"record[age_plus_education]\">Age plus education:</label><span id=\"record_age_plus_education\"></span>g question!</div>", "</div>", "</div>"]
+          @form.get_body.should == ["<div id=\"presentation_container\" class=\"presentation\">", "<div id=\"presentation_name_only\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" /></div>", "</div>", "<div id=\"presentation_education_info\" class=\"presentation\">", "<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>", "<div id=\"question_age_plus_education\" class=\"question\"><label class=\"label\" for=\"record[age_plus_education]\">Age plus education:</label><span id=\"record_age_plus_education\"></span>g question!</div>", "</div>", "</div>"]
         end
       end
       it "should render the contents readonly of a presentation with force_read_only true" do
@@ -485,7 +494,7 @@ describe SimpleForm do
             "<div id=\"question_age\" class=\"question\"><label class=\"label\" for=\"record[age]\">Age:</label><input id=\"record_age\" name=\"record[age]\" type=\"text\" />g question!</div>",
             "<div id=\"uid_1\" class=\"hideable_box_with_border\">",
               "<div id=\"presentation_education_info\" class=\"presentation\">",
-                "<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">Higher ed years:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>",
+                "<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>",
                 "<div id=\"question_age_plus_education\" class=\"question\"><label class=\"label\" for=\"record[age_plus_education]\">Age plus education:</label><span id=\"record_age_plus_education\">0</span>g question!</div>",
               "</div>",
             "</div>"]
@@ -518,7 +527,7 @@ describe SimpleForm do
     describe "q_meta_workflow_state (display a list of workflow states)" do
       it "should render the html element" do
         @form.with_record(@record) do
-          @form.q_meta_workflow_state('States:','PopUp').should == "<label class=\"label\" for=\"meta[workflow_state]\">States:</label><select name=\"meta[workflow_state]\" id=\"meta_workflow_state\">\n   <option value=\"completed\">completed: Form Completed</option>\n<option value=\"logged\">logged: Form Logged</option>\n<option value=\"verifying\">verifying: Form in verification</option>\n</select>\n"
+          @form.q_meta_workflow_state('States:','PopUp').should == "<label class=\"label\" for=\"meta[workflow_state]\">States:</label><select name=\"meta[workflow_state]\" id=\"meta_workflow_state\">\n   <option value=\"completed\">completed: Form Completed</option>\n<option value=\"logged\">logged: Form Logged</option>\n<option value=\"verifying\">verifying: Form in validation</option>\n</select>\n"
         end
       end
     end

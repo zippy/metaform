@@ -254,7 +254,7 @@ class Workflow < Bin
       ["#{name}: #{label}",name]
     end
   end
-  def should_verify?(state)
+  def should_validate?(state)
     v = states[state]
     v.instance_of?(Hash) ? v[:validate] : false
   end
@@ -266,7 +266,7 @@ end
 
 class Presentation < Bin
   def bins 
-    { :name => nil, :block => nil, :legal_states => nil, :create_with_workflow => nil, :initialized => false, :question_names => {}, :force_read_only => false, :validation => nil, :error_count => nil}
+    { :name => nil, :block => nil, :legal_states => nil, :create_with_workflow => nil, :initialized => false, :question_names => {}, :force_read_only => false, :validation => nil, :invalid_fields => nil}
   end
   def required_bins
     [:name , :block]

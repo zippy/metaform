@@ -52,7 +52,7 @@ class Form
   # {'state_name' => 'human readable state name'}
   # or
   # {'state_name' => {:label => 'human readable state name',:validate => true/false}}  
-  # if you want the state to allways display verification errors
+  # if you want the state to allways display validation errors
   #################################################################################
   def workflow(workflow_name,states)
     @actions = {}
@@ -322,11 +322,16 @@ class Form
     label ||= presentation_name.humanize
     current_text = (@_index.to_s == index.to_s && options[:current_tab] == presentation_name) ? "current " : ""
     invalid_count = 0
-    if show_verification?
+    if show_validation?
+      invalid_fields = {}
       presentations[presentation_name].fields.each do |f|
-        invalid_count += 1 if !Invalid.evaluate(self,fields[f],field_value(f)).empty? && get_record.explanation(f).blank?
+        invalid = Invalid.evaluate(self,fields[f],field_value(f))
+        if !invalid.empty? && get_record.explanation(f).blank?
+          invalid_fields[f] = invalid
+        end
       end
-      presentations[presentation_name].error_count = invalid_count
+      invalid_count = invalid_fields.size
+      presentations[presentation_name].invalid_fields = invalid_fields
     end
     %Q|<li class=\"#{current_text}tab_#{presentation_name}\"> <a href=\"#\" onClick=\"return submitAndRedirect('#{url}')\" title=\"Click here to go to #{label}\"><span>#{label}#{invalid_count > 0 ? "<font style='color:red'> #{invalid_count}</font>" : ''}</span></a></li>|
   end
@@ -413,7 +418,7 @@ class Form
       :followups => nil,
       :erb => nil,
       :initially_hidden => false,
-      :force_verify => false,
+      :force_validate => false,
       :labeling => nil,
       :read_only => nil,
       :name => nil
@@ -926,7 +931,7 @@ class Form
   def build(presentation_name,record=nil,index=nil)
     prepare_for_build(index)
     with_record(record,:build) do
-      set_verification(true) if workflows[record_workflow].should_verify?(workflow_state)
+      set_validation(true) if workflows[record_workflow].should_validate?(workflow_state)
       p(presentation_name)
       if @_stuff[:need_workflow_action]
         body %Q|<input type="hidden" name="meta[workflow_action]" id="meta_workflow_action">| 
@@ -1112,12 +1117,12 @@ EOJS
     @record.updated_by_id
   end
   
-  def show_verification?
-    @show_verification
+  def show_validation?
+    @show_validation
   end
   
-  def set_verification(val)
-    @show_verification = val
+  def set_validation(val)
+    @show_validation = val
   end
   
   def in_phase(phase,record=nil)
