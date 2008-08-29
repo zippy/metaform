@@ -1,7 +1,6 @@
-require_dependency("#{RAILS_ROOT}/app/controllers/application")
+#require_dependency("#{RAILS_ROOT}/app/controllers/application")
 
 class RecordsController < ApplicationController
-  
   include ApplicationHelper
   
   # GET /records/listings/[/<list_name>]
@@ -32,9 +31,9 @@ class RecordsController < ApplicationController
     before_create_record(@record) if respond_to?(:before_create_record)
     before_save_record(@record) if respond_to?(:before_save_record)
     respond_to do |format|
-      if @record.save(@presentation,get_meta_data)
+      if saved_attributes = @record.save(@presentation,get_meta_data)
         after_create_record(@record) if respond_to?(:after_create_record)
-        after_save_record(@record) if respond_to?(:after_save_record)
+        after_save_record(@record,saved_attributes) if respond_to?(:after_save_record)
 #        flash[:notice] = 'Record was successfully created.'
         redirect_url = @record.action_result[:redirect_url]
         format.html { redirect_to(redirect_url) }
@@ -97,9 +96,9 @@ class RecordsController < ApplicationController
         end
         meta_data = get_meta_data
         meta_data[:explanations] = params[:explanations] if params[:explanations]
-        if @record.update_attributes(attribs,@presentation,meta_data,opts)
+        if saved_attributes = @record.update_attributes(attribs,@presentation,meta_data,opts)
           after_update_record(@record) if respond_to?(:after_update_record)
-          after_save_record(@record) if respond_to?(:after_save_record)
+          after_save_record(@record,saved_attributes) if respond_to?(:after_save_record)
           flash[:action_result] = @record.action_result[:return_data] if @record.action_result && @record.action_result[:return_data]
           redirect_url = @record.action_result[:redirect_url] if @record.action_result
           redirect_url = params[:_redirect_url] if !redirect_url  && params[:_redirect_url]

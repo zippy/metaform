@@ -601,25 +601,31 @@ class Record
     field_list = @attributes.values.collect {|a| a.keys}.flatten.uniq
     field_instances = @form_instance.field_instances.find(:all, :conditions => ["field_id in (?) and form_instance_id = ?",field_list,id])
 #    field_instances.each {|fi| logger.info("#{fi.answer} #{fi.idx.to_s} ZZZZZ" << fi.idx.class.to_s)}
+    field_instances_to_save = []
     @attributes.each do |index,attribs|
   	  attribs.each do |field_instance_id,value|
         raise MetaformException,"field '#{field_instance_id}' not in form" if !form.field_exists?(field_instance_id)
   			f = field_instances.find {|fi| fi.field_id == field_instance_id && fi.idx == index}
   			if f != nil
-  				f.answer = value
-  				f.explanation = explanations[field_instance_id] if explanations
+  			  if f.answer != value || (explanations && f.explanation != explanations[field_instance_id])
+  			    f.answer = value
+  				  f.explanation = explanations[field_instance_id] if explanations
+  				  field_instances_to_save << f
+				  end
   			else
   				f = FieldInstance.new({:answer => value, :field_id=>field_instance_id, :form_instance_id => id, :idx => index})
   				f.explanation = explanations[field_instance_id] if explanations
-  				field_instances << f
+  				field_instances_to_save << f
   			end
   			f.state = 'answered'		
   		end
 		end
 		    
     if errors.empty?
+      saved_attributes = {}
       FieldInstance.transaction do
-        field_instances.each do |i|
+        field_instances_to_save.each do |i|
+          saved_attributes[i.field_id] = i.answer
           if !i.save!
     				errors.add(i.field_id,i.errors.full_messages.join(','))
           end
@@ -628,7 +634,7 @@ class Record
 
 #      form.submit(presentation,self)
 
-      true
+      saved_attributes
     else
       #TODO if there is a field instance that is invalid, i.e. for example because
       # the field is in a questions that is in group that is in a presentation that isn't
