@@ -774,7 +774,7 @@ class Record
       conditions_params << field_list.keys
     end
     if options.has_key?(:conditions)
-      c = arrayify (options[:conditions])
+      c = arrayify(options[:conditions])
       c.each {|x| x =~ /([a-zA-Z0-9_-]+)(.*)/; condition_strings << %Q|if(field_instances.field_id = '#{$1}',if (answer #{$2},true,false),false)|}
     end
 
