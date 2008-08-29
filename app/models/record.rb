@@ -592,7 +592,6 @@ class Record
         return false
       end
     else
-      form_instance.update_attributes({:updated_at => Time.now})
 #      form.setup(presentation,self)
     end
 
@@ -620,16 +619,21 @@ class Record
   			f.state = 'answered'		
   		end
 		end
-		    
+
+		# only save field instances if there were no errors and if any of the attributes were actually any
+		# different from what they previously were.
     if errors.empty?
       saved_attributes = {}
-      FieldInstance.transaction do
-        field_instances_to_save.each do |i|
-          saved_attributes[i.field_id] = i.answer
-          if !i.save!
-    				errors.add(i.field_id,i.errors.full_messages.join(','))
+      if !field_instances_to_save.empty?
+        FieldInstance.transaction do
+          field_instances_to_save.each do |i|
+            saved_attributes[i.field_id] = i.answer
+            if !i.save!
+              errors.add(i.field_id,i.errors.full_messages.join(','))
+            end
           end
         end
+        form_instance.update_attributes({:updated_at => Time.now})
       end
 
 #      form.submit(presentation,self)

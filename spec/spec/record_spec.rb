@@ -589,6 +589,28 @@ describe Record do
     end
   end
 
+  describe "timestamping" do
+    before(:each) do
+      @form = SampleForm.new
+      @record = Record.make(@form,'new_entry',{:name =>'Bob Smith'})
+      @record.save('new_entry')
+    end
+    it "should set the created date on creation" do
+      @record.created_at.to_s.should == Time.now.to_s
+    end
+    it "should set the updated date on creation" do
+      @record.updated_at.to_s.should == Time.now.to_s
+    end
+    it "should set the updated date on save" do
+      now_seconds = Time.now.to_i
+      Kernel::sleep 2
+      @record.name = "Billy"
+      @record.save('new_entry')
+      nr = Record.locate(:first, :index => :any)
+      nr.updated_at.to_i.should == now_seconds+2
+    end
+  end
+
 end
 
 describe Record::Answer do
