@@ -520,11 +520,7 @@ class Form
       @force_read_only ||= 0
       @force_read_only += 1 if pres.force_read_only
       if @phase == :build
-        legal_states = pres.legal_states
-        legal_states = legal_states.call if legal_states.is_a?(Proc)
-        if legal_states != :any && !arrayify(legal_states).include?(workflow_state)
-          raise MetaformException,"presentation #{presentation_name} is not allowed when form is in state #{workflow_state}"
-        end
+        pres.confirm_legal_state!(workflow_state)
       end
       pres.initialized = true
       indexed = options[:indexed]

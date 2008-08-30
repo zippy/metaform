@@ -265,14 +265,30 @@ class Workflow < Bin
 end
 
 class Presentation < Bin
+  include Utilities
+
   def bins 
     { :name => nil, :block => nil, :legal_states => nil, :create_with_workflow => nil, :initialized => false, :question_names => {}, :force_read_only => false, :validation => nil, :invalid_fields => nil}
   end
+
   def required_bins
     [:name , :block]
   end
+
   def fields
     question_names.keys
+  end
+
+  def is_legal_state?(state)
+    ls = legal_states.call if legal_states.is_a?(Proc)
+    ls ||= legal_states
+    ls == :any || arrayify(ls).include?(state)
+  end
+
+  def confirm_legal_state!(state)
+    if !is_legal_state?(state)
+      raise MetaformException,"presentation #{name} is not allowed when form is in state #{state}"
+    end
   end
 end
 
