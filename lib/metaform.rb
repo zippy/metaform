@@ -10,6 +10,15 @@ class MetaformIllegalStateForActionError < MetaformException
     super "action #{action} is not allowed when form is in state #{state}"
   end
 end
+class MetaformFieldUpdateError < MetaformException
+  attr :saved_attributes
+  attr :unsaved_field_instances
+  def initialize saved_attribs, unsaved_fields
+    @unsaved_field_instances = unsaved_fields
+    @saved_attributes = saved_attribs
+    super "Some field(s) were not saved: #{unsaved_fields.collect {|f| f.field_id}.inspect}"
+  end
+end
 class MetaformUndefinedFieldError < MetaformException
 #  attr :field
 #  def initialize(field)

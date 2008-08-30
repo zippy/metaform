@@ -611,6 +611,27 @@ describe Record do
     end
   end
 
+  describe "-- timestamped updating" do
+    before(:each) do
+      @form = SampleForm.new
+      @record = Record.make(@form,'new_entry',{:name =>'Bob Smith',:fruit =>'apple'})
+      @record.save('new_entry')
+    end
+    it "should allow saveing fields if timestamp is latest" do
+      t = @record.updated_at.to_i
+      @record.update_attributes({:name => 'Fred'},'new_entry',{:last_updated => t}).should == {"name"=>"Fred"}
+    end
+    it "should prevent overwriting of the same field when using timestamped updating but allow setting of fields that haven't been set and updating of older fields" do
+      t = @record.updated_at.to_i  #get the timestamp from the first record
+      Kernel::sleep 2
+      @record.name = "Joe"
+      @record.save('new_entry')
+      lambda {@record.update_attributes({:name => 'Fred',:fruit=>'banana',:education => 'lots'},'new_entry',{:last_updated => t})}.should raise_error('Some field(s) were not saved: ["name"]')
+      @record.education.should == 'lots'
+      @record.fruit.should == 'banana'
+    end
+  end
+
 end
 
 describe Record::Answer do

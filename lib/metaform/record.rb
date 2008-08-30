@@ -603,24 +603,34 @@ class Record
     field_instances = @form_instance.field_instances.find(:all, :conditions => ["field_id in (?) and form_instance_id = ?",field_list,id])
 #    field_instances.each {|fi| logger.info("#{fi.answer} #{fi.idx.to_s} ZZZZZ" << fi.idx.class.to_s)}
     field_instances_to_save = []
+    if meta_data && meta_data[:last_updated]
+      last_updated =  meta_data[:last_updated].to_i
+      field_instances_protected = []
+    end
     @attributes.each do |index,attribs|
-  	  attribs.each do |field_instance_id,value|
+      attribs.each do |field_instance_id,value|
         raise MetaformException,"field '#{field_instance_id}' not in form" if !form.field_exists?(field_instance_id)
-  			f = field_instances.find {|fi| fi.field_id == field_instance_id && fi.idx == index}
-  			if f != nil
-  			  if f.answer != value || (explanations && f.explanation != explanations[field_instance_id])
-  			    f.answer = value
-  				  f.explanation = explanations[field_instance_id] if explanations
-  				  field_instances_to_save << f
-				  end
-  			else
-  				f = FieldInstance.new({:answer => value, :field_id=>field_instance_id, :form_instance_id => id, :idx => index})
-  				f.explanation = explanations[field_instance_id] if explanations
-  				field_instances_to_save << f
-  			end
-  			f.state = 'answered'		
-  		end
-		end
+        f = field_instances.find {|fi| fi.field_id == field_instance_id && fi.idx == index}
+        if f != nil
+          if f.answer != value || (explanations && f.explanation != explanations[field_instance_id])
+            # if we are checking last_updated dates don't do the update if the fields updated_at
+            # is greater than the last_updated date passed in, and store this to report later
+            if last_updated && f.updated_at.to_i > last_updated
+              field_instances_protected << f
+            else
+              f.answer = value
+              f.explanation = explanations[field_instance_id] if explanations
+              field_instances_to_save << f
+            end
+          end
+        else
+          f = FieldInstance.new({:answer => value, :field_id=>field_instance_id, :form_instance_id => id, :idx => index})
+          f.explanation = explanations[field_instance_id] if explanations
+          field_instances_to_save << f
+        end
+        f.state = 'answered'
+      end
+    end
 
 		# only save field instances if there were no errors and if any of the attributes were actually any
 		# different from what they previously were.
@@ -637,7 +647,9 @@ class Record
         end
         form_instance.update_attributes({:updated_at => Time.now})
       end
-
+      if field_instances_protected && !field_instances_protected.empty?
+        raise MetaformFieldUpdateError.new(saved_attributes,field_instances_protected)
+      end
 #      form.submit(presentation,self)
 
       saved_attributes

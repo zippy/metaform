@@ -945,6 +945,7 @@ class Form
         set_validating(v) if v
       end
       p(presentation_name)
+      body %Q|<input type="hidden" name="meta[last_updated]" id="meta_last_updated" value=#{record.updated_at.to_i}>|
       if @_stuff[:need_workflow_action]
         body %Q|<input type="hidden" name="meta[workflow_action]" id="meta_workflow_action">| 
       end
