@@ -1,4 +1,4 @@
-#require_dependency("#{RAILS_ROOT}/app/controllers/application")
+require_dependency("#{RAILS_ROOT}/app/controllers/application")
 
 class RecordsController < ApplicationController
   include ApplicationHelper

@@ -557,6 +557,8 @@ class Record
   def _update_attributes(presentation,meta_data)
     
     p = @form.presentations[presentation]
+    p.confirm_legal_state!(workflow_state)
+      
     if p.validation == :before_save
       fields_to_validate = []
       p.question_names.values.each do |q_name|
