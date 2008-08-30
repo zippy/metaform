@@ -14,7 +14,7 @@ class RecordsController < ApplicationController
   def show
     setup_record
     respond_to do |format|
-      format.html { render get_show_render_options}
+      format.html { render_show}
       format.xml  { render :xml => @record.to_xml }
     end
   end
@@ -22,6 +22,7 @@ class RecordsController < ApplicationController
   # GET /form/<form_id>/records/new[/<presentation_id>[/<tab>]]
   def new
     setup_new_record
+    (@form_html,@form_javascript) = @record.build_html(@presentation,@index)
   end
 
   # POST /form/<form_id>/records/new[/<presentation_id>[/<tab>]]
@@ -39,7 +40,7 @@ class RecordsController < ApplicationController
         format.html { redirect_to(redirect_url) }
         format.xml  { head :created, :location => @record.url(@presentation,@tabs) }
       else
-        format.html { render :action => "new" }
+        format.html { (@form_html,@form_javascript) = @record.build_html(@presentation,@index); render :action => "new" }
         format.xml  { render :xml => @updated.errors.to_xml }
       end
     end
@@ -102,10 +103,10 @@ class RecordsController < ApplicationController
           flash[:action_result] = @record.action_result[:return_data] if @record.action_result && @record.action_result[:return_data]
           redirect_url = @record.action_result[:redirect_url] if @record.action_result
           redirect_url = params[:_redirect_url] if !redirect_url  && params[:_redirect_url]
-          format.html { redirect_url ? redirect_to(redirect_url) : render(:action => "show") }
+          format.html { redirect_url ? redirect_to(redirect_url) : render_show }
           format.xml  { head :ok }
         else
-          format.html { render get_show_render_options }
+          format.html { render_show }
           format.xml  { render :xml => @updated.errors.to_xml }
         end
       end
@@ -135,7 +136,8 @@ class RecordsController < ApplicationController
     setup_record_params
   end
   
-  def get_show_render_options
+  def render_show
+    (@form_html,@form_javascript) = @record.build_html(@presentation,@index)
     options = {:template => 'records/show'}
     if params[:template]
       tmpl = params[:template]
@@ -145,7 +147,7 @@ class RecordsController < ApplicationController
     options[:template] = 'records/'<< tmpl if tmpl
     options[:layout] = params[:template] if FileTest.exists?("#{RAILS_ROOT}/app/views/layouts/#{tmpl}.html.erb")
     options[:layout] = params[:layout] if params[:layout]
-    options
+    render options
   end
   
   def get_meta_data

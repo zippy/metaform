@@ -287,7 +287,7 @@ class Presentation < Bin
 
   def confirm_legal_state!(state)
     if !is_legal_state?(state)
-      raise MetaformException,"presentation #{name} is not allowed when form is in state #{state}"
+      raise MetaformIllegalStateForPresentationError.new(state,name)
     end
   end
 end

@@ -1,5 +1,10 @@
 class MetaformException < RuntimeError
 end
+class MetaformIllegalStateForPresentationError < MetaformException
+  def initialize state, presentation
+    super "presentation #{presentation} is not allowed when form is in state #{state}"
+  end
+end
 class MetaformUndefinedFieldError < MetaformException
 #  attr :field
 #  def initialize(field)

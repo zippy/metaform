@@ -493,7 +493,7 @@ class Record
     form.build_tabs(tabs,current,self)
   end
   
-  def build_html(presentation = 0,current=nil,index=nil)
+  def build_html(presentation = 0,index=nil)
     if form.presentation_exists?(presentation)
       form.build(presentation,self,index)
 #    p = form.find_presentation(presentation_id)
