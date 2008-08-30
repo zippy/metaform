@@ -664,6 +664,13 @@ class Record
     fi = @form_instance.field_instances.find_by_field_id_and_idx(field_name.to_s,nil)
     fi.explanation if fi
   end
+
+  def explanations(fields)
+    expl = {}
+    field_instances = @form_instance.field_instances.find(:all,:conditions =>["field_id in (?)",fields])
+    field_instances.each {|fi| expl[fi.field_id] = fi.explanation}
+    expl
+  end
   
   def set_explanation(field_name,explanation)
     fi = @form_instance.field_instances.find_by_field_id_and_idx(field_name.to_s,nil)

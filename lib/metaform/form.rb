@@ -324,9 +324,13 @@ class Form
     invalid_count = 0
     if validating?
       invalid_fields = {}
-      presentations[presentation_name].fields.each do |f|
-        invalid = Invalid.evaluate(self,fields[f],field_value(f))
-        if !invalid.empty? && get_record.explanation(f).blank?
+      fields_in_presentation = presentations[presentation_name].fields
+      explanations = get_record.explanations(fields_in_presentation)
+      #TODO-Eric this all needs to be fixed along with other perfomance enhancements.  See LH#156
+      answers = Record.locate(get_record.id,:index => index,:fields => fields_in_presentation, :return_answers_hash => true)
+      fields_in_presentation.each do |f|
+        invalid = Invalid.evaluate(self,fields[f],!answers ? nil : answers[f].value)
+        if !invalid.empty? && explanations[f].blank?
           invalid_fields[f] = invalid
         end
       end
