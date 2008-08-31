@@ -30,6 +30,30 @@ describe Constraints do
     end
   end
 
+  describe 'unique' do
+    before(:each) do
+      @record = Record.make(@form,'new_entry',{:name =>'Herbert Smith'})
+      @record.save('new_entry')
+      @record = Record.make(@form,'new_entry',{:name =>'Bob Smith'})
+      @record.save('new_entry')
+    end
+    it "should trigger when a field value is not unique" do
+      @form.with_record(@record) do
+        Constraints.verify({'unique' => 'name'}, 'Herbert Smith', @form).should == ['Answer must be unique']
+      end
+    end
+    it "should not trigger when a field value not unique but is the value of the current record" do
+      @form.with_record(@record) do
+        Constraints.verify({'unique' => 'name'}, 'Bob Smith', @form).should == []
+      end
+    end
+    it "should not trigger when a field value is unique" do
+      @form.with_record(@record) do
+        Constraints.verify({'unique' => 'name'}, 'Fred', @form).should == []
+      end
+    end
+  end
+
   describe '-- using a Proc' do
     before(:each) do
       @theProc = Proc.new {|value,form| value == 'squidness' ? 'no sqiddyiness' : nil}

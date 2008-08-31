@@ -34,6 +34,10 @@ module Constraints
         if value.to_i < low.to_i || value.to_i > hi.to_i
           constraint_errors << (err_override || "Answer must be between #{low} and #{hi}#{condition_extra_err}")
         end
+      when "unique"
+        current_record_id = form.get_record.id
+        records = Record.locate(:all,{:filters => [":#{constraint} == '#{value}'"],:index => :any,:fields => ['constraint']})
+        constraint_errors << (err_override || 'Answer must be unique') if records.size > 0 && !records.find{|r| r.id == current_record_id}
       when "required"
         # if the constraint is a string instead of (true | false) then build a condition on the fly
         case constraint
