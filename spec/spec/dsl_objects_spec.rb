@@ -10,16 +10,10 @@ end
 
 describe Workflow do
   before :each do
-    @w = Workflow.new(:name=>'standard',:states=>['logged', 'Form Logged', 'completed', 'Form Completed', 'verifying', {:label => 'Form in validation',:validate => true}])
+    @w = Workflow.new(:name=>'standard',:states=>[{'logged' => 'Form Logged'}, {'completed' => 'Form Completed'}, {'verifying'=> {:label => 'Form in validation',:validate => true}}])
   end
 
   describe "initializaton" do
-    it "should not raise an error for odd number of states in initialization list" do
-      lambda {Workflow.new(:name=>'standard',:states=>['logged', 'Form Logged', 'completed', 'Completed'])}.should_not raise_error("States array not complete.")
-    end
-    it "should raise an error for even number of states in initialization list" do
-      lambda {Workflow.new(:name=>'standard',:states=>['logged', 'Form Logged', 'completed'])}.should raise_error("States array not complete.")
-    end
     it "should initialize both order and states from a list of pairs" do
       @w.states.should == {'logged' => 'Form Logged', 'completed' => 'Form Completed', 'verifying'=> {:label => 'Form in validation',:validate => true}}
       @w.order.should == ['logged', 'completed', 'verifying']

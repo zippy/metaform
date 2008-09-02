@@ -234,13 +234,10 @@ class Workflow < Bin
   def initialize(bins)
     s = {}
     o = []
-    st = bins[:states]
-    while st.size > 0
-      state = st.shift
-      value = st.shift
-      raise "States array not complete." if value.nil?
-      s[state] = value
-      o.push state
+    bins[:states].each do |workflow_pair|
+      label = workflow_pair.keys[0]
+      o.push label
+      s[label] = workflow_pair[label]
     end
     bins[:states] = s
     bins[:order] = o
