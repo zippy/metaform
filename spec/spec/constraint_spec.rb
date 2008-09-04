@@ -30,6 +30,16 @@ describe Constraints do
     end
   end
 
+  describe 'max_length' do
+    it "should trigger when value has more characters than the given length" do
+      Constraints.verify({'max_length' => 2}, 'abc', @form).should == ["Answer must not be more than 2 characters long"]
+    end
+    it "should not trigger when value has fewer characters than the given length" do
+      Constraints.verify({'max_length' => 2}, 'ab', @form).should == []
+      Constraints.verify({'max_length' => 2}, 'a', @form).should == []
+    end
+  end
+
   describe 'unique' do
     before(:each) do
       @record = Record.make(@form,'new_entry',{:name =>'Herbert Smith'})

@@ -28,6 +28,10 @@ module Constraints
         if r !~ value
           constraint_errors << (err_override || "Answer must match regular expression #{constraint}#{condition_extra_err}")
         end
+      when "max_length"
+        if !value.blank? && value.length > constraint
+          constraint_errors << (err_override || "Answer must not be more than #{constraint} characters long")
+        end
       when "range"
         #for the range constraint the value must be a string "X-Y" where X<Y
         (low,hi) = constraint.split("-")
