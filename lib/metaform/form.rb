@@ -524,7 +524,10 @@ class Form
       @force_read_only ||= 0
       @force_read_only += 1 if pres.force_read_only
       if @phase == :build
-        pres.confirm_legal_state!(workflow_state)
+        #check the legal presentation state but only for the top level presentation, i.e.
+        # sub-presentations are assumed to be displayable in the states legal for the presentation
+        # in which they are embedded.
+        pres.confirm_legal_state!(workflow_state) if reset_pres
       end
       pres.initialized = true
       indexed = options[:indexed]
@@ -925,6 +928,7 @@ class Form
     @_stuff = {}
     @_questions_built = []
     @_use_multi_index = nil
+    @force_read_only = nil
   end
 
   #################################################################################
