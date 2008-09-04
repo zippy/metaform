@@ -22,13 +22,6 @@ class RadioButtonsWidget < Widget
   end
 
   ################################################################################
-  def self.humanize_value(value,options=nil)
-    e = enumeration(options[:constraints])
-    e = Hash[*e.collect {|r| r.reverse}.flatten]
-    e[value]
-  end
-  
-  ################################################################################
   def self.render_label (label,field_instance_id,form_object)
 	   %Q|<span class="label">#{label}</span>#{form_object}|
   end

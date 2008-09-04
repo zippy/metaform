@@ -22,11 +22,5 @@ class PopUpWidget < Widget
       EOHTML
     end
   end
-  ################################################################################
-  def self.humanize_value(value,options=nil)
-    e = enumeration(options[:constraints])
-    e = Hash[*e.collect {|r| r.reverse}.flatten]
-    e[value]
-  end
 end
 ################################################################################
