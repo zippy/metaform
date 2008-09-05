@@ -35,6 +35,31 @@ class Form
 #    raise "override with your dsl defintion"
   end
   
+  @@last_form_date = nil
+  def Form.make_form(form_name)
+    the_form = nil
+    # in development mode we reload the forms if there have been any changes
+    # in the forms directory
+    if RAILS_ENV == 'development'
+      require 'find'
+      forms_date = Time.at(0)
+      Find.find(Form.forms_dir) do |f|
+        begin
+          m = File.new(f).stat.mtime
+          forms_date = m if m > forms_date
+        rescue
+        end
+      end
+      if forms_date == @@last_form_date
+        the_form = Form.cache[form_name]
+      else
+        @@last_form_date = forms_date
+        Form.cache[form_name] = nil
+      end
+    end
+    the_form ||= form_name.constantize.new
+  end
+
   def name
     self.class.to_s
   end
