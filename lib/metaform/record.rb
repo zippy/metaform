@@ -173,7 +173,7 @@ class Record
     #TODO this is bogus!!
     #what about adding with_record here?  more bogusness
     if the_form.nil?
-      the_form = get_cached_or_new_form(the_instance.form)
+      the_form = Form.make_form(the_instance.form.to_s)
     end
       
     @form = the_form
@@ -183,35 +183,7 @@ class Record
     # end
     set_attributes(attributes,presentation_name,options)
   end
-  
-  @@last_form_date = nil
-  def get_cached_or_new_form(form_class)
-    form_name = form_class.to_s
-    the_form = nil
-    # in development mode we reload the forms if there have been any changes
-    # in the forms directory
-    if RAILS_ENV == 'development'
-      require 'find'
-      forms_date = Time.at(0)
-      Find.find(Form.forms_dir) do |f|
-        begin
-          m = File.new(f).stat.mtime
-          forms_date = m if m > forms_date
-        rescue
-        end
-      end
-      if forms_date == @@last_form_date
-        the_form = Form.cache[form_name]
-      else
-        @@last_form_date = forms_date
-        Form.cache[form_name] = nil
-      end
-    else
-      the_form = Form.cache[form_name]
-    end
-    the_form ||= form_class.new
-  end
-    
+
   ######################################################################################
   # set the attributes from a hash optionally converting from HTML
   def set_attributes(attributes,presentation_name,options = {})

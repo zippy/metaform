@@ -130,8 +130,7 @@ class RecordsController < ApplicationController
   
   def setup_new_record
     @presentation = params[:presentation]
-    f = Form.cache[params[:form_id]]
-    f ||= params[:form_id].constantize.new
+    f = Form.make_form(params[:form_id])
     @record = Record.make(f,@presentation,params[:record],:convert_from_html => true,:index => params[:index])
     setup_record_params
   end
