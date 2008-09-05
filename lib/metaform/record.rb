@@ -735,11 +735,11 @@ class Record
     if options.has_key?(:index)
       idx = options[:index]
       if idx != :any
-        condition_strings << "(idx #{idx ? '=' : 'is'} ?)"
+        condition_strings << "(field_instances.idx #{idx ? '=' : 'is'} ?)"
         conditions_params << idx
       end
     else
-      condition_strings << "(idx is null)"      
+      condition_strings << "(field_instances.idx is null)"      
     end
     #puts "condition_strings = #{condition_strings}"
     if options.has_key?(:forms)
@@ -786,7 +786,7 @@ class Record
     find_opts ||= {}
     begin
       form_instances = FormInstance.find(what,find_opts)
-    rescue
+    rescue ActiveRecord::RecordNotFound
       form_instances = nil
     end
         
