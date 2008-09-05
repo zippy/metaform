@@ -25,11 +25,11 @@ describe Workflow do
       @w.make_states_enumeration.should == [["logged: Form Logged", "logged"], ["completed: Form Completed", "completed"], ["verifying: Form in validation", "verifying"]]
     end
     it "should report validation for validate states" do
-      @w.should_verify?('verifying').should == true
+      @w.should_validate?('verifying').should == true
     end
     it "should not report validation for non validate states" do
-      @w.should_verify?('completed').should_not == true
-      @w.should_verify?('logged').should_not == true
+      @w.should_validate?('completed').should_not == true
+      @w.should_validate?('logged').should_not == true
     end
     it "should report label for a simple state" do
       @w.label('completed').should == 'Form Completed'
