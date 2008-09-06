@@ -399,15 +399,13 @@ class Form
       :legal_states => :any,
       :force_read_only => nil
     }.update(opts)
-    raise MetaformException,'presentations can not be defined inside presentations' if @_in_presentation
-    @_in_presentation = true
+    raise MetaformException,'presentations can not be defined inside presentations' if @_presentation
     the_presentation = Presentation.new(:name=>presentation_name,:block=>block)
     options.each { |option_name,v| set_option_by_class(the_presentation,option_name,v)}
     presentations[presentation_name] = the_presentation
     in_phase :setup do
       p(presentation_name)
     end
-    @_in_presentation = false
   end
 
   #################################################################################
