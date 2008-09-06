@@ -20,7 +20,9 @@ function $RF(rb_class){
 }
 
 function $DF(name){
-	var d = new Date($F(name+'_month') + "/" + $F(name+'_day')  + "/" + $F(name+'_year'));
+	var yield_field = $F(name+'_year');
+	var year = yield_field.length > 0 ? (new Date).getFullYear().toString().substring(0,4-yield_field.length) + yield_field : "";
+	var d = new Date($F(name+'_month') + "/" + $F(name+'_day')  + "/" + year);
 	return (d == "Invalid Date") ? null : d;
 }
 
@@ -171,6 +173,14 @@ function insert_tabs(tab_html,anchor_css,before_anchor,default_anchor_css,desire
 		
 	}
 }
+
+function cbfg_contains_followup_val(cbfg_hash,item,val) {
+	var follow_ups;
+	follow_ups = cbfg_hash.get(item);
+	if (follow_ups.match(val)) {	
+			return true;
+	} 
+	}
 
 function update_cbgf_hash(followup_id,values) {
 	$$('.'+followup_id).each(function(s) {
