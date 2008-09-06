@@ -403,28 +403,28 @@ describe SimpleForm do
     
     describe "p (display a presentation)" do
       it "should render the contents of a presentation" do
-        @form.in_phase(:build) do
+        @form.in_phase(:build,@record) do
           @form.p('create')
-          @form.get_body.should == ["<div id=\"presentation_create\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" /></div>", "</div>"]
+          @form.get_body.should == ["<div id=\"presentation_create\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>", "</div>"]
         end
       end
       it "should render presentations with sub-presentations" do
-        @form.in_phase(:build) do
+        @form.in_phase(:build,@record) do
           @form.p('container')
-          @form.get_body.should == ["<div id=\"presentation_container\" class=\"presentation\">", "<div id=\"presentation_name_only\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" /></div>", "</div>", "<div id=\"presentation_education_info\" class=\"presentation\">", "<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>", "<div id=\"question_age_plus_education\" class=\"question\"><label class=\"label\" for=\"record[age_plus_education]\">Age plus education:</label><span id=\"record_age_plus_education\"></span>g question!</div>", "</div>", "</div>"]
+          @form.get_body.should == ["<div id=\"presentation_container\" class=\"presentation\">", "<div id=\"presentation_name_only\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>", "</div>", "<div id=\"presentation_education_info\" class=\"presentation\">", "<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>", "<div id=\"question_age_plus_education\" class=\"question\"><label class=\"label\" for=\"record[age_plus_education]\">Age plus education:</label><span id=\"record_age_plus_education\">0</span>g question!</div>", "</div>", "</div>"]
         end
       end
       it "should render the contents readonly of a presentation with force_read_only true" do
-        @form.in_phase(:build) do
+        @form.in_phase(:build,@record) do
           @form.p('name_read_only')
-          @form.get_body.should == ["<div id=\"presentation_name_read_only\" class=\"presentation\">", "<div id=\"presentation_name_only\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><span id=\"record_name\"></span></div>", "</div>", "</div>"]
+          @form.get_body.should == ["<div id=\"presentation_name_read_only\" class=\"presentation\">", "<div id=\"presentation_name_only\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><span id=\"record_name\">Bob Smith</span></div>", "</div>", "</div>"]
         end
       end
     end #p
         
     describe "p (display an indexed presentation)" do
       def do_p
-        @record.save
+        @record.save('create')
         @form.with_record(@record) do
           @form.p 'name_only',:indexed => {:add_button_text => 'Add a name',:add_button_position=>'bottom',:delete_button_text=>'Delete this name', :reference_field => 'name'}
         end
@@ -480,9 +480,9 @@ describe SimpleForm do
       it "should add javascript initialization to the javascripts" do
         do_p
         @form.get_jscripts.should == [
-          "var name_only = new indexedItems;name_only.elem_id=\"presentation_name_only_items\";name_only.delete_text=\"Delete this name\";name_only.self_name=\"name_only\";", 
-          "            function doAddname_only() {name_only.addItem(\"<div id=\\\"question_name\\\" class=\\\"question\\\"><label class=\\\"label\\\" for=\\\"record[name]\\\">Name:<\\/label><input id=\\\"record_name\\\" name=\\\"record[name]\\\" type=\\\"text\\\" value=\\\"Bob Smith\\\" \\/><\\/div>\")}"
-          ]
+                "var name_only = new indexedItems;name_only.elem_id=\"presentation_name_only_items\";name_only.delete_text=\"Delete this name\";name_only.self_name=\"name_only\";", 
+                "            function doAddname_only() {\n              var t = \"<div id=\\\"question_name\\\" class=\\\"question\\\"><label class=\\\"label\\\" for=\\\"record[_%X%_name]\\\">Name:<\\/label><input id=\\\"record__%X%_name\\\" name=\\\"record[_%X%_name]\\\" type=\\\"text\\\" \\/><\\/div>\";\n              var idx = parseInt($F('multi_index'));\n              t = t.replace(/%X%/g,idx);\n              $('multi_index').value = idx+1;\n              name_only.addItem(t);\n            }\n"
+                ]
       end
     end #p-indexed
 
@@ -802,7 +802,7 @@ describe SimpleForm do
     end
     describe "#created_at" do
       it "should return datetime it was created" do
-        @record.save
+        @record.save('create')
         @form.with_record(@record) do
           @form.created_at.to_s.should == Time.now().to_s
         end

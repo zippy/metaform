@@ -270,18 +270,18 @@ describe Record do
     end
     
     it "should correctly set, save and locate fields with filters and, with work_flow_state_filters" do
-      @records.last.workflow_state = 'fish'
       @records << Record.make(SampleForm.new,'new_entry',{:name =>'Herbert Wilcox',:fruit => 'banana'})
       @records.each { |recs| recs.save('new_entry') }
-#      recs = Record.locate(:all)
+      @records.last.workflow_state = 'logged'
+      @records.last.save('update_entry')#      recs = Record.locate(:all)
 #      recs.size.should == 4
       Record.locate(:all,{:filters => ':fruit == "banana"'}).size.should == 3
       Record.locate(:all,{:filters => [':name =~ /Smith/',':fruit == "banana"']}).size.should == 2
       Record.locate(:all,{:filters => ':name =~ /o/'}).size.should == 3
-      Record.locate(:all,{:workflow_state_filter => 'fish'}).size.should == 1
-      Record.locate(:all,{:workflow_state_filter => 'cow'}).size.should == 0
-      Record.locate(:all,{:workflow_state_filter => ['fish','cow']}).size.should == 1
-      Record.locate(:all,{:workflow_state_filter => ['cow']}).size.should == 0
+      Record.locate(:all,{:workflow_state_filter => 'logged'}).size.should == 1
+      Record.locate(:all,{:workflow_state_filter => 'verified'}).size.should == 0
+      Record.locate(:all,{:workflow_state_filter => ['logged','verified']}).size.should == 1
+      Record.locate(:all,{:workflow_state_filter => ['verified']}).size.should == 0
     end
 
     it "should correctly set, save and locate indexed fields with complex filters" do

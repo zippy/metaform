@@ -30,7 +30,7 @@ class Field < Bin
 end
 
 class Condition < Bin
-  OperatorMatch = /(\w*)\s*((<)|(>)|(!=)|(=!)|(=~)|(!~)|(~!)|(=+)|(includes)|(!includes)|(answered)|(!answered))\s*(.*)/
+  OperatorMatch = /(\w*)\s*((<>=)|(>=)|(<=)|(<>)|(<)|(>)|(!=)|(=!)|(=~)|(!~)|(~!)|(=+)|(includes)|(!includes)|(answered)|(!answered))\s*(.*)/
   def bins 
     { :form => nil,:name => nil, :description => nil, :ruby => nil,:javascript => nil,:operator =>nil,:field_value =>nil,:field_name =>nil }
   end
@@ -43,7 +43,7 @@ class Condition < Bin
     if name =~ OperatorMatch
       self.field_name = $1
       self.operator = $2
-      self.field_value = $15
+      self.field_value = $19
     else
       raise MetaformException, "javascript not defined or definable for condition '#{name}'" if javascript.nil?
     end
@@ -63,6 +63,14 @@ class Condition < Bin
       "#{hfn} is less than #{field_value}"
     when '>'
       "#{hfn} is greater than #{field_value}"
+    when '<='
+      "#{hfn} is less than or equal to #{field_value}"
+    when '>='
+      "#{hfn} is greater than or equal to #{field_value}"
+    when '<>'
+      "#{hfn} is between #{!field_value.nil? ? field_value.gsub(',',' and ') : ''}"
+    when '<>='
+      "#{hfn} is between or equal to #{!field_value.nil? ? field_value.gsub(',',' and ') : ''}"
     when '=~'
       "#{hfn} matches regex #{field_value}"
     when '!~','~!'
@@ -100,6 +108,14 @@ class Condition < Bin
         !cur_val.nil? && (cur_val != '') && (cur_val.to_i < field_value.to_i)
       when '>'
         !cur_val.nil? && (cur_val != '') && (cur_val.to_i > field_value.to_i)
+      when '<='
+        !cur_val.nil? && (cur_val != '') && (cur_val.to_i <= field_value.to_i)
+      when '>='
+        !cur_val.nil? && (cur_val != '') && (cur_val.to_i >= field_value.to_i)
+      when '<>'
+        !cur_val.nil? && (cur_val != '') && (cur_val.to_i > field_value.split(',')[0].to_i) && (cur_val.to_i < field_value.split(',')[1].to_i)
+      when '<>='
+        !cur_val.nil? && (cur_val != '') && (cur_val.to_i >= field_value.split(',')[0].to_i) && (cur_val.to_i <= field_value.split(',')[1].to_i)
       when '=~'
         r = Regexp.new(field_value)
         r =~ cur_val
@@ -160,6 +176,14 @@ class Condition < Bin
           %Q|(:#{field_name} != null) && (:#{field_name} != '') && (:#{field_name} < #{the_field_value.to_i})|
         when '>'
           %Q|(:#{field_name} != null) && (:#{field_name} != '') && (:#{field_name} > #{the_field_value.to_i})|
+        when '<='
+          %Q|(:#{field_name} != null) && (:#{field_name} != '') && (:#{field_name} <= #{the_field_value.to_i})|
+        when '>='
+          %Q|(:#{field_name} != null) && (:#{field_name} != '') && (:#{field_name} >= #{the_field_value.to_i})|
+        when '<>'
+          %Q|(:#{field_name} != null) && (:#{field_name} != '') && (:#{field_name} > #{the_field_value.split(',')[0].to_i}) && (:#{field_name} < #{the_field_value.split(',')[1].to_i})|
+        when '<>='
+          %Q|(:#{field_name} != null) && (:#{field_name} != '') && (:#{field_name} >= #{the_field_value.split(',')[0].to_i}) && (:#{field_name} <= #{the_field_value.split(',')[1].to_i})|
         when '=~'
           if the_field_value =~ /^\/(.*)\/$/
             the_field_value = $1

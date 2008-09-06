@@ -80,21 +80,38 @@ describe Condition do
       c.field_name.should == 'age'   
       c.operator.should == '='   
       c.field_value.should == '10'
-      c = Condition.new(:name=>'age==10',:form=>'x')
-      c.field_name.should == 'age'   
-      c.operator.should == '=='
-      c.field_value.should == '10'
     end
     it "should handle not equals operator" do
       c = Condition.new(:name=>'age!=10',:form=>'x')
       c.field_name.should == 'age'   
       c.operator.should == '!='   
       c.field_value.should == '10'
-      c = Condition.new(:name=>'age=!10',:form=>'x')
+    end
+    it "should handle greater than or equal operator" do
+      c = Condition.new(:name=>'age>=10',:form=>'x')
       c.field_name.should == 'age'   
-      c.operator.should == '=!'   
+      c.operator.should == '>='   
       c.field_value.should == '10'
     end
+    it "should handle less than or equal operator" do
+      c = Condition.new(:name=>'age<=10',:form=>'x')
+      c.field_name.should == 'age'   
+      c.operator.should == '<='   
+      c.field_value.should == '10'
+    end
+    it "should handle between operator" do
+      c = Condition.new(:name=>'age<>10,20',:form=>'x')
+      c.field_name.should == 'age'   
+      c.operator.should == '<>'   
+      c.field_value.should == '10,20'
+    end
+    it "should handle between or equal" do
+      c = Condition.new(:name=>'age<>=10,20',:form=>'x')
+      c.field_name.should == 'age'   
+      c.operator.should == '<>='   
+      c.field_value.should == '10,20'
+    end
+    
   end
   describe "#humanize" do
     before :each do
