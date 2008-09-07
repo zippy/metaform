@@ -686,6 +686,12 @@ describe SimpleForm do
           @form.tab('view',:label => 'The View',:index => 1).should == "<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view/1')\" title=\"Click here to go to The View\"><span>The View</span></a></li>"
         end
       end
+      it "should render error count in tabs when validating" do
+        @form.set_validating(true)
+        @form.with_record(@record) do
+          @form.tab('view').should == "<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view')\" title=\"Click here to go to View\"><span>View<font style='color:red'> 3</font></span></a></li>"
+        end
+      end
     end #tab
   end  #-- dsl
 

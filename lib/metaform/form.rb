@@ -56,6 +56,8 @@ class Form
         @@last_form_date = forms_date
         Form.cache[form_name] = nil
       end
+    else
+      the_form = Form.cache[form_name]
     end
     the_form ||= form_name.constantize.new
   end
