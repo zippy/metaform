@@ -824,6 +824,21 @@ describe SimpleForm do
         @form.do_workflow_action('create',nil).should == {:next_state=>"logged", :redirect_url=>"/"}
       end
     end
+    it "should raise and error for an unknow action" do
+      @form.with_record(@record) do
+        lambda {@form.do_workflow_action('frog',nil)}.should raise_error("unknown action frog")
+      end
+    end
+    it "should raise and error for an action taken when form is in an illegal state" do
+      @form.with_record(@record) do
+        lambda {@form.do_workflow_action('continue',nil)}.should raise_error("action continue is not allowed when form is in state ")
+      end
+    end
+    it "should call after_workflow_action method if defined" do
+      @form.with_record(@record) do
+        @form.do_workflow_action('create','fish')[:after_workflow_action_meta].should == "fish"
+      end
+    end
   end
   
   describe "-- Form class utitlites" do

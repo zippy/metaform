@@ -164,6 +164,9 @@ class SimpleForm < Form
   	end
     
   end
+  def after_workflow_action(action_result,meta)
+    action_result[:after_workflow_action_meta] = meta if meta
+  end
 end
 
 
