@@ -9,14 +9,14 @@
 }
 
 .presentation_indexed_item {
-	background-color: #ddd;
-  list-style: none;
-	padding: 1px;
+	border-width:1px;
+	border-style: dotted;
+	border-color: #000066;
+  	list-style: none;
+	padding: 5px;
+	margin: 5px 0px 5px 0px;
 }
-
-.incomplete {
-  border: 1px solid red;
-}
+/* TODO-Style: Indent LIs by only 15px or so (too indented right now)*/
 
 .validation_error {
   display: inline;
@@ -28,29 +28,46 @@
 }
 
 .followup {
-  border:1px solid blue;
+  border-width:0px;
+  margin-left: 2em;
 }
 
 /* Widget Classes */
 
-.checkbox_group { 
+.checkbox_group_table {
 	width: auto;
 }
-td.checkbox_group {
+
+td.checkbox_group_cell {
 	padding: 5px;
 }
 
 .radio_buttons {
 	width: auto;
-/*	clear: both;  Not in Mana */
 }
 
 td.radio_buttons {
 	padding: 5px;
 }
 
+.check_box_followup_input {
+	float:left;
+	.float:none;  /*IE6&7 only*/
+	clear:both;
+}
+
+.checkbox_followups {
+	float:right;
+}
+
+.clear {
+	clear:both;
+}
 .left_margin_neg_5 {
 	margin-left:-5px;
+}
+.bottom_margin_10 {
+	margin-bottom: 10px;
 }
 .textfield_1 {
 	width:.7em;
