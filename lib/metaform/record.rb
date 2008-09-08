@@ -556,7 +556,6 @@ class Record
     # by the transactionality handling I added up in save, but then we we should also add it to
     # to update_attributes.
     if meta_data && meta_data[:workflow_action] && meta_data[:workflow_action] != ''
-      meta_data[:record] = self
       form.with_record(self,:workflow_action) do
         self.action_result = form.do_workflow_action(meta_data[:workflow_action],meta_data)
       end
