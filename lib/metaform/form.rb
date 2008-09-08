@@ -567,7 +567,7 @@ class Form
           template = save_context(:body) do
             pres.block.call
           end
-
+          
           template = template.join('')
 
           #TODO-Eric for now this just removes info icons from newly created items, but in the future
@@ -592,7 +592,7 @@ class Form
           add_button_html = %Q|<input type="button" onclick="doAdd#{presentation_name}()" value="#{indexed[:add_button_text]}">|
           body add_button_html if indexed[:add_button_position] != 'bottom'
           body %Q|<ul id="presentation_#{presentation_name}_items">|
-          answers = @record[indexed[:reference_field],:any]
+          answers = @record[indexed[:reference_field],:any].delete_if {|a| a.blank? }
           @_use_multi_index = answers ? answers.size : 0
           @_use_multi_index = 1 if @_use_multi_index == 0
           (0..@_use_multi_index-1).each do |i|
@@ -727,7 +727,7 @@ class Form
       options = {
         :before_anchor => true
       }.update(opts)
-      condition = c("#{options[:tab]}_changer")
+      condition = options[:condition] ? c(options[:condition]) : c("#{options[:tab]}_changer")
       raise MetaformException "condition must be defined" if !condition.instance_of?(Condition)
       raise MetaformException "tabs_name must be defined" if !options[:tabs_name]
       if options[:multi]
@@ -940,7 +940,7 @@ class Form
         @tabs_name = tabs_name
         body %Q|<div class="tabs"> <ul>|
         tabs_block.call
-        body "</ul></div>"
+        body "</ul></div><div class='clear'></div>"
         tabs_html = get_body.join("\n")
       end
     end
