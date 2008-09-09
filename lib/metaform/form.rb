@@ -248,8 +248,8 @@ class Form
           conds[field.name] = cond
 #TODO-Eric
 #TODO-Ellen  constraints auto-defined for followups?  Required?
-#          field.constraints ||= {}
-#          field.constraints['required'] = "#{name}=#{field_answer}"
+         field.constraints ||= {}
+         field.constraints['required'] = cond.name
         end 
       end
       the_field.followup_conditions = conds
