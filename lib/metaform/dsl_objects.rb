@@ -332,8 +332,6 @@ class Question < Bin
   
   def render(form,value = nil,force_read_only = nil)
     require 'erb'
-    
-    w = get_widget
     widget_options = {:constraints => field.constraints, :params => params}
     
     ro = force_read_only || read_only
@@ -352,6 +350,15 @@ class Question < Bin
     if form.use_multi_index? && idx = form.index
       field_id = "_#{idx}_#{field_name}"
     end
+    
+    if widget.is_a?(String)
+      w = get_widget 
+    else
+      w = Widget
+      value = widget.call(value)
+      puts "value = #{value}"
+    end
+    
     if erb
       field_element = ro ?
         w.render_form_object_read_only(field_id,value,widget_options) :
