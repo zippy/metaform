@@ -38,6 +38,19 @@ module Constraints
         if value.to_i < low.to_i || value.to_i > hi.to_i
           constraint_errors << (err_override || "Answer must be between #{low} and #{hi}#{condition_extra_err}")
         end
+      when "date"
+        if value
+          date = Time.local(*ParseDate.parsedate(value))
+          if constraint == :in_past
+            if date > Time.now
+              constraint_errors << (err_override || "Date cannot be in the future.")
+            end
+          elsif constraint == :in_future
+            if date < Time.now
+              constraint_errors << (err_override || "Date cannot be in the past.")
+            end
+          end
+        end
       when "unique"
         current_record_id = form.get_record.id
         records = Record.locate(:all,{:filters => [":#{constraint} == '#{value}'"],:index => :any,:fields => ['constraint']})

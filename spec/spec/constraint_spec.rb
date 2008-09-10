@@ -30,6 +30,24 @@ describe Constraints do
     end
   end
 
+  describe 'date' do
+    it "should not trigger when date is nil" do
+      Constraints.verify({'date' => :in_past}, nil, @form).should == []
+    end
+    it ":in_past should trigger when date is in the future" do
+      Constraints.verify({'date' => :in_past}, (Time.now+100).to_s, @form).should == ["Date cannot be in the future."]
+    end
+    it ":in_past should trigger when date is in the past" do
+      Constraints.verify({'date' => :in_past}, (Time.now-100).to_s, @form).should == []
+    end
+    it ":in_future should trigger when date is in the future" do
+      Constraints.verify({'date' => :in_future}, (Time.now-100).to_s, @form).should == ["Date cannot be in the past."]
+    end
+    it ":in_future should trigger when date is in the past" do
+      Constraints.verify({'date' => :in_future}, (Time.now+100).to_s, @form).should == []
+    end
+  end
+
   describe 'max_length' do
     it "should trigger when value has more characters than the given length" do
       Constraints.verify({'max_length' => 2}, 'abc', @form).should == ["Answer must not be more than 2 characters long"]
