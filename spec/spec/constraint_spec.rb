@@ -146,4 +146,21 @@ describe Constraints do
       end
     end
   end
+  describe 'set' do
+    it "should trigger when value is not in set" do
+      Constraints.verify({'set' => [{'apple' => 'Apple'},{'banana' => 'Banana'}]}, 'kiwi,apple', @form).should == ["Answer must be one of Apple, Banana"]
+    end
+
+    it "should not trigger when value is not in set" do
+      Constraints.verify({'set' => [{'apple' => 'Apple'},{'banana' => 'Banana'}]}, 'banana', @form).should == []
+    end
+
+    it "should trigger when value YAML encoded and is not in set" do
+      Constraints.verify({'set' => [{'apple' => 'Apple'},{'banana' => 'Banana'}]}, {'banana'=>:stuff,'kiwi'=>:more_stuff}.to_yaml, @form).should == ["Answer must be one of Apple, Banana"]
+    end
+
+    it "should not trigger when value YAML encoded and is in set" do
+      Constraints.verify({'set' => [{'apple' => 'Apple'},{'banana' => 'Banana'}]}, {'banana'=>:stuff,'apple'=>:more_stuff}.to_yaml, @form).should == []
+    end
+  end
 end
