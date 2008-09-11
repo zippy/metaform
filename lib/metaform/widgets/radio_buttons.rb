@@ -6,7 +6,8 @@ class RadioButtonsWidget < Widget
     e = enumeration(options[:constraints])
     result = []
     e.each do |key,val|
-      result << %Q|<input name="#{build_html_name(field_instance_id)}" id="#{build_html_multi_id(field_instance_id,val)}" class="#{field_instance_id}" type="radio" value="#{val}" #{value==val ? 'checked' : ''}> #{key}|
+      field_id = build_html_multi_id(field_instance_id,val)
+      result << %Q|<input name="#{build_html_name(field_instance_id)}" id="#{field_id}" class="#{field_instance_id}" type="radio" value="#{val}" #{value==val ? 'checked' : ''}> <label for="#{field_id}">#{key}</label>|
     end
     params = options[:params]
     if params

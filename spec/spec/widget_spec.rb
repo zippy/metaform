@@ -153,7 +153,7 @@ describe Widget do
      
     it "should render html checkboxes with a custom label" do
       RadioButtonsWidget.render(1,"val1",'the label',@options).should == 
-        "<span class=\"label\">the label</span><input name=\"record[1]\" id=\"record_1_val1\" class=\"1\" type=\"radio\" value=\"val1\" checked> Value 1\n<input name=\"record[1]\" id=\"record_1_val2\" class=\"1\" type=\"radio\" value=\"val2\" > Value 2\n<input name=\"record[1]\" id=\"record_1_val3\" class=\"1\" type=\"radio\" value=\"val3\" > Value 3"
+        "<span class=\"label\">the label</span><input name=\"record[1]\" id=\"record_1_val1\" class=\"1\" type=\"radio\" value=\"val1\" checked> <label for=\"record_1_val1\">Value 1</label>\n<input name=\"record[1]\" id=\"record_1_val2\" class=\"1\" type=\"radio\" value=\"val2\" > <label for=\"record_1_val2\">Value 2</label>\n<input name=\"record[1]\" id=\"record_1_val3\" class=\"1\" type=\"radio\" value=\"val3\" > <label for=\"record_1_val3\">Value 3</label>"
     end
     it "should render the human enumerations value if read_only" do
       RadioButtonsWidget.render_form_object_read_only(1,"val2",@options).should == 
