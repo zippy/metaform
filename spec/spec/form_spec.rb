@@ -258,7 +258,7 @@ describe SimpleForm do
       end
       it "should render erb" do
         nq = @form.get_questions_by_field_name('age')[0]
-        nq.render(@form,'22').should == "<tr><td class='field_label'>Age:</td><td><input id=\"record_age\" name=\"record[age]\" type=\"text\" value=\"22\" /></td></tr>"
+        nq.render(@form,'22').should == "<tr><td class='field_label'>Age:</td><td><input id=\"record_age\" name=\"record[age]\" type=\"text\" value=\"22\" />g question!</td></tr>"
       end
       it "should render erb in read only mode" do
         nq = @form.get_questions_by_field_name('higher_ed_years')[0]
@@ -381,14 +381,13 @@ describe SimpleForm do
             @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>"]
           end
         end
-        it "should add the validation html for an erb question"
-        #do
-#          @record.name = ''
-#          @record.workflow_state= 'verifying'
-#          SampleForm.prepare_for_build(@record,@form,nil)
-#          SampleForm.q 'name', 'TextField'
-#          SampleForm.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /><span class=\"errors\">this field is required</span></div>"]
-#        end
+        it "should add the validation html for an erb question" do
+          @record.name = ''
+          @form.with_record(@record) do
+            @form.q('higher_ed_years',:force_validate => true)
+            @form.get_body.should == ["<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" /> <div class=\"validation_item\">This field is required; please correct (or explain: <input id=\"explanations_higher_ed_years\" name=\"explanations[higher_ed_years]\" type=\"text\" value=\"\" />)</div>g question!</div>"]
+          end
+        end
       end
     end # q
     
@@ -788,8 +787,8 @@ describe SimpleForm do
         the_c = @form.c 'eye_color=ffffff',:description => "has black eyes"
         conds = @form.find_conditions_with_fields(['eye_color'])
         conds.size.should == 2
-        conds[0].name.should == 'eye_color=ffffff'
-        conds[1].name.should == 'eye_color=x'
+        conds[1].name.should == 'eye_color=ffffff'
+        conds[0].name.should == 'eye_color=x'
       end
     end
     describe "#record_workflow" do
