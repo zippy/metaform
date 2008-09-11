@@ -39,8 +39,13 @@ module Constraints
           constraint_errors << (err_override || "Answer must be between #{low} and #{hi}#{condition_extra_err}")
         end
       when "date"
-        if value
-          date = Time.local(*ParseDate.parsedate(value))
+        if !value.blank?
+          date = *ParseDate.parsedate(value)
+          while (date.last.nil? and date.size>0 ) do
+            date.pop
+          end
+          raise "value #{value} produced empty date!" if date == []
+          date = Time.local(*date)
           if constraint == :in_past
             if date > Time.now
               constraint_errors << (err_override || "Date cannot be in the future.")
