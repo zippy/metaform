@@ -57,7 +57,8 @@ class CheckBoxGroupWidget < Widget
           # Javscript: uncheck all none items in this checkbox group if the users clicks on a regular value.
           javascript = (none_fields.length > 0) ? "do_click_#{field_instance_id}_regular(this.checked)" : ""
       end
-      result << %Q|<input name="#{build_html_multi_name(field_instance_id,val)}" id="#{build_html_multi_id(field_instance_id,val)}" class="#{field_instance_id}" type="checkbox" value="#{val}" #{checked.include?(val) ? 'checked ' : ''}onClick="#{javascript}"> #{key}|
+      field_id = build_html_multi_id(field_instance_id,val)
+      result << %Q|<input name="#{build_html_multi_name(field_instance_id,val)}" id="#{field_id}" class="#{field_instance_id}" type="checkbox" value="#{val}" #{checked.include?(val) ? 'checked ' : ''}onClick="#{javascript}"> <label for="#{field_id}">#{key}</label>|
     end
     params = options[:params]
     if params 
