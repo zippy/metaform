@@ -207,8 +207,8 @@ describe SimpleForm do
     
     describe "def_dependent_fields (fields that set up required and force_nil relationships)" do
       it "should set dependent fields to a required constraint based on the dependency condition" do
-        @form.fields['dr_type'].constraints['required'].should = @form.c('dietary_restrictions=y')
-        @form.fields['dr_other'].constraints['required'].should = @form.c('dietary_restrictions=y')
+        @form.fields['dr_type'].constraints['required'].should == 'dietary_restrictions=y'
+        @form.fields['dr_other'].constraints['required'].should == 'dietary_restrictions=y'
       end
       it "should not affect other constraints defined in the block" do
         @form.fields['dr_type'].constraints['enumeration'].should == [{nil=>"-"}, {"choice"=>"By choice"}, {"medical"=>"for medical reasons"}]
