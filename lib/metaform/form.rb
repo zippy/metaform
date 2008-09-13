@@ -350,8 +350,10 @@ class Form
     current_text = (@_index.to_s == index.to_s && options[:current_tab] == presentation_name) ? "current " : ""
     invalid_count = 0
     if validating?
+      old_stuff = @_stuff
+      setup_presentation(presentation_name,@record)
       invalid_fields = {}
-      fields_in_presentation = presentations[presentation_name].fields
+      fields_in_presentation = get_current_field_names
       explanations = get_record.explanations(fields_in_presentation)
       #TODO-Eric this all needs to be fixed along with other perfomance enhancements.  See LH#156
       answers = Record.locate(get_record.id,:index => index,:fields => fields_in_presentation, :return_answers_hash => true)
@@ -363,6 +365,7 @@ class Form
       end
       invalid_count = invalid_fields.size
       presentations[presentation_name].invalid_fields = invalid_fields
+      @_stuff = old_stuff
     end
     %Q|<li class=\"#{current_text}tab_#{presentation_name}\"> <a href=\"#\" onClick=\"return submitAndRedirect('#{url}')\" title=\"Click here to go to #{label}\"><span>#{label}#{invalid_count > 0 ? "<font style='color:red'> #{invalid_count}</font>" : ''}</span></a></li>|
   end
@@ -401,13 +404,13 @@ class Form
       :legal_states => :any,
       :force_read_only => nil
     }.update(opts)
-    raise MetaformException,'presentations can not be defined inside presentations' if @_presentation
+    raise MetaformException,'presentations can not be defined inside presentations' if @root_presentation
     the_presentation = Presentation.new(:name=>presentation_name,:block=>block)
     options.each { |option_name,v| set_option_by_class(the_presentation,option_name,v)}
     presentations[presentation_name] = the_presentation
-    in_phase :setup do
-      p(presentation_name)
-    end
+#    in_phase :setup do
+#      p(presentation_name)
+#    end
   end
 
   #################################################################################
@@ -452,22 +455,22 @@ class Form
       :read_only => nil,
       :name => nil
     }.update(opts)
+    raise MetaformException,"attempting to process question for #{field_name} with no record" if @record.nil?
     widget = options[:widget]
     question_name = options[:name]
     question_name ||= (opts.size > 0) ? field_name+opts.inspect.hash.to_s : field_name
     read_only = @force_read_only>0 || options[:read_only]
-    @_questions_built << question_name if @_questions_built && ! read_only
-        
+
     # save the field name/question name mapping into the presentation so that we can get it out later 
     # when we are trying to figure out which widget to use to render it a given field
-    if cur_pres = @_presentation #@_stuff[:current_presentation]
-      mapping = cur_pres.question_names[field_name]
-      if mapping.nil?
-        cur_pres.question_names[field_name] = question_name
-      elsif mapping != question_name
-        raise MetaformException,"field '#{field_name}' is already defined in presentation"
-      end
-    end
+#    if cur_pres = @current_presentation #@_stuff[:current_presentation]
+#      mapping = cur_pres.question_names[field_name]
+#      if mapping.nil?
+#        cur_pres.question_names[field_name] = question_name
+#      elsif mapping != question_name
+#        raise MetaformException,"field '#{field_name}' is already defined in presentation"
+#      end
+#    end
 
     # note: we can't do this only in setup because the question block may have if's that only
     # get triggered in the build phase by specific values of the question.  So we must 
@@ -482,10 +485,11 @@ class Form
       options.update({:field=>fields[field_name],:widget =>widget_type,:params =>widget_parameters})
       the_q = questions[question_name] = Question.new(options)
     end
+    if @_stuff[:current_questions] && ! read_only
+      @_stuff[:current_questions][field_name] = the_q 
+    end
       
-    case 
-#    when @phase == 'verify' || :build
-    when @phase == :build
+    if @render
       field = the_q.field
       value = @record ? @record[field.name,@_index] : nil 
       body the_q.render(self,value,read_only)
@@ -532,35 +536,26 @@ class Form
     }.update(opts)
     pres = self.presentations[presentation_name]
     raise MetaformException,"presentation #{presentation_name} doesn't exist" if !pres
-    reset_pres = false
-    if @_presentation.nil?
-      @_presentation = pres
-      reset_pres = true
+    raise MetaformException,"attempting to process presentation #{presentation_name} with no record" if @record.nil?
+    first_call = false
+    if @root_presentation.nil?
+      @root_presentation = pres
+      first_call = true
     end
+    parent_presentation = @current_presentation
+    @current_presentation = pres
       
 #    save_context(:current_presentation,pres) do
 
-#  Had to comment this out because we actually need to go through all the 
-# calls to sub presentations to set up the questions mapping everywhere
-# TODO- see if there is a better way to handle this.
-#      if @phase == :setup
-#        return if pres.initialized
-#      end
-      @force_read_only ||= 0
       @force_read_only += 1 if pres.force_read_only
-      if @phase == :build
-        #check the legal presentation state but only for the top level presentation, i.e.
-        # sub-presentations are assumed to be displayable in the states legal for the presentation
-        # in which they are embedded.
-        pres.confirm_legal_state!(workflow_state) if reset_pres
-      end
+      pres.confirm_legal_state!(workflow_state) if first_call
       pres.initialized = true
       indexed = options[:indexed]
       css_class = indexed ? 'presentation_indexed' : 'presentation'
       body %Q|<div id="presentation_#{presentation_name}" class="#{css_class}">|
       if indexed
         raise MetaformException,"reference_field option must be defined" if !indexed[:reference_field]
-        if @phase == :build
+        if @render
           orig_index = @_index
           @_index = '%X%'
           @_use_multi_index = 1
@@ -605,6 +600,8 @@ class Form
           @_index = orig_index
           body '</ul>'
           body add_button_html if indexed[:add_button_position] == 'bottom'
+        else
+          pres.block.call
         end
       else
         pres.block.call
@@ -612,9 +609,10 @@ class Form
       body "</div>"
 #    end
     @force_read_only -= 1 if pres.force_read_only
-    if reset_pres
-      @_presentation = nil
+    if first_call
+      @root_presentation = nil
     end
+    @current_presentation = parent_presentation
   end
 
   #################################################################################
@@ -653,7 +651,9 @@ class Form
   #################################################################################
   # add arbitrary html
   #################################################################################
-  def html(text)
+  def html(text = '')
+    return if !@render
+    text += yield if block_given?
     body text
   end
 
@@ -676,11 +676,13 @@ class Form
   # The options for a text element are:
   # * :css_class  a string to add at the end of all labels (typically ":")
   #################################################################################
-  def t(text,opts={})
+  def t(text = '',opts={})
     options = {
       :css_class => nil,
       :element => 'p'
     }.update(opts)
+    return if !@render
+    text += yield if block_given?
     css_class = options[:css_class]
     css_class = %Q| class="#{css_class}"| if css_class
     element = options[:element]
@@ -694,7 +696,7 @@ class Form
   # to do_workflow_action.  This is used when you want to give the user explicit
   # control over which workflow state to go to next
   def q_meta_workflow_state(label,widget_type)
-    return if @phase != :build
+    return if !@render
     widget = Widget.fetch(widget_type)
     #TODO , :params => widget_parameters
     states = workflows[record_workflow].make_states_enumeration
@@ -722,29 +724,28 @@ class Form
   end
   
   #################################################################################
-  def js_conditional_tab(opts={})  
-    if @phase == :build
-      options = {
-        :before_anchor => true
-      }.update(opts)
-      condition = options[:condition] ? c(options[:condition]) : c("#{options[:tab]}_changer")
-      raise MetaformException "condition must be defined" if !condition.instance_of?(Condition)
-      raise MetaformException "tabs_name must be defined" if !options[:tabs_name]
-      if options[:multi]
-        tab_html_options = {:label => "#{options[:label]} NUM", :index => "INDEX", :current_tab => options[:current_tab]}  
-        tab_num_string = "value_#{options[:multi]}()-1"
-        multi_string = "true"
-      else
-        tab_html_options = {:label => options[:label], :index => options[:index], :tabs_name => options[:tabs_name], :current_tab => options[:current_tab]}
-        tab_num_string = "1"
-        multi_string = "false"
-      end
-      html_string = tab_html(options[:tab],tab_html_options).gsub(/'/, '\\\\\'')
-      js_remove = %Q|$$(".tab_#{options[:tab]}").invoke('remove');|
-      js_add = %Q|insert_tabs('#{html_string}','.tab_#{options[:anchor_css]}',#{options[:before_anchor]},'.tab_#{options[:default_anchor_css]}',#{tab_num_string},#{multi_string});|
-      add_observer_javascript(condition.name,js_remove+js_add,false)
-      add_observer_javascript(condition.name,js_remove,true)
+  def js_conditional_tab(opts={})
+    return if !@render
+    options = {
+      :before_anchor => true
+    }.update(opts)
+    condition = options[:condition] ? c(options[:condition]) : c("#{options[:tab]}_changer")
+    raise MetaformException "condition must be defined" if !condition.instance_of?(Condition)
+    raise MetaformException "tabs_name must be defined" if !options[:tabs_name]
+    if options[:multi]
+      tab_html_options = {:label => "#{options[:label]} NUM", :index => "INDEX", :current_tab => options[:current_tab]}  
+      tab_num_string = "value_#{options[:multi]}()-1"
+      multi_string = "true"
+    else
+      tab_html_options = {:label => options[:label], :index => options[:index], :tabs_name => options[:tabs_name], :current_tab => options[:current_tab]}
+      tab_num_string = "1"
+      multi_string = "false"
     end
+    html_string = tab_html(options[:tab],tab_html_options).gsub(/'/, '\\\\\'')
+    js_remove = %Q|$$(".tab_#{options[:tab]}").invoke('remove');|
+    js_add = %Q|insert_tabs('#{html_string}','.tab_#{options[:anchor_css]}',#{options[:before_anchor]},'.tab_#{options[:default_anchor_css]}',#{tab_num_string},#{multi_string});|
+    add_observer_javascript(condition.name,js_remove+js_add,false)
+    add_observer_javascript(condition.name,js_remove,true)
   end
 
   #################################################################################
@@ -790,8 +791,8 @@ class Form
     }.update(opts)
 
     # if we are not actually building skip the generation of javascript
-    # but yield so that any sub-questions and stuff can be initialized.
-    if @phase != :build
+    # but yield so that any sub-questions and stuff can be processed.
+    if !@render
       yield if block_given?
       return
     end
@@ -884,7 +885,7 @@ class Form
   # figure out the widgets on the fly
   def javascript_if_field(field_name,expr,value)
     save_context(:js) do
-      widget = questions[get_field_question_name(field_name)].get_widget
+      widget = get_current_question_by_field_name(field_name).get_widget
       javascript %Q|if (#{widget.javascript_get_value_function(field_name)} #{expr} '#{value}') {#{yield}};|
     end
   end
@@ -930,8 +931,8 @@ class Form
   # produce the html for the given tab group setting current tab appropriately
   def build_tabs(tabs_name,current,record)
     tabs_html = ''
-    with_record(record) do
-      save_context(:body) do
+    with_record(record,:render) do
+      save_context(:current_questions,:body) do
         tabs_block = tabs[tabs_name]
         raise MetaformException,"tab group '#{tabs_name}' doesn't exist" if !tabs_block
 
@@ -948,19 +949,28 @@ class Form
   end
 
   #################################################################################
-  def prepare_for_build(index)
+  def prepare(index)
     @_index = index
     @_stuff = {}
-    @_questions_built = []
+    @_stuff[:current_questions] = {}
     @_use_multi_index = nil
-    @force_read_only = nil
+    @force_read_only = 0
+  end
+
+  #################################################################################
+  # run through the presentation not rendering.
+  def setup_presentation(presentation_name,record,index=nil)
+    prepare(index)
+    with_record(record) do
+      p(presentation_name)
+    end
   end
 
   #################################################################################
   # produce the html and javascript necessary to run the form
   def build(presentation_name,record=nil,index=nil)
-    prepare_for_build(index)
-    with_record(record,:build) do
+    prepare(index)
+    with_record(record,:render) do
       if !validating? #if someone else set the validating state globally accept that
         v = presentations[presentation_name].validation  # otherwise use the presentation validation state
         if !v.nil?
@@ -986,7 +996,7 @@ class Form
       jscripts = []
       hiddens_added = {}
 
-      field_widget_map = questions_field_widget_map(get_questions_built)
+      field_widget_map = current_questions_field_widget_map
       ojs = get_observer_jscripts
        if ojs
         field_name_action_hash = {}
@@ -1033,10 +1043,9 @@ EOJS
     
   # build a field_name to widget mapping so that we can pass it into the conditions
   # to build the necessary javascript
-  def questions_field_widget_map(question_list)
+  def current_questions_field_widget_map
     field_widget_map = {}
-    question_list.each do |question_name|
-      q = questions[question_name]
+    get_current_questions.each do |q|
       field_name = q.field.name
       w = q.get_widget
       raise MetaformException,"Ouch! two different widgets for field #{field_name} (#{field_widget_map[field_name].inspect} && #{w.inspect})" if field_widget_map[field_name] && field_widget_map[field_name][0] != w
@@ -1069,9 +1078,11 @@ EOJS
   #################################################################################
   # add a "tool tip"
   #################################################################################
-  def tip(text,opts={})
+  def tip(text="",opts={})
 #    options = {
 #    }.update(opts)
+    return if !@render
+    text += yield if block_given?
     @_tip_id ||= 1
     tip_id = "tip_#{@_tip_id}"
     javascript %Q|new Tip('#{tip_id}',"#{quote_for_javascript(text)}")|
@@ -1092,11 +1103,6 @@ EOJS
   def presentation_exists?(presentation_name)
     self.presentations.has_key?(presentation_name.to_s)
   end
-  
-  def get_questions_by_field_name(field_name)
-    field_names = self.questions.keys.find_all {|n| n =~ /^#{field_name}/}
-    field_names.collect {|f| self.questions[f]}
-  end
 
   def field_valid(field_name,value = :get_from_form)
     field = fields[field_name]
@@ -1114,7 +1120,6 @@ EOJS
   end
 
   def field_value(field_name,index = -1)
-    return if @phase == :setup
     raise MetaformException,"attempting to get field value of '#{field_name}' with no record" if @record.nil?
     index = index == -1 ? @_index : index
     @record[field_name,index]
@@ -1124,38 +1129,32 @@ EOJS
   # this meta-information is not easily accessible in the same way that questions are, and probably
   # should be.  We need to formalize and unify the concept of meta or housekeeping information
   def record_workflow
-    return if @phase == :setup
     raise MetaformException,"attempting to get workflow with no record" if @record.nil?
     @record.workflow
   end
 
   def workflow_state
-    return if @phase == :setup
     raise MetaformException,"attempting to get workflow state with no record" if @record.nil?
     @record.workflow_state
   end
 
   def created_at
-    return if @phase == :setup
-    raise MetaformException,"attempting to get created_at state with no record" if @record.nil?
+    raise MetaformException,"attempting to get created_at with no record" if @record.nil?
     @record.created_at
   end
   
   def updated_at
-    return if @phase == :setup
-    raise MetaformException,"attempting to get updated_at state with no record" if @record.nil?
+    raise MetaformException,"attempting to get updated_at with no record" if @record.nil?
     @record.updated_at
   end
 
   def created_by_id
-    return if @phase == :setup
-    raise MetaformException,"attempting to get created_by_id state with no record" if @record.nil?
+    raise MetaformException,"attempting to get created_by_id with no record" if @record.nil?
     @record.created_by_id
   end
   
   def updated_by_id
-    return if @phase == :setup
-    raise MetaformException,"attempting to get updated_by_id state with no record" if @record.nil?
+    raise MetaformException,"attempting to get updated_by_id with no record" if @record.nil?
     @record.updated_by_id
   end
   
@@ -1167,19 +1166,29 @@ EOJS
     @validating = val
   end
   
-  def in_phase(phase,record=nil)
-    with_record(record,phase) do
-      yield
-    end
+#  def in_phase(phase,record=nil)
+#    with_record(record,phase) do
+#      yield
+#    end
+#  end
+
+  def with_record(record,render = false)
+    old_render = @render
+    old_record = @record
+    @record = record
+    @render = render
+    result = yield
+    @record = old_record
+    @render = old_render
+    result
+  end
+  
+  def set_record(record)
+    @record = record
   end
 
-  def with_record(record,phase=:build)
-    @record = record
-    @phase = phase
-    result = yield
-    @phase = nil
-    @record = nil
-    result
+  def set_render(render)
+    @render = render
   end
   
   def workflow_for_new_form(presentation_name)
@@ -1200,8 +1209,17 @@ EOJS
     @_stuff[:observer_js]
   end
 
-  def get_questions_built
-    @_questions_built
+  def get_current_questions
+   @_stuff[:current_questions].values
+  end
+  
+  def get_current_field_names
+    @_stuff[:current_questions].keys
+  end
+
+  def get_current_question_by_field_name(field_name)
+    raise MetaformException,"attempting to search for current question when there are none!" if @_stuff[:current_questions].nil?
+    @_stuff[:current_questions][field_name]
   end
 
   def get_record
@@ -1218,12 +1236,6 @@ EOJS
 
   def index
     @_index
-  end
-
-  #TODO this doesn't find questions from nested presentation
-  def get_presentation_question(presentation_name,field_name)
-    p = presentations[presentation_name]
-    questions[p.question_names[field_name]]
   end
 
   def get_field_constraints_as_hash(field_name,constraint)
@@ -1271,7 +1283,6 @@ EOJS
   end
   
   def if_c(condition,condition_value=true)
-    return if @phase != :build
     if condition.instance_of?(String)
       condition = c(condition)
     end
@@ -1298,7 +1309,7 @@ EOJS
   # during the build phase
   # returns what was added to the body
   def body(html)
-    return if @phase != :build
+    return if !@render
     @_stuff[:body] ||= []
     @_stuff[:body] << html
     html
@@ -1307,22 +1318,10 @@ EOJS
   ###########################################################
   # collects up javascripts generated by the rendering calls in a presentation
   def javascript(js)
-    return if @phase != :build
+    return if !@render
     @_stuff[:js] ||= []
     @_stuff[:js] << js
     js
-  end
-
-  ###############################################
-  def get_field_question_name(field_name)
-    if !(cur_pres = @_presentation)  #@_stuff[:current_presentation]
-      puts "Warning: current presentation not set when trying to get question name for field '#{field_name}'"
-      return field_name
-    end
-    
-    q_name = cur_pres.question_names[field_name]
-    raise MetaformException,"no question for field '#{field_name}' has been defined in presentation '#{cur_pres.name}'" if !q_name
-    q_name
   end
   
   ###############################################
@@ -1332,7 +1331,7 @@ EOJS
     #we collect up all the conditions/functions pairs by field because Event.Observer can
     # only be called once per field id.  Thus we have to collect all the javascript bits we want to execute on the
     # observed field, and then generate the javascript call to Event.Observe down in the #build method
-
+    return if !@render
     @_stuff[:observer_js] ||= {}
     @_stuff[:observer_js][condition_name] ||= {:pos => [],:neg =>[]}
     @_stuff[:observer_js][condition_name][negate ? :neg : :pos] << script
@@ -1340,13 +1339,26 @@ EOJS
 
   ###########################################################
   # used to save and restore something in the stuff hash for a block call
-  def save_context(what,default = [])
-    @_contexts[what] ||= []
-    @_contexts[what].push @_stuff[what]
-    @_stuff[what] = default
+  def save_context(*what)
+    what.each do |stuff_item|
+      @_contexts[stuff_item] ||= []
+      current_item = @_stuff[stuff_item]
+      @_contexts[stuff_item].push current_item
+      @_stuff[stuff_item] = case current_item
+      when Array
+        []
+      when Hash
+        {}
+      else
+        nil
+      end
+    end
     yield
-    the_stuff = @_stuff[what]
-    @_stuff[what] = @_contexts[what].pop
+    the_stuff = nil
+    what.each do |stuff_item|
+      the_stuff = @_stuff[stuff_item]
+      @_stuff[stuff_item] = @_contexts[stuff_item].pop
+    end
     the_stuff
   end
   

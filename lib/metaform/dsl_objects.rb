@@ -95,6 +95,7 @@ class Condition < Bin
   end
   
   def evaluate(index = -1)
+    raise MetaformException,"attempting to evaluate condition with no record" if form.get_record.nil?
     if ruby
       ruby.call(self)
     else
@@ -289,16 +290,16 @@ class Presentation < Bin
   include Utilities
 
   def bins 
-    { :name => nil, :block => nil, :legal_states => nil, :create_with_workflow => nil, :initialized => false, :question_names => {}, :force_read_only => false, :validation => nil, :invalid_fields => nil}
+    { :name => nil, :block => nil, :legal_states => nil, :create_with_workflow => nil, :initialized => false, :force_read_only => false, :validation => nil, :invalid_fields => nil}
   end
 
   def required_bins
     [:name , :block]
   end
 
-  def fields
-    question_names.keys
-  end
+#  def fields
+#    question_names.keys
+#  end
 
   def is_legal_state?(state)
     ls = legal_states.call if legal_states.is_a?(Proc)

@@ -74,6 +74,12 @@ class SimpleForm < Form
       f 'children', :type=>'integer', :group => 'kids', :force_nil_if => { c('no_children') => ['oldest_child_age']}
       f 'oldest_child_age', :type=>'integer', :group => 'kids'
     end
+
+    f 'dietary_restrictions', :label => "Dietary restrictions", :constraints => {'enumeration' => [{'y' => 'Yes'},{'n'=>'No'}]}
+    def_dependent_fields('dietary_restrictions=y') do
+      f 'dr_type', :label => "type", :constraints => {'enumeration' => [{nil=>'-'},{'choice'=>'By choice'},{'medical'=>'for medical reasons'}]}
+      f 'dr_other', :label => "more info"
+    end
         
  #  def_constraints do
  #    cs :fields=> ['senior'],:constraints => {'must_be' => if_c('Flg!=Y',nil)}, :force_on_save => true

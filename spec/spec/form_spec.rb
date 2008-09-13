@@ -9,6 +9,8 @@ describe SimpleForm do
   describe "-- dsl: " do
     describe "labeling" do
       before(:each) do
+        @form.set_record(@record)
+        @form.setup_presentation('simple',@record)
         @name_q = @form.questions['name']
       end
       it "should set the default label options" do
@@ -18,8 +20,8 @@ describe SimpleForm do
         @name_q.render(@form).should == "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" /></div>"
       end
       it "should render questions that override the postfix" do
-        mq = @form.get_questions_by_field_name('married')[0]
-        mq.render(@form).should == "<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record[married]\">Married?</label><select name=\"record[married]\" id=\"record_married\">\n   <option value=\"y\">Yes</option>\n<option value=\"n\">No</option>\n</select>\n</div>"
+        mq = @form.get_current_question_by_field_name('married')
+        mq.render(@form).should == "<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record[married]\">Married?</label><input id=\"record_married\" name=\"record[married]\" type=\"text\" /></div>"
       end
     end
     
@@ -80,6 +82,9 @@ describe SimpleForm do
     # end
     
     describe "if_c (define a constraint condition))" do
+      it "should raise errors when a record isn't specified" do
+        lambda {@form.if_c('name=bob')}.should raise_error("attempting to evaluate condition with no record")
+      end
       it "should correctly perform an if when a simple condition is false" do
         @record.name = 'Joe'
         r = @form.build('if_c_user_simple',@record)
@@ -210,25 +215,30 @@ describe SimpleForm do
       it "should not set the create_with_workflow option if not present" do
        lambda {@form.workflow_for_new_form('simple')}.should raise_error("simple doesn't define a workflow for create!")
       end
-      it "should return a list of the fields it uses" do
-         (@form.presentations['simple'].fields - ["name", "eye_color", "married", "higher_ed_years", "other_eye_color", "age"]).size.should == 0 
-      end
-      it "should build a map between field and question names" do
-        @form.presentations['simple'].question_names.should == {
-            "name"=>"name",
-            "married"=>"married-208205125",
-            "eye_color"=>"eye_color-876727679",
-            "other_eye_color"=>"other_eye_color-316587098", 
-            "higher_ed_years"=>"higher_ed_years",
-            "age"=>"age"
-          }
-      end
+#      it "should return a list of the fields it uses" do
+#         (@form.presentations['simple'].fields - ["name", "eye_color", "married", "higher_ed_years", "other_eye_color", "age"]).size.should == 0 
+#      end
+#      it "should build a map between field and question names" do
+#        @form.presentations['simple'].question_names.should == {
+#            "name"=>"name",
+#            "married"=>"married-208205125",
+#            "eye_color"=>"eye_color-876727679",
+#            "other_eye_color"=>"other_eye_color-316587098", 
+#            "higher_ed_years"=>"higher_ed_years",
+#            "age"=>"age"
+#          }
+#      end
     end # presentation
     
     describe "q (display a question)" do
       before(:each) do
-       @name_q = @form.questions['name']
-       @record = Record.make(@form,'create',{:name =>'Bob Smith'})
+        @form.set_record(@record)
+        @form.setup_presentation('simple',@record)
+        @name_q = @form.questions['name']
+      end
+      it "should raise errors when a record isn't specified" do
+        @form.set_record(nil)
+        lambda {@form.q('name')}.should raise_error("attempting to process question for name with no record")
       end
       it "should raise an exception for an undefined field" do
         lambda {@form.q 'froboz'}.should raise_error(MetaformUndefinedFieldError)
@@ -249,23 +259,26 @@ describe SimpleForm do
         @name_q.render(@form,'Bob Smith',true).should == "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><span id=\"record_name\">Bob Smith</span></div>"
       end
       it "should render an enumeration based widget" do
-        mq = @form.get_presentation_question('married_questions','married')
+        @form.setup_presentation('married_questions',@record)
+        mq = @form.get_current_question_by_field_name('married')
         mq.render(@form,'y').should == "<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record[married]\">Married?</label><select name=\"record[married]\" id=\"record_married\">\n\t<option value=\"y\" selected=\"selected\">Yes</option>\n<option value=\"n\">No</option>\n</select>\n</div>"
       end
       it "should render in read-only mode" do
-        nq = @form.get_questions_by_field_name('name')[1]
-        nq.render(@form,'Bob Smith').should == "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><span id=\"record_name\">Bob Smith</span></div>"
+        @name_q.render(@form,'Bob Smith',true).should == "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><span id=\"record_name\">Bob Smith</span></div>"
       end
       it "should render erb" do
-        nq = @form.get_questions_by_field_name('age')[0]
-        nq.render(@form,'22').should == "<tr><td class='field_label'>Age:</td><td><input id=\"record_age\" name=\"record[age]\" type=\"text\" value=\"22\" />g question!</td></tr>"
+        @form.setup_presentation('view',@record)
+        q = @form.get_current_question_by_field_name('age')
+        q.render(@form,'22').should == "<tr><td class='field_label'>Age:</td><td><input id=\"record_age\" name=\"record[age]\" type=\"text\" value=\"22\" />g question!</td></tr>"
       end
       it "should render erb in read only mode" do
-        nq = @form.get_questions_by_field_name('higher_ed_years')[0]
-        nq.render(@form,'5').should == "<tr><td class='field_label'>years of higher education:</td><td><span id=\"record_higher_ed_years\">5</span></td></tr>"
+        @form.setup_presentation('view',@record)
+#        puts "<p>CURRENT Q:"+ @form.questions.collect {|k,v| k}.inspect
+        (qn,q) = @form.questions.find {|k,v| k =~ /higher_ed_years/ && v.read_only}
+        q.render(@form,'5').should == "<tr><td class='field_label'>years of higher education:</td><td><span id=\"record_higher_ed_years\">5</span>g question!</td></tr>"
       end
-      it "should render a property" do
-        @form.with_record(@record) do
+      it "should render a property" do        
+        @form.with_record(@record,:render) do
           (@form.questions['age'].render(@form) =~ /g question!/).should_not == nil
           (@form.questions['higher_ed_years'].render(@form) =~ /g question!/).should_not == nil
           (@form.questions['name'].render(@form) =~ /g question!$/).should == nil
@@ -282,7 +295,7 @@ describe SimpleForm do
       end
       describe "-- :followups option" do
         def setup_q
-          @form.with_record(@record) do
+          @form.with_record(@record,:render) do
             @record.eye_color = 'x'
             yield
           end
@@ -313,13 +326,13 @@ describe SimpleForm do
           @form.get_body.should==["<div id=\"question_eye_color\" class=\"question\"><label class=\"label\" for=\"record[eye_color]\">Eye color:</label><input id=\"record_eye_color\" name=\"record[eye_color]\" type=\"text\" value=\"x\" /></div>", "<div id=\"uid_1\" class=\"followup\">", "<div id=\"question_other_eye_color\" class=\"question\"><label class=\"label\" for=\"record[other_eye_color]\">Other eye color:</label><input id=\"record_other_eye_color\" name=\"record[other_eye_color]\" type=\"text\" /></div>", "</div>"] 
         end
         it "should produce the correct javascript for regex based followups " do
-          @form.with_record(@record) do
+          @form.with_record(@record,:render) do
             @form.q 'higher_ed_years',:followups => 'degree'
             @form.get_observer_jscripts.should == {"higher_ed_years=~/../"=>{:neg=>["Element.hide('uid_1')"], :pos=>["Element.show('uid_1')"]}}
           end
         end
         it "should produce the correct javascript for negated value followups " do
-          @form.with_record(@record) do
+          @form.with_record(@record,:render) do
             @form.q 'higher_ed_years',:followups => 'no_ed_reason'
             @form.get_observer_jscripts.should == {"higher_ed_years=!0"=>{:neg=>["Element.hide('uid_1')"], :pos=>["Element.show('uid_1')"]}}
           end
@@ -332,7 +345,7 @@ describe SimpleForm do
         it "should render calculated fields in read only mode" do
           @record.age = 32
           @record.higher_ed_years = 4
-          @form.with_record(@record) do
+          @form.with_record(@record,:render) do
             @form.q('age_plus_education',:read_only => true)
             @form.get_body.should == ["<div id=\"question_age_plus_education\" class=\"question\"><label class=\"label\" for=\"record[age_plus_education]\">Age plus education:</label><span id=\"record_age_plus_education\">36</span>g question!</div>"]
           end
@@ -345,7 +358,7 @@ describe SimpleForm do
         it "should add the validation html if record is validation mode"  do
           @record.name = ''
           @form.set_validating(true)
-          @form.with_record(@record) do
+          @form.with_record(@record,:render) do
             @form.q('name')
             @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">This field is required; please correct (or explain: <input id=\"explanations_name\" name=\"explanations[name]\" type=\"text\" value=\"\" />)</div></div>"]
           end
@@ -354,7 +367,7 @@ describe SimpleForm do
         it "should add the validation html if record is in no_explanation validation mode"  do
           @record.name = ''
           @form.set_validating(:no_explanation)
-          @form.with_record(@record) do
+          @form.with_record(@record,:render) do
             @form.q('name')
             @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_error\">This field is required</div></div>"]
           end
@@ -362,7 +375,7 @@ describe SimpleForm do
 
         it "should not add the validation html if record is validation mode but the field value is ok"  do
           @form.set_validating(true)
-          @form.with_record(@record) do
+          @form.with_record(@record,:render) do
             @form.q('name')
             @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>"]
           end
@@ -370,20 +383,20 @@ describe SimpleForm do
         
         it "should add the validation html if q specifies the :force_verify option" do
           @record.name = ''
-          @form.with_record(@record) do
+          @form.with_record(@record,:render) do
             @form.q('name',:force_validate => true)
             @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">This field is required; please correct (or explain: <input id=\"explanations_name\" name=\"explanations[name]\" type=\"text\" value=\"\" />)</div></div>"]
           end
         end
         it "should not add the validation html if q specifies the :force_verify option but the value of the field is ok" do
-          @form.with_record(@record) do
+          @form.with_record(@record,:render) do
             @form.q('name',:force_validate => true)
             @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>"]
           end
         end
         it "should add the validation html for an erb question" do
           @record.name = ''
-          @form.with_record(@record) do
+          @form.with_record(@record,:render) do
             @form.q('higher_ed_years',:force_validate => true)
             @form.get_body.should == ["<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" /> <div class=\"validation_item\">This field is required; please correct (or explain: <input id=\"explanations_higher_ed_years\" name=\"explanations[higher_ed_years]\" type=\"text\" value=\"\" />)</div>g question!</div>"]
           end
@@ -393,40 +406,48 @@ describe SimpleForm do
     
     describe "qro (display a question read only)" do
       it "should be a short-hand for adding the :read_only option to a q" do
-        @form.in_phase(:build) do
+        @form.setup_presentation('create',@record)
+        @form.with_record(@record,:render) do
           @form.qro('name')
-          @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><span id=\"record_name\"></span></div>"]
+          @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><span id=\"record_name\">Bob Smith</span></div>"]
         end
       end
     end #qro
     
     describe "p (display a presentation)" do
+      before(:each) do
+        @form.set_record(@record)
+        @form.set_render(:render)
+        @form.prepare(nil)
+      end
+      it "should raise errors when a record isn't specified" do
+        @form.set_record(nil)
+        lambda {@form.p('create')}.should raise_error("attempting to process presentation create with no record")
+      end
       it "should render the contents of a presentation" do
-        @form.in_phase(:build,@record) do
-          @form.p('create')
-          @form.get_body.should == ["<div id=\"presentation_create\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>", "</div>"]
-        end
+        @form.p('create')
+        @form.get_body.should == ["<div id=\"presentation_create\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>", "</div>"]
       end
       it "should render presentations with sub-presentations" do
-        @form.in_phase(:build,@record) do
-          @form.p('container')
-          @form.get_body.should == ["<div id=\"presentation_container\" class=\"presentation\">", "<div id=\"presentation_name_only\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>", "</div>", "<div id=\"presentation_education_info\" class=\"presentation\">", "<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>", "<div id=\"question_age_plus_education\" class=\"question\"><label class=\"label\" for=\"record[age_plus_education]\">Age plus education:</label><span id=\"record_age_plus_education\">0</span>g question!</div>", "</div>", "</div>"]
-        end
+        @form.p('container')
+        @form.get_body.should == ["<div id=\"presentation_container\" class=\"presentation\">", "<div id=\"presentation_name_only\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>", "</div>", "<div id=\"presentation_education_info\" class=\"presentation\">", "<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>", "<div id=\"question_age_plus_education\" class=\"question\"><label class=\"label\" for=\"record[age_plus_education]\">Age plus education:</label><span id=\"record_age_plus_education\">0</span>g question!</div>", "</div>", "</div>"]
       end
       it "should render the contents readonly of a presentation with force_read_only true" do
-        @form.in_phase(:build,@record) do
-          @form.p('name_read_only')
-          @form.get_body.should == ["<div id=\"presentation_name_read_only\" class=\"presentation\">", "<div id=\"presentation_name_only\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><span id=\"record_name\">Bob Smith</span></div>", "</div>", "</div>"]
-        end
+        @form.p('name_read_only')
+        @form.get_body.should == ["<div id=\"presentation_name_read_only\" class=\"presentation\">", "<div id=\"presentation_name_only\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><span id=\"record_name\">Bob Smith</span></div>", "</div>", "</div>"]
       end
     end #p
         
     describe "p (display an indexed presentation)" do
+      before(:each) do
+        @form.set_record(@record)
+        @form.set_render(:render)
+      end
+      
       def do_p
         @record.save('create')
-        @form.with_record(@record) do
-          @form.p 'name_only',:indexed => {:add_button_text => 'Add a name',:add_button_position=>'bottom',:delete_button_text=>'Delete this name', :reference_field => 'name'}
-        end
+        @form.prepare(nil)
+        @form.p 'name_only',:indexed => {:add_button_text => 'Add a name',:add_button_position=>'bottom',:delete_button_text=>'Delete this name', :reference_field => 'name'}
       end
 
       it "should raise an error if you don't specify the reference_field" do
@@ -434,7 +455,7 @@ describe SimpleForm do
       end
 
       it "should setup" do
-        @form.p 'name_only',:indexed => {:add_button_text => 'Add a name',:add_button_position=>'bottom',:delete_button_text=>'Delete this name', :reference_field => 'name'}
+        do_p
       end
       
       it "should set the use_multi_index? flag" do
@@ -487,7 +508,8 @@ describe SimpleForm do
 
     describe "qp (display a question and a javascript activated sub-presentation)" do
       it "should render a complicated bunch of html and add observer javascripts" do
-        @form.with_record(@record) do
+        @form.with_record(@record,:render) do
+          @form.prepare(nil)
           @form.qp('age',:presentation_name => 'education_info',:show_hide_options=>{:condition => "age=18"})
           @form.get_body.should == [
             "<div id=\"question_age\" class=\"question\"><label class=\"label\" for=\"record[age]\">Age:</label><input id=\"record_age\" name=\"record[age]\" type=\"text\" />g question!</div>",
@@ -503,29 +525,51 @@ describe SimpleForm do
     end #qp
     
     describe "html (display arbitrary html)" do
+      before (:each) do
+        @form.set_record(@record)
+        @form.set_render(:render)
+      end
       it "should render the html passed in" do
-        @form.in_phase(:build) do
-          @form.html('<b>text</b>').should == "<b>text</b>"
-        end
+        @form.html('<b>text</b>').should == "<b>text</b>"
+      end
+      it "should render the html returned from a block" do
+        @form.html do
+          '<b>text</b>'
+        end.should == "<b>text</b>"
+      end
+      it "should render the html from the parameter and from a block if both given" do
+        @form.html('<b>param</b>') do
+          '<b>block</b>'
+        end.should == "<b>param</b><b>block</b>"
       end
     end #html
     
     describe "t (display a text element)" do
+      before (:each) do
+        @form.set_record(@record)
+        @form.set_render(:render)
+      end
       it "should render a text element using defaults" do
-        @form.in_phase(:build) do
-          @form.t('here is some test text').should == "<p>here is some test text</p>"
-        end
+        @form.t('here is some test text').should == "<p>here is some test text</p>"
       end
       it "should render a text element using options" do
-        @form.in_phase(:build) do
-          @form.t('here is a table cell',:element=>'td',:css_class=>'cell_class').should == "<td class=\"cell_class\">here is a table cell</td>"
-        end
+        @form.t('here is a table cell',:element=>'td',:css_class=>'cell_class').should == "<td class=\"cell_class\">here is a table cell</td>"
+      end
+      it "should render the text element from text returned from a block" do
+        @form.t do
+          'text'
+        end.should == "<p>text</p>"
+      end
+      it "should render the text from the parameter and from a block if both given" do
+        @form.t('param_text') do
+          'block_text'
+        end.should == "<p>param_textblock_text</p>"
       end
     end #t
 
     describe "q_meta_workflow_state (display a list of workflow states)" do
       it "should render the html element" do
-        @form.with_record(@record) do
+        @form.with_record(@record,:render) do
           @form.q_meta_workflow_state('States:','PopUp').should == "<label class=\"label\" for=\"meta[workflow_state]\">States:</label><select name=\"meta[workflow_state]\" id=\"meta_workflow_state\">\n   <option value=\"logged\">logged: Form Logged</option>\n<option value=\"completed\">completed: Form Completed</option>\n<option value=\"verifying\">verifying: Form in validation</option>\n</select>\n"
         end
       end
@@ -533,7 +577,7 @@ describe SimpleForm do
 
     describe "tip (add a tool-tip)" do
       it "should add an 'info' icon with a tool-tip" do
-        @form.in_phase(:build) do
+        @form.with_record(@record,:render) do
           @form.tip('this is the text of the first tip').should == '<img src="/images/info_circle.gif" alt="info" id="tip_1">'
           @form.tip('this is the text of the "second" tip').should == '<img src="/images/info_circle.gif" alt="info" id="tip_2">'
           @form.get_jscripts.should == [
@@ -546,13 +590,13 @@ describe SimpleForm do
     
     describe "function_button (display a javascript button)" do
       it "should render a button" do
-        @form.in_phase(:build) do
+        @form.with_record(@record,:render) do
           @form.function_button('Alert') {"alert('boink)"}
           @form.get_body.last.should == "<input type=\"button\" value=\"Alert\" onclick=\"alert('boink)\">"
         end
       end
       it "should render a button with a class specification option" do
-        @form.in_phase(:build) do
+        @form.with_record(@record,:render) do
           @form.function_button('Alert',:css_class => 'cool_button') {"alert('boink)"}
           @form.get_body.last.should == "<input type=\"button\" value=\"Alert\" class=\"cool_button\" onclick=\"alert('boink)\">"
         end
@@ -561,7 +605,7 @@ describe SimpleForm do
     
     describe "javascript_show_hide_if (display a block conditionally at 'runtime' on the browser)" do
       it "should produce body html and observer javascripts" do
-        @form.with_record(@record) do
+        @form.with_record(@record,:render) do
           @form.javascript_show_hide_if(:condition => 'married=y')
           @form.get_body.should == ["<div id=\"uid_1\" class=\"hideable_box_with_border\" style=\"display:none\">", "</div>"]
           @form.get_observer_jscripts.should == 
@@ -569,31 +613,32 @@ describe SimpleForm do
         end
       end
       it "should be able to use a custom wrapper id and element type" do
-        @form.with_record(@record) do
+        @form.with_record(@record,:render) do
           @form.javascript_show_hide_if(:condition => 'married=y',:wrapper_id => 'special_id',:wrapper_element => 'p')
           @form.get_body.should == ["<p id=\"special_id\" class=\"hideable_box_with_border\" style=\"display:none\">", "</p>"]
         end
       end
       it "should be able to use a custom wrapper and and css class" do
-        @form.with_record(@record) do
+        @form.with_record(@record,:render) do
           @form.javascript_show_hide_if(:condition => 'married=y',:wrapper_id => 'special_div',:css_class=>'shiny_box')
           @form.get_body.should == ["<div id=\"special_div\" class=\"shiny_box\" style=\"display:none\">","</div>"]
         end
       end
       it "should be able to use a condition object instead of a condition string" do
-        @form.with_record(@record) do
+        @form.with_record(@record,:render) do
           @form.javascript_show_hide_if(:condition => @form.c("age=12"))
           @form.get_observer_jscripts.should == {"age=12"=>{:neg=>["Element.hide('uid_1')"], :pos=>["Element.show('uid_1')"]}}
         end
       end
       it "should be able to hide by default instead of show" do
-        @form.with_record(@record) do
+        @form.with_record(@record,:render) do
           @form.javascript_show_hide_if(:condition => 'married=y',:show => false)
           @form.get_observer_jscripts.should == {"married=y"=>{:neg=>["Element.show('uid_1')"], :pos=>["Element.hide('uid_1')"]}}
         end
       end      
       it "should add the elements from the block into the div" do
-        @form.with_record(@record) do
+        @form.prepare(nil)
+        @form.with_record(@record,:render) do
           @form.p('married_questions')
           @form.get_body.should == ["<div id=\"presentation_married_questions\" class=\"presentation\">", "<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record[married]\">Married?</label><select name=\"record[married]\" id=\"record_married\">\n   <option value=\"y\">Yes</option>\n<option value=\"n\">No</option>\n</select>\n</div>", "<div id=\"uid_1\" class=\"hideable_box_with_border\" style=\"display:none\">", "<div id=\"question_children\" class=\"question\"><label class=\"label\" for=\"record[children]\">Children:</label><input id=\"record_children\" name=\"record[children]\" type=\"text\" /></div>", "</div>", "</div>"]
         end
@@ -601,7 +646,7 @@ describe SimpleForm do
     end #javascript_show_hide_if
     describe "javascript_show_if (show a block conditionally at 'runtime' on the browser)" do
       it "should be like calling javascript_show_hide_if" do
-        @form.with_record(@record) do
+        @form.with_record(@record,:render) do
           @form.javascript_show_if('married=y')
           @form.get_body.should == ["<div id=\"uid_1\" class=\"hideable_box\" style=\"display:none\">", "</div>"]
           @form.get_observer_jscripts.should == {"married=y"=>{:pos=>["Element.show('uid_1')"], :neg=>["Element.hide('uid_1')"]}}
@@ -610,7 +655,7 @@ describe SimpleForm do
     end #javascript_show_if
     describe "javascript_hide_if (hide a block conditionally at 'runtime' on the browser)" do
       it "should be like calling javascript_show_hide_if with :show=>false" do
-        @form.with_record(@record) do
+        @form.with_record(@record,:render) do
           @form.javascript_hide_if('married=y')
           @form.get_body.should == ["<div id=\"uid_1\" class=\"hideable_box\" style=\"display:none\">", "</div>"]
           @form.get_observer_jscripts.should == {"married=y"=>{:pos=>["Element.hide('uid_1')"], :neg=>["Element.show('uid_1')"]}}
@@ -621,7 +666,8 @@ describe SimpleForm do
     describe "javascript helpers-- " do
       describe "javascript_if_field" do
         it "should generate a comparison wrapper around the javascript returned by the block" do
-          @form.in_phase(:build) do
+          @form.setup_presentation('simple',@record)
+          @form.with_record(@record,:render) do
             @form.javascript_if_field('name','==','Bob Smith') {'alert("Go Bob!")'}.should == 
               ["if ($F('record_name') == 'Bob Smith') {alert(\"Go Bob!\")};"]
           end
@@ -629,7 +675,7 @@ describe SimpleForm do
       end #javascript_if_field
       describe "javascript_confirm" do
         it "should generate a confirm wrapper around the javascript returned by the block" do
-          @form.in_phase(:build) do
+          @form.with_record(@record,:render) do
             @form.javascript_confirm('Are you sure you want to erase everyting') {'erase("everyting")'}.should == 
               ["if (confirm('Are you sure you want to erase everyting')) {erase(\"everyting\")};"]
           end
@@ -637,12 +683,12 @@ describe SimpleForm do
       end #javascript_confirm
       describe "javascript_submit" do
         it "should generate a script that submits the form" do
-          @form.in_phase(:build) do
+          @form.with_record(@record,:render) do
             @form.javascript_submit.should == ["$('metaForm').submit();"]
           end
         end
         it "should generate a script that submits the form with a workflow_action" do
-          @form.in_phase(:build) do
+          @form.with_record(@record,:render) do
             @form.javascript_submit(:workflow_action => 'create').should == ["$('meta_workflow_action').value = 'create';$('metaForm').submit();"]
           end
         end
@@ -674,30 +720,52 @@ describe SimpleForm do
       end
     end #def_tabs
     describe "tab (render a tab)" do
+      before(:each) do
+        @form.setup_presentation('view',@record)
+        @form.set_record(@record)
+        @form.set_render(:render)
+      end
       it "should render a tab with default options" do
-        @form.with_record(@record) do
-          @form.tab('view').should == "<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view')\" title=\"Click here to go to View\"><span>View</span></a></li>"
-        end
+        @form.tab('view').should == "<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view')\" title=\"Click here to go to View\"><span>View</span></a></li>"
       end
       it "should render a tab with specified options" do
         @record[:name,1] = "Herb Monkel"
-        @form.with_record(@record) do
-          @form.tab('view',:label => 'The View',:index => 1).should == "<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view/1')\" title=\"Click here to go to The View\"><span>The View</span></a></li>"
-        end
+        @form.tab('view',:label => 'The View',:index => 1).should == "<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view/1')\" title=\"Click here to go to The View\"><span>The View</span></a></li>"
       end
-      it "should render error count in tabs when validating" do
+      it "should render error count in tabs of non-read-only values when validating" do
         @form.set_validating(true)
-        @form.with_record(@record) do
-          @form.tab('view').should == "<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view')\" title=\"Click here to go to View\"><span>View<font style='color:red'> 3</font></span></a></li>"
-        end
+        @form.tab('view').should == "<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view')\" title=\"Click here to go to View\"><span>View<font style='color:red'> 1</font></span></a></li>"
       end
     end #tab
   end  #-- dsl
 
+  describe "setup_presentation (running through a presentation without building html)" do
+    it "should collect up a list of all the questions encountered during the run" do
+      @form.setup_presentation('container',@record)
+      @form.get_current_questions.should == [@form.questions['name'],@form.questions['higher_ed_years']]
+    end
+    it "should collect up a list of all the field names encountered during the run" do
+      @form.setup_presentation('container',@record)
+      @form.get_current_field_names.sort.should == ['higher_ed_years','name']
+    end
+    it "should make current questions accessible by field name" do
+      @form.setup_presentation('container',@record)
+      @form.get_current_question_by_field_name('higher_ed_years').should == @form.questions['higher_ed_years']
+    end
+    it "shoud raise an error if getting a current question without having done a run" do
+      lambda {@form.get_current_question_by_field_name('higher_ed_years')}.should raise_error("attempting to search for current question when there are none!")
+    end
+  end
+
   describe "generators" do
     describe "build_tabs (render a tab group)" do
       it "should render a tab group with the current tab identified" do
-        @form.build_tabs('simple_tabs','simple',@record).should == "<div class=\"tabs\"> <ul>\n<li class=\"current tab_simple\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//simple/simple_tabs')\" title=\"Click here to go to Edit\"><span>Edit</span></a></li>\n<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view/simple_tabs')\" title=\"Click here to go to View\"><span>View</span></a></li>\n</ul></div>"
+        @form.build_tabs('simple_tabs','simple',@record).should == "<div class=\"tabs\"> <ul>\n<li class=\"current tab_simple\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//simple/simple_tabs')\" title=\"Click here to go to Edit\"><span>Edit</span></a></li>\n<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view/simple_tabs')\" title=\"Click here to go to View\"><span>View</span></a></li>\n</ul></div><div class='clear'></div>"
+      end
+      it "should render a tab group with the current tab identified and show validation errors if in validation mode" do
+        @form.set_validating(true)
+        @form.build_tabs('simple_tabs','simple',@record).should == 
+          "<div class=\"tabs\"> <ul>\n<li class=\"current tab_simple\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//simple/simple_tabs')\" title=\"Click here to go to Edit\"><span>Edit<font style='color:red'> 3</font></span></a></li>\n<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view/simple_tabs')\" title=\"Click here to go to View\"><span>View<font style='color:red'> 1</font></span></a></li>\n</ul></div><div class='clear'></div>"
       end
       it "should raise an error for tab group that doesn't exist" do
         lambda {@form.build_tabs('sss','',@record)}.should raise_error("tab group 'sss' doesn't exist")
@@ -706,7 +774,7 @@ describe SimpleForm do
     describe "build (render form)" do
       it "should collect up a list of all the questions encountered during the build" do
         @form.build('container',@record)
-        @form.get_questions_built.should == ['name','higher_ed_years']
+        @form.get_current_questions.should == [@form.questions['name'],@form.questions['higher_ed_years']]
       end
       it "should generate html for a simple presentation" do
         @form.build('name_only',@record).should == [
@@ -757,16 +825,6 @@ describe SimpleForm do
         end        
       end
     end
-    describe '#get_questions_by_field_name' do
-      it "should find all questions defined on the named field" do
-        mqs = @form.get_questions_by_field_name('married')
-        mqs.each {|q| q.field.name.should == 'married'}
-      end
-      it "should find all questions defined on the named field when more than one are defined" do
-        mqs = @form.get_questions_by_field_name('name')
-        mqs.size.should == 2
-      end
-    end
     describe "#field_exists?" do
       it "should test whether a field has been defined" do
         @form.field_exists?('name').should == true
@@ -797,12 +855,18 @@ describe SimpleForm do
           @form.record_workflow.should == 'standard'
         end
       end
+      it "should raise an error when a record isn't specified" do
+        lambda {@form.record_workflow}.should raise_error("attempting to get workflow with no record")
+      end
     end
     describe "#workflow_state" do
       it "should return the nil when the record is first created" do
         @form.with_record(@record) do
           @form.workflow_state.should == nil
         end
+      end
+      it "should raise an error when a record isn't specified" do
+        lambda {@form.workflow_state}.should raise_error("attempting to get workflow state with no record")
       end
     end
     describe "#created_at" do
@@ -812,8 +876,14 @@ describe SimpleForm do
           @form.created_at.to_s.should == Time.now().to_s
         end
       end
+      it "should raise an error when a record isn't specified" do
+        lambda {@form.created_at}.should raise_error("attempting to get created_at with no record")
+      end
     end
     describe "#updated_at" do
+      it "should raise errors when a record isn't specified" do
+        lambda {@form.updated_at}.should raise_error("attempting to get updated_at with no record")
+      end
     end
   end
 
@@ -836,6 +906,15 @@ describe SimpleForm do
     it "should call after_workflow_action method if defined" do
       @form.with_record(@record) do
         @form.do_workflow_action('create','fish')[:after_workflow_action_meta].should == "fish"
+      end
+    end
+  end
+  
+  describe "utility methods" do
+    describe "field widget map" do
+      it "should create a field widget map" do
+        @form.setup_presentation('simple',@record)
+        @form.current_questions_field_widget_map.should == {"name"=>[TextFieldWidget, {:params=>nil, :constraints=>{"required"=>true}}], "eye_color"=>[TextFieldWidget, {:params=>nil, :constraints=>{"enumeration"=>[{"ffffff"=>"black"}, {"00ff00"=>"green"}, {"0000ff"=>"blue"}, {"x"=>"other"}]}}], "married"=>[TextFieldWidget, {:params=>nil, :constraints=>{"enumeration"=>[{"y"=>"Yes"}, {"n"=>"No"}]}}], "higher_ed_years"=>[TextFieldWidget, {:params=>nil, :constraints=>{"required"=>true, "range"=>"0-10"}}], "other_eye_color"=>[TextAreaWidget, {:params=>nil, :constraints=>{"required"=>"eye_color=x"}}], "age"=>[TextFieldWidget, {:params=>nil, :constraints=>{"required"=>true, "range"=>"1-100"}}]}
       end
     end
   end

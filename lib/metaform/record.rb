@@ -212,7 +212,7 @@ class Record
         # setup and we check to make sure that the questions exist in this presentation
         # as a santity check.  TODO.  This check should be moved elsewhere!!
         if convert_from_html
-        	q = form.get_presentation_question(presentation_name,attribute)
+        	q = form.get_current_question_by_field_name(attribute)
           raise MetaformException,"question #{attribute} was not found in presentation #{presentation_name}" if !q
           value = Widget.fetch(q.widget).convert_html_value(value,q.params)
         end
@@ -258,7 +258,7 @@ class Record
     @attributes[index] = i = {} if !i
     i[attrib] = value
     if !ignore_force_nil && form.get_record  # TODO-Eric  This sucks and is bass-ackwards.
-      fields = form.fields[attribute].force_nil_fields
+      fields = form.fields[attrib].force_nil_fields
       fields.each { |f| set_attribute(f,nil,index) } if fields
     end
     value
@@ -517,9 +517,11 @@ class Record
   # To update the record attributes we have to update all the field instances objects
   # that are what actually are the "attributes."  The attributes parameter should be a 
   # hash where the keys are the FieldInstance ids and the values are the answers
-  def update_attributes(attribs,presentation = 0,meta_data = nil,options={})
-#    form.setup(presentation,self)
-    set_attributes(attribs,presentation,options)
+  def update_attributes(attribs,presentation,meta_data = nil,options={})
+    @form.setup_presentation(presentation,self)
+    @form.with_record(self) do
+      set_attributes(attribs,presentation,options)
+    end
     if zap_fields = options[:clear_indexes]
       FieldInstance.destroy_all(["form_instance_id = ? and field_id in (?)",@form_instance.id,zap_fields])
     end
@@ -532,11 +534,7 @@ class Record
     p.confirm_legal_state!(workflow_state)
       
     if p.validation == :before_save
-      fields_to_validate = []
-      p.question_names.values.each do |q_name|
-        q = @form.questions[q_name]
-        fields_to_validate.push(q.field.name) if !q.read_only
-      end
+      fields_to_validate = @form.get_current_questions.collect {|q| q.field.name}
 #      puts "VALIDATING FIELDS: #{fields_to_validate.inspect}"
       answers = answers_hash(*fields_to_validate)
       answers.each do |f,a|
