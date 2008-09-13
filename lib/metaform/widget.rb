@@ -68,7 +68,16 @@ class Widget
 
   def self.humanize_value(value,options=nil)
     if options && options[:constraints] && options[:constraints]["enumeration"]
-      options[:constraints]["enumeration"].each {|value_pair| return value_pair.values[0] if value_pair.keys[0] == value }
+      options[:constraints]["enumeration"].each do |value_pair|
+        case value_pair
+        when Hash
+          return value_pair.values[0] if value_pair.keys[0] == value
+        when Array
+          return value_pair[0] if value_pair[1] == value
+        else
+          return value_pair = value == value_pair
+        end
+      end
     end
     value
   end

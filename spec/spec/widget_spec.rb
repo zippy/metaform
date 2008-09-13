@@ -9,6 +9,12 @@ describe Widget do
     it "should include #humanize_value" do
       Widget.humanize_value('value').should == 'value'
     end
+    it "should include #humanize_value that works on enumerations defined with hashes" do
+      Widget.humanize_value('y',:constraints => {'enumeration' => [{'y' => 'Yes'},{'n'=>'No'}]}).should == 'Yes'
+    end
+    it "should include #humanize_value that works on enumerations defined in rails array style" do
+      Widget.humanize_value('CAN',:constraints => {'enumeration' => [	[ "-" , nil ],[ "US" , "US" ],	[ "Canada" , "CAN" ]]}).should == 'Canada'
+    end
   end
   
   describe TextFieldWidget do
