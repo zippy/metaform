@@ -205,6 +205,23 @@ describe SimpleForm do
       end
     end # f
     
+    describe "def_dependent_fields (fields that set up required and force_nil relationships)" do
+      it "should set dependent fields to a required constraint based on the dependency condition" do
+        @form.fields['dr_type'].constraints['required'].should = @form.c('dietary_restrictions=y')
+        @form.fields['dr_other'].constraints['required'].should = @form.c('dietary_restrictions=y')
+      end
+      it "should not affect other constraints defined in the block" do
+        @form.fields['dr_type'].constraints['enumeration'].should == [{nil=>"-"}, {"choice"=>"By choice"}, {"medical"=>"for medical reasons"}]
+      end
+      it "should pass through common options to be defined in the block" do
+        @form.groups['diet'].should == {"dr_type"=>true, "dr_other"=>true}
+      end
+      it "should set force_nil_if of all the dependent fields on the fields named in the dependency condition" do
+        fni  = @form.fields['dietary_restrictions'].force_nil_if
+        fni[@form.c('dietary_restrictions=y')].should == ['dr_type','dr_other']
+      end
+    end
+    
     describe "presentation (define a presentation)" do
       it "should define the 'simple' presentation" do
         @form.presentations['simple'].class.should == Presentation

@@ -76,7 +76,7 @@ class SimpleForm < Form
     end
 
     f 'dietary_restrictions', :label => "Dietary restrictions", :constraints => {'enumeration' => [{'y' => 'Yes'},{'n'=>'No'}]}
-    def_dependent_fields('dietary_restrictions=y') do
+    def_dependent_fields('dietary_restrictions=y', :group=>'diet') do
       f 'dr_type', :label => "type", :constraints => {'enumeration' => [{nil=>'-'},{'choice'=>'By choice'},{'medical'=>'for medical reasons'}]}
       f 'dr_other', :label => "more info"
     end
