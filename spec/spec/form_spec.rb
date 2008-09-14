@@ -29,6 +29,37 @@ describe SimpleForm do
       it "should provide access to conditions via a #conditions accessor" do
         @form.conditions['age_is_nil'].instance_of?(Condition).should == true
       end
+      describe "should evaluate auto constructed conditions correctly" do
+        before(:each) do
+          @form.set_record(@record)
+        end
+        it "should evaluate = correctly" do
+          @form.c('name=Wilbur').evaluate.should == false
+          @form.c('name==Wilbur').evaluate.should == false
+          @record.name = 'Wilbur'
+          @form.c('name=Wilbur').evaluate.should == true
+          @form.c('name==Wilbur').evaluate.should == true
+        end
+        it "should evaluate != correctly" do
+          @form.c('name!=Wilbur').evaluate.should == true
+          @form.c('name=!Wilbur').evaluate.should == true
+          @record.name = ''
+          @form.c('name!=Wilbur').evaluate.should == true
+          @form.c('name=!Wilbur').evaluate.should == true
+          @record.name = 'Wilbur'
+          @form.c('name!=Wilbur').evaluate.should == false
+          @form.c('name=!Wilbur').evaluate.should == false
+        end
+        it "should evaluate answered correctly" do
+          @record.name = ''
+          @form.c('name answered').evaluate.should == false
+          @form.c('name !answered').evaluate.should == true
+          @record.name = 'Wilbur'
+          @form.c('name answered').evaluate.should == true
+          @form.c('name !answered').evaluate.should == false
+        end
+      end
+
       it "should evaluate 'is nil' correctly in ruby" do
         @form.with_record(@record) do
           @form.conditions['age_is_nil'].evaluate.should == true
@@ -199,6 +230,7 @@ describe SimpleForm do
             @record.oldest_child_age = '12'
             @record.oldest_child_age.should == '12'
             @record.children = 0
+            @record.save('family_info')
             @record.oldest_child_age.should == nil
           end
         end
@@ -218,7 +250,7 @@ describe SimpleForm do
       end
       it "should set force_nil_if of all the dependent fields on the fields named in the dependency condition" do
         fni  = @form.fields['dietary_restrictions'].force_nil_if
-        fni[@form.c('dietary_restrictions=y')].should == ['dr_type','dr_other']
+        fni[@form.c('dietary_restrictions!=y')].should == ['dr_type','dr_other']
       end
     end
     

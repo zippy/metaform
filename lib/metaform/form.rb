@@ -305,6 +305,10 @@ class Form
   # This makes it easy to implement setting values which are automatically cleared
   # and required.
   #
+  # Note, the condition must be specified as a name and must of the type with either
+  # and = and ~ (regex) or answered/includes, because the code has to reverse the
+  # logic for clearing.
+  #
   # Example-- to define two feilds which both are required if the first field is y
   #   f 'dietary_restrictions', :label => "Dietary restrictions", :constraints => {'enumeration' => [{'y' => 'Yes'},{'n'=>'No'}]}
   #   def_dependent_fields('dietary_restrictions=y') do
@@ -314,17 +318,30 @@ class Form
   #
   # the common_options parameter is also available in def_dependent_fields
   #################################################################################
-  def def_dependent_fields(condition,common_options = {})
+  def def_dependent_fields(condition_name,common_options = {})
     common_options[:constraints] ||= {}
-    condition = make_condition(condition)
+    if condition_name =~ /(\w*)\s*((!=)|(=!)|(=~)|(!~)|(~!)|(=+)|(includes)|(!includes)|(answered)|(!answered))\s*(.*)/
+      field_name = $1
+      operator = $2
+      field_value = $13
+    else
+      raise MetaformException,"unable to parse condition #{condition_name}"
+    end
+    condition = make_condition(condition_name)
     common_options[:constraints]['required'] = condition.name
     def_fields(common_options) do
       yield
     end
+    if operator =~ /!/
+      operator = operator.gsub(/!/,'')
+    else
+      operator = '!'+operator
+    end
+    condition = c(field_name+operator+field_value)
     condition.fields_used.each do |fn|
       f = fields[fn]
       f.force_nil_if ||= {}
-      f.force_nil_if[condition] = @fields_defined
+      f.force_nil_if[condition] = @fields_defined.clone
     end
   end
 
@@ -392,7 +409,8 @@ class Form
       #TODO-Eric this all needs to be fixed along with other perfomance enhancements.  See LH#156
       answers = Record.locate(get_record.id,:index => index,:fields => fields_in_presentation, :return_answers_hash => true)
       fields_in_presentation.each do |f|
-        invalid = Invalid.evaluate(self,fields[f],!answers ? nil : answers[f].value)
+        value = !answers ? nil : answers[f][index]
+        invalid = Invalid.evaluate(self,fields[f],value)
         if !invalid.empty? && explanations[f].blank?
           invalid_fields[f] = invalid
         end
@@ -1314,9 +1332,6 @@ EOJS
   
   def if_c(condition,condition_value=true)
     condition = make_condition(condition)
-    if condition.instance_of?(String)
-      condition = c(condition)
-    end
     raise MetaformException "condition must be defined" if !condition.instance_of?(Condition)
     yield if (condition_value ? condition.evaluate : !condition.evaluate)
   end
@@ -1330,6 +1345,16 @@ EOJS
   #    end
   #    ConstraintCondition.new(cond,condition_value)
   #  end
+ 
+  ###########################################################
+  def make_condition(condition)
+    if condition.instance_of?(String)
+      condition = c(condition)
+    end
+    raise MetaformException "condition must be defined" if !condition.instance_of?(Condition)
+    condition
+  end
+
  
   #################################################################################
   #################################################################################
@@ -1427,14 +1452,5 @@ EOJS
   def quote_for_html_attribute(text)
     text.gsub(/"/,'&quot;')
   end
-    
-  ###########################################################
-  def make_condition(condition)
-    if condition.instance_of?(String)
-      condition = c(condition)
-    end
-    raise MetaformException "condition must be defined" if !condition.instance_of?(Condition)
-    condition
-  end
-  
+      
 end

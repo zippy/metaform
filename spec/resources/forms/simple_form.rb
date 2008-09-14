@@ -71,7 +71,7 @@ class SimpleForm < Form
     
     def_fields :groups => ['family_info'] do
       f 'married', :constraints=>{'enumeration' => [{'y' => 'Yes'},{'n'=>'No'}]}
-      f 'children', :type=>'integer', :group => 'kids', :force_nil_if => { c('no_children') => ['oldest_child_age']}
+      f 'children', :type=>'integer', :group => 'kids', :force_nil_if => { 'no_children' => ['oldest_child_age']}
       f 'oldest_child_age', :type=>'integer', :group => 'kids'
     end
 
@@ -80,6 +80,7 @@ class SimpleForm < Form
       f 'dr_type', :label => "type", :constraints => {'enumeration' => [{nil=>'-'},{'choice'=>'By choice'},{'medical'=>'for medical reasons'}]}
       f 'dr_other', :label => "more info"
     end
+    f 'test'
         
  #  def_constraints do
  #    cs :fields=> ['senior'],:constraints => {'must_be' => if_c('Flg!=Y',nil)}, :force_on_save => true
@@ -152,6 +153,12 @@ class SimpleForm < Form
       if_c 'Sue_is_Old' do
         t 'She is both Sue and old'
       end
+    end
+
+    presentation 'family_info' do
+      q 'married', :widget => 'PopUp'
+      q 'children'
+      q 'oldest_child_age'
     end
 
     workflow 'standard', [{'logged' => 'Form Logged'},{'completed' => 'Form Completed'},{'verifying' => {:label => 'Form in validation',:validate => true}}] do

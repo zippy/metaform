@@ -1,11 +1,16 @@
 require File.dirname(__FILE__) + '/../spec_helper'
 
 describe Record do
-
+  def setup_record(options = {})
+    @initial_values = {:name =>'Bob Smith',:fruit => 'banana'}
+    @initial_values.update(options)
+    @form = SampleForm.new
+    @record = Record.make(@form,'new_entry',@initial_values)
+    @form.set_record(@record)
+  end
   describe "-- creating a new one" do
     before(:each) do
-      @form = SampleForm.new
-      @record = Record.make(@form,'new_entry',{:name =>'Bob Smith'})
+      setup_record
     end
     
     it "should return values via the [] operator" do
@@ -31,8 +36,7 @@ describe Record do
 
   describe "-- workflow" do
     before(:each) do
-      @initial_values = {:name =>'Bob Smith',:fruit => 'banana'}
-      @record = Record.make(SampleForm.new,'new_entry',@initial_values)
+      setup_record
     end
     it "should provide access to the workflow state label" do
       @record.workflow_state = 'verifying'
@@ -42,8 +46,7 @@ describe Record do
     
   describe "-- indexed fields" do
     before(:each) do
-      @initial_values = {:name =>'Bob Smith',:fruit => 'banana'}
-      @record = Record.make(SampleForm.new,'new_entry',@initial_values)
+      setup_record
     end
 
     it "should work to use numerical indexes" do
@@ -105,7 +108,7 @@ describe Record do
   describe "-- setting_fields without initializing index" do
     
     before(:each) do
-    @record = Record.make(SampleForm.new,'new_entry',{:name =>'Bob Smith',:fruit => 'banana'})
+      setup_record
     end
     
     it "should change a value when set via []" do
@@ -159,7 +162,7 @@ describe Record do
     end
     
     it "should change a value and retain it after a save" do
-      @record = Record.make(SampleForm.new,'new_entry',{:name =>'Bob Smith',:fruit => 'banana'},:index=>1)
+      setup_record(:index => 1)      
       @record.save('new_entry')
       @record = Record.find(:first, :index => :any)
       @record.name__1.should == 'Bob Smith'
@@ -173,7 +176,9 @@ describe Record do
   describe "-- multi-dimensional indexing" do
     before(:each) do
       @initial_values = {:name =>'Bob Smith',:fruit => 'banana'}
-      @record = Record.make(SampleForm.new,'new_entry',@initial_values)
+      @form = SampleForm.new
+      @record = Record.make(@form,'new_entry',@initial_values)
+      @form.set_record(@record)
     end
     
     it "should be able to set and retrieve a two dimensional index" do
@@ -222,7 +227,9 @@ describe Record do
   describe "-- deleting record fields" do
     before(:each) do
       @initial_values = {:name =>'Bob Smith',:fruit => 'banana'}
-      @record = Record.make(SampleForm.new,'new_entry',@initial_values)
+      @form = SampleForm.new
+      @record = Record.make(@form,'new_entry',@initial_values)
+      @form.set_record(@record)
       @record.save('new_entry')
       @record['occupation'] = 'bum'
     end
@@ -253,7 +260,7 @@ describe Record do
     end
     
     it "should correctly set, save and locate indexed fields, each of nil index" do
-      @records.each {|recs| recs.save('new_entry')}
+      @records.each {|recs| recs.form.set_record(recs);recs.save('new_entry')}
       @nr = Record.locate(@records[0].id)
       @nr.name.should == @records[0].name
       Record.locate(:all,{:index => nil}).size.should == 3     
@@ -263,7 +270,7 @@ describe Record do
       @records[0][:name,1] = 'Bob Smith 1'
       @records[1][:name,99] = 'Joe Smith 99'
       @records[2][:name,1] = 'Frank Smith 1'
-      @records.each { |recs| recs.save('new_entry') }
+      @records.each { |recs| recs.form.set_record(recs);recs.save('new_entry') }
       Record.locate(:all,{:index => 1}).size.should == 2
       Record.locate(:all,{:index => 99}).size.should == 1
       Record.locate(:all,{:index => nil}).size.should == 3
@@ -271,7 +278,7 @@ describe Record do
     
     it "should correctly set, save and locate fields with filters and, with work_flow_state_filters" do
       @records << Record.make(SampleForm.new,'new_entry',{:name =>'Herbert Wilcox',:fruit => 'banana'})
-      @records.each { |recs| recs.save('new_entry') }
+      @records.each { |recs| recs.form.set_record(recs);recs.save('new_entry') }
       @records.last.workflow_state = 'logged'
       @records.last.save('update_entry')#      recs = Record.locate(:all)
 #      recs.size.should == 4
@@ -290,13 +297,13 @@ describe Record do
       @records[0].occupation = 'cat_catcher'
       @records[0].occupation__1 = 'snoozer'
       @records[1].occupation = 'unemployed'
-      @records.each { |recs| recs.save('new_entry') }
+      @records.each { |recs| recs.form.set_record(recs);recs.save('new_entry') }
       Record.locate(:all,{:index => :any,:filters => ':fruit.include?("carrot")'}).size.should == 2
       Record.locate(:all,{:index => :any,:filters => ':occupation.count >1'}).size.should == 1
     end
         
     it "should be able to retrieve the results as an answers hash" do
-      @records.each { |recs| recs.save('new_entry') }
+      @records.each { |recs| recs.form.set_record(recs);recs.save('new_entry') }
       recs = Record.locate(:all,{:return_answers_hash => true})
       recs.size.should == 3
       r = recs[0]
@@ -307,7 +314,7 @@ describe Record do
     it "should return indexed fields as arrays in the answers hash" do
       @records[0].fruit__1 = 'peach'
       @records[0].fruit__2 = 'kiwi'
-      @records.each { |recs| recs.save('new_entry') }
+      @records.each { |recs| recs.form.set_record(recs);recs.save('new_entry') }
       recs = Record.locate(:all,{:index => :any,:return_answers_hash => true})
       r = recs[0]
       r['fruit'][0].should == 'banana'
@@ -320,7 +327,7 @@ describe Record do
       @records[0].fruit__1 = 'peach'
       @records[0].fruit__2 = 'kiwi'
       @records[0][:fruit,2,1] = 'orange'
-      @records.each { |recs| recs.save('new_entry') }
+      @records.each { |recs| recs.form.set_record(recs);recs.save('new_entry') }
       recs = Record.locate(:all,{:index => :any,:return_answers_hash => true})
       r = recs[0]
       r['fruit'].value.should == [['banana'],['peach'],['kiwi','orange']]
@@ -333,6 +340,7 @@ describe Record do
       @record = Record.make(SampleForm.new,'new_entry')
       @record[:fruit,2,1] = 'orange'
       @record[:fruit,2,2] = 'kiwi'
+      @record.form.set_record(@record);
       @record.save('new_entry')
       nr = Record.locate(:first,{:index => :any,:return_answers_hash => true})
       nr['fruit'].value.should == [[],[],[nil,'orange','kiwi']]
@@ -345,6 +353,7 @@ describe Record do
       @record = Record.make(SampleForm.new,'new_entry')
       @record[:breastfeeding,2,1] = 'A'
       @record[:breastfeeding,2,2] = 'a'
+      @record.form.set_record(@record);
       @record.save('new_entry')
       nr = Record.locate(:first,{:index => :any,:return_answers_hash => true})
       nr['breastfeeding'][2].should == [nil,'A','a']
@@ -613,9 +622,7 @@ describe Record do
 
   describe "-- timestamped updating" do
     before(:each) do
-      @form = SampleForm.new
-      @record = Record.make(@form,'new_entry',{:name =>'Bob Smith',:fruit =>'apple'})
-      @record.save('new_entry')
+      setup_record
     end
     it "should allow saveing fields if timestamp is latest" do
       t = @record.updated_at.to_i
@@ -629,6 +636,21 @@ describe Record do
       lambda {@record.update_attributes({:name => 'Fred',:fruit=>'banana',:education => 'lots'},'new_entry',{:last_updated => t})}.should raise_error('Some field(s) were not saved: ["name"]')
       @record.education.should == 'lots'
       @record.fruit.should == 'banana'
+    end
+  end
+  
+  describe "force nil" do
+    before(:each) do
+      setup_record
+      @form.fields['name'].force_nil_if = { @form.c('name=Joe') => ['education']}
+    end
+    describe "set_force_nil_attributes method" do
+      it "it should add nil forcing attributes to the record when condition matches" do
+        @record.name = 'Joe'
+        @record.set_force_nil_attributes
+        @record.attributes.has_key?('education').should == true
+        @record.attributes['education'].should == nil
+      end
     end
   end
 

@@ -257,10 +257,10 @@ class Record
     i = @attributes[index]
     @attributes[index] = i = {} if !i
     i[attrib] = value
-    if !ignore_force_nil && form.get_record  # TODO-Eric  This sucks and is bass-ackwards.
-      fields = form.fields[attrib].force_nil_fields
-      fields.each { |f| set_attribute(f,nil,index) } if fields
-    end
+#    if !ignore_force_nil && form.get_record  # TODO-Eric  This sucks and is bass-ackwards.
+#      fields = form.fields[attrib].force_nil_fields
+#      fields.each { |f| set_attribute(f,nil,index) } if fields
+#    end
     value
   end
   
@@ -482,7 +482,7 @@ class Record
   # attributes
   # TODO here is another place where it's clear that things are wonky.  Mixing in the
   # workflow_action into the save function is odd.  
-  def save(presentation = 0,meta_data = nil)
+  def save(presentation,meta_data = nil)
     #puts "SAVE presentation = #{presentation.inspect}"
     #puts "SAVE meta_data = #{meta_data.inspect}"
     #puts "SAVE  @form_instance = #{@form_instance.inspect}"
@@ -519,9 +519,7 @@ class Record
   # hash where the keys are the FieldInstance ids and the values are the answers
   def update_attributes(attribs,presentation,meta_data = nil,options={})
     @form.setup_presentation(presentation,self)
-    @form.with_record(self) do
-      set_attributes(attribs,presentation,options)
-    end
+    set_attributes(attribs,presentation,options)
     if zap_fields = options[:clear_indexes]
       FieldInstance.destroy_all(["form_instance_id = ? and field_id in (?)",@form_instance.id,zap_fields])
     end
@@ -564,6 +562,10 @@ class Record
       end
     else
 #      form.setup(presentation,self)
+    end
+    
+    @form.with_record(self) do
+      set_force_nil_attributes
     end
 
     explanations = meta_data[:explanations] if meta_data
@@ -632,6 +634,23 @@ class Record
       false
     end
   end  
+  
+  def set_force_nil_attributes
+    attribs_to_clear = []
+    @attributes.each do |index,attribs|
+      attribs.each do |attrib,value|
+        if fni = form.fields[attrib].force_nil_if
+          fni.each do |condition,fields|
+            condition = form.make_condition(condition)
+            if condition.evaluate(index)
+              fields.each {|f| attribs_to_clear << [f,index]}
+            end
+          end
+        end
+      end
+    end
+    attribs_to_clear.each {|pair| set_attribute(pair[0],nil,pair[1])}
+  end
   
   def logger
     form_instance.logger
