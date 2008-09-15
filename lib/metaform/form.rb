@@ -243,7 +243,7 @@ class Form
           raise MetaformException, "followup key '#{followup_condition.inspect}' is invalid.  It must be a value, a full string condition defintion or a condition defined by c(...)"
         end
           
-        the_field.force_nil_if = {cond,fields.collect {|f| f.name}}
+        the_field.force_nil_unless = {cond,fields.collect {|f| f.name}}
         fields.each do |field|
           conds[field.name] = cond
 #TODO-Eric
@@ -299,15 +299,11 @@ class Form
   #################################################################################
   # Specifies a dependency of a group of fields on a condition.  The fields
   # will all have the 'required' constraint set for that condition, and any
-  # fields mentioned in the condition will have the force_nil_if options set on
+  # fields mentioned in the condition will have the force_nil_unless options set on
   # the condition.
   # 
   # This makes it easy to implement setting values which are automatically cleared
   # and required.
-  #
-  # Note, the condition must be specified as a name and must of the type with either
-  # and = and ~ (regex) or answered/includes, because the code has to reverse the
-  # logic for clearing.
   #
   # Example-- to define two feilds which both are required if the first field is y
   #   f 'dietary_restrictions', :label => "Dietary restrictions", :constraints => {'enumeration' => [{'y' => 'Yes'},{'n'=>'No'}]}
@@ -320,28 +316,15 @@ class Form
   #################################################################################
   def def_dependent_fields(condition_name,common_options = {})
     common_options[:constraints] ||= {}
-    if condition_name =~ /(\w*)\s*((!=)|(=!)|(=~)|(!~)|(~!)|(=+)|(includes)|(!includes)|(answered)|(!answered))\s*(.*)/
-      field_name = $1
-      operator = $2
-      field_value = $13
-    else
-      raise MetaformException,"unable to parse condition #{condition_name}"
-    end
     condition = make_condition(condition_name)
     common_options[:constraints]['required'] = condition.name
     def_fields(common_options) do
       yield
     end
-    if operator =~ /!/
-      operator = operator.gsub(/!/,'')
-    else
-      operator = '!'+operator
-    end
-    condition = c(field_name+operator+field_value)
     condition.fields_used.each do |fn|
       f = fields[fn]
-      f.force_nil_if ||= {}
-      f.force_nil_if[condition] = @fields_defined.clone
+      f.force_nil_unless ||= {}
+      f.force_nil_unless[condition] = @fields_defined.clone
     end
   end
 

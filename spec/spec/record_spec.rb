@@ -642,14 +642,19 @@ describe Record do
   describe "force nil" do
     before(:each) do
       setup_record
-      @form.fields['name'].force_nil_if = { @form.c('name=Joe') => ['education']}
+      @form.fields['name'].force_nil_unless = { @form.c('name=Joe') => ['education']}
     end
     describe "set_force_nil_attributes method" do
       it "it should add nil forcing attributes to the record when condition matches" do
-        @record.name = 'Joe'
+        @record.name = 'Bob'
         @record.set_force_nil_attributes
         @record.attributes.has_key?('education').should == true
         @record.attributes['education'].should == nil
+      end
+      it "it should not add nil forcing attributes to the record when condition matches" do
+        @record.name = 'Joe'
+        @record.set_force_nil_attributes
+        @record.attributes.has_key?('education').should == false
       end
     end
   end

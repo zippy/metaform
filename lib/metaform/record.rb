@@ -639,10 +639,10 @@ class Record
     attribs_to_clear = []
     @attributes.each do |index,attribs|
       attribs.each do |attrib,value|
-        if fni = form.fields[attrib].force_nil_if
+        if fni = form.fields[attrib].force_nil_unless
           fni.each do |condition,fields|
             condition = form.make_condition(condition)
-            if condition.evaluate(index)
+            if !condition.evaluate(index)
               fields.each {|f| attribs_to_clear << [f,index]}
             end
           end

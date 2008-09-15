@@ -59,8 +59,8 @@ class SimpleForm < Form
       c 'age_is_nil', :description=> 'age is nil',:javascript => ':age == ""' do
         field_value("age").nil?
       end
-      c 'no_children', :description=> 'no children',:javascript => ':children != "" && parseInt(:children)>0' do
-        field_value("children").to_i <= 0
+      c 'has_children', :description=> 'has children',:javascript => ':children != "" && parseInt(:children)>0' do
+        field_value("children").to_i > 0
       end
       c 'age=44'
       c 'age<44'
@@ -71,7 +71,7 @@ class SimpleForm < Form
     
     def_fields :groups => ['family_info'] do
       f 'married', :constraints=>{'enumeration' => [{'y' => 'Yes'},{'n'=>'No'}]}
-      f 'children', :type=>'integer', :group => 'kids', :force_nil_if => { 'no_children' => ['oldest_child_age']}
+      f 'children', :type=>'integer', :group => 'kids', :force_nil_unless => { 'has_children' => ['oldest_child_age']}
       f 'oldest_child_age', :type=>'integer', :group => 'kids'
     end
 

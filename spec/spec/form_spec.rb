@@ -198,8 +198,8 @@ describe SimpleForm do
         it "should define the followup field" do
           @followup.class.should == Field
         end
-        it "should set a force_nil_if condition for sub fields" do
-          f = @form.fields['eye_color'].force_nil_if
+        it "should set a force_nil_unless condition for sub fields" do
+          f = @form.fields['eye_color'].force_nil_unless
           f.keys[0].object_id.should == @form.c('eye_color=x').object_id
           f[f.keys[0]].should == ['other_eye_color']
         end
@@ -223,7 +223,7 @@ describe SimpleForm do
           @form.groups['family_info']['children'].should == true
         end
       end
-      describe ":force_nil_if option" do
+      describe ":force_nil_unless option" do
         it "should force listed fields to nil if the condition is true" do
           @form.with_record(@record) do
             @record.children = '4'
@@ -248,9 +248,9 @@ describe SimpleForm do
       it "should pass through common options to be defined in the block" do
         @form.groups['diet'].should == {"dr_type"=>true, "dr_other"=>true}
       end
-      it "should set force_nil_if of all the dependent fields on the fields named in the dependency condition" do
-        fni  = @form.fields['dietary_restrictions'].force_nil_if
-        fni[@form.c('dietary_restrictions!=y')].should == ['dr_type','dr_other']
+      it "should set force_nil_unless of all the dependent fields on the fields named in the dependency condition" do
+        fni  = @form.fields['dietary_restrictions'].force_nil_unless
+        fni[@form.c('dietary_restrictions=y')].should == ['dr_type','dr_other']
       end
     end
     
