@@ -20,6 +20,12 @@ describe Constraints do
   end
 
   describe 'range' do
+    it "should not trigger when value is nil" do
+      Constraints.verify({'range' => '1-5'}, nil, @form).should == []
+    end
+    it "should not trigger when value is empty string" do
+      Constraints.verify({'range' => '1-5'}, '', @form).should == []
+    end
     it "should trigger when value is out of range" do
       Constraints.verify({'range' => '1-5'}, '9', @form).should == ["Answer must be between 1 and 5"]
     end

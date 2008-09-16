@@ -34,9 +34,11 @@ module Constraints
         end
       when "range"
         #for the range constraint the value must be a string "X-Y" where X<Y
-        (low,hi) = constraint.split("-")
-        if value.to_i < low.to_i || value.to_i > hi.to_i
-          constraint_errors << (err_override || "Answer must be between #{low} and #{hi}#{condition_extra_err}")
+        if !value.blank?
+          (low,hi) = constraint.split("-")
+          if value.to_i < low.to_i || value.to_i > hi.to_i
+            constraint_errors << (err_override || "Answer must be between #{low} and #{hi}#{condition_extra_err}")
+          end
         end
       when "date"
         if !value.blank?
@@ -106,6 +108,6 @@ module Constraints
         end
       end
     end
-    constraint_errors
+    constraint_errors.flatten
   end
 end
