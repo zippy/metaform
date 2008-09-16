@@ -8,7 +8,7 @@
 class CheckBoxGroupWidget < Widget
   ################################################################################
   def self.render_form_object(field_instance_id,value,options)
-    e = enumeration(options[:constraints])
+    e = set(options[:constraints])
     none_fields = []
     e.map!{|value_label,val|
       new_val = val.chomp('*')
@@ -76,7 +76,7 @@ class CheckBoxGroupWidget < Widget
 
   ################################################################################
   def self.humanize_value(value,options=nil)
-    e = enumeration(options[:constraints])
+    e = set(options[:constraints])
     checked = value.split(/,/) if value
     checked ||= []
     e = Hash[*e.collect {|r| 
@@ -97,7 +97,7 @@ class CheckBoxGroupWidget < Widget
 
   ################################################################################
   def self.javascript_build_observe_function(field_instance_id,script,options)
-    e = enumeration(options[:constraints])
+    e = set(options[:constraints])
     result = ""
     e.each do |key,value|
        new_val = value.chomp('*')

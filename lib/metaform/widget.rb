@@ -16,12 +16,19 @@ class Widget
     instance_eval {@widgets.keys}
   end
   
-  def self.enumeration (constraints)
+  def self.set(constraints)
+    get_multi(constraints,'set')
+  end
+  def self.enumeration(constraints)
+    get_multi(constraints,'enumeration')
+  end
+  
+  def self.get_multi(constraints,type)
     
     constraint_name = nil
     #TODO this is stupid.  Fix!  Error message isn't clear if you make a mistake
-    ['enumeration','set','enumeration_lookup','set_lookup'].each {|e| constraint_name = e if constraints.has_key?(e); }
-    raise "you must set an enumeration/set constraint!" if !constraint_name
+    constraint_types = [type,"#{type}_lookup"].each {|e| constraint_name = e if constraints.has_key?(e); }
+    raise "fields displayed with #{self.to_s} must be constrained with: #{type}" if !constraint_name
     if constraints && constraints[constraint_name]
       case 
       when constraint_name == 'enumeration' || constraint_name == 'set'

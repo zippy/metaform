@@ -1361,7 +1361,11 @@ EOJS
       condition = make_condition(condition)
       condition_value = condition.evaluate(index)
       if negate ? !condition_value : condition_value
-        force_nil_fields.each {|f| yield f}
+        puts "FORCE NIL: condition #{condition.name} with negate: #{negate.to_s}"
+        force_nil_fields.each do |f|
+          puts "    FORCING: #{f}"
+          yield f
+        end
       end
     end
   end
