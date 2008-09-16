@@ -749,6 +749,7 @@ class Form
   # * :css_class 
   #################################################################################
   def function_button(name,opts={})
+    return if !@render
     options = {
       :css_class => nil
     }.update(opts)
@@ -1379,6 +1380,7 @@ EOJS
   ###########################################################
   # used to save and restore something in the stuff hash for a block call
   def save_context(*what)
+    puts "saving #{what.inspect}"
     what.each do |stuff_item|
       @_contexts[stuff_item] ||= []
       current_item = @_stuff[stuff_item]
