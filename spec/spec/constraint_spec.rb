@@ -137,6 +137,9 @@ describe Constraints do
     it "should trigger when value is ''" do
       Constraints.verify({'required' =>true}, '', @form).should == ["This field is required"]
     end
+    it "should give a different error message if also constrianed as set" do
+      Constraints.verify({'required' =>true,'set' => [{'apple' => 'Apple'},{'banana' => 'Banana'}]}, '', @form).should == ["You must check at least one choice from this list"]
+    end
     it "should not trigger when value is not nil or ''" do
       Constraints.verify({'required' =>true}, 'fish', @form).should == []
     end

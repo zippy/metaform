@@ -76,7 +76,10 @@ module Constraints
           raise MetaformException,"value of required constraint must be a true, false or a condition string!"
         end
         if constraint && (value == nil || value == "")
-          constraint_errors << (err_override || "This field is required#{condition_extra_err}")
+          msg = err_override if err_override
+          msg = "You must check at least one choice from this list" if constraints.has_key?('set')
+          msg ||= "This field is required"
+          constraint_errors << "#{msg}#{condition_extra_err}"
         end
       when "set"
         #for the set constraint the value will be an array of strings or of hashes of the form:
