@@ -198,10 +198,11 @@ describe SimpleForm do
         it "should define the followup field" do
           @followup.class.should == Field
         end
-        it "should set a force_nil_unless condition for sub fields" do
-          f = @form.fields['eye_color'].force_nil_unless
-          f.keys[0].object_id.should == @form.c('eye_color=x').object_id
-          f[f.keys[0]].should == ['other_eye_color']
+        it "should set a force_nil :unless condition for sub fields" do
+          (cond,fields,negate) = @form.fields['eye_color'].force_nil.pop
+          cond.should == 'eye_color=x'
+          fields.should == ['other_eye_color']
+          negate.should == :unless
         end
         it "should generate condition objects to trigger followup fields" do
           @form.fields['eye_color'].followup_conditions["other_eye_color"].should == @form.c("eye_color=x")
@@ -223,8 +224,8 @@ describe SimpleForm do
           @form.groups['family_info']['children'].should == true
         end
       end
-      describe ":force_nil_unless option" do
-        it "should force listed fields to nil if the condition is true" do
+      describe ":force_nil option" do
+        it "should force listed fields to nil if the condition is false (default behavior)" do
           @form.with_record(@record) do
             @record.children = '4'
             @record.oldest_child_age = '12'
@@ -248,9 +249,17 @@ describe SimpleForm do
       it "should pass through common options to be defined in the block" do
         @form.groups['diet'].should == {"dr_type"=>true, "dr_other"=>true}
       end
-      it "should set force_nil_unless of all the dependent fields on the fields named in the dependency condition" do
-        fni  = @form.fields['dietary_restrictions'].force_nil_unless
-        fni[@form.c('dietary_restrictions=y')].should == ['dr_type','dr_other']
+      it "should set force_nil on the fields named in the dependency condition" do
+        (cond,fields,negate) =  @form.fields['dietary_restrictions'].force_nil.pop
+        cond.name.should == 'dietary_restrictions=y'
+        fields.should == ['dr_type','dr_other']
+        negate == :unless
+      end
+      it "should set force_nil on the fields named in the dependency condition with override" do
+        (cond,fields,negate) =  @form.fields['married'].force_nil.pop
+        cond.name.should == 'married=n'
+        fields.should == ['years_married']
+        negate.should == nil
       end
     end
     

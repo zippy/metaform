@@ -242,8 +242,9 @@ class Form
         else
           raise MetaformException, "followup key '#{followup_condition.inspect}' is invalid.  It must be a value, a full string condition defintion or a condition defined by c(...)"
         end
-          
-        the_field.force_nil_unless = {cond,fields.collect {|f| f.name}}
+        
+        the_field.add_force_nil_case(cond.name,fields.collect {|f| f.name},:unless)
+        
         fields.each do |field|
           conds[field.name] = cond
 #TODO-Eric
@@ -299,11 +300,19 @@ class Form
   #################################################################################
   # Specifies a dependency of a group of fields on a condition.  The fields
   # will all have the 'required' constraint set for that condition, and any
-  # fields mentioned in the condition will have the force_nil_unless options set on
+  # fields mentioned in the condition will have the force_nil options set on
   # the condition.
   # 
   # This makes it easy to implement setting values which are automatically cleared
   # and required.
+  #
+  # Options: you can set override the default options that the fields :force nil options
+  # will be set to with:
+  # :force_nil_override => a condition other than the negated dependent condition
+  # :force_nil_negate => whether or not the condition in force_nil_override should be negated
+  #    by default this value is nil, thus the override condition will NOT be negated
+  # All other options will be treated as common options for the fields defined in the block just
+  #    as if this were a def_fields call.
   #
   # Example-- to define two feilds which both are required if the first field is y
   #   f 'dietary_restrictions', :label => "Dietary restrictions", :constraints => {'enumeration' => [{'y' => 'Yes'},{'n'=>'No'}]}
@@ -312,19 +321,24 @@ class Form
   #     f 'dr_other', :label => "more info"
   #   end
   #
-  # the common_options parameter is also available in def_dependent_fields
   #################################################################################
-  def def_dependent_fields(condition_name,common_options = {})
+  def def_dependent_fields(condition,common_options = {})
+    condition = make_condition(condition)
+    negate = :unless
+    if force_nil_condition = common_options.delete(:force_nil_override)
+      force_nil_condition = make_condition(force_nil_condition)
+      negate = common_options.delete(:force_nil_negate)
+    else
+      force_nil_condition = condition
+    end
     common_options[:constraints] ||= {}
-    condition = make_condition(condition_name)
     common_options[:constraints]['required'] = condition.name
     def_fields(common_options) do
       yield
     end
-    condition.fields_used.each do |fn|
+    force_nil_condition.fields_used.each do |fn|
       f = fields[fn]
-      f.force_nil_unless ||= {}
-      f.force_nil_unless[condition] = @fields_defined.clone
+      f.add_force_nil_case(force_nil_condition,@fields_defined.clone,negate)
     end
   end
 
@@ -1338,6 +1352,20 @@ EOJS
     raise MetaformException "condition must be defined" if !condition.instance_of?(Condition)
     condition
   end
+
+  ###########################################################
+  def evaluate_force_nil(field_name,index = nil)
+    field = fields[field_name]
+    return nil unless field.force_nil
+    field.force_nil.each do |condition,force_nil_fields,negate|
+      condition = make_condition(condition)
+      condition_value = condition.evaluate(index)
+      if negate ? !condition_value : condition_value
+        force_nil_fields.each {|f| yield f}
+      end
+    end
+  end
+  
 
  
   #################################################################################

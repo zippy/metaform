@@ -71,8 +71,11 @@ class SimpleForm < Form
     
     def_fields :groups => ['family_info'] do
       f 'married', :constraints=>{'enumeration' => [{'y' => 'Yes'},{'n'=>'No'}]}
-      f 'children', :type=>'integer', :group => 'kids', :force_nil_unless => { 'has_children' => ['oldest_child_age']}
+      f 'children', :type=>'integer', :group => 'kids', :force_nil => [['has_children',['oldest_child_age'],:unless]]
       f 'oldest_child_age', :type=>'integer', :group => 'kids'
+      def_dependent_fields('married=y', :force_nil_override => 'married=n') do
+        f 'years_married', :type=>'integer'
+      end
     end
 
     f 'dietary_restrictions', :label => "Dietary restrictions", :constraints => {'enumeration' => [{'y' => 'Yes'},{'n'=>'No'}]}

@@ -15,18 +15,18 @@ class Field < Bin
       :default => nil, 
       :indexed_default_from_null_index => nil,
       :groups => nil,
-      :force_nil_unless => nil
+      :force_nil => nil
     }
   end
   def required_bins
     [:name,:type]
   end
-  def force_nil_fields
-    return nil if force_nil_unless.nil?
-    f = []
-    force_nil_unless.each { |cond,fields| f.concat(fields) if cond.evaluate }
-    f
+
+  def add_force_nil_case(condition,fields,negate = nil)
+    self.force_nil ||= []
+    self.force_nil << [condition,fields,negate]
   end
+
 end
 
 class Condition < Bin
