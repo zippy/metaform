@@ -9,38 +9,44 @@ class WeightWidget < Widget
 					if (change_grams) {
 						var pounds = parseFloat($F('#{build_html_multi_id(field_instance_id,'pounds_box')}')); 
 						var ounces = parseFloat($F('#{build_html_multi_id(field_instance_id,'ounces_box')}')); 
-						if (isNaN(pounds)) {pounds=0};
-						if (isNaN(ounces)) {ounces=0};
-						var grams = (pounds * 16 + ounces) * 28.3495231; 
-						$('#{build_html_multi_id(field_instance_id,'grams_box')}').value = Math.round(grams);
+						if (isNaN(pounds) || isNaN(ounces)){
+						  $('#{build_html_multi_id(field_instance_id,'grams_box')}').value=''
+						}else{
+						  var grams = (pounds * 16 + ounces) * 28.3495231;
+						  $('#{build_html_multi_id(field_instance_id,'grams_box')}').value = Math.round(grams);
+						}
 					} else {
 						var grams = parseFloat($F('#{build_html_multi_id(field_instance_id,'grams_box')}')); 
-						if (isNaN(grams)) {grams=0};
-						var total_ounces = grams * 0.0352739619;
-						$('#{build_html_multi_id(field_instance_id,'pounds_box')}').value = Math.floor(total_ounces / 16);
-						$('#{build_html_multi_id(field_instance_id,'ounces_box')}').value = Math.round(total_ounces % 16);
+						if (isNaN(grams)){
+						  $('#{build_html_multi_id(field_instance_id,'pounds_box')}').value='';
+						  $('#{build_html_multi_id(field_instance_id,'ounces_box')}').value='';
+						}else{
+						  var total_ounces = grams * 0.0352739619;
+  						$('#{build_html_multi_id(field_instance_id,'pounds_box')}').value = Math.floor(total_ounces / 16);
+  						$('#{build_html_multi_id(field_instance_id,'ounces_box')}').value = Math.round(total_ounces % 16);
+					  }
 					}
 			}
 			EOJS
-	  if value 
-		grams = value	
-		total_ounces = (grams.to_i * 0.0352739619).round
-		pounds = total_ounces / 16
-		ounces = total_ounces % 16      	
-		<<-EOHTML
-		<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'pounds_box')}" id="#{build_html_multi_id(field_instance_id,'pounds_box')}" value="#{pounds}" onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(true)" /> lb
-		<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'ounces_box')}" id="#{build_html_multi_id(field_instance_id,'ounces_box')}" value="#{ounces}" onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(true)" /> oz or
-		<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'grams_box')}" id="#{build_html_multi_id(field_instance_id,'grams_box')}" value="#{grams}" onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(false)" /> g
-		#{form.javascript_tag(js_update_weight)}
-		EOHTML
-	  else
-		<<-EOHTML
-		<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'pounds_box')}" id="#{build_html_multi_id(field_instance_id,'pounds_box')}" onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(true)" /> lb
-		<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'ounces_box')}" id="#{build_html_multi_id(field_instance_id,'ounces_box')}"  onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(true)" /> oz
-		<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'grams_box')}" id="#{build_html_multi_id(field_instance_id,'grams_box')}"  onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(false)" /> g
-		#{form.javascript_tag(js_update_weight)}
-		EOHTML
-	  end
+	  if value && value != ''
+  		grams = value	
+  		total_ounces = (grams.to_i * 0.0352739619).round
+  		pounds = total_ounces / 16
+  		ounces = total_ounces % 16      	
+  		<<-EOHTML
+  		<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'pounds_box')}" id="#{build_html_multi_id(field_instance_id,'pounds_box')}" value="#{pounds}" onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(true)" /> lb
+  		<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'ounces_box')}" id="#{build_html_multi_id(field_instance_id,'ounces_box')}" value="#{ounces}" onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(true)" /> oz or
+  		<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'grams_box')}" id="#{build_html_multi_id(field_instance_id,'grams_box')}" value="#{grams}" onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(false)" /> g
+  		#{form.javascript_tag(js_update_weight)}
+  		EOHTML
+  	else
+  		<<-EOHTML
+  		<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'pounds_box')}" id="#{build_html_multi_id(field_instance_id,'pounds_box')}" onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(true)" /> lb
+  		<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'ounces_box')}" id="#{build_html_multi_id(field_instance_id,'ounces_box')}"  onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(true)" /> oz
+  		<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'grams_box')}" id="#{build_html_multi_id(field_instance_id,'grams_box')}"  onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(false)" /> g
+  		#{form.javascript_tag(js_update_weight)}
+  		EOHTML
+  	  end
   end
   
   ################################################################################
@@ -65,7 +71,7 @@ class WeightWidget < Widget
   ################################################################################
   def self.convert_html_value(value,params={})
     begin
-   		result = value['grams_box']
+      result = value['grams_box']
  	rescue
  		nil
     end
