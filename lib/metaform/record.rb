@@ -660,15 +660,15 @@ class Record
     Record.url(id,presentation,tab,index)
   end
     
-  def explanation(field_name)
-    fi = @form_instance.field_instances.find_by_field_id_and_idx(field_name.to_s,nil)
+  def explanation(field_name,index = nil)
+    fi = @form_instance.field_instances.find_by_field_id_and_idx(field_name.to_s,index)
     fi.explanation if fi
   end
 
-  def explanations(fields)
+  def explanations(fields,index = nil)
     expl = {}
     field_instances = @form_instance.field_instances.find(:all,:conditions =>["field_id in (?)",fields])
-    field_instances.each {|fi| expl[fi.field_id] = fi.explanation}
+    field_instances.each {|fi| expl[fi.field_id] = fi.explanation if fi.idx == index}
     expl
   end
   
