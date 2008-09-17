@@ -1361,9 +1361,9 @@ EOJS
       condition = make_condition(condition)
       condition_value = condition.evaluate(index)
       if negate ? !condition_value : condition_value
-        puts "FORCE NIL: condition #{condition.name} with negate: #{negate.to_s}"
+#        puts "FORCE NIL: condition #{condition.name} with negate: #{negate.to_s}"
         force_nil_fields.each do |f|
-          puts "    FORCING: #{f}"
+#          puts "    FORCING: #{f}"
           yield f
         end
       end
@@ -1412,7 +1412,6 @@ EOJS
   ###########################################################
   # used to save and restore something in the stuff hash for a block call
   def save_context(*what)
-    puts "saving #{what.inspect}"
     what.each do |stuff_item|
       @_contexts[stuff_item] ||= []
       current_item = @_stuff[stuff_item]
