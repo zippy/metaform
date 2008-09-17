@@ -30,7 +30,7 @@ class WeightWidget < Widget
 					}
 			}
 			EOJS
-	  if value && value != ''
+	  if !value.blank?
   		grams = value	
   		total_ounces = (grams.to_i * 0.0352739619).round
   		pounds = total_ounces / 16
@@ -74,8 +74,8 @@ class WeightWidget < Widget
   def self.convert_html_value(value,params={})
     begin
       result = value['grams_box']
- 	rescue
- 		nil
+ 	  rescue
+ 		  nil
     end
   end
 

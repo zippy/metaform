@@ -10,7 +10,7 @@ class FactorTextFieldsWidget < Widget
     if params
       (factor,first_label,second_label) = params.split(/,/)
       result = ''
-      if value
+      if !value.blank?
         (first_value,second_value) = parse_value(value,factor)
       	result <<  <<-EOHTML
 <input type="text" size=2 name="#{build_html_multi_name(field_instance_id,'first_box')}" id="#{build_html_multi_id(field_instance_id,'first_box')}" value="#{first_value}" /> #{first_label}
@@ -62,7 +62,7 @@ EOHTML
   def self.convert_html_value(value,params={})
     begin
     	factor = params.split(/,/)[0];
-    	result = (value['first_box'].to_i * factor.to_i + value['second_box'].to_i).to_s
+    	result = !value['first_box'].blank? || !value['second_box'].blank? ? (value['first_box'].to_i * factor.to_i + value['second_box'].to_i).to_s : ''
  	rescue
  		nil
     end

@@ -2,7 +2,7 @@
 class TimeIntervalWidget < Widget
   ################################################################################
   def self.render_form_object(field_instance_id,value,options)
-    if value 
+    if !value.blank?
       hours = value.to_i / 60
       minutes = value.to_i % 60
       <<-EOHTML
@@ -41,7 +41,7 @@ class TimeIntervalWidget < Widget
   ################################################################################
   def self.convert_html_value(value,params={})
     begin
-      interval = (value['hours'].to_i * 60 + value['minutes'].to_i).to_s
+      result = !value['hours'].blank? || !value['minutes'].blank? ? (value['hours'].to_i * 60 + value['minutes'].to_i).to_s : '' #Store as grams
     rescue
       nil
     end

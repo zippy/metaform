@@ -8,31 +8,34 @@ class VolumeWidget < Widget
 			function #{build_html_multi_id(field_instance_id,'update_volume')}(change_ml) {
 					if (change_ml) {
 						var cups = parseFloat($F('#{build_html_multi_id(field_instance_id,'cups_box')}')); 
-						if (isNaN(cups)) {cups=0};
-						var ml = cups * 236.588237; 
-						$('#{build_html_multi_id(field_instance_id,'ml_box')}').value = Math.round(ml);
+						if (isNaN(cups)) {
+						  $('#{build_html_multi_id(field_instance_id,'ml_box')}').value = '';
+						} else {
+						  $('#{build_html_multi_id(field_instance_id,'ml_box')}').value = cups * 236.588237; 
+						}						
 					} else {
-						var ml = parseFloat($F('#{build_html_multi_id(field_instance_id,'ml_box')}')); 
-						if (isNaN(ml)) {ml=0};
-						var cups = Math.round(ml * 0.422675283) / 100; 
-						$('#{build_html_multi_id(field_instance_id,'cups_box')}').value = cups;
-					}
-			}
+					  var ml = parseFloat($F('#{build_html_multi_id(field_instance_id,'ml_box')}')); 
+					  if (isNaN(ml)) {
+						  $('#{build_html_multi_id(field_instance_id,'pounds_box')}').value='';
+					  } else {
+					    $('#{build_html_multi_id(field_instance_id,'cups_box')}').value = Math.round(ml * 0.422675283) / 100; 
+				    }
+		      }
 			EOJS
-	  if value 
-		ml = value	
-		cups = ((ml.to_f * 0.422675283).round.to_f) / 100
-		<<-EOHTML
-		<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'cups_box')}" id="#{build_html_multi_id(field_instance_id,'cups_box')}" value="#{cups}" onchange="#{build_html_multi_id(field_instance_id,'update_volume')}(true)" /> cups
-		<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'ml_box')}" id="#{build_html_multi_id(field_instance_id,'ml_box')}" value="#{ml}" onchange="#{build_html_multi_id(field_instance_id,'update_volume')}(false)" /> ml
-		#{form.javascript_tag(js_update_volume)}
-		EOHTML
-	  else
-		<<-EOHTML
-		<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'cups_box')}" id="#{build_html_multi_id(field_instance_id,'cups_box')}" onchange="#{build_html_multi_id(field_instance_id,'update_volume')}(true)" /> cups
-		<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'ml_box')}" id="#{build_html_multi_id(field_instance_id,'ml_box')}"  onchange="#{build_html_multi_id(field_instance_id,'update_volume')}(false)" /> ml
-		#{form.javascript_tag(js_update_volume)}
-		EOHTML
+	  if value && value != ''
+		  ml = value	
+  		cups = ((ml.to_f * 0.422675283).round.to_f) / 100
+  		<<-EOHTML
+  		<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'cups_box')}" id="#{build_html_multi_id(field_instance_id,'cups_box')}" value="#{cups}" onchange="#{build_html_multi_id(field_instance_id,'update_volume')}(true)" /> cups
+  		<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'ml_box')}" id="#{build_html_multi_id(field_instance_id,'ml_box')}" value="#{ml}" onchange="#{build_html_multi_id(field_instance_id,'update_volume')}(false)" /> ml
+  		#{form.javascript_tag(js_update_volume)}
+  		EOHTML
+  	  else
+  		<<-EOHTML
+  		<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'cups_box')}" id="#{build_html_multi_id(field_instance_id,'cups_box')}" onchange="#{build_html_multi_id(field_instance_id,'update_volume')}(true)" /> cups
+  		<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'ml_box')}" id="#{build_html_multi_id(field_instance_id,'ml_box')}"  onchange="#{build_html_multi_id(field_instance_id,'update_volume')}(false)" /> ml
+  		#{form.javascript_tag(js_update_volume)}
+  		EOHTML
 	  end
   end
   
@@ -58,9 +61,9 @@ class VolumeWidget < Widget
   ################################################################################
   def self.convert_html_value(value,params={})
     begin
-   		result = value['ml_box'].to_f.round
- 	rescue
- 		nil
+      result = value['ml_box'] != '' ? value['ml_box'].to_f.round : '' 
+ 	  rescue
+ 		  nil
     end
   end
 
