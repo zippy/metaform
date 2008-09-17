@@ -342,6 +342,12 @@ describe SimpleForm do
           (@form.questions['name'].render(@form) =~ /g question!$/).should == nil
         end
       end
+      it "should render a property differently for a read only question" do
+        @form.with_record(@record,:render) do
+          (@form.questions['age'].render(@form,'10',true) =~ /g question read only!/).should_not == nil
+          (@form.questions['name'].render(@form,'Joe',true) =~ /g question$/).should == nil
+        end
+      end
       it "should render multiple properties" do
         @form.set_validating(true)
         @form.with_record(@record) do
@@ -491,6 +497,12 @@ describe SimpleForm do
         @form.get_body.should == ["<div id=\"presentation_container\" class=\"presentation\">", "<div id=\"presentation_name_only\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>", "</div>", "<div id=\"presentation_education_info\" class=\"presentation\">", "<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>", "<div id=\"question_age_plus_education\" class=\"question\"><label class=\"label\" for=\"record[age_plus_education]\">Age plus education:</label><span id=\"record_age_plus_education\">0</span>g question!</div>", "</div>", "</div>"]
       end
       it "should render the contents readonly of a presentation with force_read_only true" do
+        @form.p('name_read_only')
+        @form.get_body.should == ["<div id=\"presentation_name_read_only\" class=\"presentation\">", "<div id=\"presentation_name_only\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><span id=\"record_name\">Bob Smith</span></div>", "</div>", "</div>"]
+      end
+      it "should render the contents readonly of a presentation with force_read_only true even if it is in validation mode" do
+        @record.form_instance.update_attributes({:workflow_state => 'verifying'})
+        @form.set_validating(true)
         @form.p('name_read_only')
         @form.get_body.should == ["<div id=\"presentation_name_read_only\" class=\"presentation\">", "<div id=\"presentation_name_only\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><span id=\"record_name\">Bob Smith</span></div>", "</div>", "</div>"]
       end

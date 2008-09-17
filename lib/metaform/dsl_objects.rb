@@ -375,9 +375,9 @@ class Question < Bin
       properties.each do |p|
         property_value = p.evaluate(form,field,value)
         if erb
-          field_element = p.render(field_element,property_value,self,form)
+          field_element = p.render(field_element,property_value,self,form,ro)
         end
-        field_html=p.render(field_html,property_value,self,form)
+        field_html=p.render(field_html,property_value,self,form,ro)
       end
     end
   
