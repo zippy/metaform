@@ -178,16 +178,16 @@ class Record
       
     @form = the_form
     
-    # if attributes
-    #   set_attributes(attributes,options)
-    # end
-    set_attributes(attributes,presentation_name,options)
+    if attributes
+      set_attributes(attributes,presentation_name,options)
+    end
   end
 
   ######################################################################################
   # set the attributes from a hash optionally converting from HTML
   def set_attributes(attributes,presentation_name,options = {})
     reset_attributes
+    @form.setup_presentation(presentation_name,self)
 
     if options[:multi_index]
       attribs = attributes
@@ -518,7 +518,6 @@ class Record
   # that are what actually are the "attributes."  The attributes parameter should be a 
   # hash where the keys are the FieldInstance ids and the values are the answers
   def update_attributes(attribs,presentation,meta_data = nil,options={})
-    @form.setup_presentation(presentation,self)
     set_attributes(attribs,presentation,options)
     if zap_fields = options[:clear_indexes]
       FieldInstance.destroy_all(["form_instance_id = ? and field_id in (?)",@form_instance.id,zap_fields])

@@ -811,7 +811,7 @@ describe SimpleForm do
       @form.get_current_question_by_field_name('higher_ed_years').should == @form.questions['higher_ed_years']
     end
     it "shoud raise an error if getting a current question without having done a run" do
-      lambda {@form.get_current_question_by_field_name('higher_ed_years')}.should raise_error("attempting to search for current question when there are none!")
+      lambda {SimpleForm.new.get_current_question_by_field_name('higher_ed_years')}.should raise_error("attempting to search for current question when there are none!")
     end
   end
 
