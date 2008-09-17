@@ -56,9 +56,13 @@ module TimeHelper
   ################################################################################
   def convert_time_html_value(value,params={})
     begin
-      hours = value['hours'].to_i
-      factor = value['am_pm'] == 'pm' && hours != 12 ? 12 : 0	
-      date = Time.local(1,1,1,hours + factor,value['minutes'])
+      if !value['hours'].blank? && !value['minutes'].blank?
+        hours = value['hours'].to_i
+        factor = value['am_pm'] == 'pm' && hours != 12 ? 12 : 0	
+        date = Time.local(1,1,1,hours + factor,value['minutes'])
+      else
+        nil
+      end
     rescue
       nil
     end
