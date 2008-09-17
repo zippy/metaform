@@ -250,17 +250,13 @@ class Record
     i ? i[attribute.to_s] : nil
   end
   
-  def set_attribute(attribute,value,index=nil,ignore_force_nil=false)
+  def set_attribute(attribute,value,index=nil)
     attrib = attribute.to_s
     raise MetaformException,"you can't store a value to a calculated field" if form.fields[attrib].calculated
     index = normalize(index)
     i = @attributes[index]
     @attributes[index] = i = {} if !i
     i[attrib] = value
-#    if !ignore_force_nil && form.get_record  # TODO-Eric  This sucks and is bass-ackwards.
-#      fields = form.fields[attrib].force_nil_fields
-#      fields.each { |f| set_attribute(f,nil,index) } if fields
-#    end
     value
   end
   
@@ -390,7 +386,7 @@ class Record
       field_instances.each do |field_instance|
         value = field_instance.answer
         #cache the value in the attributes hash
-        values << set_attribute(field_name,value,field_instance.idx,true)
+        values << set_attribute(field_name,value,field_instance.idx)
       end
       if index == :any
         values
@@ -405,7 +401,7 @@ class Record
         value = form.fields[field_name].default
       end
       #cache the value in the attributes hash
-      set_attribute(field_name,value,index,true)
+      set_attribute(field_name,value,index)
     end
   end
   
