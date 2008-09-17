@@ -115,10 +115,14 @@ EOHTML
   ################################################################################
   def convert_date_html_value(value,params={})
     begin
-      year = value['year'].to_i
-      year = year + 2000 if year <= 40
-      year = year + 1900 if year > 40 && year < 100
-      date = Time.mktime(year,value['month'].to_i,value['day'].to_i) 
+      if !value['year'].blank? && !value['month'].blank? && !value['day'].blank?
+        year = value['year'].to_i
+        year = year + 2000 if year <= 40
+        year = year + 1900 if year > 40 && year < 100
+        date = Time.mktime(year,value['month'].to_i,value['day'].to_i) 
+      else
+        nil
+      end
     rescue
       nil
     end

@@ -9,9 +9,11 @@ class WeightWidget < Widget
 					if (change_grams) {
 						var pounds = parseFloat($F('#{build_html_multi_id(field_instance_id,'pounds_box')}')); 
 						var ounces = parseFloat($F('#{build_html_multi_id(field_instance_id,'ounces_box')}')); 
-						if (isNaN(pounds) || isNaN(ounces)){
-						  $('#{build_html_multi_id(field_instance_id,'grams_box')}').value=''
+						if (isNaN(pounds) && isNaN(ounces)){
+						  $('#{build_html_multi_id(field_instance_id,'grams_box')}').value='' 
 						}else{
+						  if (isNaN(pounds)) { $('#{build_html_multi_id(field_instance_id,'pounds_box')}').value=''; pounds = 0};
+						  if (isNaN(ounces)) { $('#{build_html_multi_id(field_instance_id,'ounces_box')}').value=''; ounces = 0}; 
 						  var grams = (pounds * 16 + ounces) * 28.3495231;
 						  $('#{build_html_multi_id(field_instance_id,'grams_box')}').value = Math.round(grams);
 						}
