@@ -24,9 +24,11 @@ module Constraints
         constraint_errors << e if e
       when "regex"
         #for the required constraint the value will be the regex to match the value against
-        r = Regexp.new(constraint)
-        if r !~ value
-          constraint_errors << (err_override || "Answer must match regular expression #{constraint}#{condition_extra_err}")
+        if !value.blank?
+          r = Regexp.new(constraint)
+          if r !~ value
+            constraint_errors << (err_override || "Answer must match regular expression #{constraint}#{condition_extra_err}")
+          end
         end
       when "max_length"
         if !value.blank? && value.length > constraint

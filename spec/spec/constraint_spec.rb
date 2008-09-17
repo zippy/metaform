@@ -5,8 +5,8 @@ describe Constraints do
     @form = SampleForm.new
   end
   describe 'regex' do
-    it "should trigger when value is nil" do
-      Constraints.verify({'regex' => 'a.c'}, nil, @form).should == ["Answer must match regular expression a.c"]
+    it "should not trigger when value is nil" do
+      Constraints.verify({'regex' => 'a.c'}, nil, @form).should == []
     end
     it "should not trigger when value matches regex " do
       Constraints.verify({'regex' =>'a.c'}, 'abc', @form).should == []
