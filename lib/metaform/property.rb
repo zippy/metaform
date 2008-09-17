@@ -27,7 +27,7 @@ class Invalid < Property
         if read_only
           errs += ex_val.blank? ? ";(no explanation given)" : "; (explained with: #{ex_val})"
         else
-          errs += "; please correct (or explain: <input id=\"explanations_#{fname}\" name=\"explanations[#{fname}]\" type=\"text\" value=\"#{ex_val}\" />)"
+          errs += "; please correct (or explain here: <input id=\"explanations_#{fname}\" name=\"explanations[#{fname}]\" type=\"text\" value=\"#{ex_val}\" />)"
         end
       else
         error_class = "validation_error"

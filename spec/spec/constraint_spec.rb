@@ -132,13 +132,13 @@ describe Constraints do
 
   describe 'required' do
     it "should trigger when value is nil" do
-      Constraints.verify({'required' =>true}, nil, @form).should == ["This field is required"]
+      Constraints.verify({'required' =>true}, nil, @form).should == [Constraints::RequiredErrMessage]
     end
     it "should trigger when value is ''" do
-      Constraints.verify({'required' =>true}, '', @form).should == ["This field is required"]
+      Constraints.verify({'required' =>true}, '', @form).should == [Constraints::RequiredErrMessage]
     end
     it "should give a different error message if also constrianed as set" do
-      Constraints.verify({'required' =>true,'set' => [{'apple' => 'Apple'},{'banana' => 'Banana'}]}, '', @form).should == ["You must check at least one choice from this list"]
+      Constraints.verify({'required' =>true,'set' => [{'apple' => 'Apple'},{'banana' => 'Banana'}]}, '', @form).should == [Constraints::RequiredMultiErrMessage]
     end
     it "should not trigger when value is not nil or ''" do
       Constraints.verify({'required' =>true}, 'fish', @form).should == []
@@ -151,7 +151,7 @@ describe Constraints do
     describe '-- using related field and = operator' do
       it "should trigger when related field has stated value" do
         @form.with_record(@record) do
-          Constraints.verify({'required' =>'name=Bob Smith'}, nil, @form).should == ["This field is required when Name is Bob Smith"]
+          Constraints.verify({'required' =>'name=Bob Smith'}, nil, @form).should == ["#{Constraints::RequiredErrMessage} when Name is Bob Smith"]
         end
       end
       it "should not trigger when related field has different value from stated value" do
@@ -163,7 +163,7 @@ describe Constraints do
     describe '-- using related field and =~ as regex operator' do
       it "should trigger when related field has stated regex" do
         @form.with_record(@record) do
-          Constraints.verify({'required' =>'name=~S.*h'}, nil, @form).should == ["This field is required when Name matches regex S.*h"]
+          Constraints.verify({'required' =>'name=~S.*h'}, nil, @form).should == ["#{Constraints::RequiredErrMessage} when Name matches regex S.*h"]
         end
       end
       it "should not trigger when related field has different value from stated regex" do

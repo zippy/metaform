@@ -333,7 +333,7 @@ describe SimpleForm do
         @form.setup_presentation('view',@record)
 #        puts "<p>CURRENT Q:"+ @form.questions.collect {|k,v| k}.inspect
         (qn,q) = @form.questions.find {|k,v| k =~ /higher_ed_years/ && v.read_only}
-        q.render(@form,'5').should == "<tr><td class='field_label'>years of higher education:</td><td><span id=\"record_higher_ed_years\">5</span>g question!</td></tr>"
+        q.render(@form,'5').should == "<tr><td class='field_label'>years of higher education:</td><td><span id=\"record_higher_ed_years\">5</span>g question read only!</td></tr>"
       end
       it "should render a property" do        
         @form.with_record(@record,:render) do
@@ -411,7 +411,7 @@ describe SimpleForm do
           @record.higher_ed_years = 4
           @form.with_record(@record,:render) do
             @form.q('age_plus_education',:read_only => true)
-            @form.get_body.should == ["<div id=\"question_age_plus_education\" class=\"question\"><label class=\"label\" for=\"record[age_plus_education]\">Age plus education:</label><span id=\"record_age_plus_education\">36</span>g question!</div>"]
+            @form.get_body.should == ["<div id=\"question_age_plus_education\" class=\"question\"><label class=\"label\" for=\"record[age_plus_education]\">Age plus education:</label><span id=\"record_age_plus_education\">36</span>g question read only!</div>"]
           end
         end
         it "should raise an exception if used in non-read-only mode" do
@@ -424,7 +424,7 @@ describe SimpleForm do
           @form.set_validating(true)
           @form.with_record(@record,:render) do
             @form.q('name')
-            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">This field is required; please correct (or explain: <input id=\"explanations_name\" name=\"explanations[name]\" type=\"text\" value=\"\" />)</div></div>"]
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">#{Constraints::RequiredErrMessage}; please correct (or explain here: <input id=\"explanations_name\" name=\"explanations[name]\" type=\"text\" value=\"\" />)</div></div>"]
           end
         end
 
@@ -433,7 +433,7 @@ describe SimpleForm do
           @form.set_validating(:no_explanation)
           @form.with_record(@record,:render) do
             @form.q('name')
-            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_error\">This field is required</div></div>"]
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_error\">#{Constraints::RequiredErrMessage}</div></div>"]
           end
         end
 
@@ -449,7 +449,7 @@ describe SimpleForm do
           @record.name = ''
           @form.with_record(@record,:render) do
             @form.q('name',:force_validate => true)
-            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">This field is required; please correct (or explain: <input id=\"explanations_name\" name=\"explanations[name]\" type=\"text\" value=\"\" />)</div></div>"]
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">#{Constraints::RequiredErrMessage}; please correct (or explain here: <input id=\"explanations_name\" name=\"explanations[name]\" type=\"text\" value=\"\" />)</div></div>"]
           end
         end
         it "should not add the validation html if q specifies the :force_verify option but the value of the field is ok" do
@@ -462,7 +462,7 @@ describe SimpleForm do
           @record.name = ''
           @form.with_record(@record,:render) do
             @form.q('higher_ed_years',:force_validate => true)
-            @form.get_body.should == ["<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" /> <div class=\"validation_item\">This field is required; please correct (or explain: <input id=\"explanations_higher_ed_years\" name=\"explanations[higher_ed_years]\" type=\"text\" value=\"\" />)</div>g question!</div>"]
+            @form.get_body.should == ["<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" /> <div class=\"validation_item\">#{Constraints::RequiredErrMessage}; please correct (or explain here: <input id=\"explanations_higher_ed_years\" name=\"explanations[higher_ed_years]\" type=\"text\" value=\"\" />)</div>g question!</div>"]
           end
         end
       end
@@ -494,7 +494,7 @@ describe SimpleForm do
       end
       it "should render presentations with sub-presentations" do
         @form.p('container')
-        @form.get_body.should == ["<div id=\"presentation_container\" class=\"presentation\">", "<div id=\"presentation_name_only\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>", "</div>", "<div id=\"presentation_education_info\" class=\"presentation\">", "<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>", "<div id=\"question_age_plus_education\" class=\"question\"><label class=\"label\" for=\"record[age_plus_education]\">Age plus education:</label><span id=\"record_age_plus_education\">0</span>g question!</div>", "</div>", "</div>"]
+        @form.get_body.should == ["<div id=\"presentation_container\" class=\"presentation\">", "<div id=\"presentation_name_only\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>", "</div>", "<div id=\"presentation_education_info\" class=\"presentation\">", "<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>", "<div id=\"question_age_plus_education\" class=\"question\"><label class=\"label\" for=\"record[age_plus_education]\">Age plus education:</label><span id=\"record_age_plus_education\">0</span>g question read only!</div>", "</div>", "</div>"]
       end
       it "should render the contents readonly of a presentation with force_read_only true" do
         @form.p('name_read_only')
@@ -586,7 +586,7 @@ describe SimpleForm do
             "<div id=\"uid_1\" class=\"hideable_box_with_border\">",
               "<div id=\"presentation_education_info\" class=\"presentation\">",
                 "<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>",
-                "<div id=\"question_age_plus_education\" class=\"question\"><label class=\"label\" for=\"record[age_plus_education]\">Age plus education:</label><span id=\"record_age_plus_education\">0</span>g question!</div>",
+                "<div id=\"question_age_plus_education\" class=\"question\"><label class=\"label\" for=\"record[age_plus_education]\">Age plus education:</label><span id=\"record_age_plus_education\">0</span>g question read only!</div>",
               "</div>",
             "</div>"]
           @form.get_observer_jscripts.should == {"age=18"=>{:pos=>["Element.hide('uid_1')"], :neg=>["Element.show('uid_1')"]}}

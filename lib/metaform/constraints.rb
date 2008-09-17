@@ -1,5 +1,7 @@
 ################################################################################
 module Constraints
+  RequiredErrMessage = "This information is required"
+  RequiredMultiErrMessage = "You must check at least one choice from this list"
   def Constraints.verify (constraints, value, form)
     constraint_errors = []
     return constraint_errors if !constraints
@@ -79,8 +81,8 @@ module Constraints
         end
         if constraint && (value == nil || value == "")
           msg = err_override if err_override
-          msg = "You must check at least one choice from this list" if constraints.has_key?('set')
-          msg ||= "This field is required"
+          msg = RequiredMultiErrMessage if constraints.has_key?('set')
+          msg ||= RequiredErrMessage
           constraint_errors << "#{msg}#{condition_extra_err}"
         end
       when "set"
