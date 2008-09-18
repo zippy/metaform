@@ -1171,6 +1171,12 @@ EOJS
     @record[field_name,index]
   end
   
+  #This method will call YAML.load if Rails has not already turned the field_value into a hash for us.
+  def load_yaml(field_name)
+    value_hash = field_value(field_name)
+    value_hash.is_a?(Hash) || value_hash.blank? ? value_hash : YAML.load(value_hash)
+  end
+  
   #TODO-Eric or Lisa
   # this meta-information is not easily accessible in the same way that questions are, and probably
   # should be.  We need to formalize and unify the concept of meta or housekeeping information
