@@ -32,7 +32,7 @@ end
 class Condition < Bin
   OperatorMatch = /(\w*)\s*((<>=)|(>=)|(<=)|(<>)|(<)|(>)|(!=)|(=!)|(=~)|(!~)|(~!)|(=+)|(includes)|(!includes)|(answered)|(!answered))\s*(.*)/
   def bins 
-    { :form => nil,:name => nil, :description => nil, :ruby => nil,:javascript => nil,:operator =>nil,:field_value =>nil,:field_name =>nil }
+    { :form => nil,:name => nil, :description => nil, :ruby => nil,:javascript => nil,:operator =>nil,:field_value =>nil,:field_name =>nil,:fields_to_use => nil }
   end
   def required_bins
     [:form,:name]
@@ -146,13 +146,17 @@ class Condition < Bin
   end
   
   def fields_used
-    f = []
-    if javascript
-      javascript.gsub(/:(\w+)/) {|v| f << $1}
+    if fields_to_use then
+      fields_to_use
     else
-      f << field_name
+      f = []
+      if javascript
+        javascript.gsub(/:(\w+)/) {|v| f << $1}
+      else
+        f << field_name
+      end
+      f.uniq
     end
-    f.uniq
   end
     
   def generate_javascript_function(field_widget_map)
@@ -357,7 +361,7 @@ class Question < Bin
     else
       w = Widget
       value = widget.call(value)
-      puts "value = #{value}"
+      #puts "value = #{value}"
     end
     
     if erb

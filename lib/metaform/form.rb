@@ -1177,6 +1177,11 @@ EOJS
     value_hash.is_a?(Hash) || value_hash.blank? ? value_hash : YAML.load(value_hash)
   end
   
+  def dump_yaml(field_name)
+    value = field_value(field_name,0)
+    value = (value.is_a?(Hash)) ? YAML.dump(value) : value
+  end
+  
   #TODO-Eric or Lisa
   # this meta-information is not easily accessible in the same way that questions are, and probably
   # should be.  We need to formalize and unify the concept of meta or housekeeping information
