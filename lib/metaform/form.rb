@@ -7,7 +7,8 @@ class Form
   @@forms_dir = 'forms'
   @@cache = {}
   @@store = {}
-  cattr_accessor :forms_dir,:cache
+  @@config = {}
+  cattr_accessor :forms_dir,:cache,:config
 
   FieldTypes = ['string','integer','float','decimal','boolean','date','datetime','time','text']
 

@@ -8,15 +8,16 @@ module Constraints
     constraints.each do |type, constraint|
       next if type =~ /^err_/
       
-      # if this constraint is conditional, then evaluate the constraint condition
-      # before attempting to apply the constraint!
-      if constraint.instance_of?(ConstraintCondition)
-        next if !constraint.condition.evaluate
-        constraint = constraint.constraint_value
-        condition_extra_err = " when #{constraint.condition.humanize}"
-      else
-        condition_extra_err = ""
-      end
+#      # if this constraint is conditional, then evaluate the constraint condition
+#      # before attempting to apply the constraint!
+#      if constraint.instance_of?(ConstraintCondition)
+#        next if !constraint.condition.evaluate
+#        constraint = constraint.constraint_value
+#        condition_extra_err = " when #{constraint.condition.humanize}"
+#      else
+#        condition_extra_err = ""
+#      end
+      condition_extra_err = ''
       
       err_override = constraints["err_#{type}"]
       case type
@@ -72,7 +73,7 @@ module Constraints
         when String
           cond = form.c constraint
           next if !cond.evaluate
-          condition_extra_err = " when #{cond.humanize}"
+          condition_extra_err = " when #{cond.humanize}" unless Form.config[:hide_required_extra_errors]
           constraint = true
         when TrueClass
         when FalseClass
