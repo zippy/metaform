@@ -197,3 +197,7 @@ function update_date(write_date,read_date) {
 	$('record_'+write_date+'_day').value = $F('record_'+read_date+'_day');
 	$('record_'+write_date+'_year').value = $F('record_'+read_date+'_year');
 }
+
+function confirmReset() {
+	if (confirm("Are you sure you want to revert the information on this page to what it was when you last loaded the page?")) {document.birthForm.reset()}
+}
