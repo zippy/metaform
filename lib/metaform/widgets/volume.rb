@@ -21,6 +21,7 @@ class VolumeWidget < Widget
 					    $('#{build_html_multi_id(field_instance_id,'cups_box')}').value = Math.round(ml * 0.422675283) / 100; 
 				    }
 		      }
+		  }
 			EOJS
 	  if value && value != ''
 		  ml = value	
