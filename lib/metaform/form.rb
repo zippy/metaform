@@ -1155,14 +1155,11 @@ EOJS
     raise MetaformException, "couldn't find field #{field_name} in fields list" if field.nil?
     p = field.properties[0]
     value = field_value(field_name) if value == :get_from_form
-    return false if p.evaluate(self,field,value).size > 0
-#    field_names = arrayify(field_names)
-#    field_names.each do |field_name|
-#      field = fields[field_name]
-#      p = field.properties[0]
-#      return false if p.evaluate(self,field,field_value(field_name))
-#    end
-    true
+    v = @validating
+    @validating = true
+    valid = p.evaluate(self,field,value).empty?
+    @validating = v
+    valid
   end
 
   def field_value(field_name,index = -1)
