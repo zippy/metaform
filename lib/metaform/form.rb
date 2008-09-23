@@ -500,7 +500,6 @@ class Form
       :followups => nil,
       :erb => nil,
       :initially_hidden => false,
-      :force_validate => false,
       :labeling => nil,
       :read_only => nil,
       :name => nil
