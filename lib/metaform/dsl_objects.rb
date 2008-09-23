@@ -30,9 +30,9 @@ class Field < Bin
 end
 
 class Condition < Bin
-  OperatorMatch = /(\w*)\s*((<>=)|(>=)|(<=)|(<>)|(<)|(>)|(!=)|(=!)|(=~)|(!~)|(~!)|(=+)|(includes)|(!includes)|(answered)|(!answered))\s*(.*)/
+  OperatorMatch = /([a-zA-Z_\[\]0-9]*)\s*((<>=)|(>=)|(<=)|(<>)|(<)|(>)|(!=)|(=!)|(=~)|(!~)|(~!)|(=+)|(includes)|(!includes)|(answered)|(!answered))\s*(.*)/
   def bins 
-    { :form => nil,:name => nil, :description => nil, :ruby => nil,:javascript => nil,:operator =>nil,:field_value =>nil,:field_name =>nil,:fields_to_use => nil }
+    { :form => nil,:name => nil, :description => nil, :ruby => nil,:javascript => nil,:operator =>nil,:field_value =>nil,:field_name =>nil,:fields_to_use => nil,:index => -1}
   end
   def required_bins
     [:form,:name]
@@ -44,6 +44,10 @@ class Condition < Bin
       self.field_name = $1
       self.operator = $2
       self.field_value = $19
+      if self.field_name =~ /(.*)\[([0-9]+)\]/
+        self.field_name = $1
+        self.index = $2
+      end
     else
       raise MetaformException, "javascript not defined or definable for condition '#{name}'" if javascript.nil?
     end
@@ -94,12 +98,15 @@ class Condition < Bin
     js = js.gsub(/\W/,'')
   end
   
-  def evaluate(index = -1)
+  def evaluate(idx = -1)
     raise MetaformException,"attempting to evaluate condition with no record" if form.get_record.nil?
     if ruby
       ruby.call(self)
     else
-      cur_val = form.field_value(field_name,index)      
+      if idx == -1
+        idx = self.index.to_i
+      end
+      cur_val = form.field_value(field_name,idx)
       case operator
       when '=','=='
        cur_val == field_value

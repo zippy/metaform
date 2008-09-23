@@ -99,6 +99,21 @@ describe SimpleForm do
           the_c.evaluate.should == true
         end
       end
+      it "should allow specification of a particular index of the field for evaluating a condition" do
+        c1 = @form.c 'name[0]=Eric'
+        c2 = @form.c 'name[0]=Bob'
+        c3 = @form.c 'name[1]=Eric'
+        c4 = @form.c 'name[1]=Bob'
+        @record[:name,0] = 'Eric'
+        @record[:name,1] = 'Bob'
+        @record.save('name_only')
+        @form.with_record(@record) do
+          c1.evaluate.should == true
+          c2.evaluate.should == false
+          c3.evaluate.should == false
+          c4.evaluate.should == true
+        end
+      end
     end
     
     # describe "if_c (define a constraint condition)" do
