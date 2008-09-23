@@ -11,7 +11,7 @@ class VolumeWidget < Widget
 						if (isNaN(cups)) {
 						  $('#{build_html_multi_id(field_instance_id,'ml_box')}').value = '';
 						} else {
-						  $('#{build_html_multi_id(field_instance_id,'ml_box')}').value = cups * 236.588237; 
+						  $('#{build_html_multi_id(field_instance_id,'ml_box')}').value = Math.round(cups * 236.588237); 
 						}						
 					} else {
 					  var ml = parseFloat($F('#{build_html_multi_id(field_instance_id,'ml_box')}')); 
