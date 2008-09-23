@@ -872,12 +872,14 @@ describe SimpleForm do
     describe "#field_valid" do
       it "should return true if a field is valid" do
         @record.higher_ed_years = 4
+        @form.set_validating(true)
         @form.with_record(@record) do
           @form.field_valid('higher_ed_years').should == true
         end        
       end
       it "should return false if a field is invalid" do
         @record.higher_ed_years = 99
+        @form.set_validating(true)
         @form.with_record(@record) do
           @form.field_valid('higher_ed_years').should == false
         end        
