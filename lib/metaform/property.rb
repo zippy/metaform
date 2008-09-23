@@ -18,17 +18,17 @@ class Invalid < Property
     form.validating? ? Constraints.verify(field.constraints, value, form) : []
   end
   def self.render(question_html,property_value,question,form,read_only)
-    if !property_value.empty? && (v = form.validating?)
+    if !property_value.empty? && (v = form.validating?) && !read_only
       errs = property_value.join("; ")
       if v != :no_explanation
         error_class = "validation_item"
         fname = question.field.name
         ex_val = form.get_record.explanation(fname)
-        if read_only
-          errs += ex_val.blank? ? ";(no explanation given)" : "; (explained with: #{ex_val})"
-        else
+#        if read_only
+#          errs += ex_val.blank? ? ";(no explanation given)" : "; (explained with: #{ex_val})"
+#        else
           errs += "; please correct (or explain here: <input id=\"explanations_#{fname}\" name=\"explanations[#{fname}]\" type=\"text\" value=\"#{ex_val}\" />)"
-        end
+#        end
       else
         error_class = "validation_error"
       end
