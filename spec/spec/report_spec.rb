@@ -5,7 +5,11 @@ describe Reports, "using sample form as 'schema'" do
     Record.make(SampleForm.new,'new_entry',{:name =>'Bob Smith',:fruit => 'banana',:occupation => 'unemployed'}).save('new_entry')
     Record.make(SampleForm.new,'new_entry',{:name =>'Joe Smith',:fruit => 'apple',:occupation => 'unemployed'}).save('new_entry')
     Record.make(SampleForm.new,'new_entry',{:name =>'Will Smith',:fruit => 'apple_mutsu',:occupation => 'unemployed'}).save('new_entry')
-    r = Record.make(SampleForm.new,'new_entry',{:name =>'Jane Smith',:fruit => 'banana',:occupation => 'unemployed'})
+    Record.make(SampleForm.new,'new_entry',{:name =>'Oliver Smith',:fruit => 'banana', :occupation => 'game_designer'}).save('new_entry')
+    Record.make(SampleForm.new,'new_entry',{:name =>'Steve Smith', :occupation => ''}).save('new_entry')
+    r = Record.make(SampleForm.new,'new_entry',{:name =>'Emma Smith',:occupation => 'scientist'})
+    r[:occupation,1] = 'painter'
+    r.save('new_entry')
     r[:occupation,1] = 'farmer'
     r.occupation__2 = 'painter'
     r.save('new_entry')
@@ -24,9 +28,17 @@ describe Reports, "using sample form as 'schema'" do
     @report.painters.should == 1
   end
 
-  it "should report 4 slackers" do 
-    @report.slackers.should == 4
+  it "should report 3 slackers" do 
+    @report.slackers.should == 3
   end  
+  
+  it "should report four painters or slackers" do
+    @report.painters_or_slackers.should == 4
+  end
+  
+  it "should report one person who has an occupation other than painter or slacker" do
+    @report.other_than_painter_or_slacker.should == 1
+  end
 end
 
 describe Reports, "using simple filters" do
@@ -83,7 +95,7 @@ describe Reports, "using simple filters" do
     @records.last.workflow_state = 'unusual'
     @records.each { |recs| recs.save('new_entry') }
     @report_workflow = Stats.get_report('report_with_workflow')
-    puts "@report_workflow = #{@report_workflow.inspect}"
+    #puts "@report_workflow = #{@report_workflow.inspect}"
     @report_workflow.bobs.should == 2
   end
 end

@@ -51,7 +51,7 @@ def setup
   	end
 #  end
 	
-	presentation 'new_entry',:legal_states => [nil],:create_with_workflow => 'standard' do
+	presentation 'new_entry',:legal_states => [nil,'standard','unusual','standard_1','standard_2'],:create_with_workflow => 'standard' do
     q 'name', :widget => 'TextField'
     q 'due_date', :widget => 'Date'
     q 'education', :widget => 'TextField'
@@ -108,7 +108,10 @@ class Stats < Reports
    		:bananas => 	"count.increment if :fruit == 'banana'",
    		:apples => "count.increment if :fruit =~ /apple*/",
    		:painters => "count.increment if :occupation.include?('painter')",
-   		:slackers => "count.increment if :occupation.include?('unemployed')"
+   		:slackers => "count.increment if :occupation.include?('unemployed')",
+   		:painters_or_slackers => ":occupation.any?('painter','unemployed')",
+   		:other_than_painter_or_slacker => ":occupation.other?('painter','unemployed')"
+   		
   	}) { |q,forms|
       Struct.new(*(q.keys))[*q.values]
     }

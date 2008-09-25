@@ -144,6 +144,14 @@ class Record
       @value.include?(desired_value)
     end
     
+    def any?(*desired_values)
+       desired_values.any?{|x| @value.any?{|y| y && y.include?(x)}}
+    end
+    
+    def other?(*undesired_values)
+      !@value.to_s.blank? && !undesired_values.any?{|x| @value.any?{|y| y && y.include?(x)}}
+    end
+    
     def is_indexed?
       @value.size > 1
     end
@@ -788,6 +796,7 @@ class Record
       }
     end
     find_opts ||= {}
+    #puts "find_opts = #{find_opts.inspect}"
     begin
       form_instances = FormInstance.find(what,find_opts)
     rescue ActiveRecord::RecordNotFound
@@ -798,6 +807,7 @@ class Record
     
     forms = []
     #puts "1 form_instances = #{form_instances.inspect}"
+    #puts "form_instances.size = #{form_instances.size}" if form_instances.respond_to?('each')
     #puts "filters = #{filters.inspect}"
     #puts "return_answers_hash = #{return_answers_hash}"
     if form_instances && (filters || return_answers_hash)
@@ -808,10 +818,12 @@ class Record
           #puts "DID IT"
         end
       filter_eval_string = filters.collect{|x| "(#{x})"}.join('&&') if filters
+      #puts "filter_eval_string = #{filter_eval_string}"
       #TODO test for scalability on large datatsets
       #puts "next line"
       #puts "2 form_instances = #{form_instances.inspect}"
       form_instances.each do |r|
+        #puts "--------------------"
         #puts "r = #{r.inspect}"
         f = {'workflow_state' => Answer.new(r.workflow_state),'updated_at' => Answer.new(r.updated_at)}
         #puts "1:  f = #{f.inspect}"
@@ -820,7 +832,7 @@ class Record
           #puts "field_instance = #{field_instance.inspect}"
           #puts "key: #{field_instance.field_id}, answer: #{field_instance.answer}, idx: #{field_instance.idx}"
           if f.has_key?(field_instance.field_id)
-            #puts "f.has_key?  TRUE field_instance.field_id #{field_instance.field_id}"
+            #puts "     f.has_key?  TRUE field_instance.field_id #{field_instance.field_id}"
             a = f[field_instance.field_id]
             #puts "a = #{a.inspect}"
             #puts "field_instance.idx = #{field_instance.idx}"
@@ -828,7 +840,7 @@ class Record
             a[field_instance.idx] = field_instance.answer
             #puts "a = #{a.inspect}"
           else
-            #puts "f.has_key? FALSE field_instance.field_id #{field_instance.field_id}"
+            #puts "     f.has_key? FALSE field_instance.field_id #{field_instance.field_id}"
             #puts "field_instance = #{field_instance.inspect}"
             #puts "field_instance.answer = #{field_instance.answer.inspect}"
             #puts "field_instance.idx = #{field_instance.idx.inspect}"
@@ -841,6 +853,7 @@ class Record
         the_form = return_answers_hash ? f : r
         # puts "2:  f = #{f.inspect}"
         # puts "r = #{r.inspect}"
+        #puts "filters=#{filters.inspect}"
         if filters && filters.size > 0
           kept = false
           begin
@@ -849,6 +862,7 @@ class Record
           rescue Exception => e
             raise MetaformException,"Eval error '#{e.to_s}' while evaluating: #{expr}"
           end
+          #puts "kept = #{kept}"
           forms << the_form if kept
         else
           forms << the_form
@@ -858,14 +872,14 @@ class Record
     else
       forms = form_instances
     end
-    #puts "forms = #{forms.inspect}"
+    #puts "forms = #{forms.map{|f| f.keys}.inspect}"
     return forms if return_answers_hash
     Record.create(forms)
   end
   def Record.eval_field(expression)
       #puts "---------"
       #puts "eval_Field 1:  expression=#{expression}"
-      expr = expression.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|to_i|zip|map|include\?)/,'f["\1"].\2')
+      expr = expression.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|to_i|zip|map|include|any|other\?)/,'f["\1"].\2')
       #puts "eval_field 2:  expr=#{expr}"
       expr = expr.gsub(/:([a-zA-Z0-9_-]+)\./,'f["\1"].value.')
       #puts "eval_field 3:  expr=#{expr}"

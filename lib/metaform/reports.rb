@@ -98,6 +98,7 @@ class Reports
       
       locate_options[:fields] = field_list.keys
       locate_options[:filters] = filters if filters.size>0
+      #puts "locate_options[:filters] = #{locate_options[:filters].inspect}"
       locate_options[:return_answers_hash] = true
       locate_options[:index] = :any
 
@@ -113,15 +114,15 @@ class Reports
 #        :include => [:field_instances]
 #        )
       form_instances = Record.locate(:all,locate_options) 
-      # puts "form_instances = #{form_instances.inspect}"
+      #puts "form_instances = #{form_instances.size}"
       
       total = form_instances.size
       count_queries.each do |stat,q|
         #puts "count_queries:  stat = #{stat}, q = #{q}"
         count = Counter.new
         form_instances.each do |f|
-          #puts "f['New_Sex'] = #{ f['New_Sex'].inspect}"
-          #puts "f['New_Grams'] = #{ f['New_Grams'].inspect}"
+          #puts "f['Birth_Onset'] = #{ f['Birth_Onset'].inspect}"
+          #puts "f['Birth_IPprocs_Details'] = #{ f['Birth_IPprocs_Details'].inspect}"
           begin
             expr = Record.eval_field(q)
             #puts "count_query expr = #{expr}"
