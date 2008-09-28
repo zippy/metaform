@@ -99,7 +99,6 @@ end
 
 class Stats < Reports
   def_report('fruits', 
-    :description => 'Fruits',    
     :forms => ['SampleForm'],
 #    :fields => ['education'],
 #    :workflow_state_filter => ['logged'],
@@ -117,7 +116,6 @@ class Stats < Reports
     }
     
   def_report('report_with_workflow', 
-    :description => 'Workflow Report',    
     :forms => ['SampleForm'],
     :workflow_state_filter => "standard%",
      :count_queries => {
@@ -130,7 +128,6 @@ class Stats < Reports
     }
     
     def_report('report_with_2_workflows', 
-      :description => 'Workflow Report',    
       :forms => ['SampleForm'],
       :workflow_state_filter => ['standard','unusual'],
        :count_queries => {
