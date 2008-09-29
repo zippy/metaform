@@ -115,6 +115,10 @@ class Record
       @value.each {|v| block.call(v)}
     end
     
+    def each_with_index(&block)
+      @value.each_with_index {|v,i| block.call(v,i)}
+    end
+    
     def to_i
       @value.compact.inject(0){|s,v| s += v.to_i}
     end
@@ -879,7 +883,7 @@ class Record
   def Record.eval_field(expression)
       #puts "---------"
       #puts "eval_Field 1:  expression=#{expression}"
-      expr = expression.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|to_i|zip|map|include|any|other\?)/,'f["\1"].\2')
+      expr = expression.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|each_with_index|to_i|zip|map|include|any|other\?)/,'f["\1"].\2')
       #puts "eval_field 2:  expr=#{expr}"
       expr = expr.gsub(/:([a-zA-Z0-9_-]+)\./,'f["\1"].value.')
       #puts "eval_field 3:  expr=#{expr}"

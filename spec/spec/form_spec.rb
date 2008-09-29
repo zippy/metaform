@@ -420,7 +420,7 @@ describe SimpleForm do
       it "should raise an error if followups option specified for a field not defined with followups" do
         lambda {@form.q 'name',:followups =>{}}.should raise_error("no followups defined for field 'name'")
       end
-      describe "-- with calcualted fields" do
+      describe "-- with calculated fields" do
         it "should render calculated fields in read only mode" do
           @record.age = 32
           @record.higher_ed_years = 4
