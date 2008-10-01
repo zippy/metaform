@@ -146,12 +146,19 @@ describe Constraints do
   end
   describe 'required conditional' do
     before(:each) do
+      Form.config[:hide_required_extra_errors] = false
       @record = Record.make(@form,'new_entry',{:name =>'Bob Smith'})
     end
     describe '-- using related field and = operator' do
       it "should trigger when related field has stated value" do
         @form.with_record(@record) do
           Constraints.verify({'required' =>'name=Bob Smith'}, nil, @form).should == ["#{Constraints::RequiredErrMessage} when Name is Bob Smith"]
+        end
+      end
+      it "should not show the when part of the error message if options switched off" do
+        @form.with_record(@record) do
+          Form.config[:hide_required_extra_errors] = true
+          Constraints.verify({'required' =>'name=Bob Smith'}, nil, @form).should == ["#{Constraints::RequiredErrMessage}"]
         end
       end
       it "should not trigger when related field has different value from stated value" do
