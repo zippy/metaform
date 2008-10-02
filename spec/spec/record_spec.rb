@@ -249,6 +249,40 @@ describe Record do
     end
   end
   
+  describe "-- loading data" do
+    before(:each) do
+      @initial_values = {:name =>'Bob Smith',:fruit => 'banana'}
+      @form = SampleForm.new
+      @record = Record.make(@form,'new_entry',@initial_values)
+      @record[:name,1] = 'Sue Smith'
+      @form.set_record(@record)
+      @record.save('new_entry')
+    end
+    it "should be possbile to reset the cached attribute data" do
+      @record.reset_attributes
+      @record.get_attributes.should == {nil=>{}}
+    end
+    it "should be possbile to load specific attributes" do
+      @record.reset_attributes
+      @record.load_attributes(['name'])
+      @record.get_attributes.should == {nil=>{}, "0"=>{"name"=>"Bob Smith"}}
+    end
+    it "should be possbile to load specific attributes by index" do
+      @record.reset_attributes
+      @record.load_attributes(['name'],1)
+      @record.get_attributes.should == {nil=>{}, "1"=>{"name"=>"Sue Smith"}}
+    end
+    it "should be possbile to load all indexes of the given attributes" do
+      @record.reset_attributes
+      @record.load_attributes(['name'],:any)
+      @record.attributes[0] == {nil=>{"name"=>"Bob Smith"}, "1"=>{"name"=>"Sue Smith"}}
+    end
+    it "test" do
+      Form.set_store('current_user',User.find(2))
+      @record.recalcualte_invalid_fields([])
+    end
+  end
+  
   describe "-- locating records" do
     
     before(:each) do

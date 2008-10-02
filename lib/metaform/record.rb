@@ -232,7 +232,10 @@ class Record
       end if a
     end
   end
-  
+
+  def get_attributes
+    @attributes
+  end
   def attributes(index=nil)
     index = index.to_s if index
     @attributes[index]
@@ -347,12 +350,26 @@ class Record
     form.fields[field_name].label
   end
 
+  ######################################################################################
+  # Load attributes from the database, setting items to nil if they aren't found in dabase
+  # the index parameter can be :any if all indexes should be loaded.
   def load_attributes(fields,index = nil)
-    index = index.to_i
     reset_attributes
-    fields.each do |field_name|
-      fi = @form_instance.field_instances.detect {|f| f.field_id == field_name && f.idx.to_i == index }
-      set_attribute(field_name,fi ? fi.answer : nil,index)
+    if index == :any
+      attributes_set = {}
+      @form_instance.field_instances.each do |fi|
+        if fields.include?(fi.field_id)
+          set_attribute(fi.field_id,fi.answer,fi.idx)
+          attributes_set[fi.field_id] = 1
+        end
+      end
+      fields.each {|f| set_attribute(f,nil) if !attributes_set.has_key?(f)}
+    else
+      index = index.to_i
+      fields.each do |field_name|
+        fi = @form_instance.field_instances.detect {|f| f.field_id == field_name && f.idx.to_i == index }
+        set_attribute(field_name,fi ? fi.answer : nil,index)
+      end
     end
   end
 
@@ -711,14 +728,20 @@ class Record
   
   def recalcualte_invalid_fields(presentations,index = nil)
     vd = form_instance.get_validation_data
+    all_fields = @form.fields.values.find_all {|f| !f.calculated}.collect {|f| f.name}
+    load_attributes(all_fields,:any)
+    vd['_'] = _validate_attributes(all_fields).inspect
     arrayify(presentations).each do |p|
       @form.setup_presentation(p,self,index)
-      f = @form.get_current_field_names
-      load_attributes(f,index)
-      invalid_fields = _validate_attributes(f)
-      @form.presentations[p].invalid_fields = invalid_fields
-      vd[p] = invalid_fields
-    end
+      
+#    arrayify(presentations).each do |p|
+#      @form.setup_presentation(p,self,index)
+#      f = @form.get_current_field_names
+#      load_attributes(f,index)
+#      invalid_fields = _validate_attributes(f)
+#      @form.presentations[p].invalid_fields = invalid_fields
+#      vd[p] = invalid_fields
+#    end
     form_instance.update_attributes!({:validation_data => vd})
     vd
   end
