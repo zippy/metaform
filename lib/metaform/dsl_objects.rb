@@ -15,7 +15,8 @@ class Field < Bin
       :default => nil, 
       :indexed_default_from_null_index => nil,
       :groups => nil,
-      :force_nil => nil
+      :force_nil => nil,
+      :dependent_fields => nil
     }
   end
   def required_bins
@@ -27,6 +28,10 @@ class Field < Bin
     self.force_nil << [condition,fields,negate]
   end
 
+  def set_dependent_fields(field_list)
+    self.dependent_fields ||= []
+    self.dependent_fields = self.dependent_fields.concat(field_list).uniq
+  end
 end
 
 class Condition < Bin
@@ -399,5 +404,26 @@ class Question < Bin
     end
         
     field_html
+  end
+end
+
+class Tabs < Bin
+  def bins
+    {
+      :name => nil,
+      :render_proc => nil,
+      :block => nil
+    }
+  end
+
+  def required_bins
+    [:name,:block]
+  end
+  
+  def render_tab(presentation_name,label,url,is_current,index=nil)
+    css_class = "tab_#{presentation_name}"
+    extra = render_proc.call(presentation_name,index) if render_proc
+    css_class = "current #{css_class}" if is_current
+    %Q|<li class="#{css_class}"> <a href="#" onClick="return submitAndRedirect('#{url}')" title="Click here to go to #{label}"><span>#{label}#{extra}</span></a></li>|
   end
 end

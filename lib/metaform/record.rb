@@ -8,7 +8,7 @@
 
 
 class Record
-
+  include Utilities
   class Answer
     def initialize(val,index=nil)
       if index.instance_of?(String)
@@ -264,6 +264,7 @@ class Record
   
   def set_attribute(attribute,value,index=nil)
     attrib = attribute.to_s
+    raise MetaformUndefinedFieldError, attrib if !form.field_exists?(attrib)
     raise MetaformException,"you can't store a value to a calculated field" if form.fields[attrib].calculated
     index = normalize(index)
     i = @attributes[index]
@@ -344,6 +345,15 @@ class Record
   # get the default field as definined in the form
   def field_label(field_name)
     form.fields[field_name].label
+  end
+
+  def load_attributes(fields,index = nil)
+    index = index.to_i
+    reset_attributes
+    fields.each do |field_name|
+      fi = @form_instance.field_instances.detect {|f| f.field_id == field_name && f.idx.to_i == index }
+      set_attribute(field_name,fi ? fi.answer : nil,index)
+    end
   end
 
   ######################################################################################
@@ -535,22 +545,25 @@ class Record
 
   def _update_attributes(presentation,meta_data)
     
+    # determine if this presentation is allowed to be used for updating the 
+    # record in the current state
     p = @form.presentations[presentation]
     p.confirm_legal_state!(workflow_state)
-      
-    if p.validation == :before_save
-      fields_to_validate = @form.get_current_questions.collect {|q| q.field.name}
-#      puts "VALIDATING FIELDS: #{fields_to_validate.inspect}"
-      answers = answers_hash(*fields_to_validate)
-      answers.each do |f,a|
-        @form.with_record(self) do
-          if !@form.field_valid(f,a.value)
-#            puts "INVALID FIELD VALUE: #{a.value} for #{f.inspect}"
-            @form.set_validating(:no_explanation)
-            return false
-          end
-        end
-      end
+
+    invalid_fields = nil
+    @form.with_record(self) do
+      # force any attributes to nil that need forcing
+      set_force_nil_attributes
+
+      # evaluate the validity of the attributes to be saved
+      invalid_fields = _validate_attributes
+      p.invalid_fields = invalid_fields
+    end
+
+    # if presentation requires valid data before saving it then return
+    if p.validation == :before_save && invalid_fields.size > 0
+      @form.set_validating(:no_explanation)
+      return false
     end
     #TODO by moving the workflow action stuff to the begining here I've introduced a 
     # transactionality problem.  I.e. if the workflow changes state info and then the 
@@ -559,7 +572,7 @@ class Record
     # by the transactionality handling I added up in save, but then we we should also add it to
     # to update_attributes.
     if meta_data && meta_data[:workflow_action] && meta_data[:workflow_action] != ''
-      form.with_record(self,:workflow_action) do
+      form.with_record(self) do
         self.action_result = form.do_workflow_action(meta_data[:workflow_action],meta_data)
       end
       if self.action_result[:next_state]
@@ -570,12 +583,9 @@ class Record
     else
 #      form.setup(presentation,self)
     end
-    
-    @form.with_record(self) do
-      set_force_nil_attributes
-    end
 
     explanations = meta_data[:explanations] if meta_data
+    
     #TODO scalability.  This could be responsible for slowness.  Why check all the indexes!?!
     field_list = @attributes.values.collect {|a| a.keys}.flatten.uniq
     field_instances = @form_instance.field_instances.find(:all, :conditions => ["field_id in (?) and form_instance_id = ?",field_list,id])
@@ -587,6 +597,8 @@ class Record
     end
     @attributes.each do |index,attribs|
       attribs.each do |field_instance_id,value|
+        #TODO change this to confirm that field_instance_id is in the current presentation.  We
+        # shouldn't be updating fields against the workflow rules.
         raise MetaformException,"field '#{field_instance_id}' not in form" if !form.field_exists?(field_instance_id)
         f = field_instances.find {|fi| fi.field_id == field_instance_id && fi.idx == index}
         if f != nil
@@ -606,7 +618,11 @@ class Record
           f.explanation = explanations[field_instance_id] if explanations
           field_instances_to_save << f
         end
-        f.state = 'answered'
+        if (invalid_fields[field_instance_id] && invalid_fields[field_instance_id][index.to_i])
+          f.state = (!explanations || explanations[field_instance_id].blank?) ? 'invalid' : 'explained'
+        else
+          f.state = 'answered'
+        end
       end
     end
 
@@ -615,15 +631,21 @@ class Record
     if errors.empty?
       saved_attributes = {}
       if !field_instances_to_save.empty?
+    		dependents = []
         FieldInstance.transaction do
           field_instances_to_save.each do |i|
+            dependents << @form.dependent_fields(i.field_id)
             saved_attributes[i.field_id] = i.answer
             if !i.save!
               errors.add(i.field_id,i.errors.full_messages.join(','))
             end
           end
         end
-        form_instance.update_attributes({:updated_at => Time.now})
+        dependents = dependents.flatten.uniq.compact.reject {|f| field_list.include?(f)}
+        puts "XXXXXXX:"+dependents.inspect
+        vd = form_instance.get_validation_data
+        vd[presentation] = invalid_fields
+        form_instance.update_attributes({:updated_at => Time.now, :validation_data => vd})
       end
       if field_instances_protected && !field_instances_protected.empty?
         raise MetaformFieldUpdateError.new(saved_attributes,field_instances_protected)
@@ -640,7 +662,66 @@ class Record
 #      raise errors.inspect
       false
     end
-  end  
+  end
+
+  #################################################################################
+  # Returns a hash of which of the currently set attributes are invalid
+  #################################################################################
+  def _validate_attributes(fields = nil)
+    invalid_fields = {}
+    @attributes.each do |index,attribs|
+      attribs.each do |f,value|
+        next if fields && !fields.include?(f)
+        invalid = Invalid.evaluate(@form,@form.fields[f],value)
+        if !invalid.empty?
+          invalid_fields[f] ||= []
+          invalid_fields[f][index.to_i] = invalid
+        end
+      end
+    end
+    invalid_fields
+  end
+
+  def get_invalid_fields(options=nil)
+    case options
+    when nil
+      presentations = nil
+      return_hash = true
+    when String,Array
+      presentations = options
+    when Hash
+      presentations = options[:presentations]
+      recalc = options[:force_recalc]
+      index = options[:index].to_i
+    end
+    index ||= 0
+    presentations = @form_instance.get_validation_data.keys if presentations.nil?
+    recalcualte_invalid_fields(presentations) if recalc
+    single = true if presentations.is_a?(String)
+    result = return_hash ? {} : []
+    arrayify(presentations).each do |p|
+      v = @form_instance.get_validation_data[p]
+      r = {}
+      v.each {|f,errs| r[f] = errs[index] if errs && errs[index]} if !v.nil?
+      r = nil if r.size == 0
+      return_hash ? result[p] = r : result << r
+    end
+    single ? result[0] : result
+  end
+  
+  def recalcualte_invalid_fields(presentations,index = nil)
+    vd = form_instance.get_validation_data
+    arrayify(presentations).each do |p|
+      @form.setup_presentation(p,self,index)
+      f = @form.get_current_field_names
+      load_attributes(f,index)
+      invalid_fields = _validate_attributes(f)
+      @form.presentations[p].invalid_fields = invalid_fields
+      vd[p] = invalid_fields
+    end
+    form_instance.update_attributes!({:validation_data => vd})
+    vd
+  end
   
   def set_force_nil_attributes
     @attributes.each do |index,attribs|
@@ -808,7 +889,7 @@ class Record
     end
         
     return_answers_hash = options.has_key?(:return_answers_hash)
-    
+
     forms = []
     #puts "1 form_instances = #{form_instances.inspect}"
     #puts "form_instances.size = #{form_instances.size}" if form_instances.respond_to?('each')

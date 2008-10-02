@@ -22,5 +22,6 @@ ActiveRecord::Schema.define(:version => 0) do
     t.integer  "updated_by_id"
     t.string   "workflow_state"
     t.string   "workflow"
+    t.text     "validation_data"
   end
 end

@@ -8,6 +8,7 @@ class CreateFormInstances < ActiveRecord::Migration
       t.column :updated_by_id, :integer
       t.column :workflow_state, :string
       t.column :workflow, :string
+      t.column :validation_data,:text
     end
     add_index :form_instances, :workflow_state
     add_index :form_instances, :form_id

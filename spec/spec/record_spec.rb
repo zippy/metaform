@@ -1,11 +1,10 @@
 require File.dirname(__FILE__) + '/../spec_helper'
 
 describe Record do
-  def setup_record(options = {})
+  def setup_record(index = nil)
     @initial_values = {:name =>'Bob Smith',:fruit => 'banana'}
-    @initial_values.update(options)
     @form = SampleForm.new
-    @record = Record.make(@form,'new_entry',@initial_values)
+    @record = Record.make(@form,'new_entry',@initial_values,{:index => index})
     @form.set_record(@record)
   end
   describe "-- creating a new one" do
@@ -162,7 +161,7 @@ describe Record do
     end
     
     it "should change a value and retain it after a save" do
-      setup_record(:index => 1)      
+      setup_record(1)
       @record.save('new_entry')
       @record = Record.find(:first, :index => :any)
       @record.name__1.should == 'Bob Smith'
@@ -562,12 +561,13 @@ describe Record do
     end
   end
 
-  describe "-- calculated fields fields" do
+  describe "-- calculated fields" do
     before(:each) do
       #TODO- think about this.  Record needs to have the form prepared for build... hmmmm...
       @initial_values = {:name =>'Bob Smith',:occupation => 'Boss'}
       @form = SampleForm.new
       @record = Record.make(@form,'new_entry',@initial_values)
+      @form.set_record(@record)
 #      @form = FormProxy.new('SampleForm'.gsub(/ /,'_'))
 #      SampleForm.prepare_for_build(@record,@form,nil)
     end
@@ -598,7 +598,7 @@ describe Record do
     end
   end
 
-  describe "timestamping" do
+  describe "-- timestamping" do
     before(:each) do
       @form = SampleForm.new
       @record = Record.make(@form,'new_entry',{:name =>'Bob Smith'})
@@ -625,6 +625,7 @@ describe Record do
       setup_record
     end
     it "should allow saveing fields if timestamp is latest" do
+      @record.save('new_entry')
       t = @record.updated_at.to_i
       @record.update_attributes({:name => 'Fred'},'new_entry',{:last_updated => t}).should == {"name"=>"Fred"}
     end
@@ -636,6 +637,75 @@ describe Record do
       lambda {@record.update_attributes({:name => 'Fred',:fruit=>'banana',:education => 'lots'},'new_entry',{:last_updated => t})}.should raise_error('Some field(s) were not saved: ["name"]')
       @record.education.should == 'lots'
       @record.fruit.should == 'banana'
+    end
+  end
+  describe "-- validation" do
+    before(:each) do
+      setup_record
+      @record.education = '99'
+      @record.save('new_entry')      
+      @id = @record.id
+    end
+    it "should set the field instance state to 'answered' for valid fields" do
+      f = FieldInstance.find(:first,:conditions => ['form_instance_id = ? and field_id == "name"',@id])
+      f.state.should == 'answered'
+    end
+    it "should set the field instance state to 'invalid' for invalid fields" do
+      f = FieldInstance.find(:first,:conditions => ['form_instance_id = ? and field_id == "education"',@id])
+      f.state.should == 'invalid'
+    end
+    it "should set the field instance state to 'explained' for fields with an explanation" do
+      @record.update_attributes({:education => '99'},'new_entry',{:explanations => {'education' => 'has studied forever'}})
+      f = FieldInstance.find(:first,:conditions => ['form_instance_id = ? and field_id == "education"',@id])
+      f.state.should == 'explained'
+      f.explanation.should == 'has studied forever'
+    end
+    it "should be able to calculate validation of current attributes" do
+      @record.name = nil
+      @record._validate_attributes.should == {"name"=>[["This information is required"]], "education"=>[["Answer must be between 0 and 14"]]}
+    end
+    it "should be able to calculate validation of current attributes selected from the given list" do
+      @record.name = nil
+      @record._validate_attributes(['name']).should == {"name"=>[["This information is required"]]}
+    end
+    it "should set the validation data in the form_instance" do
+      f = FormInstance.find(@id)
+      f.get_validation_data['new_entry'].should == {"education"=>[["Answer must be between 0 and 14"]]}
+    end
+    it "should return the invalid fields of requested presentation(s)" do
+      @record.get_invalid_fields('new_entry').should == {"education"=>["Answer must be between 0 and 14"]}
+      @record.get_invalid_fields(['new_entry','simple']).should == [{"education"=>["Answer must be between 0 and 14"]},nil]
+      @record.get_invalid_fields(:presentations => 'new_entry').should == {"education"=>["Answer must be between 0 and 14"]}
+      @record.get_invalid_fields(:presentations => ['new_entry','simple']).should == [{"education"=>["Answer must be between 0 and 14"]},nil]
+    end
+    it "should return the invalid fields data for all presentations so far updated" do
+      @record.get_invalid_fields.should == {"new_entry"=>{"education"=>["Answer must be between 0 and 14"]}}
+    end
+    it "should update invalid fields data after an update_attributes call" do
+      @record.update_attributes({:name => ''},'simple')
+      @record.get_invalid_fields.should == {"new_entry"=>{"education"=>["Answer must be between 0 and 14"]},"simple"=>{"name"=>["This information is required"]}}
+    end
+    it "should return nil for the invalid fields of a requested presentation if it hasn't been updated" do
+      @record.get_invalid_fields('simple').should == nil
+    end
+    it "should return the invalid fields of requested presentation and index" do
+      @record.get_invalid_fields(:presentations => 'new_entry',:index => 1).should == nil
+      @record['name',1] = ""
+      @record.save('new_entry')
+      @record.get_invalid_fields(:presentations => 'new_entry',:index => 1).should == {"name"=>["This information is required"]}
+    end
+    it "should be able to recalculate invalid fields of a requested presentation" do
+      @record.name = ''
+      @record.save('new_entry')
+      @record.recalcualte_invalid_fields('simple')['simple'].should == {"name"=>[["This information is required"]]}
+    end
+    it "should be able to force the calculation of invalid fields of a requested presentation at a given index" do
+      @record.save('simple')
+      @record.recalcualte_invalid_fields('simple',1)['simple'].should == {"name"=>[nil, ["This information is required"]]}
+    end
+    it "should update the invalid count for related presentations on update_attributes" do
+      @record.update_attributes({:education => 3},'new_entry')
+      @record.get_invalid_fields['education_info'].should == {"degree"=>[["This information is required"]]}
     end
   end
   

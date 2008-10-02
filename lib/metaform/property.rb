@@ -15,7 +15,7 @@ end
 
 class Invalid < Property
   def self.evaluate(form,field,value)
-    form.validating? ? Constraints.verify(field.constraints, value, form) : []
+    Constraints.verify(field.constraints, value, form)
   end
   def self.render(question_html,property_value,question,form,read_only)
     if !property_value.empty? && (v = form.validating?) && !read_only

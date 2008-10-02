@@ -788,8 +788,8 @@ describe SimpleForm do
       before(:each) do
         @tabs = @form.tabs['simple_tabs']
       end
-      it "should create a tab group" do
-        @tabs.class.should == Proc
+      it "should create a Tabs object" do
+        @tabs.class.should == Tabs
       end
     end #def_tabs
     describe "tab (render a tab)" do
@@ -797,17 +797,14 @@ describe SimpleForm do
         @form.setup_presentation('view',@record)
         @form.set_record(@record)
         @form.set_render(:render)
+        @form.prepare_for_tabs('simple_tabs')
       end
       it "should render a tab with default options" do
-        @form.tab('view').should == "<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view')\" title=\"Click here to go to View\"><span>View</span></a></li>"
+        @form.tab('view').should == "<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view/simple_tabs')\" title=\"Click here to go to View\"><span>View</span></a></li>"
       end
       it "should render a tab with specified options" do
         @record[:name,1] = "Herb Monkel"
-        @form.tab('view',:label => 'The View',:index => 1).should == "<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view/1')\" title=\"Click here to go to The View\"><span>The View</span></a></li>"
-      end
-      it "should render error count in tabs of non-read-only values when validating" do
-        @form.set_validating(true)
-        @form.tab('view').should == "<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view')\" title=\"Click here to go to View\"><span>View<font style='color:red'> 1</font></span></a></li>"
+        @form.tab('view',:label => 'The View',:index => 1).should == "<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view/simple_tabs/1')\" title=\"Click here to go to The View\"><span>The View</span></a></li>"
       end
     end #tab
   end  #-- dsl
@@ -826,19 +823,24 @@ describe SimpleForm do
       @form.get_current_question_by_field_name('higher_ed_years').should == @form.questions['higher_ed_years']
     end
     it "shoud raise an error if getting a current question without having done a run" do
-      lambda {SimpleForm.new.get_current_question_by_field_name('higher_ed_years')}.should raise_error("attempting to search for current question when there are none!")
+      lambda {SimpleForm.new.get_current_question_by_field_name('higher_ed_years')}.should raise_error("attempting to search for current question without a setup presentation.")
+    end
+    it "shoud raise an error if getting a current field info without having done a run" do
+      lambda {SimpleForm.new.get_current_field_names}.should raise_error("attempting to get current field names without a setup presentation.")
+      lambda {SimpleForm.new.get_current_questions}.should raise_error("attempting to get current questions without a setup presentation.")
     end
   end
 
   describe "generators" do
     describe "build_tabs (render a tab group)" do
       it "should render a tab group with the current tab identified" do
-        @form.build_tabs('simple_tabs','simple',@record).should == "<div class=\"tabs\"> <ul>\n<li class=\"current tab_simple\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//simple/simple_tabs')\" title=\"Click here to go to Edit\"><span>Edit</span></a></li>\n<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view/simple_tabs')\" title=\"Click here to go to View\"><span>View</span></a></li>\n</ul></div><div class='clear'></div>"
-      end
-      it "should render a tab group with the current tab identified and show validation errors if in validation mode" do
-        @form.set_validating(true)
         @form.build_tabs('simple_tabs','simple',@record).should == 
-          "<div class=\"tabs\"> <ul>\n<li class=\"current tab_simple\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//simple/simple_tabs')\" title=\"Click here to go to Edit\"><span>Edit<font style='color:red'> 3</font></span></a></li>\n<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view/simple_tabs')\" title=\"Click here to go to View\"><span>View<font style='color:red'> 1</font></span></a></li>\n</ul></div><div class='clear'></div>"
+        "<div class=\"tabs\"><ul>\n<li class=\"current tab_simple\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//simple/simple_tabs')\" title=\"Click here to go to Edit\"><span>Edit</span></a></li>\n<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view/simple_tabs')\" title=\"Click here to go to View\"><span>View</span></a></li>\n</ul></div><div class='clear'></div>"
+      end
+      it "should properly render a tab group that returns extra info for a tab from the render_proc" do
+        $extra = 'view'
+        @form.build_tabs('simple_tabs','simple',@record).should == 
+          "<div class=\"tabs\"><ul>\n<li class=\"current tab_simple\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//simple/simple_tabs')\" title=\"Click here to go to Edit\"><span>Edit</span></a></li>\n<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view/simple_tabs')\" title=\"Click here to go to View\"><span>Viewextra_stuff</span></a></li>\n</ul></div><div class='clear'></div>"
       end
       it "should raise an error for tab group that doesn't exist" do
         lambda {@form.build_tabs('sss','',@record)}.should raise_error("tab group 'sss' doesn't exist")
@@ -922,6 +924,12 @@ describe SimpleForm do
         conds.size.should == 2
         conds[1].name.should == 'eye_color=ffffff'
         conds[0].name.should == 'eye_color=x'
+      end
+    end
+    describe "#dependent_fields" do
+      it "for a given field it should return a list of dependent fields" do
+        @form.dependent_fields('married').should == ['years_married']
+        @form.dependent_fields('higher_ed_years').should == ['degree','no_ed_reason']
       end
     end
     describe "#record_workflow" do
@@ -1010,7 +1018,7 @@ describe SimpleForm do
       r = @form.build('tab_changer',@record)
       r.should == [
         "<div id=\"presentation_tab_changer\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>\n</div>\n<input type=\"hidden\" name=\"meta[last_updated]\" id=\"meta_last_updated\" value=0>\n<input type=\"hidden\" name=\"___age\" id=\"___age\" value=\"\">",
-        "function actions_for_multi_tab_changer() {\n  if (multi_tab_changer()) {$$(\".tab_multi_tab\").invoke('remove');insert_tabs('<li class=\"tab_multi_tab\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//multi_tab/INDEX\\')\" title=\"Click here to go to  NUM\"><span> NUM</span></a></li>','.tab_finish',true,'.tab_finish',value_age()-1,true);}\n  else {$$(\".tab_multi_tab\").invoke('remove');}\n}\n\nfunction value_age() {return $F('___age')};function multi_tab_changer() {return value_age() > 0}\nfunction actions_for_view_changer() {\n  if (view_changer()) {$$(\".tab_view\").invoke('remove');insert_tabs('<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//view/mutliple_value_tabs\\')\" title=\"Click here to go to View\"><span>View</span></a></li>','.tab_finish',true,'.tab_finish',1,false);}\n  else {$$(\".tab_view\").invoke('remove');}\n}\n\nfunction value_age() {return $F('___age')};function view_changer() {return value_age() > 0}\nfunction actions_for_simple_changer() {\n  if (simple_changer()) {$$(\".tab_simple\").invoke('remove');insert_tabs('<li class=\"current tab_simple\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//simple/mutliple_value_tabs\\')\" title=\"Click here to go to Simple\"><span>Simple</span></a></li>','.tab_finish',true,'.tab_finish',1,false);}\n  else {$$(\".tab_simple\").invoke('remove');}\n}\n\nfunction value_name() {return $F('record_name')};function simple_changer() {return value_name() == Sue}\nEvent.observe('record_name', 'change', function(e){ actions_for_simple_changer(); });"
+        "function actions_for_multi_tab_changer() {\n  if (multi_tab_changer()) {$$(\".tab_multi_tab\").invoke('remove');insert_tabs('<li class=\"tab_multi_tab\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//multi_tab/mutliple_value_tabs/INDEX\\')\" title=\"Click here to go to  NUM\"><span> NUM</span></a></li>','.tab_finish',true,'.tab_finish',value_age()-1,true);}\n  else {$$(\".tab_multi_tab\").invoke('remove');}\n}\n\nfunction value_age() {return $F('___age')};function multi_tab_changer() {return value_age() > 0}\nfunction actions_for_view_changer() {\n  if (view_changer()) {$$(\".tab_view\").invoke('remove');insert_tabs('<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//view/mutliple_value_tabs\\')\" title=\"Click here to go to View\"><span>View</span></a></li>','.tab_finish',true,'.tab_finish',1,false);}\n  else {$$(\".tab_view\").invoke('remove');}\n}\n\nfunction value_age() {return $F('___age')};function view_changer() {return value_age() > 0}\nfunction actions_for_simple_changer() {\n  if (simple_changer()) {$$(\".tab_simple\").invoke('remove');insert_tabs('<li class=\"current tab_simple\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//simple/mutliple_value_tabs\\')\" title=\"Click here to go to Simple\"><span>Simple</span></a></li>','.tab_finish',true,'.tab_finish',1,false);}\n  else {$$(\".tab_simple\").invoke('remove');}\n}\n\nfunction value_name() {return $F('record_name')};function simple_changer() {return value_name() == Sue}\nEvent.observe('record_name', 'change', function(e){ actions_for_simple_changer(); });"
       ]
     end    
   end

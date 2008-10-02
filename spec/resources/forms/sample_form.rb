@@ -20,6 +20,9 @@ def setup
     f 'name', :label => 'Name', :type => 'string', :constraints => {"required"=>true}
     f 'due_date', :label => 'Due Date', :type => 'date'
     f 'education', :label => 'Post-secondary formal education (years)', :type => 'integer', :constraints => {"range"=>"0-14"}
+    def_dependent_fields('education>0') do
+      f 'degree', :type=>'string'
+    end
     f 'occupation', :label => 'Occupation', :type => 'string'
     f 'field_with_default', :label => 'FWD', :type => 'string', :default=> 'fish'
     f 'indexed_field_no_default', :label => 'AF', :type => 'string', :indexed_default_from_null_index => true
@@ -31,7 +34,7 @@ def setup
       :proc => Proc.new { |form,index| (form.field_value('name',index).to_s+form.field_value('occupation',index).to_s).reverse}
     }
   end
-        
+
 #  def_workflows do 
     workflow 'standard',[{'logged' => 'Form Logged'},{'completed' => 'Form Completed'},{'verifying' => {:label => 'Form in validation',:validate => true}}] do
     	action 'create',[nil] do
@@ -65,6 +68,11 @@ def setup
   
   presentation 'simple' do
     q 'name'
+  end
+  
+  presentation 'education_info' do
+    q 'education'
+    q 'degree'
   end
   
   presentation 'indexed_sub_presentation' do

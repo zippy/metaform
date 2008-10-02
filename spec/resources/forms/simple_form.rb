@@ -18,7 +18,7 @@ end
 class SimpleForm < Form
   def setup
 
-    def_tabs 'simple_tabs' do
+    def_tabs 'simple_tabs', :render_proc => Proc.new {|presentation_name,index| $extra == presentation_name ? 'extra_stuff' : ''} do
       tab 'simple', :label => 'Edit'
       tab 'view'
     end

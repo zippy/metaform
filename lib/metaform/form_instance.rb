@@ -7,4 +7,10 @@ class FormInstance < ActiveRecord::Base
     form_id.constantize
   end
   
+  def get_validation_data
+    return validation_data if validation_data.is_a?(Hash)
+    v = YAML.load(validation_data) if !validation_data.nil?
+    v ||= {}
+  end
+  
 end

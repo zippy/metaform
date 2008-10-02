@@ -246,13 +246,14 @@ class Form
         
         the_field.add_force_nil_case(cond.name,fields.collect {|f| f.name},:unless)
         
+        dependents = []
         fields.each do |field|
+          dependents << field.name
           conds[field.name] = cond
-#TODO-Eric
-#TODO-Ellen  constraints auto-defined for followups?  Required?
-         field.constraints ||= {}
-         field.constraints['required'] = cond.name
-        end 
+          field.constraints ||= {}
+          field.constraints['required'] = cond.name
+        end
+        the_field.set_dependent_fields(dependents)
       end
       the_field.followup_conditions = conds
     end
@@ -337,6 +338,7 @@ class Form
     def_fields(common_options) do
       yield
     end
+    condition.fields_used.each {|f| fields[f].set_dependent_fields(@fields_defined)}
     force_nil_condition.fields_used.each do |fn|
       f = fields[fn]
       f.add_force_nil_case(force_nil_condition,@fields_defined.clone,negate)
@@ -364,8 +366,8 @@ class Form
   #################################################################################
   # defines a tab group
   #################################################################################
-  def def_tabs(tabs_name,&block)
-    tabs[tabs_name] = block
+  def def_tabs(tabs_name,options={},&block)
+    tabs[tabs_name] = Tabs.new(:name => tabs_name,:block => block,:render_proc => options[:render_proc])
   end
 
   #################################################################################
@@ -373,7 +375,8 @@ class Form
   #################################################################################
   
   #################################################################################
-  # Renders a tab
+  # Renders a tab, or if not in render mode just adds the presentation to the
+  # hash of tabs
   #
   # Options:
   # * :label  if no label is given the "humanzied" version of presentation_name
@@ -381,43 +384,24 @@ class Form
   # * :index
   #################################################################################
   def tab(presentation_name,opts={})
-    body tab_html(presentation_name,opts)
+    if @render
+      body tab_html(presentation_name,opts)
+    else
+      @_tabs[presentation_name] = opts
+    end
   end    
   
   def tab_html(presentation_name,opts)
     options = {
       :label => nil,
-      :index => -1,
-      :tabs_name => @tabs_name,
-      :current_tab => @current_tab
+      :index => -1
     }.update(opts)
     index = options[:index]
     index = index == -1 ? @_index : index
-    url = Record.url(@record.id,presentation_name,options[:tabs_name],index)
+    url = Record.url(@record.id,presentation_name,@tabs_name,index)
     label = options[:label]
     label ||= presentation_name.humanize
-    current_text = (@_index.to_s == index.to_s && options[:current_tab] == presentation_name) ? "current " : ""
-    invalid_count = 0
-    if validating?
-      old_stuff = @_stuff
-      setup_presentation(presentation_name,@record)
-      invalid_fields = {}
-      fields_in_presentation = get_current_field_names
-      explanations = get_record.explanations(fields_in_presentation)
-      #TODO-Eric this all needs to be fixed along with other perfomance enhancements.  See LH#156
-      answers = Record.locate(get_record.id,:index => index,:fields => fields_in_presentation, :return_answers_hash => true)
-      fields_in_presentation.each do |f|
-        value = !answers ? nil : answers[f][index]
-        invalid = Invalid.evaluate(self,fields[f],value)
-        if !invalid.empty? && explanations[f].blank?
-          invalid_fields[f] = invalid
-        end
-      end
-      invalid_count = invalid_fields.size
-      presentations[presentation_name].invalid_fields = invalid_fields
-      @_stuff = old_stuff
-    end
-    %Q|<li class=\"#{current_text}tab_#{presentation_name}\"> <a href=\"#\" onClick=\"return submitAndRedirect('#{url}')\" title=\"Click here to go to #{label}\"><span>#{label}#{invalid_count > 0 ? "<font style='color:red'> #{invalid_count}</font>" : ''}</span></a></li>|
+    tabs[@tabs_name].render_tab(presentation_name,label,url,@_index.to_s == index.to_s && @current_tab == presentation_name,index)
   end
 
   #################################################################################
@@ -781,16 +765,16 @@ class Form
     }.update(opts)
     condition = options[:condition] ? c(options[:condition]) : c("#{options[:tab]}_changer")
     raise MetaformException "condition must be defined" if !condition.instance_of?(Condition)
-    raise MetaformException "tabs_name must be defined" if !options[:tabs_name]
     if options[:multi]
-      tab_html_options = {:label => "#{options[:label]} NUM", :index => "INDEX", :current_tab => options[:current_tab]}  
+      tab_html_options = {:label => "#{options[:label]} NUM", :index => "INDEX"}  
       tab_num_string = "value_#{options[:multi]}()-1"
       multi_string = "true"
     else
-      tab_html_options = {:label => options[:label], :index => options[:index], :tabs_name => options[:tabs_name], :current_tab => options[:current_tab]}
+      tab_html_options = {:label => options[:label], :index => options[:index]}
       tab_num_string = "1"
       multi_string = "false"
     end
+    prepare_for_tabs(options[:tabs_name],options[:current_tab])
     html_string = tab_html(options[:tab],tab_html_options).gsub(/'/, '\\\\\'')
     js_remove = %Q|$$(".tab_#{options[:tab]}").invoke('remove');|
     js_add = %Q|insert_tabs('#{html_string}','.tab_#{options[:anchor_css]}',#{options[:before_anchor]},'.tab_#{options[:default_anchor_css]}',#{tab_num_string},#{multi_string});|
@@ -979,19 +963,34 @@ class Form
     tabs_html = ''
     with_record(record,:render) do
       save_context(:current_questions,:body) do
-        tabs_block = tabs[tabs_name]
-        raise MetaformException,"tab group '#{tabs_name}' doesn't exist" if !tabs_block
-
-        #TODO this should be moved to a render method in a Tabs object
-        @current_tab = current
-        @tabs_name = tabs_name
-        body %Q|<div class="tabs"> <ul>|
-        tabs_block.call
-        body "</ul></div><div class='clear'></div>"
+        the_tabs = tabs[tabs_name]
+        raise MetaformException,"tab group '#{tabs_name}' doesn't exist" if !tabs.has_key?(tabs_name)
+        prepare_for_tabs(tabs_name,current)
+        body %Q|<div class="tabs"><ul>|
+        the_tabs.block.call
+        body %Q|</ul></div><div class='clear'></div>|
         tabs_html = get_body.join("\n")
       end
     end
     tabs_html
+  end
+  
+  def prepare_for_tabs(tabs_name,current_tab = nil)
+    @tabs_name = tabs_name
+    @current_tab = current_tab
+  end
+  
+  #################################################################################
+  # return a list of the tabs for the current record
+  def setup_tabs(tabs_name,record)
+    with_record(record) do
+      the_tabs = tabs[tabs_name]
+      raise MetaformException,"tab group '#{tabs_name}' doesn't exist" if !tabs.has_key?(tabs_name)
+      prepare_for_tabs(tabs_name)
+      @_tabs = {}
+      the_tabs.block.call
+      @_tabs
+    end
   end
 
   #################################################################################
@@ -1155,10 +1154,7 @@ EOJS
     raise MetaformException, "couldn't find field #{field_name} in fields list" if field.nil?
     p = field.properties[0]
     value = field_value(field_name) if value == :get_from_form
-    v = @validating
-    @validating = true
     valid = p.evaluate(self,field,value).empty?
-    @validating = v
     valid
   end
 
@@ -1264,15 +1260,17 @@ EOJS
   end
 
   def get_current_questions
+    raise MetaformException,"attempting to get current questions without a setup presentation." if @_stuff[:current_questions].nil?
    @_stuff[:current_questions].values
   end
   
   def get_current_field_names
+    raise MetaformException,"attempting to get current field names without a setup presentation." if @_stuff[:current_questions].nil?
     @_stuff[:current_questions].keys
   end
 
   def get_current_question_by_field_name(field_name)
-    raise MetaformException,"attempting to search for current question when there are none!" if @_stuff[:current_questions].nil?
+    raise MetaformException,"attempting to search for current question without a setup presentation." if @_stuff[:current_questions].nil?
     @_stuff[:current_questions][field_name]
   end
 
@@ -1303,6 +1301,10 @@ EOJS
     conds = []
     conditions.each { |name,c| conds << c if c.uses_fields(field_list) }
     conds
+  end
+  
+  def dependent_fields(field)
+    fields[field].dependent_fields
   end
   
   #################################################################################

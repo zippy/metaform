@@ -169,6 +169,27 @@ describe Condition do
   end
 end
 
+describe Tabs do
+  before :each do
+    @current_tab ='start'
+    @tab = Tabs.new(
+      :name => 'midwife',
+      :block => nil
+    )
+  end
+  it "should render a tab" do
+    @tab.render_tab('end','End','/end',false).should == "<li class=\"tab_end\"> <a href=\"#\" onClick=\"return submitAndRedirect('/end')\" title=\"Click here to go to End\"><span>End</span></a></li>"
+  end
+  it "should render the current tab" do
+    @tab.render_tab('start','Start','/start',true).should == "<li class=\"current tab_start\"> <a href=\"#\" onClick=\"return submitAndRedirect('/start')\" title=\"Click here to go to Start\"><span>Start</span></a></li>"
+  end
+  it "should render the current tab with additional info added to the label via a callback" do
+    @tab.render_proc = Proc.new {|presentation_name,index| " fish"}
+    @tab.render_tab('start','Start','/start',true).should == "<li class=\"current tab_start\"> <a href=\"#\" onClick=\"return submitAndRedirect('/start')\" title=\"Click here to go to Start\"><span>Start fish</span></a></li>"
+  end
+end
+
+
 #describe Constraint do
 #  it "should require " do
 #    lambda {Condition.new}.should raise_error("Condition reqires 'name' to be defined")
