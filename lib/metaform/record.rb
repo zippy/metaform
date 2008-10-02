@@ -731,9 +731,6 @@ class Record
     all_fields = @form.fields.values.find_all {|f| !f.calculated}.collect {|f| f.name}
     load_attributes(all_fields,:any)
     vd['_'] = _validate_attributes(all_fields).inspect
-    arrayify(presentations).each do |p|
-      @form.setup_presentation(p,self,index)
-      
 #    arrayify(presentations).each do |p|
 #      @form.setup_presentation(p,self,index)
 #      f = @form.get_current_field_names
