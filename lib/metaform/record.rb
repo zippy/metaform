@@ -702,7 +702,11 @@ class Record
       index = index.to_i
       field_list.each do |f|
         v[f] ||= []
-        v[f][index] = invalid_fields[f][index] if invalid_fields[f]
+        if invalid_fields[f]
+          v[f][index] = invalid_fields[f][index]
+        else
+          v[f][index] = nil
+        end
         v.delete(f) if v[f].compact.size == 0
       end
     end

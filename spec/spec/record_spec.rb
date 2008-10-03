@@ -725,8 +725,8 @@ describe Record do
         end
         it "should clear validation data if not invalid" do
           vd = {'_'=>{"name"=>[nil,["This information is required"]], "education"=>[["Answer must be between 0 and 14"]]}}
-          @record._merge_invalid_fields(vd,['name'],{},1).should ==
-            {"education"=>[["Answer must be between 0 and 14"]]}
+          @record._merge_invalid_fields(vd,['name'],{},1)
+          vd.should == {'_'=>{"education"=>[["Answer must be between 0 and 14"]]}}
         end
       end
       describe "_update_presentation_error_count" do
