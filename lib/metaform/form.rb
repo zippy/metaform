@@ -962,7 +962,7 @@ class Form
   def build_tabs(tabs_name,current,record)
     tabs_html = ''
     with_record(record,:render) do
-      save_context(:current_questions,:body) do
+      save_context(:body) do
         the_tabs = tabs[tabs_name]
         raise MetaformException,"tab group '#{tabs_name}' doesn't exist" if !tabs.has_key?(tabs_name)
         prepare_for_tabs(tabs_name,current)

@@ -648,21 +648,30 @@ class Record
     if errors.empty?
       saved_attributes = {}
       if !field_instances_to_save.empty?
-#    		dependents = []
+    		dependents = []
         FieldInstance.transaction do
           field_instances_to_save.each do |i|
-#            dependents << @form.dependent_fields(i.field_id)
+            dependents << @form.dependent_fields(i.field_id)
             saved_attributes[i.field_id] = i.answer
             if !i.save!
               errors.add(i.field_id,i.errors.full_messages.join(','))
             end
           end
         end
-#        dependents = dependents.flatten.uniq.compact.reject {|f| field_list.include?(f)}
-#        puts "XXXXXXX:"+dependents.inspect
         vd = form_instance.get_validation_data
         _merge_invalid_fields(vd,field_list,invalid_fields,index)
         _update_presentation_error_count(vd,presentation,index)
+
+        # any dependents that aren't being updated in this group of attributes must have
+        # their validity status updated too.
+#        dependents = dependents.flatten.uniq.compact.reject {|f| field_list.include?(f)}
+#        if !dependents.empty?
+#          load_attributes(dependents,index)
+#          @form.with_record(self) do
+#            _merge_invalid_fields(vd,dependents,_validate_attributes(dependents),index)
+#          end
+#        end
+        
         form_instance.update_attributes({:updated_at => Time.now, :validation_data => vd})
       end
       if field_instances_protected && !field_instances_protected.empty?
@@ -752,6 +761,16 @@ class Record
       end
     end
     invalid_fields
+  end
+
+  #################################################################################
+  # Returns a the cached invalid fields list for the current fields
+  #################################################################################
+  def current_invalid_fields
+  	v = form_instance.get_validation_data['_']
+  	d = {}
+  	@form.get_current_field_names.each {|f| d[f] = v[f] if v[f]} if v
+  	d
   end
 
   #################################################################################

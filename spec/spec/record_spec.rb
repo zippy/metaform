@@ -747,6 +747,9 @@ describe Record do
         end
       end
     end
+    it "should list the current invalid fields" do
+      @record.current_invalid_fields.should == {"education"=>[["Answer must be between 0 and 14"]]}
+    end
     it "should set the validation data in the form_instance" do
       @record.form_instance.get_validation_data['_'].should == {"education"=>[["Answer must be between 0 and 14"]]}
       @record.form_instance.get_validation_data['new_entry'].should == 1
@@ -782,9 +785,9 @@ describe Record do
         @record.recalcualte_invalid_fields['_'].should == {"hobby"=>[["This information is required"]], "name"=>[["This information is required"]], "fruit"=>[["This information is required"]]}
       end
     end #recalculating validation
-    it "should update the invalid count for related presentations on update_attributes" do
+    it "should update the validity of related fields" do
       @record.update_attributes({:education => 3},'new_entry')
-      @record.get_invalid_fields['education_info'].should == {"degree"=>[["This information is required"]]}
+      @record.form_instance.get_validation_data['_'].should == {"degree"=>[["This information is required"]]}
     end
   end
   
