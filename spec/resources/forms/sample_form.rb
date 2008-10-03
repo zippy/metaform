@@ -24,6 +24,7 @@ def setup
       f 'degree', :type=>'string'
     end
     f 'occupation', :label => 'Occupation', :type => 'string'
+    f 'hobby', :label => 'Hobby', :constraints => {"required"=>true}
     f 'field_with_default', :label => 'FWD', :type => 'string', :default=> 'fish'
     f 'indexed_field_no_default', :label => 'AF', :type => 'string', :indexed_default_from_null_index => true
     f 'indexed_field_with_default', :label => 'AFWD', :type => 'string', :default=> 'cow',:indexed_default_from_null_index => true

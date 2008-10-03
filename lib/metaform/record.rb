@@ -557,10 +557,10 @@ class Record
     if zap_fields = options[:clear_indexes]
       FieldInstance.destroy_all(["form_instance_id = ? and field_id in (?)",@form_instance.id,zap_fields])
     end
-    _update_attributes(presentation,meta_data)
+    _update_attributes(presentation,meta_data,options[:index])
   end
 
-  def _update_attributes(presentation,meta_data)
+  def _update_attributes(presentation,meta_data,index = nil)
     
     # determine if this presentation is allowed to be used for updating the 
     # record in the current state
@@ -648,20 +648,21 @@ class Record
     if errors.empty?
       saved_attributes = {}
       if !field_instances_to_save.empty?
-    		dependents = []
+#    		dependents = []
         FieldInstance.transaction do
           field_instances_to_save.each do |i|
-            dependents << @form.dependent_fields(i.field_id)
+#            dependents << @form.dependent_fields(i.field_id)
             saved_attributes[i.field_id] = i.answer
             if !i.save!
               errors.add(i.field_id,i.errors.full_messages.join(','))
             end
           end
         end
-        dependents = dependents.flatten.uniq.compact.reject {|f| field_list.include?(f)}
-        puts "XXXXXXX:"+dependents.inspect
+#        dependents = dependents.flatten.uniq.compact.reject {|f| field_list.include?(f)}
+#        puts "XXXXXXX:"+dependents.inspect
         vd = form_instance.get_validation_data
-        vd[presentation] = invalid_fields
+        _merge_invalid_fields(vd,field_list,invalid_fields,index)
+        _update_presentation_error_count(vd,presentation,index)
         form_instance.update_attributes({:updated_at => Time.now, :validation_data => vd})
       end
       if field_instances_protected && !field_instances_protected.empty?
@@ -682,6 +683,56 @@ class Record
   end
 
   #################################################################################
+  # merges the invalid_fields information into the validation data hash
+  #################################################################################
+  def _merge_invalid_fields(vd,field_list,invalid_fields,index = nil)
+    v = vd['_']
+    v ||= {}
+    if index == :any
+      # if the index is any, then we assume that the invalid_fields has
+      # all the invalidity data for all indexes so we can just delete
+      # everyting from the validity data hash and merge in the current
+      # invalid state
+      field_list.each {|f| v.delete(f)}
+      v.update(invalid_fields)
+    else
+      # if an index is specified, then we only assume that the validity information
+      # for that index (not any others) is specified in invalid_fields, so we
+      # only clear and merge for that index
+      index = index.to_i
+      field_list.each do |f|
+        v[f] ||= []
+        v[f][index] = invalid_fields[f][index] if invalid_fields[f]
+        v.delete(f) if v[f].compact.size == 0
+      end
+    end
+    vd['_'] = v
+  end
+
+  #################################################################################
+  # updates the count of invalid fields in the validation_data hash per presentation and index
+  # NOTE: this method only works if the given presentation has been properly set up
+  #       by a call to form#setup_presentation or form#build
+  #################################################################################
+  def _update_presentation_error_count(validation_data,presentation,index=nil)
+    vd = validation_data
+    v = vd['_']    
+    count = vd[presentation]
+    if index == :any
+      count = []
+      @form.get_current_field_names.each {|f| errs = v[f]; errs.each_with_index {|e,i| if e then count[i] ||= 0;count[i] += 1 end} if errs}
+    else
+      count ||= []
+      index = index.to_i
+      count[index] = 0
+      @form.get_current_field_names.each {|f| errs = v[f]; count[index] += 1 if errs && errs[index]}
+    end
+    vd[presentation] = count
+    vd
+  end
+
+
+  #################################################################################
   # Returns a hash of which of the currently set attributes are invalid
   #################################################################################
   def _validate_attributes(fields = nil)
@@ -699,46 +750,25 @@ class Record
     invalid_fields
   end
 
-  def get_invalid_fields(options=nil)
-    case options
-    when nil
-      presentations = nil
-      return_hash = true
-    when String,Array
-      presentations = options
-    when Hash
-      presentations = options[:presentations]
-      recalc = options[:force_recalc]
-      index = options[:index].to_i
+  #################################################################################
+  # Returns a the cached count of invalid fields for a given presentation and index
+  #################################################################################
+  def get_invalid_field_count(presentation_name,index=nil)
+    count = @form_instance.get_validation_data[presentation_name]
+    if count
+      if index == :any
+        count.compact.inject { |sum,x| sum+x }
+      else
+        count[index.to_i]
+      end
     end
-    index ||= 0
-    presentations = @form_instance.get_validation_data.keys if presentations.nil?
-    recalcualte_invalid_fields(presentations) if recalc
-    single = true if presentations.is_a?(String)
-    result = return_hash ? {} : []
-    arrayify(presentations).each do |p|
-      v = @form_instance.get_validation_data[p]
-      r = {}
-      v.each {|f,errs| r[f] = errs[index] if errs && errs[index]} if !v.nil?
-      r = nil if r.size == 0
-      return_hash ? result[p] = r : result << r
-    end
-    single ? result[0] : result
   end
-  
-  def recalcualte_invalid_fields(presentations,index = nil)
+
+  def recalcualte_invalid_fields
     vd = form_instance.get_validation_data
     all_fields = @form.fields.values.find_all {|f| !f.calculated}.collect {|f| f.name}
     load_attributes(all_fields,:any)
-    vd['_'] = _validate_attributes(all_fields).inspect
-#    arrayify(presentations).each do |p|
-#      @form.setup_presentation(p,self,index)
-#      f = @form.get_current_field_names
-#      load_attributes(f,index)
-#      invalid_fields = _validate_attributes(f)
-#      @form.presentations[p].invalid_fields = invalid_fields
-#      vd[p] = invalid_fields
-#    end
+    vd['_'] = _validate_attributes
     form_instance.update_attributes!({:validation_data => vd})
     vd
   end
