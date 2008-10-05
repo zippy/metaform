@@ -32,7 +32,7 @@ class Invalid < Property
       else
         error_class = "validation_error"
       end
-      question_html + %Q| <div class="#{error_class}">#{errs}</div>|
+      question_html + %Q| <div tabindex="1" class="#{error_class}">#{errs}</div>|
     else
       question_html
     end
