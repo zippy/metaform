@@ -27,12 +27,12 @@ class Invalid < Property
 #        if read_only
 #          errs += ex_val.blank? ? ";(no explanation given)" : "; (explained with: #{ex_val})"
 #        else
-          errs += "; please correct (or explain here: <input id=\"explanations_#{fname}\" name=\"explanations[#{fname}]\" type=\"text\" value=\"#{ex_val}\" />)"
+          errs += "; please correct (or explain here: <input tabindex=\"1\" id=\"explanations_#{fname}\" name=\"explanations[#{fname}]\" type=\"text\" value=\"#{ex_val}\" />)"
 #        end
       else
         error_class = "validation_error"
       end
-      question_html + %Q| <div tabindex="1" class="#{error_class}">#{errs}</div>|
+      question_html + %Q| <div class="#{error_class}">#{errs}</div>|
     else
       question_html
     end
