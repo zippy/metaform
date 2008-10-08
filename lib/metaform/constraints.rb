@@ -94,10 +94,14 @@ module Constraints
         ok_values << '' if !ok_values.include?('')
         cur_values = if value.blank?
           [nil]
-        elsif value =~ /^---/
-          YAML.load(value).keys
-        else
-          value.split(',')
+        elsif value.is_a?(String)
+          if value =~ /^---/
+            YAML.load(value).keys
+          else 
+            value.split(',')
+          end
+        elsif value.is_a?(Hash)
+          value.keys
         end
         if not cur_values.all? {|v| ok_values.include?(v)}
           labels = constraint[0].is_a?(String) ? ok_values.join(', ') : constraint.collect{|h| h.is_a?(String) ? h.to_s : h.values[0]}
