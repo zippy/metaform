@@ -12,7 +12,7 @@ class Form
 
   FieldTypes = ['string','integer','float','decimal','boolean','date','datetime','time','text']
 
-  attr_accessor :fields, :conditions, :questions, :presentations, :groups, :workflows, :listings, :tabs, :label_options, :calculated_field_dependencies
+  attr_accessor :fields, :conditions, :questions, :presentations, :groups, :workflows, :listings, :tabs, :label_options, :calculated_field_dependencies, :current_tab_label
 
   def initialize
     @fields = {}
@@ -413,6 +413,9 @@ class Form
     index = index == -1 ? @_index : index
     url = Record.url(@record.id,presentation_name,@tabs_name,index)
     label = options[:label]
+    if @current_tab == presentation_name
+      @current_tab_label = label
+    end
     label ||= presentation_name.humanize
     tabs[@tabs_name].render_tab(presentation_name,label,url,@_index.to_s == index.to_s && @current_tab == presentation_name,index)
   end
