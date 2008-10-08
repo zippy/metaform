@@ -12,7 +12,7 @@ class Form
 
   FieldTypes = ['string','integer','float','decimal','boolean','date','datetime','time','text']
 
-  attr_accessor :fields, :conditions, :questions, :presentations, :groups, :workflows, :listings, :tabs, :label_options
+  attr_accessor :fields, :conditions, :questions, :presentations, :groups, :workflows, :listings, :tabs, :label_options, :calculated_field_dependencies
 
   def initialize
     @fields = {}
@@ -24,6 +24,7 @@ class Form
     @listings = {}
     @tabs = {}
     @label_options = {}
+    @calculated_field_dependencies = {}
     
     @_commons = {}
     @_stuff = {}
@@ -195,6 +196,18 @@ class Form
       :type => 'string'
     }.update(opts)
     @fields_defined << name if @fields_defined
+    
+    if options.has_key?(:calculated)
+      based_on_fields = options[:calculated][:based_on_fields]
+      raise MetaformException,"calculated fields need a :proc option that defines a Proc" unless options[:calculated][:proc].class == Proc
+      raise MetaformException,"calculated fields need a :based_on_fields option that defines a list of fields used by the calculation proc" unless based_on_fields.class == Array
+      based_on_fields.each do |f|
+        @calculated_field_dependencies[f] ||= []
+        @calculated_field_dependencies[f]<<name
+        @calculated_field_dependencies[f].uniq!
+      end
+    end
+    
     if options.has_key?(:group)
       options[:groups] = [options[:group]]
       options.delete(:group)

@@ -4,7 +4,7 @@ class FieldInstance < ActiveRecord::Base
   validates_uniqueness_of :field_id, :scope => [:form_instance_id,:idx]
   validates_presence_of :field_id,:form_instance_id
 
-  States = %w(unanswered answered invalid explained)
+  States = %w(unanswered answered invalid explained calculated)
   validates_inclusion_of :state, :in => States
     
   def field

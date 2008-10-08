@@ -32,6 +32,7 @@ def setup
     f 'fruit', :label => '', :type => 'string', :constraints => {"enumeration"=>[{"apple_mac"=>"Macintosh Apple"}, {"apple_mutsu"=>"Mutsu"}, {"pear"=>"Pear"}, {"banana"=>"Banana"}, {"other"=>"Other...*"}, {"x"=>"XOther...*"}], "required"=>true}, :followups => {'/other|x/' => fo}
     f 'breastfeeding', :label => 'BF', :type => 'string', :indexed_default_from_null_index => true
     f 'reverse_name_and_job', :label => 'reversed name and occupation', :type => 'string', :calculated => {
+      :based_on_fields => ['name','occupation'],
       :proc => Proc.new { |form,index| (form.field_value('name',index).to_s+form.field_value('occupation',index).to_s).reverse}
     }
   end

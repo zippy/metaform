@@ -612,6 +612,7 @@ class Record
       last_updated =  meta_data[:last_updated].to_i
       field_instances_protected = []
     end
+    calculated_fields_to_update = {}
     @attributes.each do |index,attribs|
       attribs.each do |field_instance_id,value|
         #TODO change this to confirm that field_instance_id is in the current presentation.  We
@@ -634,6 +635,10 @@ class Record
           f = FieldInstance.new({:answer => value, :field_id=>field_instance_id, :form_instance_id => id, :idx => index})
           f.explanation = explanations[field_instance_id] if explanations
           field_instances_to_save << f
+        end
+        if @form.calculated_field_dependencies[field_instance_id]
+          calculated_fields_to_update[index] ||= []
+          calculated_fields_to_update[index] << @form.calculated_field_dependencies[field_instance_id]
         end
         if (invalid_fields[field_instance_id] && invalid_fields[field_instance_id][index.to_i])
           f.state = (!explanations || explanations[field_instance_id].blank?) ? 'invalid' : 'explained'
@@ -671,6 +676,9 @@ class Record
 #            _merge_invalid_fields(vd,dependents,_validate_attributes(dependents),index)
 #          end
 #        end
+        if !calculated_fields_to_update.empty?
+          update_calculated_fields(calculated_fields_to_update)
+        end
         
         form_instance.update_attributes({:updated_at => Time.now, :validation_data => vd})
       end
@@ -688,6 +696,29 @@ class Record
       # our own validation.
 #      raise errors.inspect
       false
+    end
+  end
+
+  def update_calculated_fields(fields_hash)
+    fields_hash.each do |index,fields|
+      field_list = fields.flatten.uniq
+      if !field_list.empty?
+        condition_values = [@form_instance.id,field_list]
+        condition_string = "form_instance_id = ? and field_id in (?)"
+        if index
+          condition_string << " and idx = ?"
+          condition_values << index
+        else
+          condition_string << ' and idx is null'
+        end
+        condition_values.unshift(condition_string)
+        FieldInstance.destroy_all(condition_values)
+        field_list.each do |f|
+          value = @form.fields[f].calculated[:proc].call(@form,index)
+          fi = FieldInstance.new({:answer => value, :field_id=>f, :form_instance_id => @form_instance.id, :idx => index, :state => 'calculated'})
+          fi.save
+        end
+      end
     end
   end
 

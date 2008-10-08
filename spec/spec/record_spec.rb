@@ -608,6 +608,19 @@ describe Record do
        @record.reverse_name_and_job = "fred"
       }.should raise_error("you can't store a value to a calculated field")
     end
+    it "should save a cached version to the database on attribute save" do
+      @record.save('new_entry')
+      r = Record.locate(@record.id,:fields => ['reverse_name_and_job'],:return_answers_hash =>true)
+      r['reverse_name_and_job'].value.should == "ssoBhtimS boB"
+    end
+    it "should update a cached value when on attribute update" do
+      @record.save('new_entry')
+      r = Record.locate(@record.id,:fields => ['reverse_name_and_job'],:return_answers_hash =>true)
+      r['reverse_name_and_job'].value.should == "ssoBhtimS boB"
+      @record.update_attributes({:name => 'Herbert'},'new_entry')
+      r = Record.locate(@record.id,:fields => ['reverse_name_and_job'],:return_answers_hash =>true)
+      r['reverse_name_and_job'].value.should == "ssoBtrebreH"
+    end
   end
   
   describe "-- explanations" do

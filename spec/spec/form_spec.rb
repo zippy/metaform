@@ -251,6 +251,23 @@ describe SimpleForm do
           end
         end
       end
+      describe ":calculated option" do
+        it "should require a :proc parameter" do
+          lambda {@form.f('fish',:calculated => {})}.should raise_error("calculated fields need a :proc option that defines a Proc")
+        end
+        it "should require a :based_on_fields parameter" do
+          lambda {@form.f('fish',:calculated => {:proc => Proc.new {}})}.should raise_error("calculated fields need a :based_on_fields option that defines a list of fields used by the calculation proc")
+        end
+        it "should update the calculated_field_dependencies map" do
+          @form.f('fish',:calculated => {:proc => Proc.new {},:based_on_fields=>['cat','dog']})
+          @form.calculated_field_dependencies['cat'].should == ['fish']
+          @form.calculated_field_dependencies['dog'].should == ['fish']
+          @form.f('bird',:calculated => {:proc => Proc.new {},:based_on_fields=>['cat','fish']})
+          @form.calculated_field_dependencies['cat'].should == ['fish','bird']
+          @form.calculated_field_dependencies['dog'].should == ['fish']
+          @form.calculated_field_dependencies['fish'].should == ['bird']
+        end        
+      end
     end # f
     
     describe "def_dependent_fields (fields that set up required and force_nil relationships)" do

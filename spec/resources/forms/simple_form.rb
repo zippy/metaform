@@ -46,6 +46,7 @@ class SimpleForm < Form
         :constraints=>{'enumeration' => [{'ffffff' => 'black'},{'00ff00'=>'green'},{'0000ff'=>'blue'},{'x'=>'other'}]},
         :followups => {'x'=>f('other_eye_color')}
       f 'age_plus_education', :calculated => {
+        :based_on_fields => ['age','higher_ed_years'],
         :proc => Proc.new { |form,index| (form.field_value('age',index).to_i+form.field_value('higher_ed_years',index).to_i).to_s}
       }
     end
