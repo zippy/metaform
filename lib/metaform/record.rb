@@ -751,7 +751,7 @@ class Record
   def _validate_attributes(fields = nil)
     invalid_fields = {}
     @attributes.each do |index,attribs|
-      attribs.each do |f,value|
+      attribs.clone.each do |f,value|
         next if fields && !fields.include?(f)
         invalid = Invalid.evaluate(@form,@form.fields[f],value)
         if !invalid.empty?

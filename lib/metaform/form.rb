@@ -1164,15 +1164,19 @@ EOJS
     @record[field_name,index]
   end
   
-  #This method will call YAML.load if Rails has not already turned the field_value into a hash for us.
-  def load_yaml(field_name)
-    value_hash = field_value(field_name)
-    value_hash.is_a?(Hash) || value_hash.blank? ? value_hash : YAML.load(value_hash)
+  #This method will call YAML.load if Rails has not already turned the field_value or value into a hash for us.
+  def load_yaml(field_name_or_value, is_value = false)
+    if is_value #ie is not a field_name
+      field_name_or_value.is_a?(String) ? YAML.load(field_name_or_value) : field_name_or_value
+    else #ie is a field_name
+      value_hash = field_value(field_name_or_value)
+      value_hash.is_a?(Hash) || value_hash.blank? ? value_hash : YAML.load(value_hash)
+    end
   end
   
-  def dump_yaml(field_name)
-    value = field_value(field_name,0)
-    value = (value.is_a?(Hash)) ? YAML.dump(value) : value
+  def dump_yaml(field_name_or_value, is_value = false)
+    value = (is_value ? field_name_or_value : field_value(field_name_or_value,0))
+    value.is_a?(Hash) ? YAML.dump(value) : value
   end
   
   #TODO-Eric or Lisa
