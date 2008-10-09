@@ -13,9 +13,13 @@ class RecordsController < ApplicationController
   # GET /records/1.xml
   def show
     setup_record
-    respond_to do |format|
-      format.html { render_show}
-      format.xml  { render :xml => @record.to_xml }
+    redirected = false
+    redirected = before_show_record(@record) if respond_to?(:before_show_record)
+    if !redirected
+      respond_to do |format|
+        format.html { render_show}
+        format.xml  { render :xml => @record.to_xml }
+      end
     end
   end
 
