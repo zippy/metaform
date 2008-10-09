@@ -6,7 +6,11 @@ class RecordsController < ApplicationController
   # GET /records/listings/[/<list_name>]
   def index
     @listing_name = params[:list_name]
-    render(:template => "records/#{@listing_name}")
+    redirected = false
+    redirected = before_list_records(@listing_name) if respond_to?(:before_list_records)
+    if !redirected
+      render(:template => "records/#{@listing_name}")
+    end
   end
 
   # GET /records/1
