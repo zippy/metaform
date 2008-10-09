@@ -677,7 +677,9 @@ class Record
 #          end
 #        end
         if !calculated_fields_to_update.empty?
-          update_calculated_fields(calculated_fields_to_update)
+          form.with_record(self) do
+            update_calculated_fields(calculated_fields_to_update)
+          end
         end
         
         form_instance.update_attributes({:updated_at => Time.now, :validation_data => vd})
@@ -714,7 +716,7 @@ class Record
         condition_values.unshift(condition_string)
         FieldInstance.destroy_all(condition_values)
         field_list.each do |f|
-          value = @form.fields[f].calculated[:proc].call(@form,index)
+          value = form.fields[f].calculated[:proc].call(form,index)
           fi = FieldInstance.new({:answer => value, :field_id=>f, :form_instance_id => @form_instance.id, :idx => index, :state => 'calculated'})
           fi.save
         end
