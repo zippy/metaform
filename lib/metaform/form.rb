@@ -586,10 +586,8 @@ class Form
     pres = self.presentations[presentation_name]
     raise MetaformException,"presentation #{presentation_name} doesn't exist" if !pres
     raise MetaformException,"attempting to process presentation #{presentation_name} with no record" if @record.nil?
-    first_call = false
     if @root_presentation.nil?
       @root_presentation = pres
-      first_call = true
     end
     parent_presentation = @current_presentation
     @current_presentation = pres
@@ -597,7 +595,7 @@ class Form
 #    save_context(:current_presentation,pres) do
 
       @force_read_only += 1 if pres.force_read_only
-      pres.confirm_legal_state!(workflow_state) if first_call
+      pres.confirm_legal_state!(workflow_state) if @root_presentation == pres
       pres.initialized = true
       indexed = options[:indexed]
       css_class = indexed ? 'presentation_indexed' : 'presentation'
@@ -658,7 +656,7 @@ class Form
       body "</div>"
 #    end
     @force_read_only -= 1 if pres.force_read_only
-    if first_call
+    if @root_presentation == pres
       @root_presentation = nil
     end
     @current_presentation = parent_presentation

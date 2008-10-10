@@ -456,7 +456,7 @@ describe SimpleForm do
           @form.set_validating(true)
           @form.with_record(@record,:render) do
             @form.q('name')
-            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">#{Constraints::RequiredErrMessage}; please correct (or explain here: <input id=\"explanations_name\" name=\"explanations[name]\" type=\"text\" value=\"\" />)</div></div>"]
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">This information is required; please correct (or explain here: <input tabindex=\"1\" id=\"explanations_name\" name=\"explanations[name]\" type=\"text\" value=\"\" />)</div></div>"]
           end
         end
 
@@ -482,7 +482,7 @@ describe SimpleForm do
           @form.set_validating(true)
           @form.with_record(@record,:render) do
             @form.q('higher_ed_years')
-            @form.get_body.should == ["<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" /> <div class=\"validation_item\">#{Constraints::RequiredErrMessage}; please correct (or explain here: <input id=\"explanations_higher_ed_years\" name=\"explanations[higher_ed_years]\" type=\"text\" value=\"\" />)</div>g question!</div>"]
+            @form.get_body.should == ["<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" /> <div class=\"validation_item\">This information is required; please correct (or explain here: <input tabindex=\"1\" id=\"explanations_higher_ed_years\" name=\"explanations[higher_ed_years]\" type=\"text\" value=\"\" />)</div>g question!</div>"]
           end
         end
       end
