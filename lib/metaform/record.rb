@@ -394,7 +394,9 @@ class Record
     return get_attribute(field_name,index) if attribute_exists(field_name,index)
     raise MetaformUndefinedFieldError, field_name if !form.field_exists?(field_name)
     if c = form.fields[field_name].calculated
-      return c[:proc].call(form,index)
+      form.with_record(self) do
+        return c[:proc].call(form,index)
+      end
     end
     
     if !@form_instance.new_record?      
@@ -1114,7 +1116,7 @@ class Record
       #puts "eval_Field 1:  expression=#{expression}"
       expr = expression.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|each_with_index|to_i|zip|map|include|any|other\?)/,'f["\1"].\2')
       #puts "eval_field 2:  expr=#{expr}"
-      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\.blank\?/,'f["/1"] ? (f["\1"].is_indexed? ? f["\1"].value[0].blank? : f["\1"].value.blank?) : true')
+      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\.blank\?/,'f["\1"] ? (f["\1"].is_indexed? ? f["\1"].value[0].blank? : f["\1"].value.blank?) : true')
       expr = expr.gsub(/:([a-zA-Z0-9_-]+)\./,'f["\1"].value.')
       #puts "eval_field 3:  expr=#{expr}"
       expr = expr.gsub(/:([a-zA-Z0-9_-]+)\[/,'f["\1"][')
