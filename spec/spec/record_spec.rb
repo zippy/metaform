@@ -798,11 +798,17 @@ describe Record do
         @record.get_invalid_field_count('simple',0).should == 0
         @record.get_invalid_field_count('simple',1).should == 1
       end
-      it "should provide the count of errors in a presentation at for all indexes" do
+      it "should provide error count for a presentation at for all indexes" do
         @record.update_attributes({:name => ''},'simple')
         @record.update_attributes({:name => ''},'simple',nil,:index => 2)
         @record.form_instance.get_validation_data.should == {"simple"=>[1,nil, 1], "new_entry"=>[1], "_"=>{"name"=>[["This information is required"],nil,["This information is required"]], "education"=>[["Answer must be between 0 and 14"]]}}
         @record.get_invalid_field_count('simple',:any).should == 2
+      end
+      it "should provide error count of zero in a presentation at for all indexes if there is none" do
+        @record.update_attributes({:name => 'joe'},'simple')
+        @record.update_attributes({:name => 'jane'},'simple',nil,:index => 2)
+        @record.form_instance.get_validation_data.should == {"simple"=>[0,nil, 0], "new_entry"=>[1], "_"=>{"education"=>[["Answer must be between 0 and 14"]]}}
+        @record.get_invalid_field_count('simple',:any).should == 0
       end
       it "should return nil for the count of errors in a presentation that hasn't been saved" do
         @record.get_invalid_field_count('education_info').should == nil
