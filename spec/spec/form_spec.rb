@@ -460,6 +460,16 @@ describe SimpleForm do
           end
         end
 
+        it "should add the validation html if record is validation approval mode"  do
+          @record.save('create')
+          @form.set_validating(:approval)
+          @form.with_record(@record,:render) do
+            @record.update_attributes({:name => ''},'simple',{:explanations => {'name' => 'unknown'}})
+            @form.q('name')
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">Error was \"This information is required\"; midwife's explanation: \"unknown\" (Fix, or <input type=\"radio\" tabindex=\"2\" id=\"approvals_name\" name=\"approvals[name]\" value=\"Y\" /> approve <input type=\"radio\" tabindex=\"1\" id=\"approvals_name\" name=\"approvals[name]\" value=\"\" checked/> don't approve)</div></div>"]
+          end
+        end
+
         it "should add the validation html if record is in no_explanation validation mode"  do
           @record.name = ''
           @form.set_validating(:no_explanation)
@@ -901,6 +911,17 @@ describe SimpleForm do
       end
       it "should raise an error if @record has not be set" do
         lambda {@form.field_value('name').should}.should raise_error("attempting to get field value of 'name' with no record")
+      end
+    end
+    describe "#field_state" do
+      it "should return the value of a field" do
+        @form.with_record(@record) do
+          @record.save('simple')
+          @form.field_state('name').should == 'answered'
+          @form.field_state('age').should == nil
+          @record.update_attributes({:name => ''},'simple',{:explanations => {'name' => 'unknown'}})
+          @form.field_state('name').should == 'explained'
+        end
       end
     end
     describe "#field_valid" do

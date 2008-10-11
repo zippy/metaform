@@ -1177,6 +1177,13 @@ EOJS
     index = index == -1 ? @_index : index
     @record[field_name,index]
   end
+
+  def field_state(field_name,index = -1)
+    raise MetaformException,"attempting to get field state of '#{field_name}' with no record" if @record.nil?
+    index = index == -1 ? @_index : index
+    fi = @record.form_instance.field_instances.find_by_field_id_and_idx(field_name.to_s,index)
+    fi ? fi.state : nil
+  end
   
   #This method will call YAML.load if Rails has not already turned the field_value or value into a hash for us.
   def load_yaml(field_name_or_value, is_value = false)
@@ -1398,7 +1405,13 @@ EOJS
     end
   end
   
-
+  ###########################################################
+  # This method determines which field_instance states should
+  # not be counted as invalid.  Override it for more complicated 
+  # behaviors
+  def validation_exclude_states
+    'explained'
+  end
  
   #################################################################################
   #################################################################################

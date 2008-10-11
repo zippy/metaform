@@ -27,7 +27,13 @@ class Invalid < Property
 #        if read_only
 #          errs += ex_val.blank? ? ";(no explanation given)" : "; (explained with: #{ex_val})"
 #        else
-          errs += "; please correct (or explain here: <input tabindex=\"1\" id=\"explanations_#{fname}\" name=\"explanations[#{fname}]\" type=\"text\" value=\"#{ex_val}\" />)"
+          if v == :approval
+            achecked = form.field_state(fname) == 'approved' ? 'checked' : ''
+            checked = form.field_state(fname) == 'approved' ? '' : 'checked'
+            errs = %Q|Error was "#{errs}"; midwife's explanation: "#{ex_val}" (Fix, or <input type=\"radio\" tabindex=\"2\" id=\"approvals_#{fname}\" name=\"approvals[#{fname}]\" value=\"Y\" #{achecked}/> approve <input type=\"radio\" tabindex=\"1\" id=\"approvals_#{fname}\" name=\"approvals[#{fname}]\" value=\"\" #{checked}/> don't approve)|
+          else
+            errs += "; please correct (or explain here: <input tabindex=\"1\" id=\"explanations_#{fname}\" name=\"explanations[#{fname}]\" type=\"text\" value=\"#{ex_val}\" />)"
+          end
 #        end
       else
         error_class = "validation_error"

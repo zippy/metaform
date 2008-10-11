@@ -568,6 +568,7 @@ class Record
     p.confirm_legal_state!(workflow_state)
 
     invalid_fields = nil
+    validation_exclude_states = nil
     @form.with_record(self) do
       # force any attributes to nil that need forcing
       set_force_nil_attributes
@@ -575,6 +576,7 @@ class Record
       # evaluate the validity of the attributes to be saved
       invalid_fields = _validate_attributes
       p.invalid_fields = invalid_fields
+      validation_exclude_states = form.validation_exclude_states
     end
 
     # if presentation requires valid data before saving it then return
@@ -602,7 +604,7 @@ class Record
     end
 
     explanations = meta_data[:explanations] if meta_data
-    
+    approvals = meta_data[:approvals] if meta_data
     #TODO scalability.  This could be responsible for slowness.  Why check all the indexes!?!
     field_list = @attributes.values.collect {|a| a.keys}.flatten.uniq
     field_instances = @form_instance.field_instances.find(:all, :conditions => ["field_id in (?) and form_instance_id = ?",field_list,id])
@@ -613,6 +615,7 @@ class Record
       field_instances_protected = []
     end
     calculated_fields_to_update = {}
+    states = {}
     @attributes.each do |index,attribs|
       attribs.each do |field_instance_id,value|
         #TODO change this to confirm that field_instance_id is in the current presentation.  We
@@ -620,7 +623,8 @@ class Record
         raise MetaformException,"field '#{field_instance_id}' not in form" if !form.field_exists?(field_instance_id)
         f = field_instances.find {|fi| fi.field_id == field_instance_id && fi.idx == index}
         if f != nil
-          if f.answer != value || (explanations && f.explanation != explanations[field_instance_id])
+          if f.answer != value || (explanations && f.explanation != explanations[field_instance_id]) ||
+              (approvals && approvals[field_instance_id])
             # if we are checking last_updated dates don't do the update if the fields updated_at
             # is greater than the last_updated date passed in, and store this to report later
             if last_updated && f.updated_at.to_i > last_updated
@@ -641,10 +645,16 @@ class Record
           calculated_fields_to_update[index] << @form.calculated_field_dependencies[field_instance_id]
         end
         if (invalid_fields[field_instance_id] && invalid_fields[field_instance_id][index.to_i])
-          f.state = (!explanations || explanations[field_instance_id].blank?) ? 'invalid' : 'explained'
+          if approvals
+            f.state = approvals[field_instance_id].blank? ? 'explained' : 'approved'
+          else
+            f.state = (!explanations || explanations[field_instance_id].blank?) ? 'invalid' : 'explained'
+          end
         else
           f.state = 'answered'
         end
+        states[field_instance_id] ||= []
+        states[field_instance_id][index.to_i] = f.state
       end
     end
 
@@ -665,7 +675,7 @@ class Record
         end
         vd = form_instance.get_validation_data
         _merge_invalid_fields(vd,field_list,invalid_fields,index)
-        _update_presentation_error_count(vd,presentation,index)
+        _update_presentation_error_count(vd,presentation,index,states,validation_exclude_states)
 
         # any dependents that aren't being updated in this group of attributes must have
         # their validity status updated too.
@@ -760,18 +770,30 @@ class Record
   # NOTE: this method only works if the given presentation has been properly set up
   #       by a call to form#setup_presentation or form#build
   #################################################################################
-  def _update_presentation_error_count(validation_data,presentation,index=nil)
+  def _update_presentation_error_count(validation_data,presentation,index=nil,states={},exclude_states=[])
     vd = validation_data
-    v = vd['_']    
+    v = vd['_']
+    states_to_exclude = arrayify(exclude_states)
     count = vd[presentation]
     if index == :any
       count = []
-      @form.get_current_field_names.each {|f| errs = v[f]; errs.each_with_index {|e,i| if e then count[i] ||= 0;count[i] += 1 end} if errs}
+      @form.get_current_field_names.each do |f| 
+        errs = v[f]
+        s = states[f]
+        if errs
+          errs.each_with_index do |e,i|
+            if e
+              count[i] ||= 0
+              count[i] += 1 if !s || !states_to_exclude.include?(s[i])
+            end
+          end
+        end
+      end
     else
       count ||= []
       index = index.to_i
       count[index] = 0
-      @form.get_current_field_names.each {|f| errs = v[f]; count[index] += 1 if errs && errs[index]}
+      @form.get_current_field_names.each {|f| errs = v[f]; s = states[f]; count[index] += 1 if errs && errs[index] && (!s || !states_to_exclude.include?(s[index]))}
     end
     vd[presentation] = count
     vd

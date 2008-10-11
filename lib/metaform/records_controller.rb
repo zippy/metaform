@@ -107,6 +107,7 @@ class RecordsController < ApplicationController
           end
           meta_data = get_meta_data
           meta_data[:explanations] = params[:explanations] if params[:explanations]
+          meta_data[:approvals] = params[:approvals] if params[:approvals]
           if saved_attributes = @record.update_attributes(attribs,@presentation,meta_data,opts)
             after_update_record(@record) if respond_to?(:after_update_record)
             after_save_record(@record,saved_attributes) if respond_to?(:after_save_record)
