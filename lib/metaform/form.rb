@@ -414,7 +414,7 @@ class Form
     url = Record.url(@record.id,presentation_name,@tabs_name,index)
     label = options[:label]
     if @current_tab == presentation_name
-      @current_tab_label = label
+      @current_tab_label = label ? label : presentation_name.humanize
     end
     label ||= presentation_name.humanize
     tabs[@tabs_name].render_tab(presentation_name,label,url,@_index.to_s == index.to_s && @current_tab == presentation_name,index)
