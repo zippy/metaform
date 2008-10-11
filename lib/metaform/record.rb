@@ -691,8 +691,8 @@ class Record
             update_calculated_fields(calculated_fields_to_update)
           end
         end
-        
-        form_instance.update_attributes({:updated_at => Time.now, :validation_data => vd})
+        ok = form_instance.update_attributes({:updated_at => Time.now, :validation_data => vd})
+        raise MetaformException, "error updating form_instance: #{form_instance.errors.full_messages}" if !ok
       end
       if field_instances_protected && !field_instances_protected.empty?
         raise MetaformFieldUpdateError.new(saved_attributes,field_instances_protected)
@@ -776,7 +776,7 @@ class Record
     states_to_exclude = arrayify(exclude_states)
     count = vd[presentation]
     if index == :any
-      count = []
+      count = [0]
       @form.get_current_field_names.each do |f| 
         errs = v[f]
         s = states[f]
