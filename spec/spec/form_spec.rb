@@ -456,7 +456,7 @@ describe SimpleForm do
           @form.set_validating(true)
           @form.with_record(@record,:render) do
             @form.q('name')
-            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">This information is required; please correct (or explain here: <input tabindex=\"1\" id=\"explanations_name\" name=\"explanations[name]\" type=\"text\" value=\"\" />)</div></div>"]
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">This information is required; please correct (or explain here: <input tabindex=\"1\" id=\"explanations_name_0\" name=\"explanations[name][0]\" type=\"text\" value=\"\" />)</div></div>"]
           end
         end
 
@@ -464,9 +464,9 @@ describe SimpleForm do
           @record.save('create')
           @form.set_validating(:approval)
           @form.with_record(@record,:render) do
-            @record.update_attributes({:name => ''},'simple',{:explanations => {'name' => 'unknown'}})
+            @record.update_attributes({:name => ''},'simple',{:explanations => {'name' => {"0" => 'unknown'}}})
             @form.q('name')
-            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">Error was \"This information is required\"; midwife's explanation: \"unknown\" (Fix, or <input type=\"radio\" tabindex=\"2\" id=\"approvals_name\" name=\"approvals[name]\" value=\"Y\" /> approve <input type=\"radio\" tabindex=\"1\" id=\"approvals_name\" name=\"approvals[name]\" value=\"\" checked/> don't approve)</div></div>"]
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">Error was \"This information is required\"; midwife's explanation: \"unknown\" (Fix, or <input type=\"radio\" tabindex=\"2\" id=\"approvals_name_0\" name=\"approvals[name][0]\" value=\"Y\" /> approve <input type=\"radio\" tabindex=\"1\" id=\"approvals_name_0\" name=\"approvals[name][0]\" value=\"\" checked/> don't approve)</div></div>"]
           end
         end
 
@@ -474,9 +474,9 @@ describe SimpleForm do
           @record.save('create')
           @form.set_validating(:approval)
           @form.with_record(@record,:render) do
-            @record.update_attributes({:name => ''},'simple',{:explanations => {'name' => 'unknown'},:approvals => {'name'=>'Y'}})
+            @record.update_attributes({:name => ''},'simple',{:explanations => {'name' => {"0" => 'unknown'}},:approvals => {'name'=>{"0" => 'Y'}}})
             @form.q('name')
-            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">Error was \"This information is required\"; midwife's explanation: \"unknown\" (Fix, or <input type=\"radio\" tabindex=\"2\" id=\"approvals_name\" name=\"approvals[name]\" value=\"Y\" checked/> approve <input type=\"radio\" tabindex=\"1\" id=\"approvals_name\" name=\"approvals[name]\" value=\"\" /> don't approve)</div></div>"]
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">Error was \"This information is required\"; midwife's explanation: \"unknown\" (Fix, or <input type=\"radio\" tabindex=\"2\" id=\"approvals_name_0\" name=\"approvals[name][0]\" value=\"Y\" checked/> approve <input type=\"radio\" tabindex=\"1\" id=\"approvals_name_0\" name=\"approvals[name][0]\" value=\"\" /> don't approve)</div></div>"]
           end
         end
 
@@ -502,7 +502,7 @@ describe SimpleForm do
           @form.set_validating(true)
           @form.with_record(@record,:render) do
             @form.q('higher_ed_years')
-            @form.get_body.should == ["<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" /> <div class=\"validation_item\">This information is required; please correct (or explain here: <input tabindex=\"1\" id=\"explanations_higher_ed_years\" name=\"explanations[higher_ed_years]\" type=\"text\" value=\"\" />)</div>g question!</div>"]
+            @form.get_body.should == ["<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" /> <div class=\"validation_item\">This information is required; please correct (or explain here: <input tabindex=\"1\" id=\"explanations_higher_ed_years_0\" name=\"explanations[higher_ed_years][0]\" type=\"text\" value=\"\" />)</div>g question!</div>"]
           end
         end
       end
@@ -929,7 +929,7 @@ describe SimpleForm do
           @record.save('simple')
           @form.field_state('name').should == 'answered'
           @form.field_state('age').should == nil
-          @record.update_attributes({:name => ''},'simple',{:explanations => {'name' => 'unknown'}})
+          @record.update_attributes({:name => ''},'simple',{:explanations => {'name' => {"0" => 'unknown'}}})
           @form.field_state('name').should == 'explained'
         end
       end

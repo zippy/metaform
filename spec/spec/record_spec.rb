@@ -694,13 +694,24 @@ describe Record do
       f.state.should == 'invalid'
     end
     it "should set the field instance state to 'explained' for fields with an explanation" do
-      @record.update_attributes({:education => '99'},'new_entry',{:explanations => {'education' => 'has studied forever'}})
+      @record.update_attributes({:education => '99'},'new_entry',{:explanations => {'education' => {"0" => 'has studied forever'}}})
       f = @record.form_instance.field_instances.find_by_field_id('education')
       f.state.should == 'explained'
       f.explanation.should == 'has studied forever'
     end
+    it "should set the field instance state to 'explained' for multi_index fields with explanations" do
+      @record.update_attributes(
+        { 0 => {:education => '99'},1 => {:education => '97'}},'new_entry',
+        {:explanations => {'education' => {"0" => 'has studied forever',"1" => 'has flunked forever'}}},:multi_index => true)
+      f = @record.form_instance.field_instances.find_by_field_id('education')
+      f.state.should == 'explained'
+      f.explanation.should == 'has studied forever'
+      f = @record.form_instance.field_instances.find_by_field_id_and_idx('education',"1")
+      f.state.should == 'explained'
+      f.explanation.should == 'has flunked forever'
+    end
     it "should set the field instance state to 'approved' for fields with an approval" do
-      @record.update_attributes({:education => '99'},'new_entry',{:approvals => {'education' => 'Y'}})
+      @record.update_attributes({:education => '99'},'new_entry',{:approvals => {'education' => {"0" => 'Y'}}})
       f = @record.form_instance.field_instances.find_by_field_id('education')
       f.state.should == 'approved'
     end
@@ -773,6 +784,11 @@ describe Record do
           @record._update_presentation_error_count(@validation_data,'new_entry',:any,states,'answered')["new_entry"].should == [0,1]
         end
       end
+      describe "get_attribute_states" do
+        it "should return a hash of all the attributes state" do
+          @record.get_attribute_states.should == {"name"=>["answered"], "fruit_other"=>["answered"], "fruit"=>["answered"], "education"=>["invalid"]}
+        end
+      end
     end
     it "should list the current invalid fields" do
       @record.current_invalid_fields.should == {"education"=>[["Answer must be between 0 and 14"]]}
@@ -788,7 +804,7 @@ describe Record do
         @record.get_invalid_field_count('new_entry').should == 2
       end
       it "should provide the count of errors in a presentation subtracting out ones from fields with excluded states" do
-        @record.update_attributes({:name => ''},'new_entry',{:explanations => {'name' => 'unknown'}})
+        @record.update_attributes({:name => ''},'new_entry',{:explanations => {'name' => {"0" =>'unknown'}}})
         @record.get_invalid_field_count('new_entry').should == 1
       end
       it "should provide the count of errors in a presentation at a given index" do

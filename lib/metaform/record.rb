@@ -624,22 +624,26 @@ class Record
         # shouldn't be updating fields against the workflow rules.
         raise MetaformException,"field '#{field_instance_id}' not in form" if !form.field_exists?(field_instance_id)
         f = field_instances.find {|fi| fi.field_id == field_instance_id && fi.idx == index}
+        is_explanation = explanations && explanations[field_instance_id]
+        explanation_value = explanations[field_instance_id][index.to_i.to_s] if is_explanation
+        is_approval = approvals && approvals[field_instance_id]
+        approval_value = approvals[field_instance_id][index.to_i.to_s] if is_approval
         if f != nil
-          if f.answer != value || (explanations && f.explanation != explanations[field_instance_id]) ||
-              (approvals && approvals[field_instance_id])
+          if f.answer != value || (is_explanation && f.explanation != explanation_value) ||
+              (is_approval && approval_value)
             # if we are checking last_updated dates don't do the update if the fields updated_at
             # is greater than the last_updated date passed in, and store this to report later
             if last_updated && f.updated_at.to_i > last_updated
               field_instances_protected << f
             else
               f.answer = value
-              f.explanation = explanations[field_instance_id] if explanations
+              f.explanation = explanation_value if is_explanation
               field_instances_to_save << f
             end
           end
         else
           f = FieldInstance.new({:answer => value, :field_id=>field_instance_id, :form_instance_id => id, :idx => index})
-          f.explanation = explanations[field_instance_id] if explanations
+          f.explanation = explanation_value if is_explanation
           field_instances_to_save << f
         end
         if @form.calculated_field_dependencies[field_instance_id]
@@ -647,10 +651,10 @@ class Record
           calculated_fields_to_update[index] << @form.calculated_field_dependencies[field_instance_id]
         end
         if (invalid_fields[field_instance_id] && invalid_fields[field_instance_id][index.to_i])
-          if approvals
-            f.state = approvals[field_instance_id].blank? ? 'explained' : 'approved'
+          if is_approval
+            f.state = approval_value.blank? ? 'explained' : 'approved'
           else
-            f.state = (!explanations || explanations[field_instance_id].blank?) ? 'invalid' : 'explained'
+            f.state = (!is_explanation || explanation_value.blank?) ? 'invalid' : 'explained'
           end
         else
           f.state = 'answered'
@@ -711,6 +715,18 @@ class Record
 #      raise errors.inspect
       false
     end
+  end
+
+  #################################################################################
+  # returns the field_instance states of the current attributes
+  #################################################################################
+  def get_attribute_states
+    states = {}
+    @form_instance.field_instances.each do |fi| 
+      states[fi.field_id] ||= []
+      states[fi.field_id][fi.idx.to_i] = fi.state
+    end
+    states
   end
 
   def update_calculated_fields(fields_hash)
@@ -872,11 +888,13 @@ class Record
   end
     
   def explanation(field_name,index = nil)
+    index = nil if index.to_i == 0
     fi = @form_instance.field_instances.find_by_field_id_and_idx(field_name.to_s,index)
     fi.explanation if fi
   end
 
   def explanations(fields,index = nil)
+    index = nil if index.to_i == 0
     expl = {}
     field_instances = @form_instance.field_instances.find(:all,:conditions =>["field_id in (?)",fields])
     field_instances.each {|fi| expl[fi.field_id] = fi.explanation if fi.idx == index}

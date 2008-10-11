@@ -23,7 +23,9 @@ class Invalid < Property
       if v != :no_explanation
         error_class = "validation_item"
         fname = question.field.name
-        ex_val = form.get_record.explanation(fname)
+        index = form.index
+        ex_val = form.get_record.explanation(fname,index)
+        index = index.to_i.to_s
 #        if read_only
 #          errs += ex_val.blank? ? ";(no explanation given)" : "; (explained with: #{ex_val})"
 #        else
@@ -35,9 +37,9 @@ class Invalid < Property
             else
               checked = 'checked'
             end
-            errs = %Q|Error was "#{errs}"; midwife's explanation: "#{ex_val}" (Fix, or <input type=\"radio\" tabindex=\"2\" id=\"approvals_#{fname}\" name=\"approvals[#{fname}]\" value=\"Y\" #{achecked}/> approve <input type=\"radio\" tabindex=\"1\" id=\"approvals_#{fname}\" name=\"approvals[#{fname}]\" value=\"\" #{checked}/> don't approve)|
+            errs = %Q|Error was "#{errs}"; midwife's explanation: "#{ex_val}" (Fix, or <input type=\"radio\" tabindex=\"2\" id=\"approvals_#{fname}_#{index}\" name=\"approvals[#{fname}][#{index}]\" value=\"Y\" #{achecked}/> approve <input type=\"radio\" tabindex=\"1\" id=\"approvals_#{fname}_#{index}\" name=\"approvals[#{fname}][#{index}]\" value=\"\" #{checked}/> don't approve)|
           else
-            errs += "; please correct (or explain here: <input tabindex=\"1\" id=\"explanations_#{fname}\" name=\"explanations[#{fname}]\" type=\"text\" value=\"#{ex_val}\" />)"
+            errs += "; please correct (or explain here: <input tabindex=\"1\" id=\"explanations_#{fname}_#{index}\" name=\"explanations[#{fname}][#{index}]\" type=\"text\" value=\"#{ex_val}\" />)"
           end
 #        end
       else
