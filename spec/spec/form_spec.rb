@@ -470,6 +470,16 @@ describe SimpleForm do
           end
         end
 
+        it "should add the validation html with approved checked if record is validation approval mode and explanation has been approved"  do
+          @record.save('create')
+          @form.set_validating(:approval)
+          @form.with_record(@record,:render) do
+            @record.update_attributes({:name => ''},'simple',{:explanations => {'name' => 'unknown'},:approvals => {'name'=>'Y'}})
+            @form.q('name')
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">Error was \"This information is required\"; midwife's explanation: \"unknown\" (Fix, or <input type=\"radio\" tabindex=\"2\" id=\"approvals_name\" name=\"approvals[name]\" value=\"Y\" checked/> approve <input type=\"radio\" tabindex=\"1\" id=\"approvals_name\" name=\"approvals[name]\" value=\"\" /> don't approve)</div></div>"]
+          end
+        end
+
         it "should add the validation html if record is in no_explanation validation mode"  do
           @record.name = ''
           @form.set_validating(:no_explanation)

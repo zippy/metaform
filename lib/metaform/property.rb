@@ -28,8 +28,13 @@ class Invalid < Property
 #          errs += ex_val.blank? ? ";(no explanation given)" : "; (explained with: #{ex_val})"
 #        else
           if v == :approval
-            achecked = form.field_state(fname) == 'approved' ? 'checked' : ''
-            checked = form.field_state(fname) == 'approved' ? '' : 'checked'
+            achecked = ''
+            checked = ''
+            if form.field_state(fname) == 'approved'
+              achecked =  'checked'
+            else
+              checked = 'checked'
+            end
             errs = %Q|Error was "#{errs}"; midwife's explanation: "#{ex_val}" (Fix, or <input type=\"radio\" tabindex=\"2\" id=\"approvals_#{fname}\" name=\"approvals[#{fname}]\" value=\"Y\" #{achecked}/> approve <input type=\"radio\" tabindex=\"1\" id=\"approvals_#{fname}\" name=\"approvals[#{fname}]\" value=\"\" #{checked}/> don't approve)|
           else
             errs += "; please correct (or explain here: <input tabindex=\"1\" id=\"explanations_#{fname}\" name=\"explanations[#{fname}]\" type=\"text\" value=\"#{ex_val}\" />)"
