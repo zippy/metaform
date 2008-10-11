@@ -810,6 +810,24 @@ describe Record do
         @record.form_instance.get_validation_data.should == {"simple"=>[0,nil, 0], "new_entry"=>[1], "_"=>{"education"=>[["Answer must be between 0 and 14"]]}}
         @record.get_invalid_field_count('simple',:any).should == 0
       end
+      it "should update the error count correctly for multi-index update" do
+        @record.update_attributes(
+          {
+            0 => {:name =>''},
+            1 => {:name =>''},
+            2 => {:name =>'Jane'}
+          }, 'simple',nil,:multi_index => true)
+        @record.form_instance.get_validation_data.should == {"simple"=>[1,1], "new_entry"=>[1], "_"=>{"name"=>[["This information is required"], ["This information is required"]], "education"=>[["Answer must be between 0 and 14"]]}}
+        @record.get_invalid_field_count('simple',:any).should == 2
+      end
+      it "should update the error count correctly when no errors for multi-index update" do
+        @record.update_attributes(
+          {
+            1 => {:name =>'Jane'}
+          }, 'simple',nil,:multi_index => true)
+        @record.form_instance.get_validation_data.should == {"simple"=>[0], "new_entry"=>[1], "_"=>{"education"=>[["Answer must be between 0 and 14"]]}}
+        @record.get_invalid_field_count('simple',:any).should == 0
+      end
       it "should return nil for the count of errors in a presentation that hasn't been saved" do
         @record.get_invalid_field_count('education_info').should == nil
       end

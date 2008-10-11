@@ -1,5 +1,5 @@
 class FieldNameHasG < Property
-  def self.evaluate(form,field,value)
+  def self.evaluate(form,field,value,index)
     field.name =~ /g/ ? true : false
   end
   def self.render(question_html,property_value,question,form,read_only)

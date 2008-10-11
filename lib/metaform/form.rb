@@ -1168,7 +1168,7 @@ EOJS
     raise MetaformException, "couldn't find field #{field_name} in fields list" if field.nil?
     p = field.properties[0]
     value = field_value(field_name) if value == :get_from_form
-    valid = p.evaluate(self,field,value).empty?
+    valid = p.evaluate(self,field,value,@_index).empty?
     valid
   end
 

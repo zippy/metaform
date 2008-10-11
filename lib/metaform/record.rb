@@ -557,10 +557,12 @@ class Record
     if zap_fields = options[:clear_indexes]
       FieldInstance.destroy_all(["form_instance_id = ? and field_id in (?)",@form_instance.id,zap_fields])
     end
-    _update_attributes(presentation,meta_data,options[:index])
+    index = :any if options[:multi_index]
+    index ||= options[:index]
+    _update_attributes(presentation,meta_data,index)
   end
 
-  def _update_attributes(presentation,meta_data,index = nil)
+  def _update_attributes(presentation,meta_data,idx = nil)
     
     # determine if this presentation is allowed to be used for updating the 
     # record in the current state
@@ -674,8 +676,8 @@ class Record
           end
         end
         vd = form_instance.get_validation_data
-        _merge_invalid_fields(vd,field_list,invalid_fields,index)
-        _update_presentation_error_count(vd,presentation,index,states,validation_exclude_states)
+        _merge_invalid_fields(vd,field_list,invalid_fields,idx)
+        _update_presentation_error_count(vd,presentation,idx,states,validation_exclude_states)
 
         # any dependents that aren't being updated in this group of attributes must have
         # their validity status updated too.
@@ -808,7 +810,7 @@ class Record
     @attributes.each do |index,attribs|
       attribs.clone.each do |f,value|
         next if fields && !fields.include?(f)
-        invalid = Invalid.evaluate(@form,@form.fields[f],value)
+        invalid = Invalid.evaluate(@form,@form.fields[f],value,index.to_i)
         if !invalid.empty?
           invalid_fields[f] ||= []
           invalid_fields[f][index.to_i] = invalid

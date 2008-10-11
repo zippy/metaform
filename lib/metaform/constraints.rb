@@ -2,7 +2,7 @@
 module Constraints
   RequiredErrMessage = "This information is required"
   RequiredMultiErrMessage = "You must check at least one choice from this list"
-  def Constraints.verify (constraints, value, form)
+  def Constraints.verify (constraints, value, form,index = -1)
     constraint_errors = []
     return constraint_errors if !constraints
     constraints.each do |type, constraint|
@@ -72,7 +72,7 @@ module Constraints
         case constraint
         when String
           cond = form.c constraint
-          next if !cond.evaluate
+          next if !cond.evaluate(index)
           condition_extra_err = " when #{cond.humanize}" unless Form.config[:hide_required_extra_errors]
           constraint = true
         when TrueClass

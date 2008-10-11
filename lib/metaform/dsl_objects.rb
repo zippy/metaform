@@ -108,9 +108,7 @@ class Condition < Bin
     if ruby
       ruby.call(self)
     else
-      if idx == -1
-        idx = self.index.to_i
-      end
+      idx = self.index.to_i if self.index != -1
       cur_val = form.field_value(field_name,idx)
       case operator
       when '=','=='
@@ -389,7 +387,7 @@ class Question < Bin
     properties = field.properties
     if properties
       properties.each do |p|
-        property_value = p.evaluate(form,field,value)
+        property_value = p.evaluate(form,field,value,-1)
         if erb
           field_element = p.render(field_element,property_value,self,form,ro)
         end

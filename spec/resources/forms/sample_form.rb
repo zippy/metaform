@@ -1,5 +1,5 @@
 class Shady < Property
-  def self.evaluate(form,field,value)
+  def self.evaluate(form,field,value,index)
     form.field_value('name') =~ /Capone/
   end
   def self.render(question_html,property_value,question,form)
