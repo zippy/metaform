@@ -871,7 +871,7 @@ class Record
   
   def set_force_nil_attributes
     @attributes.each do |index,attribs|
-      attribs.each do |attrib,value|
+      attribs.clone.each do |attrib,value|
         form.evaluate_force_nil(attrib,index) do |f|
           set_attribute(f,nil,index)
         end
