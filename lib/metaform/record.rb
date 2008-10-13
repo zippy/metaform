@@ -426,7 +426,15 @@ class Record
       field_instances.each do |field_instance|
         value = field_instance.answer
         #cache the value in the attributes hash
-        values << set_attribute(field_name,value,field_instance.idx)
+        #To-Do Eric:  I(Lisa) commented out line 430 and added in lines 431-435.  This allows me to read
+        #the value of calculated fields without setting them in the cache, which raises a metaform exception 
+        #"you can't store a value to a calculated field"
+        #values << set_attribute(field_name,value,field_instance.idx)
+        if form.fields[field_name].calculated
+          values << value
+        else
+          values << set_attribute(field_name,value,field_instance.idx)
+        end
       end
       if index == :any
         values
@@ -1059,7 +1067,7 @@ class Record
       form_instances.each do |r|
         #puts "--------------------"
         #puts "r = #{r.inspect}"
-        f = {'workflow_state' => Answer.new(r.workflow_state),'updated_at' => Answer.new(r.updated_at)}
+        f = {'workflow_state' => Answer.new(r.workflow_state),'updated_at' => Answer.new(r.updated_at), 'form_id' => Answer.new(r.form.to_s)}
         #puts "1:  f = #{f.inspect}"
         #puts "r.field_instances = #{r.field_instances.inspect}"
         r.field_instances.each do |field_instance|

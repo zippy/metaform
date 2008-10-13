@@ -119,7 +119,6 @@ class Reports
         count = Counter.new
         form_instances.each do |f|
           #puts "f['TransNonmedical_ProviderWent'] = #{ f['TransNonmedical_ProviderWent'].inspect}" if stat == :medical
-          #puts "f['TransNonmedical_Reason'] = #{ f['TransNonmedical_Reason'].inspect}" if stat == :medical
            
           #puts "f['Birth_IPprocs_Details'] = #{ f['Birth_IPprocs_Details'].inspect}"
           begin
