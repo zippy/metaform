@@ -23,7 +23,7 @@ module Constraints
       case type
       when "proc"
         raise MetaformException,"value of proc constraint must be a Proc!" if !constraint.instance_of?(Proc)
-        e = constraint.call(value,form)
+        e = constraint.call(value,form,index)
         constraint_errors << e if e
       when "regex"
         #for the required constraint the value will be the regex to match the value against
