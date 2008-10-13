@@ -394,9 +394,9 @@ class Record
     return get_attribute(field_name,index) if attribute_exists(field_name,index)
     raise MetaformUndefinedFieldError, field_name if !form.field_exists?(field_name)
     if c = form.fields[field_name].calculated
-      form.with_record(self) do
+#      form.with_record(self) do
         return c[:proc].call(form,index)
-      end
+#      end
     end
     
     if !@form_instance.new_record?      
