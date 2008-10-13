@@ -1097,7 +1097,7 @@ class Record
           rescue Exception => e
             raise MetaformException,"Eval error '#{e.to_s}' while evaluating: #{expr}"
           end
-          puts "     kept = #{kept}"
+          #puts "     kept = #{kept}"
           forms << the_form if kept
         else
           forms << the_form
