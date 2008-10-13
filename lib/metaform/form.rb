@@ -1017,10 +1017,27 @@ class Form
   end
 
   #################################################################################
+  def setup_validating(presentation_name)
+    if !validating? #if someone else set the validating state globally accept that
+      v = presentations[presentation_name].validation  # otherwise use the presentation validation state
+      if !v.nil?
+        # if validation from the presentation is :before save then we set validation back to nil because
+        # we want to validation on first presentation, and record.rb sets validation if there was an error
+        v = nil if v == :before_save
+      else
+        #otherwise use the state default validation state
+        v = workflows[record_workflow].should_validate?(workflow_state)
+      end
+      set_validating(v) if v
+    end
+  end
+
+  #################################################################################
   # run through the presentation not rendering.
   def setup_presentation(presentation_name,record,index=nil)
     prepare(index)
     with_record(record) do
+      setup_validating(presentation_name)
       p(presentation_name)
     end
   end
@@ -1030,18 +1047,7 @@ class Form
   def build(presentation_name,record=nil,index=nil)
     prepare(index)
     with_record(record,:render) do
-      if !validating? #if someone else set the validating state globally accept that
-        v = presentations[presentation_name].validation  # otherwise use the presentation validation state
-        if !v.nil?
-          # if validation from the presentation is :before save then we set validation back to nil because
-          # we want to validation on first presentation, and record.rb sets validation if there was an error
-          v = nil if v == :before_save
-        else
-          #otherwise use the state default validation state
-          v = workflows[record_workflow].should_validate?(workflow_state)
-        end
-        set_validating(v) if v
-      end
+      setup_validating(presentation_name)
       p(presentation_name)
       body %Q|<input type="hidden" name="meta[last_updated]" id="meta_last_updated" value=#{record.updated_at.to_i}>|
       if @_stuff[:need_workflow_action]
