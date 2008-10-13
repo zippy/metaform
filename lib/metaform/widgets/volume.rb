@@ -28,13 +28,13 @@ class VolumeWidget < Widget
   		cups = ((ml.to_f * 0.422675283).round.to_f) / 100
   		<<-EOHTML
   		<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'cups_box')}" id="#{build_html_multi_id(field_instance_id,'cups_box')}" value="#{cups}" onchange="#{build_html_multi_id(field_instance_id,'update_volume')}(true)" /> cups
-  		<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'ml_box')}" id="#{build_html_multi_id(field_instance_id,'ml_box')}" value="#{ml}" onchange="#{build_html_multi_id(field_instance_id,'update_volume')}(false)" /> ml
+  		<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'ml_box')}" id="#{build_html_multi_id(field_instance_id,'ml_box')}" value="#{ml}" onchange="#{build_html_multi_id(field_instance_id,'update_volume')}(false)" /> ml/cc
   		#{form.javascript_tag(js_update_volume)}
   		EOHTML
   	  else
   		<<-EOHTML
   		<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'cups_box')}" id="#{build_html_multi_id(field_instance_id,'cups_box')}" onchange="#{build_html_multi_id(field_instance_id,'update_volume')}(true)" /> cups
-  		<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'ml_box')}" id="#{build_html_multi_id(field_instance_id,'ml_box')}"  onchange="#{build_html_multi_id(field_instance_id,'update_volume')}(false)" /> ml
+  		<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'ml_box')}" id="#{build_html_multi_id(field_instance_id,'ml_box')}"  onchange="#{build_html_multi_id(field_instance_id,'update_volume')}(false)" /> ml/cc
   		#{form.javascript_tag(js_update_volume)}
   		EOHTML
 	  end
