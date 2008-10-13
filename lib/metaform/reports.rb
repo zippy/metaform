@@ -113,21 +113,20 @@ class Reports
 #        :conditions => ["form_id in (?) and field_id in (?)" << w ,r.forms,field_list.keys], 
 #        :include => [:field_instances]
 #        )
-      form_instances = Record.locate(:all,locate_options) 
-      #puts "form_instances = #{form_instances.size}"
-      
+      form_instances = Record.locate(:all,locate_options)       
       total = form_instances.size
       count_queries.each do |stat,q|
-        #puts "count_queries:  stat = #{stat}, q = #{q}"
         count = Counter.new
         form_instances.each do |f|
-          #puts "f['Birth_Onset'] = #{ f['Birth_Onset'].inspect}"
+          #puts "f['TransNonmedical_ProviderWent'] = #{ f['TransNonmedical_ProviderWent'].inspect}" if stat == :medical
+          #puts "f['TransNonmedical_Reason'] = #{ f['TransNonmedical_Reason'].inspect}" if stat == :medical
+           
           #puts "f['Birth_IPprocs_Details'] = #{ f['Birth_IPprocs_Details'].inspect}"
           begin
             expr = Record.eval_field(q)
-            #puts "count_query expr = #{expr}"
+            #puts "count_query expr = #{expr}" if  stat == :blah
             eval(expr)
-            #puts "count.value = #{count.value}"
+            #puts "count.value = #{count.value}" if  stat == :blah
           rescue Exception => e
             raise "Eval error '#{e.to_s}' while evaluating: #{expr}"
           end

@@ -1097,7 +1097,7 @@ class Record
           rescue Exception => e
             raise MetaformException,"Eval error '#{e.to_s}' while evaluating: #{expr}"
           end
-          #puts "kept = #{kept}"
+          puts "     kept = #{kept}"
           forms << the_form if kept
         else
           forms << the_form
@@ -1113,14 +1113,17 @@ class Record
   end
   def Record.eval_field(expression)
       #puts "---------"
-      #puts "eval_Field 1:  expression=#{expression}"
-      expr = expression.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|each_with_index|to_i|zip|map|include|any|other\?)/,'f["\1"].\2')
+      #puts "eval_Field 0:  expression=#{expression}"
+      expr = expression.gsub(/\!:(\S+)/,'!(:\1)')
+      #puts "eval_Field 1:  expr=#{expr}"
+      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|each_with_index|to_i|zip|map|include|any|other\?)/,'f["\1"].\2')
       #puts "eval_field 2:  expr=#{expr}"
       expr = expr.gsub(/:([a-zA-Z0-9_-]+)\.blank\?/,'f["\1"] ? (f["\1"].is_indexed? ? f["\1"].value[0].blank? : f["\1"].value.blank?) : true')
-      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\./,'f["\1"].value.')
       #puts "eval_field 3:  expr=#{expr}"
-      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\[/,'f["\1"][')
+      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\./,'f["\1"].value.')
       #puts "eval_field 4:  expr=#{expr}"
+      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\[/,'f["\1"][')
+      #puts "eval_field 5:  expr=#{expr}"
       if /\.zip/.match(expr)
         expr = expr.gsub(/\.zip\(:([a-zA-Z0-9_-]+)/,'.zip(f["\1"]')
       else

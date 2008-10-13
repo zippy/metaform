@@ -198,7 +198,20 @@ class Form
     @fields_defined << name if @fields_defined
     
     if options.has_key?(:calculated)
-      based_on_fields = options[:calculated][:based_on_fields]
+      if options[:calculated].has_key?(:from_condition) 
+        c = conditions[options[:calculated][:from_condition]]
+        based_on_fields = c.fields_used
+        negate = options[:calculated][:negate]
+        options[:calculated][:proc] = Proc.new do |form,index|
+          if negate
+            c.evaluate ? "false" : "true"
+          else
+            c.evaluate ? "true" : "false"
+          end
+        end
+      else
+        based_on_fields = options[:calculated][:based_on_fields]
+      end
       raise MetaformException,"calculated fields need a :proc option that defines a Proc" unless options[:calculated][:proc].class == Proc
       raise MetaformException,"calculated fields need a :based_on_fields option that defines a list of fields used by the calculation proc" unless based_on_fields.class == Array
       based_on_fields.each do |f|

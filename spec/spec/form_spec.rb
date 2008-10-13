@@ -258,6 +258,11 @@ describe SimpleForm do
         it "should require a :based_on_fields parameter" do
           lambda {@form.f('fish',:calculated => {:proc => Proc.new {}})}.should raise_error("calculated fields need a :based_on_fields option that defines a list of fields used by the calculation proc")
         end
+        it "should take the :based_on_fields from the :from_condition fields_used" do
+          @form.f('fish',:calculated => {:from_condition => 'Sue_is_Old' })
+          @form.calculated_field_dependencies['name'].should == ['fish']
+          @form.calculated_field_dependencies['age'].should == ['age_plus_education','fish']
+        end
         it "should update the calculated_field_dependencies map" do
           @form.f('fish',:calculated => {:proc => Proc.new {},:based_on_fields=>['cat','dog']})
           @form.calculated_field_dependencies['cat'].should == ['fish']
@@ -266,7 +271,27 @@ describe SimpleForm do
           @form.calculated_field_dependencies['cat'].should == ['fish','bird']
           @form.calculated_field_dependencies['dog'].should == ['fish']
           @form.calculated_field_dependencies['fish'].should == ['bird']
-        end        
+        end      
+        it "should return the same value as the condition it is base on"  do
+          @form.f('fish',:calculated => {:from_condition => 'Sue_is_Old' })
+          @form.set_record(@record)
+          @form.c('Sue_is_Old').evaluate.should == false
+          @record.fish.should == "false"
+          @record.name = 'Sue'
+          @record.age = 61
+          @form.c('Sue_is_Old').evaluate.should == true
+          @record.fish.should == "true"
+        end
+        it "should return the opposite value as the condition it is base on if negate is true"  do
+          @form.f('fish',:calculated => {:from_condition => 'Sue_is_Old', :negate => true })
+          @form.set_record(@record)
+          @form.c('Sue_is_Old').evaluate.should == false
+          @record.fish.should == "true"
+          @record.name = 'Sue'
+          @record.age = 61
+          @form.c('Sue_is_Old').evaluate.should == true
+          @record.fish.should == "false"
+        end      
       end
     end # f
     
