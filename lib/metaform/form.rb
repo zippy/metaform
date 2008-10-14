@@ -1209,14 +1209,17 @@ EOJS
     if is_value #ie is not a field_name
       field_name_or_value.is_a?(String) ? YAML.load(field_name_or_value) : field_name_or_value
     else #ie is a field_name
-      value_hash = field_value(field_name_or_value)
-      value_hash.is_a?(Hash) || value_hash.blank? ? value_hash : YAML.load(value_hash)
+      value_hashes = get_record.answers_hash(field_name_or_value)[field_name_or_value].value
+      value_hashes ||= []
+      value_hashes.map! {|v| v.is_a?(Hash) || v.blank? ? v : YAML.load(v) }
     end
   end
   
   def dump_yaml(field_name_or_value, is_value = false)
-    value = (is_value ? field_name_or_value : field_value(field_name_or_value,0))
-    value.is_a?(Hash) ? YAML.dump(value) : value
+    values = (is_value ? field_name_or_value : get_record.answers_hash(field_name_or_value)[field_name_or_value].value)
+    values = [values] if !values.is_a?(Array) 
+    values ||= []
+    values.map! {|v| v.is_a?(Hash) ? YAML.dump(v) : v}
   end
   
   #TODO-Eric or Lisa

@@ -1091,12 +1091,13 @@ class Record
         if filters && filters.size > 0
           kept = false
           begin
+            #puts "expr = #{eval_field(filter_eval_string)}"
             expr = eval_field(filter_eval_string)
             kept = eval expr
+            #puts "     kept = #{kept}"
           rescue Exception => e
             raise MetaformException,"Eval error '#{e.to_s}' while evaluating: #{expr}"
           end
-          #puts "     kept = #{kept}"
           forms << the_form if kept
         else
           forms << the_form

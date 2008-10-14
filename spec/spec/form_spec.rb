@@ -947,6 +947,24 @@ describe SimpleForm do
       it "should raise an error if @record has not be set" do
         lambda {@form.field_value('name').should}.should raise_error("attempting to get field value of 'name' with no record")
       end
+      it "should return an array of values when used with :any" do
+        @record = Record.make(SampleForm.new,'new_entry', {
+           2 => {:name =>'Bob Smith 2',:fruit => 'apple'},
+           1 => {:name =>'Bob Smith 1',:fruit => 'banana'},
+           0 => {:name =>'Bob Smith 0'}
+           },:multi_index => true)
+        @form.with_record(@record) do
+          @form.field_value('name',0)
+          #@form.field_value('name',:any)
+        end
+        @record.save('new_entry')   
+        @form.with_record(@record) do
+          @form.field_value('name',0).should == 'Bob Smith 0'
+          @form.field_value('name',1).should == 'Bob Smith 1'
+          @form.field_value('name',2).should == 'Bob Smith 2'
+          @form.field_value('name',:any).should == ['Bob Smith 0','Bob Smith 1','Bob Smith 2']
+        end
+      end
     end
     describe "#field_state" do
       it "should return the value of a field" do
