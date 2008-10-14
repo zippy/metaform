@@ -645,8 +645,8 @@ describe SimpleForm do
       it "should render a complicated bunch of html and add observer javascripts" do
         @form.with_record(@record,:render) do
           @form.prepare(nil)
-          @form.qp('age',:presentation_name => 'education_info',:show_hide_options=>{:condition => "age=18"})
-          @form.get_body.should == [
+          @form.qp('age',:question_options => {:presentation_name => 'education_info'},:show_hide_options=>{:condition => "age=18"})
+        	@form.get_body.should == [
             "<div id=\"question_age\" class=\"question\"><label class=\"label\" for=\"record[age]\">Age:</label><input id=\"record_age\" name=\"record[age]\" type=\"text\" />g question!</div>",
             "<div id=\"uid_1\" class=\"hideable_box_with_border\">",
               "<div id=\"presentation_education_info\" class=\"presentation\">",

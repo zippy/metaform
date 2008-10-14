@@ -395,7 +395,7 @@ class Record
     raise MetaformUndefinedFieldError, field_name if !form.field_exists?(field_name)
     if c = form.fields[field_name].calculated
       form.set_record(self)
-      c[:proc].call(form,index)
+      return c[:proc].call(form,index)
     end
     
     if !@form_instance.new_record?      
@@ -426,15 +426,7 @@ class Record
       field_instances.each do |field_instance|
         value = field_instance.answer
         #cache the value in the attributes hash
-        #To-Do Eric:  I(Lisa) commented out line 430 and added in lines 431-435.  This allows me to read
-        #the value of calculated fields without setting them in the cache, which raises a metaform exception 
-        #"you can't store a value to a calculated field"
-        #values << set_attribute(field_name,value,field_instance.idx)
-        if form.fields[field_name].calculated
-          values << value
-        else
-          values << set_attribute(field_name,value,field_instance.idx)
-        end
+        values << set_attribute(field_name,value,field_instance.idx)
       end
       if index == :any
         values

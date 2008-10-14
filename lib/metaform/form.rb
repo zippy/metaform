@@ -700,7 +700,7 @@ class Form
       :show => false
     }.update(options[:show_hide_options])
     q field_name, options[:question_options]
-    presentation_name = options[:presentation_name]
+    presentation_name = options[:question_options][:presentation_name]
     presentation_name ||= field_name
     javascript_show_hide_if(show_hide_options) do
       p presentation_name

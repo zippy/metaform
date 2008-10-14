@@ -79,6 +79,7 @@ class Reports
         sum_queries.update(options[:sum_queries])
       end
       sum_queries.each { |stat,q| 
+        q.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1} 
         #puts "sum_query:  q = #{q}"
         if q.is_a?(String)
           if !q.match('count') 
@@ -137,7 +138,7 @@ class Reports
         #puts "sum_queries:  stat = #{stat}, q = #{q}"
         count = Counter.new
         form_instances.each do |f|
-          #puts "f['New_Sex'] = #{ f['New_Sex'].inspect}"
+          #puts "f['c_sections'] = #{ f['c_sections'].inspect}" if :c_sections
           #puts "f['New_Grams'] = #{ f['New_Grams'].inspect}"
           begin
             expr = Record.eval_field(q)
