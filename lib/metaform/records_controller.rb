@@ -59,7 +59,9 @@ class RecordsController < ApplicationController
   def update
     setup_record
     redirected = false
+    @zapped_fields_proc
     redirected = before_update_record(@record) if respond_to?(:before_update_record)
+    opts = {:clear_fields_proc => @zapped_fields_proc}
     redirected = before_save_record(@record) if respond_to?(:before_save_record) && !redirected
     if !redirected
       respond_to do |format|
@@ -68,7 +70,7 @@ class RecordsController < ApplicationController
           format.html { redirect_url ? redirect_to(redirect_url) : render(:action => "show") }
           format.xml  { head :ok }
         else
-          opts = {:convert_from_html=>true}
+          opts[:convert_from_html] = true
           if @index
             attribs = params[:record]
             opts[:index] = @index

@@ -34,7 +34,8 @@ def setup
     f 'reverse_name_and_job', :label => 'reversed name and occupation', :type => 'string', :calculated => {
       :based_on_fields => ['name','occupation'],
       :proc => Proc.new { |form,index| (form.field_value('name',index).to_s+form.field_value('occupation',index).to_s).reverse}
-    }
+    }    
+    f 'people_num', :label => '', :type => 'string'
   end
 
 #  def_workflows do 
@@ -55,6 +56,19 @@ def setup
     	end
   	end
 #  end
+
+  def_conditions do
+    c 'sue_is_a_plumber', :javascript => ":name == Sue && :occupation == 'plumber'" do
+      field_value("name") == 'Sue' && field_value("occupation") == 'plumber'
+    end
+    c 'people_num_mult_changer', :javascript => ":people_num > 0" do
+        field_value("people_num",0).to_i > 0
+    end
+  end
+  
+  def_fields do
+    f 'sue_is_a_plumber', :type => 'boolean', :calculated =>  {:from_condition => 'sue_is_a_plumber'}
+  end
 	
 	presentation 'new_entry',:legal_states => [nil,'standard','unusual','standard_1','standard_2'],:create_with_workflow => 'standard' do
     q 'name', :widget => 'TextField'

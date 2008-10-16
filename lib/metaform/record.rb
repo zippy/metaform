@@ -554,9 +554,29 @@ class Record
   # that are what actually are the "attributes."  The attributes parameter should be a 
   # hash where the keys are the FieldInstance ids and the values are the answers
   def update_attributes(attribs,presentation,meta_data = nil,options={})
+    preflight_state = []
+    zap_fields = []
+    if options[:zapping_proc]
+      @form.with_record(self)  do
+        preflight_state = options[:zapping_proc][:preflight_state].call(form)
+      end
+    end
+    set_attributes(attribs,presentation,options)    
+    if options[:zapping_proc]
+      @form.with_record(self)  do
+        zap_fields = options[:zapping_proc][:fields_hit].call(form,preflight_state)
+      end
+    end
     set_attributes(attribs,presentation,options)
-    if zap_fields = options[:clear_indexes]
-      FieldInstance.destroy_all(["form_instance_id = ? and field_id in (?)",@form_instance.id,zap_fields])
+    zap_fields[:all] = zap_fields[:all] + options[:clear_indexes] if options[:clear_indexes]
+    if zap_fields
+      zap_fields.each do |idx,fields|
+        if idx == :all
+          FieldInstance.destroy_all(["form_instance_id = ? and field_id in (?)",@form_instance.id,fields])
+        else
+          FieldInstance.destroy_all(["form_instance_id = ? and field_id in (?) and idx = ?",@form_instance.id,fields,idx])
+        end
+      end
     end
     index = :any if options[:multi_index]
     index ||= options[:index]
