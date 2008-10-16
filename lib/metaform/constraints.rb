@@ -55,11 +55,11 @@ module Constraints
           date = Time.local(*date)
           if constraint == :in_past
             if date > Time.now
-              constraint_errors << (err_override || "Date cannot be in the future.")
+              constraint_errors << (err_override || "Date cannot be in the future")
             end
           elsif constraint == :in_future
             if date < Time.now
-              constraint_errors << (err_override || "Date cannot be in the past.")
+              constraint_errors << (err_override || "Date cannot be in the past")
             end
           end
         end
