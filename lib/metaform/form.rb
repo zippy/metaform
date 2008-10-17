@@ -1211,6 +1211,7 @@ EOJS
     else #ie is a field_name
       value_hashes = get_record.answers_hash(field_name_or_value)[field_name_or_value].value
       value_hashes ||= []
+      value_hashes = [value_hashes] if !value_hashes.is_a?(Array)
       value_hashes.map! {|v| v.is_a?(Hash) || v.blank? ? v : YAML.load(v) }
     end
   end

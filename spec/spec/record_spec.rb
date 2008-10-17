@@ -937,46 +937,46 @@ describe Record do
       @record.education.should == 'college'
     end
     it "should apply proc to correct index of fields" do
-      @record.update_attributes({0 => {:education =>'grad_school',:people_num => 2}, 1 => {:education => 'college'}}, 'new_entry',nil,:multi_index => true)
-       @record[:education,0].should == 'grad_school'  
-       @record[:education,1].should == 'college'  
-       @record[:people_num => 2]
-       @record.update_attributes({:people_num => 1},'new_entry',nil,
-         :zapping_proc => {:preflight_state => lambda {|form| 
-                               result = {}
-                               result['people_num_mult_changer'] = [form.field_value('people_num'),'education'] if form.field_value('people_num_mult_changer')
-                               result},
-                           :fields_hit => lambda {|form,preflight_state| 
-                             result = []
-                             preflight_state.each{|k,v| 
-                               if !form.field_value('people_num_mult_changer')
-                                 if form
-                                 (..v.shift.to_i).each {|i| tab 'intrapartum_mult', :label => 'Labor & Birth '<< i.to_s,:index => i}
-                                 
-                               
-                               result << v if form.field_value('sue_is_a_plumber') == 'false' }
-                             result.flatten}
-                             })
-                             
-       :clear_fields_proc => lambda {|form| ['education'] if form.c('sue_is_a_plumber').evaluate})
-      
-      
-       @record.update_attributes({:education => 'college', :name => 'Sue', :occupation => 'plumber'},'new_entry')
-       @record.sue_is_a_plumber.should == 'true'
-       @record.education.should == 'college'
-       @record.update_attributes({:fruit => 'plum'},'new_entry',nil,
-         :zapping_proc => {:preflight_state => lambda {|form| 
-                               result = {}
-                               result['sue_is_a_plumber'] = ['education'] if form.field_value('sue_is_a_plumber')
-                               result},
-                           :fields_hit => lambda {|form,preflight_state| 
-                             result = []
-                             preflight_state.each{|k,v| result << v if form.field_value('sue_is_a_plumber') == 'false' }
-                             result.flatten}
-                             })
-       @record.education.should == 'college'
-      
-      
+      # @record.update_attributes({0 => {:education =>'grad_school',:people_num => 2}, 1 => {:education => 'college'}}, 'new_entry',nil,:multi_index => true)
+      #  @record[:education,0].should == 'grad_school'  
+      #  @record[:education,1].should == 'college'  
+      #  @record[:people_num => 2]
+      #  @record.update_attributes({:people_num => 1},'new_entry',nil,
+      #    :zapping_proc => {:preflight_state => lambda {|form| 
+      #                          result = {}
+      #                          result['people_num_mult_changer'] = [form.field_value('people_num'),'education'] if form.field_value('people_num_mult_changer')
+      #                          result},
+      #                      :fields_hit => lambda {|form,preflight_state| 
+      #                        result = []
+      #                        preflight_state.each{|k,v| 
+      #                          if !form.field_value('people_num_mult_changer')
+      #                            if form
+      #                            (..v.shift.to_i).each {|i| tab 'intrapartum_mult', :label => 'Labor & Birth '<< i.to_s,:index => i}
+      #                            
+      #                          
+      #                          result << v if form.field_value('sue_is_a_plumber') == 'false' }
+      #                        result.flatten}
+      #                        })
+      #                        
+      #  :clear_fields_proc => lambda {|form| ['education'] if form.c('sue_is_a_plumber').evaluate})
+      # 
+      # 
+      #  @record.update_attributes({:education => 'college', :name => 'Sue', :occupation => 'plumber'},'new_entry')
+      #  @record.sue_is_a_plumber.should == 'true'
+      #  @record.education.should == 'college'
+      #  @record.update_attributes({:fruit => 'plum'},'new_entry',nil,
+      #    :zapping_proc => {:preflight_state => lambda {|form| 
+      #                          result = {}
+      #                          result['sue_is_a_plumber'] = ['education'] if form.field_value('sue_is_a_plumber')
+      #                          result},
+      #                      :fields_hit => lambda {|form,preflight_state| 
+      #                        result = []
+      #                        preflight_state.each{|k,v| result << v if form.field_value('sue_is_a_plumber') == 'false' }
+      #                        result.flatten}
+      #                        })
+      #  @record.education.should == 'college'
+      # 
+      # 
 
     end
   end

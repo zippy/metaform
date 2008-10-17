@@ -58,10 +58,10 @@ class Condition < Bin
     end
   end
    
-  def humanize
+  def humanize(use_label = true)
     return description if description
     form_field = form.fields[self.field_name]
-    hfn = form_field.label if form_field
+    hfn = form_field.label if form_field && use_label
     hfn ||= field_name
     case operator
     when '=','=='
@@ -98,7 +98,7 @@ class Condition < Bin
   end
   
   def js_function_name
-    js = humanize
+    js = humanize(false)
     js = js.gsub(/[- ]/,'_')
     js = js.gsub(/\W/,'')
   end
