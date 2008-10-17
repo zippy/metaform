@@ -1206,6 +1206,8 @@ EOJS
   
   #This method will call YAML.load if Rails has not already turned the field_value or value into a hash for us.
   def load_yaml(field_name_or_value, is_value = false)
+    # puts "load_yaml:  is_value = #{is_value}, field_name_or_value = #{field_name_or_value}"
+    # puts "---------"
     if is_value #ie is not a field_name
       field_name_or_value.is_a?(String) ? YAML.load(field_name_or_value) : field_name_or_value
     else #ie is a field_name

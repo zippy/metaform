@@ -106,7 +106,7 @@ class Condition < Bin
   def evaluate(idx = -1)
     raise MetaformException,"attempting to evaluate condition with no record" if form.get_record.nil?
     if ruby
-      ruby.call(self)
+      ruby.call(idx)
     else
       idx = self.index.to_i if self.index != -1
       cur_val = form.field_value(field_name,idx)
