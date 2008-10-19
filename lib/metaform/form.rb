@@ -1204,24 +1204,23 @@ EOJS
     fi ? fi.state : nil
   end
   
-  #This method will call YAML.load if Rails has not already turned the field_value or value into a hash for us.
+  #This method will call YAML.load if Rails has not already turned the string into a hash for us.
   def load_yaml(field_name_or_value, is_value = false)
-    # puts "load_yaml:  is_value = #{is_value}, field_name_or_value = #{field_name_or_value}"
-    # puts "---------"
     if is_value #ie is not a field_name
       field_name_or_value.is_a?(String) ? YAML.load(field_name_or_value) : field_name_or_value
     else #ie is a field_name
-      value_hashes = get_record.answers_hash(field_name_or_value)[field_name_or_value].value
+      value_hashes = Record.locate(get_record.id, :fields=>[field_name_or_value], :index => :any)[field_name_or_value,:any]
       value_hashes ||= []
       value_hashes = [value_hashes] if !value_hashes.is_a?(Array)
       value_hashes.map! {|v| v.is_a?(Hash) || v.blank? ? v : YAML.load(v) }
     end
   end
   
+  #This method will call YAML.dump if Rails has not already turned the hash into a string for us.
   def dump_yaml(field_name_or_value, is_value = false)
-    values = (is_value ? field_name_or_value : get_record.answers_hash(field_name_or_value)[field_name_or_value].value)
-    values = [values] if !values.is_a?(Array) 
+    values = (is_value ? field_name_or_value : Record.locate(get_record.id, :fields=>["#{field_name_or_value}"], :index => :any)[field_name_or_value,:any])    
     values ||= []
+    values = [values] if !values.is_a?(Array) 
     values.map! {|v| v.is_a?(Hash) ? YAML.dump(v) : v}
   end
   

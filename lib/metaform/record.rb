@@ -590,7 +590,6 @@ class Record
   end
 
   def _update_attributes(presentation,meta_data,idx = nil)
-    
     # determine if this presentation is allowed to be used for updating the 
     # record in the current state
     p = @form.presentations[presentation]
