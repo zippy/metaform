@@ -978,7 +978,41 @@ class Record
         r[field].value.compact[-1]
       end
     end
- end
+  end
+ 
+  #################################################################################
+  # exports the attributes of the record in the format specified
+  # The options to export are:
+  # * :format - which format to export the record.  Currently support are:
+  #     :csv
+  # currently 
+  #################################################################################
+  require 'csv.rb'
+  def export(opts = {})
+    options = {
+      :format => :csv
+    }.update(opts)
+    case options[:format]
+    when :csv
+      result = []
+      fields = options[:fields]
+      raise "you must specify the :fields option with a list of fields to export" if !fields
+      @attributes.keys.each do |index|
+        row = []
+        row << index.to_i
+        row << self.id
+        row << self.created_at
+        row << self.updated_at
+        row << self.workflow_state
+        fields.each {|f| row << attributes(index)[f]}
+        result << CSV.generate_line(row)
+      end
+      result
+    else
+      raise "#{options[:format].inspect} is an unknown export format"
+    end
+  end
+ 
   
   ######################################################################################
   ######################################################################################

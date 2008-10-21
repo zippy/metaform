@@ -980,6 +980,23 @@ describe Record do
 
     end
   end
+  describe "exporting records" do
+    before(:each) do
+      setup_record
+    end
+    it "should be able to export a record to a CSV line" do
+      @record.export(
+        :fields => ['name', 'fruit']
+      ).should == ['0,,,,,Bob Smith,banana']
+    end
+    it "should be able to export an indexed record" do
+      @record[:fruit,2] = 'apple'
+      @record.export(
+        :fields => ['name', 'fruit'],
+        :meta => true
+      ).should == ['0,,,,,Bob Smith,banana','2,,,,,,apple']
+    end
+  end
 end
 
 describe Record::Answer do
