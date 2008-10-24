@@ -9,7 +9,7 @@ ActiveRecord::Schema.define(:version => 0) do
     t.text     "answer"
     t.string   "state"
     t.text     "explanation"
-    t.string   "idx"
+    t.integer  'idx', :default => 0, :null => false
   end
 
   add_index "field_instances", ["idx"], :name => "index_field_instances_on_idx"

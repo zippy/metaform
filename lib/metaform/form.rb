@@ -3,6 +3,8 @@ class Form
   include Utilities
   include FormHelper
 
+  MultiIndexMarker = '%X%'
+
   # directory in which to auto-load form setup files
   @@forms_dir = 'forms'
   @@cache = {}
@@ -430,7 +432,7 @@ class Form
       @current_tab_label = label ? label : presentation_name.humanize
     end
     label ||= presentation_name.humanize
-    tabs[@tabs_name].render_tab(presentation_name,label,url,@_index.to_s == index.to_s && @current_tab == presentation_name,index)
+    tabs[@tabs_name].render_tab(presentation_name,label,url,@_index.to_i == index.to_i && @current_tab == presentation_name,index)
   end
 
   #################################################################################
@@ -553,7 +555,7 @@ class Form
       
     if @render
       field = the_q.field
-      value = @record ? @record[field.name,@_index] : nil 
+      value = @record && @_index != MultiIndexMarker ? @record[field.name,@_index] : nil 
       body the_q.render(self,value,read_only)
     end
     
@@ -616,7 +618,7 @@ class Form
         raise MetaformException,"reference_field option must be defined" if !indexed[:reference_field]
         if @render
           orig_index = @_index
-          @_index = '%X%'
+          @_index = MultiIndexMarker
           @_use_multi_index = 1
           template = save_context(:body) do
             pres.block.call
@@ -631,14 +633,14 @@ class Form
 
           template = quote_for_javascript(template)
           @_multi_index_fields ||= {}
-          template.scan(/\[_%X%_(.*?)\]/) {|f| @_multi_index_fields[f] = true}
+          template.scan(/\[_#{MultiIndexMarker}_(.*?)\]/) {|f| @_multi_index_fields[f] = true}
 
           javascript %Q|var #{presentation_name} = new indexedItems;#{presentation_name}.elem_id="presentation_#{presentation_name}_items";#{presentation_name}.delete_text="#{indexed[:delete_button_text]}";#{presentation_name}.self_name="#{presentation_name}";|
           javascript <<-EOJS
             function doAdd#{presentation_name}() {
               var t = "#{template}";
               var idx = parseInt($F('multi_index'));
-              t = t.replace(/%X%/g,idx);
+              t = t.replace(/#{MultiIndexMarker}/g,idx);
               $('multi_index').value = idx+1;
               #{presentation_name}.addItem(t);
             }
@@ -1046,7 +1048,7 @@ class Form
 
   #################################################################################
   # run through the presentation not rendering.
-  def setup_presentation(presentation_name,record,index=nil)
+  def setup_presentation(presentation_name,record,index=0)
     prepare(index)
     with_record(record) do
       setup_validating(presentation_name)
@@ -1056,7 +1058,7 @@ class Form
 
   #################################################################################
   # produce the html and javascript necessary to run the form
-  def build(presentation_name,record=nil,index=nil)
+  def build(presentation_name,record=nil,index=0)
     prepare(index)
     with_record(record,:render) do
       setup_validating(presentation_name)

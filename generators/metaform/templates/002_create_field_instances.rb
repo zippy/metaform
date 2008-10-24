@@ -10,7 +10,7 @@ class CreateFieldInstances < ActiveRecord::Migration
       t.column :answer, :text
       t.column :state, :string
       t.column :explanation, :text
-      t.column :idx, :integer
+      t.column :idx, :integer, :default => 0, :null => false
     end
     add_index :field_instances, :form_instance_id
     add_index :field_instances, :field_id

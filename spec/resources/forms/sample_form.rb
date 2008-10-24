@@ -27,6 +27,14 @@ def setup
     f 'hobby', :label => 'Hobby', :constraints => {"required"=>true}
     f 'field_with_default', :label => 'FWD', :type => 'string', :default=> 'fish'
     f 'indexed_field_no_default', :label => 'AF', :type => 'string', :indexed_default_from_null_index => true
+    c 'condition_for_def_dependent_fields', :fields_to_use =>  'indexed_field_no_default',
+      :javascript => ':indexed_field_no_default.include("pig")' do
+        field_value('indexed_field_no_default',:any).include?("pig")
+      end
+    f 'indexed_field_no_default', :label => 'AF', :type =>  'string', :indexed_default_from_null_index => true
+    def_dependent_fields('condition_for_def_dependent_fields') do
+      f 'yale_class', :label => '', :type => 'string', :constraints => {"enumeration"=>[{"math"=>"Cool Math Class"}, {"comp_sci"=>"Lots of Computer Theory"}, {"music"=>"Pretty Music"}]}
+    end
     f 'indexed_field_with_default', :label => 'AFWD', :type => 'string', :default=> 'cow',:indexed_default_from_null_index => true
     fo = f('fruit_other', :label => 'Other fruit', :type => 'string', :constraints => {"required"=>"fruit=other"})
     f 'fruit', :label => '', :type => 'string', :constraints => {"enumeration"=>[{"apple_mac"=>"Macintosh Apple"}, {"apple_mutsu"=>"Mutsu"}, {"pear"=>"Pear"}, {"banana"=>"Banana"}, {"other"=>"Other...*"}, {"x"=>"XOther...*"}], "required"=>true}, :followups => {'/other|x/' => fo}
@@ -79,8 +87,13 @@ def setup
     q 'breastfeeding', :widget => 'TextField'
     function_button "New Entry" do
       javascript_submit :workflow_action => 'create'
-    end  
+    end
   end
+
+  presentation 'condition_test',:legal_states =>  [nil,'standard','unusual','standard_1','standard_2'],:create_with_workflow  => 'standard' do
+    q 'indexed_field_no_default'
+    q 'yale_class'
+   end
   
   presentation 'simple' do
     q 'name'

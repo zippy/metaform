@@ -168,7 +168,7 @@ class Record
   
   attr :form_instance
   attr :errors
-  attr_accessor :action_result
+  attr_accessor :action_result,:cache
   ######################################################################################
   # creating a new Record happens either because we pass in a given FormInstance
   # or we create a raw new one here
@@ -178,7 +178,7 @@ class Record
     #puts "the_instance = #{the_instance.inspect}"
     #puts "attributes = #{attributes.inspect}"
     #puts "options = #{options.inspect}"
-    reset_attributes
+    @cache = RecordCache.new
     the_instance = FormInstance.new if !the_instance
     @form_instance = the_instance
     
@@ -198,7 +198,7 @@ class Record
   ######################################################################################
   # set the attributes from a hash optionally converting from HTML
   def set_attributes(attributes,presentation_name,options = {})
-    reset_attributes
+#    reset_attributes
     @form.setup_presentation(presentation_name,self)
 
     if options[:multi_index]
@@ -233,46 +233,18 @@ class Record
     end
   end
 
-  def get_attributes
-    @attributes
-  end
-  def attributes(index=nil)
-    index = index.to_s if index
-    @attributes[index]
-  end
   def reset_attributes
-    @attributes = {nil=>{}}
-  end
-  def clear_attributes(*attributes)
-    @attributes.each {|idx,a| attributes.each {|f| a.delete(f)}}
-  end
-  def clear_attributes_except(*attributes)
-    exceptions = {}
-    attributes.each {|a| exceptions[a] = true}
-    @attributes.each {|idx,a| a.each {|f,v| a.delete(f) unless exceptions[f]}}
-  end
+#    puts "<br>RESETTING Attributes"
+    @cache.clear
+    @record_loaded = false
+  end 
   
-  def attribute_exists(attribute,index=nil)
-    #puts "attribute_exists @attributes = #{@attributes.inspect}"
-    #puts "attribute_exists @index = #{@index.inspect}"
-    index = index.to_s if index
-    #puts "attribute_exists @index = #{@index.inspect}"
-    @attributes.has_key?(index) && @attributes[index].has_key?(attribute.to_s)
-  end
-  def get_attribute(attribute,index=nil)
-    index = index.to_s if index
-    i = @attributes[index]
-    i ? i[attribute.to_s] : nil
-  end
-  
-  def set_attribute(attribute,value,index=nil)
+  def set_attribute(attribute,value,index=0)
+    raise "whoops index was :any" if index == :any
     attrib = attribute.to_s
     raise MetaformUndefinedFieldError, attrib if !form.field_exists?(attrib)
-    raise MetaformException,"you can't store a value to a calculated field" if form.fields[attrib].calculated
-    index = normalize(index)
-    i = @attributes[index]
-    @attributes[index] = i = {} if !i
-    i[attrib] = value
+    raise MetaformException,"you can't store a value to a calculated field (#{attrib})" if form.fields[attrib].calculated
+    @cache.set_attribute(attribute,value,index)
     value
   end
   
@@ -282,10 +254,8 @@ class Record
     fields.each do |field|
       a = Answer.new(nil,nil)
       h[field] = a
-      @attributes.each do |index,values|
-        if values.keys.include?(field)
-          a[index]=values[field]
-        end
+      @cache.each(:attributes => field) do |attribute,value,index|
+        a[index]=value
       end
     end
     h
@@ -293,12 +263,12 @@ class Record
   
   def delete_fields(*fields)
     FieldInstance.destroy_all(["form_instance_id = ? and field_id in (?)",@form_instance.id,fields])
-    clear_attributes(*fields)
+    @cache.clear(:attributes => fields)
   end
 
   def delete_fields_except(*fields)
     FieldInstance.destroy_all(["form_instance_id = ? and field_id not in (?)",@form_instance.id,fields])
-    clear_attributes_except(*fields)
+    @cache.clear(:attributes => fields,:except => true)
   end
   
   ######################################################################################
@@ -353,7 +323,7 @@ class Record
   ######################################################################################
   # Load attributes from the database, setting items to nil if they aren't found in dabase
   # the index parameter can be :any if all indexes should be loaded.
-  def load_attributes(fields,index = nil)
+  def load_attributes(fields,index = 0)
     reset_attributes
     if index == :any
       attributes_set = {}
@@ -372,82 +342,62 @@ class Record
       end
     end
   end
+  
+  ######################################################################################
+  # Load attributes from the database
+  def load_record
+    return if @record_loaded || @form_instance.new_record?
+#    puts "<br>LOADING RECORD"
+    @record_loaded = true
+    instances = @form_instance.field_instances.find(:all,:conditions => 'state != "calculated"')
+    instances.each do |fi|
+      next if !form.field_exists?(fi.field_id)
+      set_attribute(fi.field_id,fi.answer,fi.idx)
+    end
+  end
 
   ######################################################################################
   # field accessors
 
   # the field_value is either pulled from the attributes hash if it exists or from the database
-  # TODO we need to make a system where field_instance values can be pre-loaded for a full presentation, otherwise
-  # this causes one hit to the database per field per page.
   # TODO the use of :any here is kind of weird and needs to be refactored out and unified with
   #  all the Answer stuff.  Also the way in which this code loads in the instances should be refactored
   #  into a generalized "load" function that can be shared with how Locate loads in information too.
-  def [](attribute,*index)
-    #puts "[] attribute = #{attribute.inspect}"
-    #puts "[] index = #{index.inspect}"
-    if index == [:any]
-      index = :any
-    else
-      index = normalize(index)
-    end
-    field_name = attribute.to_s
-    return get_attribute(field_name,index) if attribute_exists(field_name,index)
-    raise MetaformUndefinedFieldError, field_name if !form.field_exists?(field_name)
-    if c = form.fields[field_name].calculated
+  def [](attribute,index=0)
+#    puts "[#{attribute.to_s},#{index.to_s}]<br>"
+    attribute = attribute.to_s
+    load_record
+
+    if c = form.fields[attribute].calculated
       form.set_record(self)
       return c[:proc].call(form,index)
     end
     
-    if !@form_instance.new_record?      
-      field_instance = nil 
-      # The instance may already have been loaded in the instances from a Record.locate so check there first
-      field_instance = nil
-      @form_instance.field_instances.each do |fi|
-        if fi.field_id == field_name && fi.idx == index
-          field_instance = fi
-          break
-        end
-      end
-      conditions = ["form_instance_id = ? and field_id = ?",@form_instance.id,field_name]
-      if index
-        if index != :any
-          conditions[0] <<  " and idx = ?"
-          conditions << index
-        end
-      else
-        conditions[0] <<  " and idx is null"
-      end
-      field_instances ||= FieldInstance.find(:all, :conditions => conditions)
-    end
-
-    # use the database value or get the default value
-    if field_instances
-      values = []
-      field_instances.each do |field_instance|
-        value = field_instance.answer
-        #cache the value in the attributes hash
-        values << set_attribute(field_name,value,field_instance.idx)
-      end
-      if index == :any
-        values
-      else
-        values[0]
-      end
+    if @cache.attribute_exists?(attribute,index)
+#      puts "<br> loading #{attribute}[#{index}] from cache"
+      @cache.get_attribute(attribute,index)
     else
-      index = nil if index == :any
-      if index && form.fields[field_name].indexed_default_from_null_index
+#      puts "<br> loading #{attribute}[#{index}] from DB"
+      was_any = false
+      if index == :any
+        index = nil
+        was_any = true
+      end
+      if index && form.fields[attribute].indexed_default_from_null_index
         value = self[attribute,nil]
       else
-        value = form.fields[field_name].default
+        value = form.fields[attribute].default
       end
       #cache the value in the attributes hash
-      set_attribute(field_name,value,index)
+      set_attribute(attribute,value,index)
+      was_any ? [value] : value
     end
   end
   
   def []=(attribute,*args)
     value = args.pop
-    set_attribute(attribute,value,args)
+    index = args[0]
+    set_attribute(attribute,value,index)
   end
   
   def method_missing(method,*args)
@@ -469,26 +419,6 @@ class Record
       end
     end
     super
-  end
-  
-  def normalize(index)
-    if index.instance_of?(Array)
-      index.pop while index.size > 0 && (index[-1] == '' || index[-1] == 0 || index[-1] == nil ) 
-    end
-    if index.instance_of?(Array)
-      if index.size == 0
-        index = nil
-      else
-        index = index.join(',')
-      end
-    elsif index 
-      if index.size == 0 || index == [nil] || index == ""
-        index = nil
-      else
-        index = index.to_s
-      end
-    end
-    index
   end
   
   ######################################################################################
@@ -522,10 +452,10 @@ class Record
     #puts "SAVE presentation = #{presentation.inspect}"
     #puts "SAVE meta_data = #{meta_data.inspect}"
     #puts "SAVE  @form_instance = #{@form_instance.inspect}"
-    #puts "SAVE  @attributes = #{@attributes.inspect}"
     #puts "SAVE self = #{self.inspect}"
     #TODO we need to test this transactionality to see how it works if different parts
     # of the _update_attributes process fails.
+    @record_loaded = true
     begin
       FormInstance.transaction do
         result = @form_instance.save
@@ -580,29 +510,44 @@ class Record
     #     index = :any if options[:multi_index]
     #     index ||= options[:index]
     #     _update_attributes(presentation,meta_data,index)
-    set_attributes(attribs,presentation,options)
+    load_record
      if zap_fields = options[:clear_indexes]
        FieldInstance.destroy_all(["form_instance_id = ? and field_id in (?)",@form_instance.id,zap_fields])
+       @cache.clear(:attributes => zap_fields)
      end
-     index = :any if options[:multi_index]
+     set_attributes(attribs,presentation,options)
+     if options[:multi_index]
+       index = :any
+       fields = []
+       attribs.each {|idx,a| fields << a.keys}
+       fields = fields.flatten.uniq
+     else
+       fields = attribs.nil? ? nil : attribs.keys
+     end
      index ||= options[:index]
-     _update_attributes(presentation,meta_data,index)
+     _update_attributes(presentation,meta_data,fields,index)
   end
 
-  def _update_attributes(presentation,meta_data,idx = nil)
+  def _update_attributes(presentation,meta_data,fields=nil,idx=0)
     # determine if this presentation is allowed to be used for updating the 
     # record in the current state
+#    puts "<br>CACHE on entrance to _update_attributes: #{@cache.dump.inspect}"
     p = @form.presentations[presentation]
     p.confirm_legal_state!(workflow_state)
-
     invalid_fields = nil
     validation_exclude_states = nil
+    
+    if fields
+      field_list = fields.collect { |f| f.to_s }
+    else
+      field_list = @cache.attribute_names
+    end
     @form.with_record(self) do
       # force any attributes to nil that need forcing
-      set_force_nil_attributes
+      field_list.concat set_force_nil_attributes(field_list)
 
       # evaluate the validity of the attributes to be saved
-      invalid_fields = _validate_attributes
+      invalid_fields = _validate_attributes(field_list)
       p.invalid_fields = invalid_fields
       validation_exclude_states = form.validation_exclude_states
     end
@@ -633,9 +578,8 @@ class Record
 
     explanations = meta_data[:explanations] if meta_data
     approvals = meta_data[:approvals] if meta_data
-    #TODO scalability.  This could be responsible for slowness.  Why check all the indexes!?!
-    field_list = @attributes.values.collect {|a| a.keys}.flatten.uniq
-    field_instances = @form_instance.field_instances.find(:all, :conditions => ["field_id in (?) and form_instance_id = ?",field_list,id])
+
+#    field_instances = @form_instance.field_instances.find(:all, :conditions => ["field_id in (?) and form_instance_id = ?",field_list,id])
 #    field_instances.each {|fi| logger.info("#{fi.answer} #{fi.idx.to_s} ZZZZZ" << fi.idx.class.to_s)}
     field_instances_to_save = []
     if meta_data && meta_data[:last_updated]
@@ -644,50 +588,51 @@ class Record
     end
     calculated_fields_to_update = {}
     states = {}
-    @attributes.each do |index,attribs|
-      attribs.each do |field_instance_id,value|
-        #TODO change this to confirm that field_instance_id is in the current presentation.  We
-        # shouldn't be updating fields against the workflow rules.
-        raise MetaformException,"field '#{field_instance_id}' not in form" if !form.field_exists?(field_instance_id)
-        f = field_instances.find {|fi| fi.field_id == field_instance_id && fi.idx == index}
-        is_explanation = explanations && explanations[field_instance_id]
-        explanation_value = explanations[field_instance_id][index.to_i.to_s] if is_explanation
-        is_approval = approvals && approvals[field_instance_id]
-        approval_value = approvals[field_instance_id][index.to_i.to_s] if is_approval
-        if f != nil
-          if f.answer != value || (is_explanation && f.explanation != explanation_value) ||
-              (is_approval && approval_value)
-            # if we are checking last_updated dates don't do the update if the fields updated_at
-            # is greater than the last_updated date passed in, and store this to report later
-            if last_updated && f.updated_at.to_i > last_updated
-              field_instances_protected << f
-            else
-              f.answer = value
-              f.explanation = explanation_value if is_explanation
-              field_instances_to_save << f
-            end
-          end
-        else
-          f = FieldInstance.new({:answer => value, :field_id=>field_instance_id, :form_instance_id => id, :idx => index})
-          f.explanation = explanation_value if is_explanation
-          field_instances_to_save << f
-        end
-        if @form.calculated_field_dependencies[field_instance_id]
-          calculated_fields_to_update[index] ||= []
-          calculated_fields_to_update[index] << @form.calculated_field_dependencies[field_instance_id]
-        end
-        if (invalid_fields[field_instance_id] && invalid_fields[field_instance_id][index.to_i])
-          if is_approval
-            f.state = approval_value.blank? ? 'explained' : 'approved'
+    @cache.each do |field_instance_id,value,index|
+      #TODO change this to confirm that field_instance_id is in the current presentation.  We
+      # shouldn't be updating fields against the workflow rules.
+      raise MetaformException,"field '#{field_instance_id}' not in form" if !form.field_exists?(field_instance_id)
+#      f = field_instances.find {|fi| fi.field_id == field_instance_id && fi.idx == index}
+      f = FieldInstance.find(:first, :conditions=>["form_instance_id = ? and field_id = ? and idx = ?",form_instance.id,field_instance_id,index])
+      is_explanation = explanations && explanations[field_instance_id]
+      explanation_value = explanations[field_instance_id][index.to_s] if is_explanation
+      is_approval = approvals && approvals[field_instance_id]
+      approval_value = approvals[field_instance_id][index.to_s] if is_approval
+      if f != nil
+#        puts "<br>Updating found fi for #{field_instance_id} #{f.attributes.inspect}"
+        if f.answer != value || (is_explanation && f.explanation != explanation_value) ||
+            (is_approval && approval_value)
+          # if we are checking last_updated dates don't do the update if the fields updated_at
+          # is greater than the last_updated date passed in, and store this to report later
+          if last_updated && f.updated_at.to_i > last_updated
+            field_instances_protected << f
           else
-            f.state = (!is_explanation || explanation_value.blank?) ? 'invalid' : 'explained'
+            f.answer = value
+            f.explanation = explanation_value if is_explanation
+            field_instances_to_save << f
           end
-        else
-          f.state = 'answered'
         end
-        states[field_instance_id] ||= []
-        states[field_instance_id][index.to_i] = f.state
+      else
+#        puts "<br>Creating new fi for #{field_instance_id}"
+        f = FieldInstance.new({:answer => value, :field_id=>field_instance_id, :form_instance_id => id, :idx => index})
+        f.explanation = explanation_value if is_explanation
+        field_instances_to_save << f
       end
+      if @form.calculated_field_dependencies[field_instance_id]
+        calculated_fields_to_update[index] ||= []
+        calculated_fields_to_update[index] << @form.calculated_field_dependencies[field_instance_id]
+      end
+      if (invalid_fields[field_instance_id] && invalid_fields[field_instance_id][index])
+        if is_approval
+          f.state = approval_value.blank? ? 'explained' : 'approved'
+        else
+          f.state = (!is_explanation || explanation_value.blank?) ? 'invalid' : 'explained'
+        end
+      else
+        f.state = 'answered'
+      end
+      states[field_instance_id] ||= []
+      states[field_instance_id][index] = f.state
     end
 
 		# only save field instances if there were no errors and if any of the attributes were actually any
@@ -700,6 +645,7 @@ class Record
           field_instances_to_save.each do |i|
             dependents << @form.dependent_fields(i.field_id)
             saved_attributes[i.field_id] = i.answer
+#            puts "<br>about to save #{i.attributes.inspect}"
             if !i.save!
               errors.add(i.field_id,i.errors.full_messages.join(','))
             end
@@ -738,7 +684,6 @@ class Record
       # in a form, you'll see something very ugly.  Currently validate puts things in place
       # so that the standard rails error message shows up.  Note that this is different from
       # our own validation.
-#      raise errors.inspect
       false
     end
   end
@@ -761,12 +706,9 @@ class Record
       if !field_list.empty?
         condition_values = [@form_instance.id,field_list]
         condition_string = "form_instance_id = ? and field_id in (?)"
-        if index
-          condition_string << " and idx = ?"
-          condition_values << index
-        else
-          condition_string << ' and idx is null'
-        end
+        index = index.to_i
+        condition_string << " and idx = ?"
+        condition_values << index
         condition_values.unshift(condition_string)
         FieldInstance.destroy_all(condition_values)
         field_list.each do |f|
@@ -849,14 +791,11 @@ class Record
   #################################################################################
   def _validate_attributes(fields = nil)
     invalid_fields = {}
-    @attributes.each do |index,attribs|
-      attribs.clone.each do |f,value|
-        next if fields && !fields.include?(f)
-        invalid = Invalid.evaluate(@form,@form.fields[f],value,index.to_i)
-        if !invalid.empty?
-          invalid_fields[f] ||= []
-          invalid_fields[f][index.to_i] = invalid
-        end
+    @cache.each(:attributes => fields) do |f,value,index|
+      invalid = Invalid.evaluate(@form,@form.fields[f],value,index.to_i)
+      if !invalid.empty?
+        invalid_fields[f] ||= []
+        invalid_fields[f][index.to_i] = invalid
       end
     end
     invalid_fields
@@ -886,52 +825,46 @@ class Record
     end
   end
 
-  def recalcualte_invalid_fields
-    vd = form_instance.get_validation_data
-    all_fields = @form.fields.values.find_all {|f| !f.calculated}.collect {|f| f.name}
-    load_attributes(all_fields,:any)
-    vd['_'] = _validate_attributes
-    form_instance.update_attributes!({:validation_data => vd})
-    vd
-  end
+#  def recalcualte_invalid_fields
+#    vd = form_instance.get_validation_data
+#    all_fields = @form.fields.values.find_all {|f| !f.calculated}.collect {|f| f.name}
+#    load_attributes(all_fields,:any)
+#    vd['_'] = _validate_attributes
+#    form_instance.update_attributes!({:validation_data => vd})
+#    vd
+#  end
   
-  def set_force_nil_attributes
-    @attributes.each do |index,attribs|
-      attribs.clone.each do |attrib,value|
-        form.evaluate_force_nil(attrib,index) do |f|
-          set_attribute(f,nil,index)
-        end
+  def set_force_nil_attributes(fields=nil)
+    fields_forced = []
+    @cache.each(:attributes => fields) do |attrib,value,index|
+      form.evaluate_force_nil(attrib,index) do |f|
+        set_attribute(f,nil,index)
+        fields_forced << f
       end
     end
+    fields_forced
   end
   
   def logger
     form_instance.logger
   end
   
-  def url(presentation,tab=nil,index=nil)
+  def url(presentation,tab=nil,index=0)
     Record.url(id,presentation,tab,index)
   end
     
-  def explanation(field_name,index = nil)
-    index = nil if index.to_i == 0
+  def explanation(field_name,index = 0)
+    index = index.to_i
     fi = @form_instance.field_instances.find_by_field_id_and_idx(field_name.to_s,index)
     fi.explanation if fi
   end
 
-  def explanations(fields,index = nil)
-    index = nil if index.to_i == 0
+  def explanations(fields,index = 0)
+    index = index.to_i
     expl = {}
     field_instances = @form_instance.field_instances.find(:all,:conditions =>["field_id in (?)",fields])
     field_instances.each {|fi| expl[fi.field_id] = fi.explanation if fi.idx == index}
     expl
-  end
-  
-  def set_explanation(field_name,explanation)
-    fi = @form_instance.field_instances.find_by_field_id_and_idx(field_name.to_s,nil)
-    if fi
-      fi.update_attribute(:explanation, explanation)
-    end
   end
 
   def self.human_attribute_name(attribute_key_name) #:nodoc:
@@ -997,14 +930,14 @@ class Record
       result = []
       fields = options[:fields]
       raise "you must specify the :fields option with a list of fields to export" if !fields
-      @attributes.keys.each do |index|
+      @cache.indexes.each do |index|
         row = []
-        row << index.to_i
+        row << index
         row << self.id
         row << self.created_at
         row << self.updated_at
         row << self.workflow_state
-        fields.each {|f| row << attributes(index)[f]}
+        fields.each {|f| row << @cache.attributes(index)[f]}
         result << CSV.generate_line(row)
       end
       result
@@ -1013,6 +946,9 @@ class Record
     end
   end
  
+  def loaded?
+    @record_loaded
+  end
   
   ######################################################################################
   ######################################################################################
@@ -1036,7 +972,6 @@ class Record
    #puts "searching for #{what} options = " + options.inspect
     
     field_list = {} 
-    
     if options.has_key?(:index)
       idx = options[:index]
       if idx != :any
@@ -1044,9 +979,9 @@ class Record
         conditions_params << idx
       end
     else
-      condition_strings << "(field_instances.idx is null)"      
+      condition_strings << "(field_instances.idx = 0)"      
     end
-    #puts "condition_strings = #{condition_strings}"
+
     if options.has_key?(:forms)
       condition_strings << "(form_id in (?))"
       conditions_params << options[:forms]
@@ -1071,6 +1006,7 @@ class Record
       options[:fields].each {|x| field_list[x] = 1 }
       conditions_params << field_list.keys
     end
+
     if options.has_key?(:conditions)
       c = arrayify(options[:conditions])
       c.each {|x| x =~ /([a-zA-Z0-9_-]+)(.*)/; condition_strings << %Q|if(field_instances.field_id = '#{$1}',if (answer #{$2},true,false),false)|}
@@ -1089,7 +1025,6 @@ class Record
       }
     end
     find_opts ||= {}
-    #puts "find_opts = #{find_opts.inspect}"
     begin
       form_instances = FormInstance.find(what,find_opts)
     rescue ActiveRecord::RecordNotFound
@@ -1197,7 +1132,7 @@ class Record
     url = "/records/#{record_id}"
     url << "/#{presentation}" if presentation != ""
     url << "/#{tab}" if tab
-    url << "/#{index}" if index
+    url << "/#{index}" if index.to_i > 0
     url
   end
   
