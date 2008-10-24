@@ -107,11 +107,12 @@ class CheckBoxGroupWidget < Widget
     result
   end
 
-  ################################################################################
-  def self.is_multi_value?
-    true
+  ################################################################################  
+  def self.update_value_hash_function(field_instance_id)
+    %Q|update_value_hash_for_checkbox_group('#{field_instance_id}',values_for_#{field_instance_id})|
   end
   
+
   ################################################################################
   def self.convert_html_value(value,params={})
     value.delete('__none__')

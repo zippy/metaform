@@ -171,14 +171,14 @@ class Condition < Bin
     
   def generate_javascript_function(field_widget_map)
     if javascript
+      cur_idx = ''
       js = javascript
-    else
-      multi = false
-      
-      #TODO-Eric this fails if the hidden value is multi.
+    else     
+      cur_idx = '[cur_idx]' 
+      #Note that if the condition does not have the javascript pre-defined, then we assume that the condition
+      #only cares about the information on the tab it is being run on.
       if field_widget_map.has_key?(field_name)
         (widget,widget_options) = field_widget_map[field_name]
-        multi = widget.is_multi_value?
       end
       the_field_value = field_value  #Ruby gets confused below and interprets field_value as
       # a local variable.  This is necessary to use bin#[]=
@@ -203,14 +203,12 @@ class Condition < Bin
           if the_field_value =~ /^\/(.*)\/$/
             the_field_value = $1
           end
-          multi ? %Q|arrayMatch(:#{field_name},'#{the_field_value}')| :
-          %Q|:#{field_name}.match('#{the_field_value}')|
+          %Q|valueMatch(:#{field_name},'#{the_field_value}')|     
         when '!~','~!'  
           if the_field_value =~ /^\/(.*)\/$/
             the_field_value = $1
           end
-          multi ? %Q|!arrayMatch(:#{field_name},'#{the_field_value}')| :
-          %Q|!:#{field_name}.match('#{the_field_value}')|
+          %Q|valueMatch(:#{field_name},'#{the_field_value}')|       
         when 'includes'
           %Q|"#{the_field_value}" in oc(:#{field_name})|
         when '!includes'
@@ -221,40 +219,14 @@ class Condition < Bin
           %Q*:#{field_name} == null || :#{field_name} == ""*
       end
     end
-    hiddens = []
     variable_declarations = []
     js = js.gsub(/:(\w+)/) do |m|
       f = $1
-      if field_widget_map.has_key?(f)
-        (widget,widget_options) = field_widget_map[f]
-        variable_declarations << "function value_#{f}() {return #{widget.javascript_get_value_function(f)}}"
-      else
-        hiddens << f
-        variable_declarations << "function value_#{f}() {return $F('___#{f}')}"
-      end
-      "value_#{f}()"
+      variable_declarations << "function value_#{f}() {return values_for_#{f}}"
+      "value_#{f}()#{cur_idx}"
     end
-    ["#{variable_declarations.join(';')};function #{js_function_name}() {return #{js}}",hiddens]
+    "#{variable_declarations.join(';')};function #{js_function_name}() {return #{js}}"
   end
-#  def generate_show_hide_js_options(value_is_array)
-#    if value == :answered
-#      opts[:condition] = %Q|field_value != null && field_value != ""|
-#    elsif value =~ /^\/(.*)\/$/
-#      if the_q.get_widget.is_multi_value?
-#        opts[:condition] = %Q|arrayMatch(field_value,#{value})|
-#      else
-#        opts[:condition] = %Q|field_value.match(#{value})|
-#      end 
-#    else
-#      if value =~ /^\!(.*)/
-#        opts[:value] = $1
-#        opts[:operator] = the_q.get_widget.is_multi_value? ? :not_in : '!='
-#      else
-#        opts[:value] = value
-#        opts[:operator] = the_q.get_widget.is_multi_value? ? :in : '=='
-#      end
-#    end
-#  end
 end
 
 class ConstraintCondition

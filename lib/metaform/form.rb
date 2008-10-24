@@ -10,7 +10,7 @@ class Form
   @@config = {}
   cattr_accessor :forms_dir,:cache,:config
 
-  FieldTypes = ['string','integer','float','decimal','boolean','date','datetime','time','text']
+  FieldTypes = ['string','integer','float','decimal','boolean','date','datetime','time','text','hash']
 
   attr_accessor :fields, :conditions, :questions, :presentations, :groups, :workflows, :listings, :tabs, :label_options, :calculated_field_dependencies, :current_tab_label
 
@@ -579,7 +579,6 @@ class Form
         conds = the_q.field.followup_conditions
         cond = conds[followup_field_name]
         opts = {:css_class => 'followup',:condition=>cond}
-#        opts.update(cond.generate_show_hide_js_options(the_q.get_widget.is_multi_value?))
         javascript_show_hide_if(opts) do
           q followup_field_name,followup_question_options
         end
@@ -1072,8 +1071,9 @@ class Form
       end
       
       jscripts = []
-      hiddens_added = {}
-
+      stored_value_string = ''
+      stored_values_added = {}
+      
       field_widget_map = current_questions_field_widget_map
       ojs = get_observer_jscripts
        if ojs
@@ -1086,22 +1086,46 @@ class Form
             if field_widget_map.has_key?(field_name)
               field_name_action_hash.key?(field_name) ? field_name_action_hash[field_name] << fnname : field_name_action_hash[field_name] = [fnname]
              end
-          end
+             #Every field_name listed as a fields_used for any condition will have a javascript array set up and printed on the page.  
+             #This array will be called values_for_#{field_name}
+             #The array will have the same structure as the result of calling field_value(field_name,:any), ie an array with the ith member
+             #being the answer value for the field_instance with field_id = field_name and idx = i. If the type of the field is a hash we will have
+             #to use load_yaml to convert to javascript.
+             if !stored_values_added[field_name]
+               (widget,widget_options) = field_widget_map[field_name];
+               stored_value_string << %Q|var values_for_#{field_name} = new Array();|
+               value_array = field_value(field_name,:any)
+               field = fields[field_name]
+               if field[:type] == 'hash'
+                 result = ''
+                 value_array.map! do |val_string| 
+                   js_hash_builder = []
+                   load_yaml(val_string).each{|k,v| js_hash_builder << "'#{k}':'#{v}'"}
+                   "{#{js_hash_builder.join(',')}}"
+                 end
+                 stored_value_string << %Q|values_for_#{field_name} = [$H(#{value_array.join('),$H(')})];|
+               else
+                 val = "[" + value_array.inspect[1..-2].split(', ').collect {|e| e == 'nil'? "undefined" : e}.join(",") +"]"
+                 stored_value_string <<  %Q|values_for_#{field_name} = #{val};|
+               end
+               stored_values_added[field_name] = true
+             end
+          end          
+          
           jscripts << <<-EOJS
 function #{fnname}() {
   if (#{cond.js_function_name}()) {#{actions[:pos].join(";")}}
   else {#{actions[:neg].join(";")}}
 }
 EOJS
-#{fnname}();
-
-          (js,hiddens) = cond.generate_javascript_function(field_widget_map)
+          js = cond.generate_javascript_function(field_widget_map)
           jscripts << js
-          hiddens.each { |h| body %Q|<input type="hidden" name="___#{h}" id="___#{h}" value="#{field_value(h)}">| if !hiddens_added[h];hiddens_added[h]=true }
         end
         field_name_action_hash.each do |the_field_name,the_functions|
           (widget,widget_options) = field_widget_map[the_field_name];
-          jscripts << widget.javascript_build_observe_function(the_field_name,"#{the_functions.join('();')}();",widget_options)
+          #Widgets can customize update_value_hash_function to call whichever metaform.js function will read their value
+          #We can have checkbox followup group use this machinery if we can add all of the fields to the condition.fields_used list
+          jscripts << widget.javascript_build_observe_function(the_field_name,"#{widget.update_value_hash_function(the_field_name)};#{the_functions.join('();')}();",widget_options)
         end
       end
 
@@ -1115,6 +1139,7 @@ EOJS
       js = get_jscripts
       jscripts << js if js
       
+      b = '<script>var cur_idx=find_current_idx();' + stored_value_string + '</script>' + b if stored_value_string != ''
       [b,jscripts.join("\n")]
     end
   end
@@ -1205,23 +1230,9 @@ EOJS
   end
   
   #This method will call YAML.load if Rails has not already turned the string into a hash for us.
-  def load_yaml(field_name_or_value, is_value = false)
-    if is_value #ie is not a field_name
-      field_name_or_value.is_a?(String) ? YAML.load(field_name_or_value) : field_name_or_value
-    else #ie is a field_name
-      value_hashes = Record.locate(get_record.id, :fields=>[field_name_or_value], :index => :any)[field_name_or_value,:any]
-      value_hashes ||= []
-      value_hashes = [value_hashes] if !value_hashes.is_a?(Array)
-      value_hashes.map! {|v| v.is_a?(Hash) || v.blank? ? v : YAML.load(v) }
-    end
-  end
-  
-  #This method will call YAML.dump if Rails has not already turned the hash into a string for us.
-  def dump_yaml(field_name_or_value, is_value = false)
-    values = (is_value ? field_name_or_value : Record.locate(get_record.id, :fields=>["#{field_name_or_value}"], :index => :any)[field_name_or_value,:any])    
-    values ||= []
-    values = [values] if !values.is_a?(Array) 
-    values.map! {|v| v.is_a?(Hash) ? YAML.dump(v) : v}
+  def load_yaml(field_value)
+    return {} if field_value.blank?
+    field_value.is_a?(String) ? YAML.load(field_value) : field_value
   end
   
   #TODO-Eric or Lisa

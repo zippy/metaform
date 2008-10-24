@@ -6,7 +6,7 @@ class CheckBoxWidget < Widget
     result = []
     result << %Q|<input name="#{build_html_multi_name(field_instance_id,"Y")}" id="#{build_html_multi_id(field_instance_id,"Y")}" type="checkbox" #{checked}>|
     result << "\n"
-    result << %Q|<input name="#{build_html_multi_name(field_instance_id,'__none__')}" id="#{build_html_multi_id(field_instance_id,'__none__')}" class="#{field_instance_id}" type="hidden"}>|
+    result << %Q|<input name="#{build_html_multi_name(field_instance_id,'__none__')}" id="#{build_html_multi_id(field_instance_id,'__none__')}" class="#{field_instance_id}" type="hidden">|
     result
   end 
    
@@ -20,9 +20,9 @@ class CheckBoxWidget < Widget
     %Q|Event.observe('#{build_html_multi_id(field_instance_id,"Y")}', 'click', function(e){ #{script} });\n| 
   end
 
-  ################################################################################
-  def self.is_multi_value?
-    true
+  ################################################################################  
+  def self.update_value_hash_function(field_instance_id)
+    %Q|update_value_hash_for_checkbox('#{field_instance_id}',values_for_#{field_instance_id})|
   end
   
   ################################################################################

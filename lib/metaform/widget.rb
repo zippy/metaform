@@ -69,6 +69,10 @@ class Widget
     render_label(label,field_instance_id,options[:read_only] ? render_form_object_read_only(field_instance_id,value,options) : render_form_object(field_instance_id,value,options))
   end
   
+  def self.update_value_hash_function(field_instance_id)
+    %Q|update_value_hash('#{field_instance_id}',values_for_#{field_instance_id})|
+  end
+  
   def self.render_form_object_read_only(field_instance_id,value,options)
     "<span id=\"#{build_html_id(field_instance_id)}\">#{humanize_value(value,options)}</span>"
   end
@@ -93,13 +97,6 @@ class Widget
   # convert the value produced by rails submit to an sql saveable value
   def self.convert_html_value(value,params={})
     value
-  end
-  
-  ################################################################################
-  # TODO at some point this needs to be generalized into a value type system i.e
-  # scalar/array/hash
-  def self.is_multi_value?
-    false
   end
 
   ################################################################################

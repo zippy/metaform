@@ -160,11 +160,11 @@ describe Condition do
   describe "#generate_javascript_function" do
     it "should javascript for simple conditions with no widget" do
       c = Condition.new(:name=>'age=~/^[0-9]+$/',:form=>SimpleForm.new)
-      c.generate_javascript_function({}).should == ["function value_age() {return $F('___age')};function age_matches_regex_0_9() {return value_age().match('^[0-9]+$')}", ["age"]]
+      c.generate_javascript_function({}).should == "function value_age() {return values_for_age};function age_matches_regex_0_9() {return valueMatch(value_age()[cur_idx],'^[0-9]+$')}"
     end
     it "should javascript for custom conditions with a widget" do
       c = Condition.new(:name=>'collies_owned_by_joe',:form=>SimpleForm.new,:javascript => ":dog_type == 'collie' && :owner == 'joe'")
-      c.generate_javascript_function({'dog_type'=>[Widget.fetch('TextField'),{}]}).should == ["function value_dog_type() {return $F('record_dog_type')};function value_owner() {return $F('___owner')};function collies_owned_by_joe() {return value_dog_type() == 'collie' && value_owner() == 'joe'}", ["owner"]] 
+      c.generate_javascript_function({'dog_type'=>[Widget.fetch('TextField'),{}]}).should == "function value_dog_type() {return values_for_dog_type};function value_owner() {return values_for_owner};function collies_owned_by_joe() {return value_dog_type() == 'collie' && value_owner() == 'joe'}"
     end
   end
 end

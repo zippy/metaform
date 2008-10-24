@@ -1168,7 +1168,7 @@ class Record
     end
     #puts "forms = #{forms.map{|f| f.keys}.inspect}"
     return forms if return_answers_hash
-    Record.create(forms)
+    forms ? Record.create(forms) : nil
   end
   def Record.eval_field(expression)
       #puts "---------"

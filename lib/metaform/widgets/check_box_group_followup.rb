@@ -85,7 +85,7 @@ class CheckBoxGroupFollowupWidget < Widget
             on_click_string = <<-EOJS
               onClick="  
                 if ($('#{id}').checked) {$$('.#{field_instance_id}_#{val}_followup').each(function(cb){if (cb.value != '#{param}') {cb.checked=false}})};
-                try{update_cbgf_hash('#{field_instance_id}',values_for_#{field_instance_id});tab_changing_actions_for_#{field_instance_id}();}catch(err){};"
+                try{update_value_hash_for_cbfg('#{field_instance_id}',values_for_#{field_instance_id});condition_actions_for_#{field_instance_id}();}catch(err){};"
               EOJS
           elsif none_fields_followup.length > 0
             none_js = ''
@@ -100,7 +100,7 @@ class CheckBoxGroupFollowupWidget < Widget
             on_click_string = <<-EOJS
               onClick="
                 #{none_js};
-                try{update_cbgf_hash('#{field_instance_id}',values_for_#{field_instance_id});tab_changing_actions_for_#{field_instance_id}();}catch(err){};"
+                try{update_value_hash_for_cbfg('#{field_instance_id}',values_for_#{field_instance_id});condition_actions_for_#{field_instance_id}();}catch(err){};"
             EOJS
           end
           followups << <<-EOHTML
@@ -118,7 +118,7 @@ class CheckBoxGroupFollowupWidget < Widget
       result << <<-EOHTML 
       <input name="#{build_html_multi_name(field_instance_id,'__none__')}" id="#{build_html_multi_id(field_instance_id,'__none__')}" type="hidden"}>
       <span class="check_box_followup_input"><input name="#{build_html_multi_name(field_instance_id,val)}" id="#{build_html_multi_id(field_instance_id,val)}" class="#{field_instance_id}" type="checkbox" value="#{val}" #{checked ? 'checked' : ''}
-        onClick="#{javascript};try{update_cbgf_hash('#{field_instance_id}',values_for_#{field_instance_id});tab_changing_actions_for_#{field_instance_id}();}catch(err){};">
+        onClick="#{javascript};try{update_value_hash_for_cbfg('#{field_instance_id}',values_for_#{field_instance_id});condition_actions_for_#{field_instance_id}();}catch(err){};">
         #{value_label}</span>
         #{followup_span}
       EOHTML
@@ -159,20 +159,15 @@ class CheckBoxGroupFollowupWidget < Widget
 
   ################################################################################
   def self.javascript_build_observe_function(field_instance_id,script,options)
-    e = set(options[:constraints])
-    result = ""
-    e.each do |key,value|
-      new_val = value.chomp('*')
-      result << %Q|Event.observe('#{build_html_multi_id(field_instance_id,new_val)}', 'click', function(e){#{script} });\n|
-    end
-    result
-  end
-
-  ################################################################################
-  def self.is_multi_value?
-    true
+    #Note that this is not an observe function!  CheckboxFollowupGroup widgets have a try block in their onClick handler.  This will
+    #call fhe following function if it is present.  It will be present if this field_instance_id is listed as a fields used for a condition.
+    %Q|function condition_actions_for_#{field_instance_id}(){#{script}}|
   end
   
+  ################################################################################  
+  def self.update_value_hash_function(field_instance_id)
+    %Q|update_value_hash_for_cbfg('#{field_instance_id}',values_for_#{field_instance_id})|
+  end
   
   ################################################################################
   def self.convert_html_value(value,params={})
