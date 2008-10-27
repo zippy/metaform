@@ -33,7 +33,7 @@ class WeightLbkgWidget < Widget
   		EOHTML
   	else
   		<<-EOHTML
-  		<input type="text" size=2 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'pounds_box')}" id="#{build_html_multi_id(field_instance_id,'pounds_box')}"  onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(true)" /> lb
+  		<input type="text" size=2 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'pounds_box')}" id="#{build_html_multi_id(field_instance_id,'pounds_box')}"  onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(true)" /> lb or
   		<input type="text" size=4 class="textfield_5" name="#{build_html_multi_name(field_instance_id,'kilograms_box')}" id="#{build_html_multi_id(field_instance_id,'kilograms_box')}"  onchange="#{build_html_multi_id(field_instance_id,'update_weight')}(false)" /> kg
   		#{form.javascript_tag(js_update_weight)}
   		EOHTML
