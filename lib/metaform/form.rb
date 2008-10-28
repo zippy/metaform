@@ -580,6 +580,7 @@ class Form
           
         conds = the_q.field.followup_conditions
         cond = conds[followup_field_name]
+puts "FOLLOWUP FIELD NAME #{followup_field_name} cond: #{conds.keys.inspect}"
         opts = {:css_class => 'followup',:condition=>cond}
         javascript_show_hide_if(opts) do
           q followup_field_name,followup_question_options
@@ -1133,6 +1134,7 @@ EOJS
       end
 
       b = get_body.join("\n")
+      
       b.gsub!(/<info>(.*?)<\/info>/) {|match| tip($1)}
 
       if @_tip_id
@@ -1191,7 +1193,9 @@ EOJS
     text += yield if block_given?
     @_tip_id ||= 1
     tip_id = "tip_#{@_tip_id}"
-    javascript %Q|new Tip('#{tip_id}',"#{quote_for_javascript(text)}")|
+    css_class = Form.get_store(self.class.to_s+"_info_css_class")
+    css_class = ",{ className: '#{css_class}' }" if css_class
+    javascript %Q|new Tip('#{tip_id}',"#{quote_for_javascript(text)}"#{css_class})|
     @_tip_id += 1
     %Q|<img src="/images/info_circle.gif" alt="info" id="#{tip_id}">|
   end
