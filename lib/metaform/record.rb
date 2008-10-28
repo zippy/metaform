@@ -6,6 +6,8 @@
 
 #require 'form_proxy'
 
+DEBUG1 = false
+CACHE = false
 
 class Record
   include Utilities
@@ -179,6 +181,7 @@ class Record
     #puts "attributes = #{attributes.inspect}"
     #puts "options = #{options.inspect}"
     @cache = RecordCache.new
+    @ficache = RecordCache.new if CACHE
     the_instance = FormInstance.new if !the_instance
     @form_instance = the_instance
     
@@ -233,9 +236,14 @@ class Record
     end
   end
 
+    def trace
+      caller[1..3].collect {|l| l.gsub('/Users/eric/Coding/Consulting/MANA/MetaForm/git/manastats/vendor/plugins/metaform/lib/metaform/','')}.inspect
+    end
+
   def reset_attributes
-#    puts "<br>RESETTING Attributes"
+    puts "<br>RESETTING Attributes #{trace}" if DEBUG1
     @cache.clear
+    @ficache.clear if CACHE
     @record_loaded = false
   end 
   
@@ -264,11 +272,13 @@ class Record
   def delete_fields(*fields)
     FieldInstance.destroy_all(["form_instance_id = ? and field_id in (?)",@form_instance.id,fields])
     @cache.clear(:attributes => fields)
+    @ficache.clear(:attributes => fields)  if CACHE
   end
 
   def delete_fields_except(*fields)
     FieldInstance.destroy_all(["form_instance_id = ? and field_id not in (?)",@form_instance.id,fields])
     @cache.clear(:attributes => fields,:except => true)
+    @ficache.clear(:attributes => fields,:except => true) if CACHE
   end
   
   ######################################################################################
@@ -327,7 +337,7 @@ class Record
     reset_attributes
     if index == :any
       attributes_set = {}
-      @form_instance.field_instances.each do |fi|
+      @form_instance.field_instances.find(:all,:conditions => 'state != "calculated"').each do |fi|
         if fields.include?(fi.field_id)
           set_attribute(fi.field_id,fi.answer,fi.idx)
           attributes_set[fi.field_id] = 1
@@ -337,7 +347,7 @@ class Record
     else
       index = index.to_i
       fields.each do |field_name|
-        fi = @form_instance.field_instances.detect {|f| f.field_id == field_name && f.idx.to_i == index }
+        fi = @form_instance.field_instances.find(:all,:conditions => 'state != "calculated"').detect {|f| f.field_id == field_name && f.idx.to_i == index }
         set_attribute(field_name,fi ? fi.answer : nil,index)
       end
     end
@@ -345,14 +355,38 @@ class Record
   
   ######################################################################################
   # Load attributes from the database
-  def load_record
-    return if @record_loaded || @form_instance.new_record?
-#    puts "<br>LOADING RECORD"
-    @record_loaded = true
-    instances = @form_instance.field_instances.find(:all,:conditions => 'state != "calculated"')
+  def load_record(fields=nil,index=nil,force = false)
+    return if !force && (@record_loaded || @form_instance.new_record?)
+    puts "<br>LOADING RECORD" if DEBUG1
+#    reset_attributes if !fields
+    @record_loaded = true if !fields
+    condition_string = 'state != "calculated"'
+    condition_params = []
+    if fields
+      condition_string << " and field_id in (?)"
+      condition_params << fields
+    end
+    if index
+      condition_string << " and idx = ?"
+      condition_params << index
+    end
+    #    field_instances = @form_instance.field_instances.find(:all, :conditions => ["field_id in (?) and form_instance_id = ?",field_list,id])
+
+    instances = @form_instance.field_instances.find(:all,:conditions => [condition_string,*condition_params])
+    attributes_set = {}
     instances.each do |fi|
       next if !form.field_exists?(fi.field_id)
       set_attribute(fi.field_id,fi.answer,fi.idx)
+      @ficache.set_attribute(fi.field_id,fi,fi.idx) if CACHE
+      attributes_set[fi.field_id] ||= []
+      attributes_set[fi.field_id] << fi.idx
+    end
+    if fields
+      if index == :any
+        fields.each {|f| set_attribute(f,nil) if !attributes_set.has_key?(f)}
+      else
+        fields.each {|f| set_attribute(f,nil,index) if !attributes_set.has_key?(f) || !attributes_set[f].include?(index)}
+      end
     end
   end
 
@@ -510,6 +544,8 @@ class Record
     #     index = :any if options[:multi_index]
     #     index ||= options[:index]
     #     _update_attributes(presentation,meta_data,index)
+    result = nil
+#puts "BENCHMARK"+ Benchmark.measure {
     load_record
      if zap_fields = options[:clear_indexes]
        delete_fields(*zap_fields)
@@ -524,13 +560,15 @@ class Record
        fields = attribs.nil? ? nil : attribs.keys
      end
      index ||= options[:index]
-     _update_attributes(presentation,meta_data,fields,index)
+     result=_update_attributes(presentation,meta_data,fields,index)
+#}.to_s
+    result
   end
 
   def _update_attributes(presentation,meta_data,fields=nil,idx=0)
     # determine if this presentation is allowed to be used for updating the 
     # record in the current state
-#    puts "<br>CACHE on entrance to _update_attributes: #{@cache.dump.inspect}"
+    puts "<br>CACHE on entrance to _update_attributes: #{@cache.dump.inspect}" if DEBUG1
     p = @form.presentations[presentation]
     p.confirm_legal_state!(workflow_state)
     invalid_fields = nil
@@ -592,13 +630,14 @@ class Record
       # shouldn't be updating fields against the workflow rules.
       raise MetaformException,"field '#{field_instance_id}' not in form" if !form.field_exists?(field_instance_id)
 #      f = field_instances.find {|fi| fi.field_id == field_instance_id && fi.idx == index}
-      f = FieldInstance.find(:first, :conditions=>["form_instance_id = ? and field_id = ? and idx = ?",form_instance.id,field_instance_id,index])
+      f = FieldInstance.find(:first, :conditions=>["form_instance_id = ? and field_id = ? and idx = ?",form_instance.id,field_instance_id,index]) if !CACHE
+      f = @ficache.get_attribute(field_instance_id,index) if CACHE
       is_explanation = explanations && explanations[field_instance_id]
       explanation_value = explanations[field_instance_id][index.to_s] if is_explanation
       is_approval = approvals && approvals[field_instance_id]
       approval_value = approvals[field_instance_id][index.to_s] if is_approval
       if f != nil
-#        puts "<br>Updating found fi for #{field_instance_id} #{f.attributes.inspect}"
+        puts "<br>Updating found fi for #{field_instance_id} #{f.attributes.inspect}" if DEBUG1
         if f.answer != value || (is_explanation && f.explanation != explanation_value) ||
             (is_approval && approval_value)
           # if we are checking last_updated dates don't do the update if the fields updated_at
@@ -612,8 +651,9 @@ class Record
           end
         end
       else
-#        puts "<br>Creating new fi for #{field_instance_id}"
+        puts "<br>Creating new fi for #{field_instance_id}" if DEBUG1
         f = FieldInstance.new({:answer => value, :field_id=>field_instance_id, :form_instance_id => id, :idx => index})
+        @ficache.set_attribute(field_instance_id,f,index) if CACHE
         f.explanation = explanation_value if is_explanation
         field_instances_to_save << f
       end
@@ -644,7 +684,7 @@ class Record
           field_instances_to_save.each do |i|
             dependents << @form.dependent_fields(i.field_id)
             saved_attributes[i.field_id] = i.answer
-#            puts "<br>about to save #{i.attributes.inspect}"
+            puts "<br>about to save #{i.attributes.inspect}" if DEBUG1
             if !i.save!
               errors.add(i.field_id,i.errors.full_messages.join(','))
             end
