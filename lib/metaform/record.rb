@@ -512,8 +512,7 @@ class Record
     #     _update_attributes(presentation,meta_data,index)
     load_record
      if zap_fields = options[:clear_indexes]
-       FieldInstance.destroy_all(["form_instance_id = ? and field_id in (?)",@form_instance.id,zap_fields])
-       @cache.clear(:attributes => zap_fields)
+       delete_fields(*zap_fields)
      end
      set_attributes(attribs,presentation,options)
      if options[:multi_index]
