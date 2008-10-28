@@ -1033,6 +1033,7 @@ class Form
   #################################################################################
   def setup_validating(presentation_name)
     if !validating? #if someone else set the validating state globally accept that
+      raise MetaformException, "presentation #{presentation_name} not found" if !presentation_exists?(presentation_name)
       v = presentations[presentation_name].validation  # otherwise use the presentation validation state
       if !v.nil?
         # if validation from the presentation is :before save then we set validation back to nil because
