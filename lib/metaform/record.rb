@@ -1171,7 +1171,7 @@ class Record
     url = "/records/#{record_id}"
     url << "/#{presentation}" if presentation != ""
     url << "/#{tab}" if tab
-    url << "/#{index}" if index.to_i > 0
+    url << "/#{index}" if index && index != 0 
     url
   end
   

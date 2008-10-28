@@ -796,7 +796,7 @@ puts "FOLLOWUP FIELD NAME #{followup_field_name} cond: #{conds.keys.inspect}"
     raise MetaformException "condition must be defined" if !condition.instance_of?(Condition)
     if options[:multi]
       tab_html_options = {:label => "#{options[:label]} NUM", :index => "INDEX"}  
-      tab_num_string = "value_#{options[:multi]}()-1"
+      tab_num_string = "values_for_#{options[:multi]}[cur_idx]-1"
       multi_string = "true"
     else
       tab_html_options = {:label => options[:label], :index => options[:index]}
@@ -1100,17 +1100,19 @@ puts "FOLLOWUP FIELD NAME #{followup_field_name} cond: #{conds.keys.inspect}"
                stored_value_string << %Q|var values_for_#{field_name} = new Array();|
                value_array = field_value(field_name,:any)
                field = fields[field_name]
-               if field[:type] == 'hash'
-                 result = ''
-                 value_array.map! do |val_string| 
-                   js_hash_builder = []
-                   load_yaml(val_string).each{|k,v| js_hash_builder << "'#{k}':'#{v}'"}
-                   "{#{js_hash_builder.join(',')}}"
+               if value_array.compact.size > 0  #if the whole array is nil, we don't need to put the value on the page
+                 if field[:type] == 'hash'
+                   result = ''
+                   value_array.map! do |val_string| 
+                     js_hash_builder = []
+                     load_yaml(val_string).each{|k,v| js_hash_builder << "'#{k}':'#{v}'"}
+                     "{#{js_hash_builder.join(',')}}"
+                   end
+                   stored_value_string << %Q|values_for_#{field_name} = [$H(#{value_array.join('),$H(')})];|
+                 else
+                   val = "[" + value_array.inspect[1..-2].split(', ').collect {|e| e == 'nil'? "undefined" : e}.join(",") +"]"
+                   stored_value_string <<  %Q|values_for_#{field_name} = #{val};|
                  end
-                 stored_value_string << %Q|values_for_#{field_name} = [$H(#{value_array.join('),$H(')})];|
-               else
-                 val = "[" + value_array.inspect[1..-2].split(', ').collect {|e| e == 'nil'? "undefined" : e}.join(",") +"]"
-                 stored_value_string <<  %Q|values_for_#{field_name} = #{val};|
                end
                stored_values_added[field_name] = true
              end

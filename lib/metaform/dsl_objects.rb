@@ -220,13 +220,11 @@ class Condition < Bin
           %Q*:#{field_name} == null || :#{field_name} == ""*
       end
     end
-    variable_declarations = []
     js = js.gsub(/:(\w+)/) do |m|
       f = $1
-      variable_declarations << "function value_#{f}() {return values_for_#{f}}"
-      "value_#{f}()#{cur_idx}"
+      "values_for_#{f}#{cur_idx}"
     end
-    "#{variable_declarations.join(';')};function #{js_function_name}() {return #{js}}"
+    "function #{js_function_name}() {return #{js}}"
   end
 end
 
