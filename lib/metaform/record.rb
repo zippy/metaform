@@ -251,7 +251,8 @@ class Record
     raise "whoops index was :any" if index == :any
     attrib = attribute.to_s
     raise MetaformUndefinedFieldError, attrib if !form.field_exists?(attrib)
-    raise MetaformException,"you can't store a value to a calculated field (#{attrib})" if form.fields[attrib].calculated
+    return if form.fields[attrib].calculated
+#    raise MetaformException,"you can't store a value to a calculated field (#{attrib})" if form.fields[attrib].calculated
     @cache.set_attribute(attribute,value,index)
     value
   end
@@ -372,7 +373,7 @@ class Record
     end
     #    field_instances = @form_instance.field_instances.find(:all, :conditions => ["field_id in (?) and form_instance_id = ?",field_list,id])
 
-    instances = @form_instance.field_instances.find(:all,:conditions => [condition_string,*condition_params])
+    instances = @form_instance.field_instances.find(:all,:conditions => [condition_string].concat(condition_params))
     attributes_set = {}
     instances.each do |fi|
       next if !form.field_exists?(fi.field_id)
@@ -385,7 +386,7 @@ class Record
       if index == :any
         fields.each {|f| set_attribute(f,nil) if !attributes_set.has_key?(f)}
       else
-        fields.each {|f| set_attribute(f,nil,index) if !attributes_set.has_key?(f) || !attributes_set[f].include?(index)}
+        fields.each {|f| set_attribute(f,nil,index) if !attributes_set.has_key?(f) || (!index.nil? && !attributes_set[f].include?(index))}
       end
     end
   end
@@ -971,8 +972,9 @@ class Record
       raise "you must specify the :fields option with a list of fields to export" if !fields
       @cache.indexes.each do |index|
         row = []
-        row << index
+        row << self.form.class.to_s
         row << self.id
+        row << index
         row << self.created_at
         row << self.updated_at
         row << self.workflow_state
@@ -983,6 +985,10 @@ class Record
     else
       raise "#{options[:format].inspect} is an unknown export format"
     end
+  end
+  
+  def self.export_csv_header(field_list)
+    CSV.generate_line(['form','id','index','created_at','updated_at','wofkflow_state'].concat(field_list))
   end
  
   def loaded?
