@@ -405,7 +405,14 @@ class Record
 
     if c = form.fields[attribute].calculated
       form.set_record(self)
-      return c[:proc].call(form,index)
+      if index == :any
+        last_index = @cache.indexes.pop
+        result = []
+        (0..last_index).each{|i|result << c[:proc].call(form,i)}
+        return result
+      else
+        return c[:proc].call(form,index)
+      end
     end
     
     if @cache.attribute_exists?(attribute,index)
