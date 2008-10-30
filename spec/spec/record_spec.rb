@@ -629,6 +629,16 @@ describe Record do
       r = Record.locate(@record.id,:fields => ['reverse_name_and_job'],:return_answers_hash =>true)
       r['reverse_name_and_job'].value.should == "ssoBhtimS boB"
     end
+    it "summary_calculation fields should be cached to the 0th index" do
+      @record['name',1] = 'Joe'
+      @record['name',2] = 'Jane'
+      @record['name',3] = 'Bob'
+      @record.total_bobs.should == 2
+      @record['total_bobs',4].should == 2
+      @record.save('new_entry')
+      r = Record.locate(@record.id,:fields => ['total_bobs'],:return_answers_hash =>true)
+      r['total_bobs'].value.should == "2"
+    end
     it "should update a cached value when on attribute update" do
       @record.save('new_entry')
       r = Record.locate(@record.id,:fields => ['reverse_name_and_job'],:return_answers_hash =>true)

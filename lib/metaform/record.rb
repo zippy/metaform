@@ -752,8 +752,10 @@ class Record
         condition_values.unshift(condition_string)
         FieldInstance.destroy_all(condition_values)
         field_list.each do |f|
-          value = form.fields[f].calculated[:proc].call(form,index)
-          fi = FieldInstance.new({:answer => value, :field_id=>f, :form_instance_id => @form_instance.id, :idx => index, :state => 'calculated'})
+          the_field = form.fields[f]
+          value = the_field.calculated[:proc].call(form,index)
+          idx = the_field.calculated[:summary_calculation] ? 0 : index
+          fi = FieldInstance.new({:answer => value, :field_id=>f, :form_instance_id => @form_instance.id, :idx => idx, :state => 'calculated'})
           fi.save
         end
       end
