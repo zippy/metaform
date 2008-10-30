@@ -198,7 +198,6 @@ class Form
       :type => 'string'
     }.update(opts)
     @fields_defined << name if @fields_defined
-    
     if options.has_key?(:calculated)
       if options[:calculated].has_key?(:from_condition) 
         c = conditions[options[:calculated][:from_condition]]
@@ -541,6 +540,10 @@ class Form
     # allways be ready to define a question if it wasn't already defined  
     the_q = questions[question_name]
     widget_type,widget_parameters = parse_widget(widget)
+    field_types_allowed = Widget.fetch(widget_type).field_types_allowed
+     if field_types_allowed 
+      raise MetaformException,"#{widget_type}(#{field_name}) must belong to a field of type #{field_types_allowed.inspect}" if !field_types_allowed.include?(fields[field_name][:type])
+    end
     if the_q
       the_q.params = widget_parameters
     else

@@ -120,5 +120,10 @@ class CheckBoxGroupWidget < Widget
     value.keys.join(',')
   end
   
+  ################################################################################
+  def self.field_types_allowed
+    return ['array']
+  end
+  
 end
 ################################################################################

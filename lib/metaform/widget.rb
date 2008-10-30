@@ -135,6 +135,10 @@ class Widget
     end
     result
   end
+  
+  def self.field_types_allowed
+    return nil
+  end
 
   protected
   

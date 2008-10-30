@@ -185,5 +185,9 @@ class CheckBoxGroupFollowupWidget < Widget
     result
   end
   
+  ################################################################################
+  def self.field_types_allowed
+    return ['hash']
+  end  
 end
 ################################################################################
