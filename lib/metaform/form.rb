@@ -12,7 +12,7 @@ class Form
   @@config = {}
   cattr_accessor :forms_dir,:cache,:config
 
-  FieldTypes = ['string','integer','float','decimal','boolean','date','datetime','time','text','hash']
+  FieldTypes = ['string','integer','float','decimal','boolean','date','datetime','time','text','hash','array']
 
   attr_accessor :fields, :conditions, :questions, :presentations, :groups, :workflows, :listings, :tabs, :label_options, :calculated_field_dependencies, :current_tab_label
 
@@ -170,7 +170,7 @@ class Form
   # defines fields
   # The options for a field definition are:
   # * :type - defaults to 'string' and can be one of: 
-  #   string, integer, float, decimal, boolean, date, datetime, time, text
+  #   string, integer, float, decimal, boolean, date, datetime, time, text, array, hash
   # * :label - a default label to be used in human interface when displaying
   #   this field
   # * :constraints - a hash of constraint specification key,value pairs
