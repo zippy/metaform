@@ -38,7 +38,7 @@ describe Workflow do
       @w.label('verifying').should == 'Form in validation'
     end
   end
-    
+
 end
 
 describe Question do
@@ -64,74 +64,87 @@ describe Condition do
   end
   describe "initialzing from name" do
     it "should handle regex operator" do
-      c = Condition.new(:name=>'age=~/^[0-9]+$/',:form=>'x')
-      c.field_name.should == 'age'   
-      c.operator.should == '=~'   
+      c = Condition.new(:name=>'age=~/^[0-9]+$/',:form=>'x').expressions[0]
+      c.field_name.should == 'age'
+      c.operator.should == '=~'
       c.field_value.should == '/^[0-9]+$/'
     end
     it "should handle whitespace around operator" do
-      c = Condition.new(:name=>'age = 10',:form=>'x')
-      c.field_name.should == 'age'   
-      c.operator.should == '='   
+      c = Condition.new(:name=>'age = 10',:form=>'x').expressions[0]
+      c.field_name.should == 'age'
+      c.operator.should == '='
       c.field_value.should == '10'
     end
+    it "should handle field name index" do
+      c = Condition.new(:name=>'age[1] = 10',:form=>'x').expressions[0]
+      c.field_name.should == 'age'
+      c.operator.should == '='
+      c.field_value.should == '10'
+      c.index.should == '1'
+    end
     it "should handle equals operator" do
-      c = Condition.new(:name=>'age=10',:form=>'x')
-      c.field_name.should == 'age'   
-      c.operator.should == '='   
+      c = Condition.new(:name=>'age=10',:form=>'x').expressions[0]
+      c.field_name.should == 'age'
+      c.operator.should == '='
       c.field_value.should == '10'
     end
     it "should handle not equals operator" do
-      c = Condition.new(:name=>'age!=10',:form=>'x')
-      c.field_name.should == 'age'   
-      c.operator.should == '!='   
+      c = Condition.new(:name=>'age!=10',:form=>'x').expressions[0]
+      c.field_name.should == 'age'
+      c.operator.should == '!='
       c.field_value.should == '10'
     end
     it "should handle greater than or equal operator" do
-      c = Condition.new(:name=>'age>=10',:form=>'x')
-      c.field_name.should == 'age'   
-      c.operator.should == '>='   
+      c = Condition.new(:name=>'age>=10',:form=>'x').expressions[0]
+      c.field_name.should == 'age'
+      c.operator.should == '>='
       c.field_value.should == '10'
     end
     it "should handle less than or equal operator" do
-      c = Condition.new(:name=>'age<=10',:form=>'x')
-      c.field_name.should == 'age'   
-      c.operator.should == '<='   
+      c = Condition.new(:name=>'age<=10',:form=>'x').expressions[0]
+      c.field_name.should == 'age'
+      c.operator.should == '<='
       c.field_value.should == '10'
     end
     it "should handle between operator" do
-      c = Condition.new(:name=>'age<>10,20',:form=>'x')
-      c.field_name.should == 'age'   
-      c.operator.should == '<>'   
+      c = Condition.new(:name=>'age<>10,20',:form=>'x').expressions[0]
+      c.field_name.should == 'age'
+      c.operator.should == '<>'
       c.field_value.should == '10,20'
     end
     it "should handle between or equal" do
-      c = Condition.new(:name=>'age<>=10,20',:form=>'x')
-      c.field_name.should == 'age'   
-      c.operator.should == '<>='   
+      c = Condition.new(:name=>'age<>=10,20',:form=>'x').expressions[0]
+      c.field_name.should == 'age'
+      c.operator.should == '<>='
       c.field_value.should == '10,20'
     end
-    
+    it "should handle boolean expressions" do
+      c = Condition.new(:name=>'age<10 or age>20',:form=>'x')
+      c.expressions[0].field_name.should == 'age'
+      c.expressions[0].operator.should == '<'
+      c.expressions[0].field_value.should == '10'
+      c.expressions[1].field_name.should == 'age'
+      c.expressions[1].operator.should == '>'
+      c.expressions[1].field_value.should == '20'
+      c.booleanjoins[0].should == 'or'
+    end
   end
   describe "#humanize" do
     before :each do
       @form = SimpleForm.new
     end
     it "should be able to derive a description from the a name" do
-      Condition.new(:name=>'age=~/^[0-9]+$/',:form=>@form).humanize.should == 'age matches regex /^[0-9]+$/'    
+      Condition.new(:name=>'age=~/^[0-9]+$/',:form=>@form).humanize.should == 'age matches regex /^[0-9]+$/'
     end
     it "should be able to derive a description from the field label if provided" do
-      Condition.new(:name=>'higher_ed_years=1',:form=>@form).humanize.should == 'years of higher education is 1'    
+      Condition.new(:name=>'higher_ed_years=1',:form=>@form).humanize.should == 'years of higher education is 1'
+    end
+    it "should be able to derive a description for boolean expressions" do
+      Condition.new(:name=>'age<10 or age>20',:form=>@form).humanize.should == 'age is less than 10 or age is greater than 20'
     end
     it "should use the description if provided" do
       Condition.new(:name=>'age=~/^[0-9]+$/',:form=>@form,:description=>'age is only digits').humanize.should == 'age is only digits'
     end
-  end
-  it "should be able to produce a javascript function name" do
-    Condition.new(:name=>'age=~/^[0-9]+$/',:form=>SimpleForm.new).js_function_name.should == 'age_matches_regex_0_9'    
-  end
-  it "should use the description for deriving the javascript name if provided" do
-    Condition.new(:name=>'age=~/^[0-9]+$/',:form=>SimpleForm.new,:description=>'age is only digits').js_function_name.should == 'age_is_only_digits'
   end
   describe "#uses_fields" do
     it "should confirm usage of field for simple conditions" do
@@ -145,24 +158,46 @@ describe Condition do
       c.uses_fields(['fish','dog_type']).should == true
       c.uses_fields(['fish','owner']).should == true
     end
+    it "should confirm usage of field for boolean conditions" do
+       c = Condition.new(:name=>'age<10 or height>20',:form=>'x')
+       c.uses_fields(['age']).should == true
+       c.uses_fields(['height']).should == true
+    end
   end
   describe "#fields_used" do
     it "should return the list of fields used by simple conditions" do
       c = Condition.new(:name=>'age=~/^[0-9]+$/',:form=>'x')
       c.fields_used.should == ['age']
     end
+    it "should  return lists of fields for boolean conditions" do
+      c = Condition.new(:name=>'age<10 or height>20',:form=>SimpleForm.new)
+      c.fields_used.should == ['age','height']
+    end
     it "should return lists of fields for custom conditions" do
       c = Condition.new(:name=>'collies_owned_by_joe',:form=>'x',:javascript => ":dog_type == 'collie' && :owner == 'joe'")
       c.fields_used.should == ['dog_type','owner']
     end
   end
-      
-  describe "#generate_javascript_function" do
-    it "should javascript for simple conditions with no widget" do
+
+  describe "javascript" do
+    it "should be able to produce a javascript function name" do
+      Condition.new(:name=>'age=~/^[0-9]+$/',:form=>SimpleForm.new).js_function_name.should == 'age_matches_regex_0_9'
+    end
+    it "should be able to produce a javascript function name for boolean conditions" do
+      Condition.new(:name=>'age<10 or height>20',:form=>SimpleForm.new).js_function_name.should == 'age_is_less_than_10_or_height_is_greater_than_20'
+    end
+    it "should use the description for deriving the javascript name if provided" do
+      Condition.new(:name=>'age=~/^[0-9]+$/',:form=>SimpleForm.new,:description=>'age is only digits').js_function_name.should == 'age_is_only_digits'
+    end
+    it "should create javascript for simple conditions with no widget" do
       c = Condition.new(:name=>'age=~/^[0-9]+$/',:form=>SimpleForm.new)
       c.generate_javascript_function({}).should == "function age_matches_regex_0_9() {return valueMatch(values_for_age[cur_idx],'^[0-9]+$')}"
     end
-    it "should javascript for custom conditions with a widget" do
+    it "should create javascript for boolean conditions" do
+       c = Condition.new(:name=>'age<10 or age>20',:form=>SimpleForm.new)
+       c.generate_javascript_function({}).should == "function age_is_less_than_10_or_age_is_greater_than_20() {return (values_for_age[cur_idx] != null) && (values_for_age[cur_idx] != '') && (values_for_age[cur_idx] < 10) || (values_for_age[cur_idx] != null) && (values_for_age[cur_idx] != '') && (values_for_age[cur_idx] > 20)}"
+    end
+    it "should create javascript for custom conditions with a widget" do
       c = Condition.new(:name=>'collies_owned_by_joe',:form=>SimpleForm.new,:javascript => ":dog_type == 'collie' && :owner == 'joe'")
       c.generate_javascript_function({'dog_type'=>[Widget.fetch('TextField'),{}]}).should == "function collies_owned_by_joe() {return values_for_dog_type == 'collie' && values_for_owner == 'joe'}"
     end

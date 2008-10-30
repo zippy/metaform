@@ -37,6 +37,7 @@ class SimpleForm < Form
         f 'name'
         def_fields :constraints=>{"range"=>"1-100"} do
           f 'age'
+          f 'height'
           f 'higher_ed_years',:constraints=>{'range'=>'0-10'},:followups=>{'/../' => f('degree'),'!0'=>f('no_ed_reason')},:label => 'years of higher education'
         end
         f 'senior'
@@ -69,6 +70,9 @@ class SimpleForm < Form
       end
       c 'age=44'
       c 'age<44'
+      c 'age<15 or age>75'
+      c 'age>15 and age<75'
+      c 'age>15 and age<75 or age=99'
       c 'Sue_is_Old', :javascript => ':name == "Sue" && :age > 60' do
         field_value("name") == "Sue" && field_value("age") > 60 
       end

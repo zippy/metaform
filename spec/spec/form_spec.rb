@@ -2,7 +2,7 @@ require File.dirname(__FILE__) + '/../spec_helper'
 
 describe SimpleForm do
   before(:each) do
-    @form = SimpleForm.new 
+    @form = SimpleForm.new
     @record = Record.make(@form,'create',{:name =>'Bob Smith'})
   end
   
@@ -67,6 +67,26 @@ describe SimpleForm do
           @form.conditions['age_is_nil'].evaluate.should == false
         end
       end
+      
+      it "should evalute boolean conditions correctly" do
+        @form.with_record(@record) do
+          @record.age = '3'
+          @form.conditions['age<15 or age>75'].evaluate.should == true
+          @form.conditions['age>15 and age<75'].evaluate.should == false
+          @form.conditions['age>15 and age<75 or age=99'].evaluate.should == false
+          @record.age = '20'
+          @form.conditions['age<15 or age>75'].evaluate.should == false
+          @form.conditions['age>15 and age<75'].evaluate.should == true
+          @form.conditions['age>15 and age<75 or age=99'].evaluate.should == true
+          @record.age = '80'
+          @form.conditions['age<15 or age>75'].evaluate.should == true
+          @form.conditions['age>15 and age<75'].evaluate.should == false
+          @form.conditions['age>15 and age<75 or age=99'].evaluate.should == false
+          @record.age = '99'
+          @form.conditions['age>15 and age<75 or age=99'].evaluate.should == true
+        end
+      end
+      
       it "should evaluate correctly == in ruby for integers" do
         @form.with_record(@record) do
           @form.conditions['age=44'].evaluate.should == false
@@ -115,7 +135,7 @@ describe SimpleForm do
         end
       end
     end
-    
+
     # describe "if_c (define a constraint condition)" do
     #   it "should define a ConstraintCondition object" do
     #     cc = @form.if_c('age=60',true)
@@ -126,7 +146,7 @@ describe SimpleForm do
     #     cc.condition.humanize.should == 'age is 60'
     #   end
     # end
-    
+
     describe "if_c (define a constraint condition))" do
       it "should raise errors when a record isn't specified" do
         lambda {@form.if_c('name=bob')}.should raise_error("attempting to evaluate condition with no record")
@@ -136,49 +156,49 @@ describe SimpleForm do
         r = @form.build('if_c_user_simple',@record)
         r.should == ["<div id=\"presentation_if_c_user_simple\" class=\"presentation\">\n</div>\n<input type=\"hidden\" name=\"meta[last_updated]\" id=\"meta_last_updated\" value=0>", ""]
       end
-      
+
       it "should correctly perform an if when a simple condition is true" do
         @record.name = 'Sue'
         r = @form.build('if_c_user_simple',@record)
         r.should == ["<div id=\"presentation_if_c_user_simple\" class=\"presentation\">\n<p>Her name is sue</p>\n</div>\n<input type=\"hidden\" name=\"meta[last_updated]\" id=\"meta_last_updated\" value=0>", ""]
       end
-      
+
       it "should correctly perform an if when a simple condition is false and condition_value is false" do
         @record.name = 'Joe'
         r = @form.build('if_c_user_false',@record)
         r.should == ["<div id=\"presentation_if_c_user_false\" class=\"presentation\">\n<p>Her name is sue</p>\n</div>\n<input type=\"hidden\" name=\"meta[last_updated]\" id=\"meta_last_updated\" value=0>", ""]
       end
-      
+
       it "should correctly perform an if when a simple condition is true and condition_value is false" do
         @record.name = 'Sue'
         r = @form.build('if_c_user_false',@record)
         r.should == ["<div id=\"presentation_if_c_user_false\" class=\"presentation\">\n</div>\n<input type=\"hidden\" name=\"meta[last_updated]\" id=\"meta_last_updated\" value=0>", ""]
       end
-      
+
       it "should correctly perform an if when a complex condition is false" do
         @record.age = 59
         @record.name = 'Joe'
         r = @form.build('if_c_user_complex',@record)
         r.should == ["<div id=\"presentation_if_c_user_complex\" class=\"presentation\">\n</div>\n<input type=\"hidden\" name=\"meta[last_updated]\" id=\"meta_last_updated\" value=0>", ""]
       end
-      
+
       it "should correctly perform an if when a complex condition is true" do
         @record.age = 61
         @record.name = 'Sue'
         r = @form.build('if_c_user_complex',@record)
         r.should == ["<div id=\"presentation_if_c_user_complex\" class=\"presentation\">\n<p>She is both Sue and old</p>\n</div>\n<input type=\"hidden\" name=\"meta[last_updated]\" id=\"meta_last_updated\" value=0>", ""]
       end
-      
-      
+
+
     end
-    
+
     describe "cs (define a constraint)" do
       it "should add constraints to specified fields" do
 #        @form.cs :fields=> ['senior'], :constraints => {'required' => true}
         @form.fields['senior'].constraints['required'].should == true
       end
     end
-    
+
     describe "f (define a field)" do
       it "should create a form with a name field" do
         @form.fields['name'].class.should == Field
@@ -205,7 +225,7 @@ describe SimpleForm do
       it "should raise an error for unknown field types" do
         lambda {@form.f('fish',:type => 'squid')}.should raise_error("Unknown field type: squid")
       end
-            
+
       describe ":followups option"do
         before(:each) do
           @followup = @form.fields['other_eye_color']
@@ -226,7 +246,7 @@ describe SimpleForm do
           @form.fields['higher_ed_years'].followup_conditions['degree'].should == @form.c('higher_ed_years=~/../')
         end
       end
-      
+
       describe ":groups option" do
         it "should add field to the group" do
           @form.groups['basic_info']['name'].should == true
@@ -271,7 +291,7 @@ describe SimpleForm do
           @form.calculated_field_dependencies['cat'].should == ['fish','bird']
           @form.calculated_field_dependencies['dog'].should == ['fish']
           @form.calculated_field_dependencies['fish'].should == ['bird']
-        end      
+        end
         it "should return the same value as the condition it is base on"  do
           @form.f('fish',:calculated => {:from_condition => 'Sue_is_Old' })
           @form.set_record(@record)
@@ -291,10 +311,10 @@ describe SimpleForm do
           @record.age = 61
           @form.c('Sue_is_Old').evaluate.should == true
           @record.fish.should == "false"
-        end      
+        end
       end
     end # f
-    
+
     describe "def_dependent_fields (fields that set up required and force_nil relationships)" do
       it "should set dependent fields to a required constraint based on the dependency condition" do
         @form.fields['dr_type'].constraints['required'].should == 'dietary_restrictions=y'
@@ -319,7 +339,7 @@ describe SimpleForm do
         negate.should == nil
       end
     end
-    
+
     describe "presentation (define a presentation)" do
       it "should define the 'simple' presentation" do
         @form.presentations['simple'].class.should == Presentation
@@ -331,20 +351,20 @@ describe SimpleForm do
        lambda {@form.workflow_for_new_form('simple')}.should raise_error("simple doesn't define a workflow for create!")
       end
 #      it "should return a list of the fields it uses" do
-#         (@form.presentations['simple'].fields - ["name", "eye_color", "married", "higher_ed_years", "other_eye_color", "age"]).size.should == 0 
+#         (@form.presentations['simple'].fields - ["name", "eye_color", "married", "higher_ed_years", "other_eye_color", "age"]).size.should == 0
 #      end
 #      it "should build a map between field and question names" do
 #        @form.presentations['simple'].question_names.should == {
 #            "name"=>"name",
 #            "married"=>"married-208205125",
 #            "eye_color"=>"eye_color-876727679",
-#            "other_eye_color"=>"other_eye_color-316587098", 
+#            "other_eye_color"=>"other_eye_color-316587098",
 #            "higher_ed_years"=>"higher_ed_years",
 #            "age"=>"age"
 #          }
 #      end
     end # presentation
-    
+
     describe "q (display a question)" do
       before(:each) do
         @form.set_record(@record)
@@ -392,7 +412,7 @@ describe SimpleForm do
         (qn,q) = @form.questions.find {|k,v| k =~ /higher_ed_years/ && v.read_only}
         q.render(@form,'5').should == "<tr><td class='field_label'>years of higher education:</td><td><span id=\"record_higher_ed_years\">5</span>g question read only!</td></tr>"
       end
-      it "should render a property" do        
+      it "should render a property" do
         @form.with_record(@record,:render) do
           (@form.questions['age'].render(@form) =~ /g question!/).should_not == nil
           (@form.questions['higher_ed_years'].render(@form) =~ /g question!/).should_not == nil
@@ -444,7 +464,7 @@ describe SimpleForm do
           setup_q do
             @form.q 'eye_color', :followups => 'other_eye_color'
           end
-          @form.get_body.should==["<div id=\"question_eye_color\" class=\"question\"><label class=\"label\" for=\"record[eye_color]\">Eye color:</label><input id=\"record_eye_color\" name=\"record[eye_color]\" type=\"text\" value=\"x\" /></div>", "<div id=\"uid_1\" class=\"followup\">", "<div id=\"question_other_eye_color\" class=\"question\"><label class=\"label\" for=\"record[other_eye_color]\">Other eye color:</label><input id=\"record_other_eye_color\" name=\"record[other_eye_color]\" type=\"text\" /></div>", "</div>"] 
+          @form.get_body.should==["<div id=\"question_eye_color\" class=\"question\"><label class=\"label\" for=\"record[eye_color]\">Eye color:</label><input id=\"record_eye_color\" name=\"record[eye_color]\" type=\"text\" value=\"x\" /></div>", "<div id=\"uid_1\" class=\"followup\">", "<div id=\"question_other_eye_color\" class=\"question\"><label class=\"label\" for=\"record[other_eye_color]\">Other eye color:</label><input id=\"record_other_eye_color\" name=\"record[other_eye_color]\" type=\"text\" /></div>", "</div>"]
         end
         it "should produce the correct javascript for regex based followups " do
           @form.with_record(@record,:render) do
@@ -521,7 +541,7 @@ describe SimpleForm do
             @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>"]
           end
         end
-        
+
         it "should add the validation html for an erb question" do
           @record.name = ''
           @form.set_validating(true)
@@ -532,7 +552,7 @@ describe SimpleForm do
         end
       end
     end # q
-    
+
     describe "qro (display a question read only)" do
       it "should be a short-hand for adding the :read_only option to a q" do
         @form.setup_presentation('create',@record)
@@ -542,7 +562,7 @@ describe SimpleForm do
         end
       end
     end #qro
-    
+
     describe "p (display a presentation)" do
       before(:each) do
         @form.set_record(@record)
@@ -572,13 +592,13 @@ describe SimpleForm do
         @form.get_body.should == ["<div id=\"presentation_name_read_only\" class=\"presentation\">", "<div id=\"presentation_name_only\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><span id=\"record_name\">Bob Smith</span></div>", "</div>", "</div>"]
       end
     end #p
-        
+
     describe "p (display an indexed presentation)" do
       before(:each) do
         @form.set_record(@record)
         @form.set_render(:render)
       end
-      
+
       def do_p
         @record.save('create')
         @form.prepare(nil)
@@ -592,7 +612,7 @@ describe SimpleForm do
       it "should setup" do
         do_p
       end
-      
+
       it "should set the use_multi_index? flag" do
         @form.use_multi_index?.should == nil
         do_p
@@ -628,14 +648,14 @@ describe SimpleForm do
                 "<input type=\"button\" class=\"float_right\" value=\"Delete this name\" onclick=\"name_only.removeItem($(this).up())\"><div class=\"clear\"></div>",
               "</li>",
             "</ul>",
-            "<input type=\"button\" onclick=\"doAddname_only()\" value=\"Add a name\">",          
+            "<input type=\"button\" onclick=\"doAddname_only()\" value=\"Add a name\">",
             "</div>"]
       end
-      
+
       it "should add javascript initialization to the javascripts" do
         do_p
         @form.get_jscripts.should == [
-                "var name_only = new indexedItems;name_only.elem_id=\"presentation_name_only_items\";name_only.delete_text=\"Delete this name\";name_only.self_name=\"name_only\";", 
+                "var name_only = new indexedItems;name_only.elem_id=\"presentation_name_only_items\";name_only.delete_text=\"Delete this name\";name_only.self_name=\"name_only\";",
                 "            function doAddname_only() {\n              var t = \"<div id=\\\"question_name\\\" class=\\\"question\\\"><label class=\\\"label\\\" for=\\\"record[_%X%_name]\\\">Name:<\\/label><input id=\\\"record__%X%_name\\\" name=\\\"record[_%X%_name]\\\" type=\\\"text\\\" \\/><\\/div>\";\n              var idx = parseInt($F('multi_index'));\n              t = t.replace(/%X%/g,idx);\n              $('multi_index').value = idx+1;\n              name_only.addItem(t);\n            }\n"
                 ]
       end
@@ -658,7 +678,7 @@ describe SimpleForm do
         end
       end
     end #qp
-    
+
     describe "html (display arbitrary html)" do
       before (:each) do
         @form.set_record(@record)
@@ -678,7 +698,7 @@ describe SimpleForm do
         end.should == "<b>param</b><b>block</b>"
       end
     end #html
-    
+
     describe "t (display a text element)" do
       before (:each) do
         @form.set_record(@record)
@@ -721,8 +741,8 @@ describe SimpleForm do
           ]
         end
       end
-    end    
-    
+    end
+
     describe "function_button (display a javascript button)" do
       it "should render a button" do
         @form.with_record(@record,:render) do
@@ -737,13 +757,13 @@ describe SimpleForm do
         end
       end
     end #function_button
-    
+
     describe "javascript_show_hide_if (display a block conditionally at 'runtime' on the browser)" do
       it "should produce body html and observer javascripts" do
         @form.with_record(@record,:render) do
           @form.javascript_show_hide_if(:condition => 'married=y')
           @form.get_body.should == ["<div id=\"uid_1\" class=\"hideable_box_with_border\" style=\"display:none\">", "</div>"]
-          @form.get_observer_jscripts.should == 
+          @form.get_observer_jscripts.should ==
             {"married=y"=>{:neg=>["Element.hide('uid_1')"], :pos=>["Element.show('uid_1')"]}}
         end
       end
@@ -770,7 +790,7 @@ describe SimpleForm do
           @form.javascript_show_hide_if(:condition => 'married=y',:show => false)
           @form.get_observer_jscripts.should == {"married=y"=>{:neg=>["Element.show('uid_1')"], :pos=>["Element.hide('uid_1')"]}}
         end
-      end      
+      end
       it "should add the elements from the block into the div" do
         @form.prepare(nil)
         @form.with_record(@record,:render) do
@@ -797,13 +817,13 @@ describe SimpleForm do
         end
       end
     end #javascript_hide_if
-    
+
     describe "javascript helpers-- " do
       describe "javascript_if_field" do
         it "should generate a comparison wrapper around the javascript returned by the block" do
           @form.setup_presentation('simple',@record)
           @form.with_record(@record,:render) do
-            @form.javascript_if_field('name','==','Bob Smith') {'alert("Go Bob!")'}.should == 
+            @form.javascript_if_field('name','==','Bob Smith') {'alert("Go Bob!")'}.should ==
               ["if ($F('record_name') == 'Bob Smith') {alert(\"Go Bob!\")};"]
           end
         end
@@ -811,7 +831,7 @@ describe SimpleForm do
       describe "javascript_confirm" do
         it "should generate a confirm wrapper around the javascript returned by the block" do
           @form.with_record(@record,:render) do
-            @form.javascript_confirm('Are you sure you want to erase everyting') {'erase("everyting")'}.should == 
+            @form.javascript_confirm('Are you sure you want to erase everyting') {'erase("everyting")'}.should ==
               ["if (confirm('Are you sure you want to erase everyting')) {erase(\"everyting\")};"]
           end
         end
@@ -896,12 +916,12 @@ describe SimpleForm do
   describe "generators" do
     describe "build_tabs (render a tab group)" do
       it "should render a tab group with the current tab identified" do
-        @form.build_tabs('simple_tabs','simple',@record).should == 
+        @form.build_tabs('simple_tabs','simple',@record).should ==
         "<div class=\"tabs\"><ul>\n<li class=\"current tab_simple\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//simple/simple_tabs')\" title=\"Click here to go to Edit\"><span>Edit</span></a></li>\n<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view/simple_tabs')\" title=\"Click here to go to View\"><span>View</span></a></li>\n</ul></div><div class='clear'></div>"
       end
       it "should properly render a tab group that returns extra info for a tab from the render_proc" do
         $extra = 'view'
-        @form.build_tabs('simple_tabs','simple',@record).should == 
+        @form.build_tabs('simple_tabs','simple',@record).should ==
           "<div class=\"tabs\"><ul>\n<li class=\"current tab_simple\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//simple/simple_tabs')\" title=\"Click here to go to Edit\"><span>Edit</span></a></li>\n<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view/simple_tabs')\" title=\"Click here to go to View\"><span>Viewextra_stuff</span></a></li>\n</ul></div><div class='clear'></div>"
       end
       it "should raise an error for tab group that doesn't exist" do
@@ -922,7 +942,7 @@ describe SimpleForm do
       it "should generate all the html and javascript for a complex presentation" do
         r = @form.build('simple',@record)
         r.should == [
-          "<script>var cur_idx=find_current_idx();var values_for_eye_color = new Array();</script><div id=\"presentation_simple\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>\n<div id=\"question_age\" class=\"question\"><label class=\"label\" for=\"record[age]\">Age:</label><input id=\"record_age\" name=\"record[age]\" type=\"text\" />g question!</div>\n<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>\n<div id=\"question_eye_color\" class=\"question\"><label class=\"label\" for=\"record[eye_color]\">Eye color:</label><input id=\"record_eye_color\" name=\"record[eye_color]\" type=\"text\" /></div>\n<div id=\"uid_1\" class=\"followup\" style=\"display:none\">\n<div id=\"question_other_eye_color\" class=\"question\"><label class=\"label\" for=\"record[other_eye_color]\">Other eye color:</label><textarea id=\"record_other_eye_color\" name=\"record[other_eye_color]\"></textarea></div>\n</div>\n<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record[married]\">Married?</label><input id=\"record_married\" name=\"record[married]\" type=\"text\" /></div>\n</div>\n<input type=\"hidden\" name=\"meta[last_updated]\" id=\"meta_last_updated\" value=0>", 
+          "<script>var cur_idx=find_current_idx();var values_for_eye_color = new Array();</script><div id=\"presentation_simple\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>\n<div id=\"question_age\" class=\"question\"><label class=\"label\" for=\"record[age]\">Age:</label><input id=\"record_age\" name=\"record[age]\" type=\"text\" />g question!</div>\n<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>\n<div id=\"question_eye_color\" class=\"question\"><label class=\"label\" for=\"record[eye_color]\">Eye color:</label><input id=\"record_eye_color\" name=\"record[eye_color]\" type=\"text\" /></div>\n<div id=\"uid_1\" class=\"followup\" style=\"display:none\">\n<div id=\"question_other_eye_color\" class=\"question\"><label class=\"label\" for=\"record[other_eye_color]\">Other eye color:</label><textarea id=\"record_other_eye_color\" name=\"record[other_eye_color]\"></textarea></div>\n</div>\n<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record[married]\">Married?</label><input id=\"record_married\" name=\"record[married]\" type=\"text\" /></div>\n</div>\n<input type=\"hidden\" name=\"meta[last_updated]\" id=\"meta_last_updated\" value=0>",
           "function actions_for_eye_color_is_x() {\n  if (eye_color_is_x()) {Element.show('uid_1')}\n  else {Element.hide('uid_1')}\n}\n\nfunction eye_color_is_x() {return values_for_eye_color[cur_idx] == \"x\"}\nEvent.observe('record_eye_color', 'change', function(e){ update_value_hash('eye_color',values_for_eye_color);actions_for_eye_color_is_x(); });"
         ]
       end
@@ -957,7 +977,7 @@ describe SimpleForm do
           @form.field_value('name',0)
           #@form.field_value('name',:any)
         end
-        @record.save('new_entry')   
+        @record.save('new_entry')
         @form.with_record(@record) do
           @form.field_value('name',0).should == 'Bob Smith 0'
           @form.field_value('name',1).should == 'Bob Smith 1'
@@ -983,14 +1003,14 @@ describe SimpleForm do
         @form.set_validating(true)
         @form.with_record(@record) do
           @form.field_valid('higher_ed_years').should == true
-        end        
+        end
       end
       it "should return false if a field is invalid" do
         @record.higher_ed_years = 99
         @form.set_validating(true)
         @form.with_record(@record) do
           @form.field_valid('higher_ed_years').should == false
-        end        
+        end
       end
     end
     describe "#field_exists?" do
@@ -1083,7 +1103,7 @@ describe SimpleForm do
       end
     end
   end
-  
+
   describe "utility methods" do
     describe "field widget map" do
       it "should create a field widget map" do
@@ -1092,7 +1112,7 @@ describe SimpleForm do
       end
     end
   end
-  
+
   describe "-- Form class utitlites" do
     it "should store a cash of form objects created" do
       cache = Form.cache
@@ -1103,7 +1123,7 @@ describe SimpleForm do
       Form.forms_dir.should == 'forms'
     end
   end
-  
+
   describe "#js_conditional_tab" do
     it "should create the correct html and javascript when when using tab changers" do
       r = @form.build('tab_changer',@record)
@@ -1111,7 +1131,7 @@ describe SimpleForm do
         "<script>var cur_idx=find_current_idx();var values_for_age = new Array();var values_for_name = new Array();values_for_name = [\"Bob Smith\"];</script><div id=\"presentation_tab_changer\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>\n</div>\n<input type=\"hidden\" name=\"meta[last_updated]\" id=\"meta_last_updated\" value=0>",
          "function actions_for_multi_tab_changer() {\n  if (multi_tab_changer()) {$$(\".tab_multi_tab\").invoke('remove');insert_tabs('<li class=\"tab_multi_tab\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//multi_tab/mutliple_value_tabs/INDEX\\')\" title=\"Click here to go to  NUM\"><span> NUM</span></a></li>','.tab_finish',true,'.tab_finish',values_for_age[cur_idx]-1,true);}\n  else {$$(\".tab_multi_tab\").invoke('remove');}\n}\n\nfunction multi_tab_changer() {return values_for_age > 0}\nfunction actions_for_view_changer() {\n  if (view_changer()) {$$(\".tab_view\").invoke('remove');insert_tabs('<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//view/mutliple_value_tabs\\')\" title=\"Click here to go to View\"><span>View</span></a></li>','.tab_finish',true,'.tab_finish',1,false);}\n  else {$$(\".tab_view\").invoke('remove');}\n}\n\nfunction view_changer() {return values_for_age > 0}\nfunction actions_for_simple_changer() {\n  if (simple_changer()) {$$(\".tab_simple\").invoke('remove');insert_tabs('<li class=\"current tab_simple\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//simple/mutliple_value_tabs\\')\" title=\"Click here to go to Simple\"><span>Simple</span></a></li>','.tab_finish',true,'.tab_finish',1,false);}\n  else {$$(\".tab_simple\").invoke('remove');}\n}\n\nfunction simple_changer() {return values_for_name == Sue}\nEvent.observe('record_name', 'change', function(e){ update_value_hash('name',values_for_name);actions_for_simple_changer(); });"
       ]
-    end    
+    end
   end
   
 end
