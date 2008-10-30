@@ -50,6 +50,7 @@ class SimpleForm < Form
         :based_on_fields => ['age','higher_ed_years'],
         :proc => Proc.new { |form,index| (form.field_value('age',index).to_i+form.field_value('higher_ed_years',index).to_i).to_s}
       }
+      f 'hash_field', :type => 'hash'
     end
     
     def_conditions do

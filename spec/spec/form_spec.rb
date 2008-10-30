@@ -434,6 +434,9 @@ describe SimpleForm do
           (@form.questions['higher_ed_years'].render(@form,'99') =~ /<div class="validation_item">/).should_not == nil
         end
       end
+      it "should raise an exception for an invalid field type" do
+            lambda {@form.q 'hash_field', :widget => 'CheckBoxGroup'}.should raise_error(MetaformException)  
+      end
       describe "-- :followups option" do
         def setup_q
           @form.with_record(@record,:render) do
