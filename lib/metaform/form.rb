@@ -580,7 +580,6 @@ class Form
           
         conds = the_q.field.followup_conditions
         cond = conds[followup_field_name]
-puts "FOLLOWUP FIELD NAME #{followup_field_name} cond: #{conds.keys.inspect}"
         opts = {:css_class => 'followup',:condition=>cond}
         javascript_show_hide_if(opts) do
           q followup_field_name,followup_question_options
