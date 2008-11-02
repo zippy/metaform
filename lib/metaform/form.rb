@@ -1110,11 +1110,13 @@ class Form
                      load_yaml(val_string).each{|k,v| js_hash_builder << "'#{k}':'#{v}'"}
                      "{#{js_hash_builder.join(',')}}"
                    end
-                   stored_value_string << %Q|values_for_#{field_name} = [$H(#{value_array.join('),$H(')})];|
+                   val = "[$H(#{value_array.join('),$H(')})]"
+                 elsif field[:type] == 'array'
+                   val = '[' + value_array.inspect[1..-2].split(', ').map{|val_string| val_string == 'nil' ? "undefined" : %Q|[#{val_string.split(',').join('","')}]|}.join(",") + ']' 
                  else
-                   val = "[" + value_array.inspect[1..-2].split(', ').collect {|e| e == 'nil'? "undefined" : e}.join(",") +"]"
-                   stored_value_string <<  %Q|values_for_#{field_name} = #{val};|
+                   val = "[" + value_array.inspect[1..-2].split(', ').map{|val_string| val_string == 'nil'? "undefined" : val_string}.join(",") +"]"
                  end
+                 stored_value_string <<  %Q|values_for_#{field_name} = #{val};|
                end
                stored_values_added[field_name] = true
              end

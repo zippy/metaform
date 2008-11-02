@@ -47,9 +47,11 @@ class Condition < Bin
 
   def initialize(b={})
     super(b)
-    parse_expressions(name)
-    if expressions.empty?
-      raise MetaformException, "javascript not defined or definable for condition '#{name}'" if javascript.nil?
+    if javascript.nil? && ruby.nil?
+      parse_expressions(name) 
+      if expressions.empty?
+        raise MetaformException, "javascript not defined or definable for condition '#{name}'" if javascript.nil?
+      end
     end
   end
 
@@ -229,10 +231,12 @@ class Condition < Bin
 
   def generate_javascript_function(field_widget_map)
     if javascript
-      cur_idx = ''
       js = javascript
+      js = js.gsub(/:(\w+)/) do |m|
+        f = $1
+        "values_for_#{f}"
+      end
     else
-      cur_idx = '[cur_idx]'
       js = ""
       jsmap = {'or'=>'||','and'=>'&&'}
       expressions.each_with_index do |e,indx|
@@ -241,12 +245,9 @@ class Condition < Bin
       end
       js
     end
-    js = js.gsub(/:(\w+)/) do |m|
-      f = $1
-      "values_for_#{f}#{cur_idx}"
-    end
     "function #{js_function_name}() {return #{js}}"
   end
+  
   def generate_javascript_expression(expr,field_widget_map)
     #Note that if the condition does not have the javascript pre-defined, then we assume that the condition
     #only cares about the information on the tab it is being run on.
@@ -276,12 +277,12 @@ class Condition < Bin
         if field_value =~ /^\/(.*)\/$/
           field_value = $1
         end
-        %Q|valueMatch(:#{field_name},'#{field_value}')|
+        %Q|regexMatch(:#{field_name},'#{field_value}')|
       when '!~','~!'
         if field_value =~ /^\/(.*)\/$/
           field_value = $1
         end
-        %Q|valueMatch(:#{field_name},'#{field_value}')|
+        %Q|regexMatch(:#{field_name},'#{field_value}')|
       when 'includes'
         %Q|"#{field_value}" in oc(:#{field_name})|
       when '!includes'
@@ -290,6 +291,11 @@ class Condition < Bin
         %Q|:#{field_name} != null && :#{field_name} != ""|
       when '!answered'
         %Q*:#{field_name} == null || :#{field_name} == ""*
+    end
+    idx_string = expr.index != -1 ? "[#{expr.index}]" : '[cur_idx]'
+    js = js.gsub(/:(\w+)/) do |m|
+      f = $1
+      "values_for_#{f}#{idx_string}"
     end
   end
 end
