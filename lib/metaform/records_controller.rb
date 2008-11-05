@@ -59,9 +59,9 @@ class RecordsController < ApplicationController
   def update
     setup_record
     redirected = false
-    @zapped_fields_proc
+    #@zapped_fields_proc
     redirected = before_update_record(@record) if respond_to?(:before_update_record)
-    opts = {:clear_fields_proc => @zapped_fields_proc}
+    opts = {:zapping_proc => @zapping_proc}
     redirected = before_save_record(@record) if respond_to?(:before_save_record) && !redirected
     if !redirected
       respond_to do |format|

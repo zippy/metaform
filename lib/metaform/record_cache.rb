@@ -68,15 +68,26 @@ class RecordCache
   # options:
   #   :attributes => list of attributes   Limits clearing to a attributes in the list  
   #   :except => true/false  causes clearing to be of all attributes except those in the list  
+  #   :at_index => integer for index at which attributes should be cleared.  If not set, all indexes will be cleared.
   def clear(opts={})
     attribs = normalize_attribute_list opts[:attributes]
     except = opts[:except]
     if attribs
-      @attributes.each_with_index do |values,idx|
+      if opts[:at_index]
+        idx = opts[:at_index]
+        values = @attributes[idx]
         if values
           attrs = except ? (values.keys-attribs) : attribs
           attrs.each {|a| values.delete(a)}
           @attributes[idx] = nil if values.empty?
+        end
+      else
+        @attributes.each_with_index do |values,idx|
+          if values
+            attrs = except ? (values.keys-attribs) : attribs
+            attrs.each {|a| values.delete(a)}
+            @attributes[idx] = nil if values.empty?
+          end
         end
       end
       while @attributes[-1].nil? do

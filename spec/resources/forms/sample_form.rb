@@ -81,6 +81,7 @@ def setup
   
   def_fields do
     f 'sue_is_a_plumber', :type => 'boolean', :calculated =>  {:from_condition => 'sue_is_a_plumber'}
+    f 'people_num_mult_changer', :type => 'integer', :calculated =>  {:from_condition => 'people_num_mult_changer'}
   end
 	
 	presentation 'new_entry',:legal_states => [nil,'standard','unusual','standard_1','standard_2'],:create_with_workflow => 'standard' do

@@ -253,6 +253,8 @@ class Condition < Bin
     #only cares about the information on the tab it is being run on.
     field_value = expr.field_value
     field_name = expr.field_name
+    idx_string = expr.index != -1 ? "#{expr.index}" : 'cur_idx'
+    regex = false
     if field_widget_map.has_key?(field_name)
       (widget,widget_options) = field_widget_map[field_name]
     end
@@ -274,15 +276,17 @@ class Condition < Bin
       when '<>='
         %Q|(:#{field_name} != null) && (:#{field_name} != '') && (:#{field_name} >= #{field_value.split(',')[0].to_i}) && (:#{field_name} <= #{field_value.split(',')[1].to_i})|
       when '=~'
+        regex = true
         if field_value =~ /^\/(.*)\/$/
           field_value = $1
         end
-        %Q|regexMatch(:#{field_name},'#{field_value}')|
+        %Q|regexMatch(:#{field_name},'#{field_value}',$H({'idx' : #{idx_string}}))|
       when '!~','~!'
+        regex = true
         if field_value =~ /^\/(.*)\/$/
           field_value = $1
         end
-        %Q|regexMatch(:#{field_name},'#{field_value}')|
+        %Q|!regexMatch(:#{field_name},'#{field_value}',$H({'idx' : #{idx_string}))|
       when 'includes'
         %Q|"#{field_value}" in oc(:#{field_name})|
       when '!includes'
@@ -292,10 +296,13 @@ class Condition < Bin
       when '!answered'
         %Q*:#{field_name} == null || :#{field_name} == ""*
     end
-    idx_string = expr.index != -1 ? "[#{expr.index}]" : '[cur_idx]'
     js = js.gsub(/:(\w+)/) do |m|
       f = $1
-      "values_for_#{f}#{idx_string}"
+      if regex 
+        "values_for_#{f}"
+      else
+        "values_for_#{f}[#{idx_string}]"
+      end
     end
   end
 end

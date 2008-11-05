@@ -270,9 +270,15 @@ class Record
     h
   end
   
-  def delete_fields(*fields)
-    FieldInstance.destroy_all(["form_instance_id = ? and field_id in (?)",@form_instance.id,fields])
-    @cache.clear(:attributes => fields)
+  def delete_fields(idx,*fields)
+    if idx == :all
+      FieldInstance.destroy_all(["form_instance_id = ? and field_id in (?)",@form_instance.id,fields])
+    else
+      FieldInstance.destroy_all(["form_instance_id = ? and field_id in (?) and idx = ?",@form_instance.id,fields,idx])
+    end
+    opts = {:attributes => fields}
+    opts.update(:at_index => idx) if idx != :all
+    @cache.clear(opts)
     @ficache.clear(:attributes => fields)  if CACHE
   end
 
@@ -526,50 +532,46 @@ class Record
   # that are what actually are the "attributes."  The attributes parameter should be a 
   # hash where the keys are the FieldInstance ids and the values are the answers
   def update_attributes(attribs,presentation,meta_data = nil,options={})
-    #preflight_state = []
-    #zap_fields = {}
-    # if options[:zapping_proc]
-    #       @form.with_record(self)  do
-    #         preflight_state = options[:zapping_proc][:preflight_state].call(form)
-    #       end
-    #     end
-    #set_attributes(attribs,presentation,options)    
-    # if options[:zapping_proc]
-    #       @form.with_record(self)  do
-    #         zap_fields = options[:zapping_proc][:fields_hit].call(form,preflight_state)
-    #       end
-    #     end
-    # zap_fields[:all] = zap_fields[:all] + options[:clear_indexes] if options[:clear_indexes]
-    #     if zap_fields
-    #       zap_fields.each do |idx,fields|
-    #         if idx == :all
-    #           FieldInstance.destroy_all(["form_instance_id = ? and field_id in (?)",@form_instance.id,fields])
-    #         else
-    #           FieldInstance.destroy_all(["form_instance_id = ? and field_id in (?) and idx = ?",@form_instance.id,fields,idx])
-    #         end
-    #       end
-    #     end
-    #     index = :any if options[:multi_index]
-    #     index ||= options[:index]
-    #     _update_attributes(presentation,meta_data,index)
+    # puts "attribs = #{attribs.inspect}"
+    # puts "presentation = #{presentation.inspect}"
+    # puts "meta_data = #{meta_data.inspect}"
+    # puts "options = #{options.inspect}"
+    
     result = nil
-#puts "BENCHMARK"+ Benchmark.measure {
-    load_record
+    #puts "BENCHMARK"+ Benchmark.measure {
+    load_record #pulls in everything from the database into record cache called @cache
      if zap_fields = options[:clear_indexes]
-       delete_fields(*zap_fields)
+       delete_fields(:all,*zap_fields)  
      end
-     set_attributes(attribs,presentation,options)
-     if options[:multi_index]
-       index = :any
-       fields = []
-       attribs.each {|idx,a| fields << a.keys}
-       fields = fields.flatten.uniq
-     else
-       fields = attribs.nil? ? nil : attribs.keys
-     end
-     index ||= options[:index]
-     result=_update_attributes(presentation,meta_data,fields,index)
-#}.to_s
+    preflight_state = []
+    zap_fields = {}
+    if options[:zapping_proc]
+      @form.with_record(self)  do
+        preflight_state = options[:zapping_proc][:preflight_state].call(form)
+      end
+    end    
+    set_attributes(attribs,presentation,options) 
+    if options[:zapping_proc]
+      @form.with_record(self)  do
+        zap_fields = options[:zapping_proc][:fields_hit].call(form,preflight_state)
+      end
+    end
+    if zap_fields
+      zap_fields.each do |idx,fields|
+        delete_fields(idx,*fields)
+      end
+    end    
+    if options[:multi_index]
+      index = :any
+      fields = []
+      attribs.each {|idx,a| fields << a.keys}
+      fields = fields.flatten.uniq
+    else
+      fields = attribs.nil? ? nil : attribs.keys
+    end
+    index ||= options[:index]
+    result=_update_attributes(presentation,meta_data,fields,index)
+    #}.to_s
     result
   end
 
