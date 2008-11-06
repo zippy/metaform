@@ -3,6 +3,7 @@
 # sublabel,[followups...]  and assumes a set constraint just like the checkboxgroup
 #This widget handles 'none' values like checkboxgroup.  In addition, followup params
 #can have * at the end of their value to act like 'none' within the followups.
+#Also, any q which uses this widget must belong to a f with :type => 'hash'
 class CheckBoxGroupFollowupWidget < Widget
   ################################################################################
   def self.render_form_object(field_instance_id,value,options)

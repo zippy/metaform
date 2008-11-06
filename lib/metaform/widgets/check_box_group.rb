@@ -5,6 +5,7 @@
 #make any checkbox a act like 'none' by putting a '*' at the end of its value.
 #For example, value = 'none__sometimes*' and value = 'none__never*' will have the
 #stripped off and then act as none.
+#Also, any q which uses this widget must belong to a f with :type => 'array'
 class CheckBoxGroupWidget < Widget
   ################################################################################
   def self.render_form_object(field_instance_id,value,options)
