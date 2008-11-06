@@ -11,6 +11,9 @@ CACHE = false
 
 class Record
   include Utilities
+  class << self
+    include Utilities
+  end
   class Answer
     def initialize(val,index=nil)
       if index.instance_of?(String)
@@ -202,7 +205,7 @@ class Record
   # set the attributes from a hash optionally converting from HTML
   def set_attributes(attributes,presentation_name,options = {})
 #    reset_attributes
-    @form.setup_presentation(presentation_name,self)
+    @form.setup_presentation(presentation_name,self ,options[:index])
 
     if options[:multi_index]
       attribs = attributes

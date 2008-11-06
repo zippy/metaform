@@ -1053,6 +1053,7 @@ class Form
   #################################################################################
   # run through the presentation not rendering.
   def setup_presentation(presentation_name,record,index=0)
+    index ||= 0
     prepare(index)
     with_record(record) do
       setup_validating(presentation_name)

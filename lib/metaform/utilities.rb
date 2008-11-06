@@ -41,4 +41,8 @@ module Utilities
     end
     result
   end
+  
+  def kaste(strng)
+    return (strng == "true")
+  end
 end
