@@ -44,7 +44,7 @@ class HeightWidget < Widget
 	  else
 		  <<-EOHTML
   		<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'feet_box')}" id="#{build_html_multi_id(field_instance_id,'feet_box')}" onchange="#{build_html_multi_id(field_instance_id,'update_height')}(true)" /> ft
-  		<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'inches_box')}" id="#{build_html_multi_id(field_instance_id,'inches_box')}"  onchange="#{build_html_multi_id(field_instance_id,'update_height')}(true)" /> in
+  		<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'inches_box')}" id="#{build_html_multi_id(field_instance_id,'inches_box')}"  onchange="#{build_html_multi_id(field_instance_id,'update_height')}(true)" /> in or
   		<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'meters_box')}" id="#{build_html_multi_id(field_instance_id,'meters_box')}"  onchange="#{build_html_multi_id(field_instance_id,'update_height')}(false)" /> m
   		#{form.javascript_tag(js_update_height)}
   		EOHTML

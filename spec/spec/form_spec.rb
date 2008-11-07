@@ -978,7 +978,7 @@ describe SimpleForm do
            },:multi_index => true)
         @form.with_record(@record) do
           @form.field_value('name',0)
-          #@form.field_value('name',:any)
+          @form.field_value('name',:any)
         end
         @record.save('new_entry')
         @form.with_record(@record) do
