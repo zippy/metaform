@@ -1134,9 +1134,7 @@ EOJS
         end
         field_name_action_hash.each do |the_field_name,the_functions|
           (widget,widget_options) = field_widget_map[the_field_name];
-          #Widgets can customize update_value_hash_function to call whichever metaform.js function will read their value
-          #We can have checkbox followup group use this machinery if we can add all of the fields to the condition.fields_used list
-          jscripts << widget.javascript_build_observe_function(the_field_name,"#{widget.update_value_hash_function(the_field_name)};#{the_functions.join('();')}();",widget_options)
+          jscripts << widget.javascript_build_observe_function(the_field_name,"values_for_#{the_field_name}[cur_idx] = #{widget.javascript_get_value_function(the_field_name)};#{the_functions.join('();')}();",widget_options)
         end
       end
 
@@ -1230,7 +1228,7 @@ EOJS
     valid
   end
 
-  def field_value(field_name,index = -1)
+  def field_value(field_name,index = 0)
     raise MetaformException,"attempting to get field value of '#{field_name}' with no record" if @record.nil?
     index = index == -1 ? @_index : index
     @record[field_name,index]

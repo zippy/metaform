@@ -1,31 +1,34 @@
-function $XF(el, radioGroup) {
-	if($(el).type == 'radio') {
-		var el = $(el).form;
-		var radioGroup = $(el).name;
-	} else if ($(el).tagName.toLowerCase() != 'form') {
-		return false;
-	}
-	return $F($(el).getInputs('radio', radioGroup).find(
-		function(re) {return re.checked;}
-	));
-}
-
+//Get value of checkbox and check_box_group widgets
 function $CF(cb_class){
 	return $$(cb_class).findAll(function(cb) {return cb.checked}).pluck("value");
 }
-
+//Get value of check_box_group_followup widgets
+function $CBFG(followup_id){
+	cur_idx_values = new Hash();
+	$$('.'+followup_id).each(function(s) {
+		var the_value = s.value;
+		var value_string = "";
+		if (s.checked) {
+			$$('#' + followup_id + '_' + the_value + ' input').each(function(c){if (c.checked) {value_string = value_string + c.value}});
+			cur_idx_values.set(the_value,value_string);	
+		}	
+	});
+	console.log(followup_id+':  '+cur_idx_values.inspect());
+	return cur_idx_values;
+}
+//Get value of radiobutton widgets
 function $RF(rb_class){
 	var chosen_element = $$(rb_class).find(function(rb){return rb.checked});
 	return (chosen_element != null) ? chosen_element.value : null;
 }
-
+//Get value of date, date_time and month_year widgets
 function $DF(name){
 	var yield_field = $F(name+'_year');
 	var year = yield_field.length > 0 ? (new Date).getFullYear().toString().substring(0,4-yield_field.length) + yield_field : "";
 	var d = new Date($F(name+'_month') + "/" + $F(name+'_day')  + "/" + year);
 	return (d == "Invalid Date") ? null : d;
 }
-
+//Get value of time widgets
 function $TF(name){
 	var hours = parseInt($F(name+'_hours'));
 	if (isNaN(hours)) {hours=0};
@@ -35,15 +38,16 @@ function $TF(name){
 	var d = new Date("0/0/0 "+ hours + ':' + minutes);
 	return (d == "Invalid Date") ? null : d;
 }
-
+//Get value of factor_textfield widgets
 function $FTF(name){
     var first_box = parseFloat($F(name+'_first_box'));
     var second_box = parseFloat($F(name+'_second_box'));
 	if (isNaN(first_box)) {first_box=0};
 	if (isNaN(second_box)) {second_box=0};
+	console.log(first_box * parseFloat($F(name+'_factor')) + second_box);
 	return first_box * parseFloat($F(name+'_factor')) + second_box;
 }
-
+//Get value of time_interval widgets
 function $TIF(name){
     var hours = parseFloat($F(name+'_hours'));
     var minutes = parseFloat($F(name+'_minutes'));
@@ -70,18 +74,6 @@ function setCheckboxGroup(checkboxGroupName,form,value) {
 	form.getInputs("checkbox").findAll(function(item)
 	{ if (item.name.indexOf(checkboxGroupName) === 0) {
 		item.checked = value;
-	} });
-}
-function mapCheckboxGroup(checkboxGroupName,form,func) {
-	form.getInputs("checkbox").findAll(function(item)
-	{ if (item.name.indexOf(checkboxGroupName) === 0) {
-		func(item,item.name.replace(checkboxGroupName,'').gsub(/[\[\]]/,''));
-	} });
-}
-function mapCheckboxGroupFollowup(group_name,val,form,func) {
-	form.getInputs("checkbox").findAll(function(item) 
-	{if ((item.name.indexOf(group_name) === 0) && (item.name.indexOf(val) > -1)) {
-		func(item,item.name.replace(group_name,'').replace(val,'').gsub(/[\[\]\[-]/,'').gsub(/[\]]/,''));
 	} });
 }
 
@@ -138,14 +130,48 @@ function myCallBackOnFinish(obj){
 	var item = obj.element.remove();
 }
 
-function arrayMatch(array,regex){
-	for (var index = 0, len = array.length; index < len; index++) {
-	  var fv = array[index];
-	  if (fv.match(regex)) {
-			return true;
+function regexMatch(value,regex,opts) {
+	options = opts || new Hash(); 
+	var result = false;
+	//console.log('value ='+value.inspect());
+	//console.log("options.get('idx') = "+options.get('idx'));
+	if(options.get('idx') != undefined){
+		//console("value[options.get('idx')] = "+value[options.get('idx')].inspect());
+		val_to_check = new Array(value[options.get('idx')]);}
+	else{
+		if(Object.isString(value)){
+			val_to_check = new Array(value)
+		}else{
+			val_to_check = value};
 		}
-	}
-	return false;
+	//console.log('val_to_check ='+val_to_check.inspect());
+    if(!val_to_check){return false};
+	val_to_check.each(function(cur_val) {
+		if(result){return};
+		if(typeof(cur_val) == "string") {
+			if(cur_val.match(regex)) {result=true}
+		} else {
+			if(Object.isHash(cur_val)) {
+				if(options.get('match_keys')){
+					//console.log("MATCH KEYS");
+					array_to_check = cur_val.keys();}
+				else if(options.get('only_key')){
+					//console.log("ONLY KEY");
+					if(!cur_val.get(options.get('only_key'))){return};
+					array_to_check = new Array(cur_val.get(options.get('only_key')))}
+				else{
+					array_to_check = cur_val.values();}
+			} else if(Object.isArray(cur_val)) {
+				array_to_check = cur_val
+			}
+	           if(!array_to_check){return};			
+				array_to_check.each(function(val) {
+					if(val.match(regex)) {result=true;}
+			});
+		}
+	});
+	//console.log('result:  '+result);
+	return result;
 }
 
 function insert_tabs(tab_html,anchor_css,before_anchor,default_anchor_css,desired_tab_num,multi) {
@@ -174,24 +200,15 @@ function insert_tabs(tab_html,anchor_css,before_anchor,default_anchor_css,desire
 	}
 }
 
-function cbfg_contains_followup_val(cbfg_hash,item,val) {
-	var follow_ups;
-	follow_ups = cbfg_hash.get(item);
-	if (follow_ups.match(val)) {	
-			return true;
-	} 
-	}
 
-function update_cbgf_hash(followup_id,values) {
-	$$('.'+followup_id).each(function(s) {
-		var the_value = s.value;
-		var value_string = ""
-		$$('#' + followup_id + '_' + the_value + ' input').find(function(c){if (c.checked) value_string = value_string + c.value});
-		values.set(the_value,value_string);
-	});
-	
+
+
+
+function find_current_idx() {
+	cur_idx = location.href.split('/').pop();
+	if (!cur_idx.match(/\d/)) {cur_idx = 0};
+	return cur_idx;
 }
-
 function update_date(write_date,read_date) {
 	$('record_'+write_date+'_month').value = $F('record_'+read_date+'_month');
 	$('record_'+write_date+'_day').value = $F('record_'+read_date+'_day');
@@ -199,5 +216,5 @@ function update_date(write_date,read_date) {
 }
 
 function confirmReset() {
-	if (confirm("Are you sure you want to revert the information on this page to what it was when you last loaded the page?")) {document.birthForm.reset()}
+	if (confirm("Are you sure you want to revert the information on this page to what it was when you last loaded the page?")) {window.location.reload()}
 }

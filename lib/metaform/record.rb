@@ -7,7 +7,7 @@
 #require 'form_proxy'
 
 DEBUG1 = false
-CACHE = false
+CACHE = false  #Note:  Didn't implment using :at_index for call to @ficache.clear in def delete_fields
 
 class Record
   include Utilities
@@ -282,7 +282,7 @@ class Record
     opts = {:attributes => fields}
     opts.update(:at_index => idx) if idx != :all
     @cache.clear(opts)
-    @ficache.clear(:attributes => fields)  if CACHE
+    @ficache.clear(:attributes => fields)  if CACHE  
   end
 
   def delete_fields_except(*fields)

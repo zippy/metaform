@@ -41,11 +41,6 @@ class RadioButtonsWidget < Widget
     end
     result
   end
-
-  ################################################################################  
-  def self.update_value_hash_function(field_instance_id)
-    %Q|update_value_hash_for_radio_buttons('#{field_instance_id}',values_for_#{field_instance_id})|
-  end
   
   ################################################################################
   def self.convert_html_value(value,params={})

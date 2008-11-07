@@ -230,12 +230,32 @@ class Condition < Bin
   end
 
   def generate_javascript_function(field_widget_map)
+    #This function is similar to field_value in how it interprets parameters.  
+    #It scans the javascript string for things of the form :<field_name>[<idx info>]
+    #The field_name is used to write the javascript variable as it is printed on the page, values_for_<field_name>
+    #The idx_info is used to create the array index for this variable.  Here is how various patterns are interpretted:
+    # '' => [0]  (will return only the zeroth value of the array)
+    # [*] -> '' (corresponds to :any, will return an array of all values)
+    # [-1] -> [cur_indx]  (will return only value at current index)
+    # [<any other text>] get [<any other text>]   (Used for things like [2])  
     if javascript
       js = javascript
-      js = js.gsub(/:(\w+)/) do |m|
+      js = js.gsub(/:(\w+)([\[\]\*\-\d]*)/) do |m|
         f = $1
-        "values_for_#{f}"
+        g = $2
+        case g
+        when ''
+          idx_string = '[0]'
+        when '[*]'
+          idx_string = ''
+        when '[-1]'
+          idx_string = '[cur_idx]'
+        else
+          idx_string = g
+        end
+        "values_for_#{f}#{idx_string}"
       end
+
     else
       js = ""
       jsmap = {'or'=>'||','and'=>'&&'}
@@ -249,12 +269,11 @@ class Condition < Bin
   end
   
   def generate_javascript_expression(expr,field_widget_map)
-    #Note that if the condition does not have the javascript pre-defined, then we assume that the condition
-    #only cares about the information on the tab it is being run on.
+    #Note that if the condition does not have the javascript pre-defined and no index value is set for the expression, 
+    #then we assume that the condition only cares about the information on the tab it is being run on.
     field_value = expr.field_value
     field_name = expr.field_name
     idx_string = expr.index != -1 ? "#{expr.index}" : 'cur_idx'
-    regex = false
     if field_widget_map.has_key?(field_name)
       (widget,widget_options) = field_widget_map[field_name]
     end
@@ -276,17 +295,15 @@ class Condition < Bin
       when '<>='
         %Q|(:#{field_name} != null) && (:#{field_name} != '') && (:#{field_name} >= #{field_value.split(',')[0].to_i}) && (:#{field_name} <= #{field_value.split(',')[1].to_i})|
       when '=~'
-        regex = true
         if field_value =~ /^\/(.*)\/$/
           field_value = $1
         end
-        %Q|regexMatch(:#{field_name},'#{field_value}',$H({'idx' : #{idx_string}}))|
+        %Q|regexMatch(:#{field_name},'#{field_value}')|
       when '!~','~!'
-        regex = true
         if field_value =~ /^\/(.*)\/$/
           field_value = $1
         end
-        %Q|!regexMatch(:#{field_name},'#{field_value}',$H({'idx' : #{idx_string}))|
+        %Q|!regexMatch(:#{field_name},'#{field_value}')|
       when 'includes'
         %Q|"#{field_value}" in oc(:#{field_name})|
       when '!includes'
@@ -298,11 +315,7 @@ class Condition < Bin
     end
     js = js.gsub(/:(\w+)/) do |m|
       f = $1
-      if regex 
-        "values_for_#{f}"
-      else
-        "values_for_#{f}[#{idx_string}]"
-      end
+      "values_for_#{f}[#{idx_string}]"
     end
   end
 end

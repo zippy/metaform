@@ -19,11 +19,6 @@ class CheckBoxWidget < Widget
   def self.javascript_build_observe_function(field_instance_id,script,options)
     %Q|Event.observe('#{build_html_multi_id(field_instance_id,"Y")}', 'click', function(e){ #{script} });\n| 
   end
-
-  ################################################################################  
-  def self.update_value_hash_function(field_instance_id)
-    %Q|update_value_hash_for_checkbox('#{field_instance_id}',values_for_#{field_instance_id})|
-  end
   
   ################################################################################
   def self.convert_html_value(value,params={})

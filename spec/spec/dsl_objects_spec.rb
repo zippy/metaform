@@ -191,7 +191,7 @@ describe Condition do
     end
     it "should create javascript for simple conditions with no widget" do
       c = Condition.new(:name=>'age=~/^[0-9]+$/',:form=>SimpleForm.new)
-      c.generate_javascript_function({}).should == "function age_matches_regex_0_9() {return regexMatch(values_for_age,'^[0-9]+$',$H({'idx' : cur_idx}))}"
+      c.generate_javascript_function({}).should == "function age_matches_regex_0_9() {return regexMatch(values_for_age[cur_idx],'^[0-9]+$')}"
     end
     it "should create javascript for boolean conditions" do
        c = Condition.new(:name=>'age<10 or age>20',:form=>SimpleForm.new)
@@ -199,7 +199,7 @@ describe Condition do
     end
     it "should create javascript for custom conditions with a widget" do
       c = Condition.new(:name=>'collies_owned_by_joe',:form=>SimpleForm.new,:javascript => ":dog_type == 'collie' && :owner == 'joe'")
-      c.generate_javascript_function({'dog_type'=>[Widget.fetch('TextField'),{}]}).should == "function collies_owned_by_joe() {return values_for_dog_type == 'collie' && values_for_owner == 'joe'}"
+      c.generate_javascript_function({'dog_type'=>[Widget.fetch('TextField'),{}]}).should == "function collies_owned_by_joe() {return values_for_dog_type[0] == 'collie' && values_for_owner[0] == 'joe'}"
     end
   end
 end

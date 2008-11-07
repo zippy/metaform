@@ -69,10 +69,6 @@ class Widget
     render_label(label,field_instance_id,options[:read_only] ? render_form_object_read_only(field_instance_id,value,options) : render_form_object(field_instance_id,value,options))
   end
   
-  def self.update_value_hash_function(field_instance_id)
-    %Q|update_value_hash('#{field_instance_id}',values_for_#{field_instance_id})|
-  end
-  
   def self.render_form_object_read_only(field_instance_id,value,options)
     "<span id=\"#{build_html_id(field_instance_id)}\">#{humanize_value(value,options)}</span>"
   end
