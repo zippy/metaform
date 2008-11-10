@@ -302,9 +302,9 @@ class Condition < Bin
         end
         %Q|!regexMatch(:#{field_name},'#{field_value}')|
       when 'includes'
-        %Q|"#{field_value}" in oc(:#{field_name})|
+        %Q|includes(:#{field_name},"#{field_value}")|
       when '!includes'
-        %Q|"!(#{field_value}" in oc(:#{field_name}))|
+        %Q|!includes(:#{field_name},"#{field_value}")|
       when 'answered'
         %Q|:#{field_name} != null && :#{field_name} != ""|
       when '!answered'

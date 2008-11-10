@@ -13,7 +13,7 @@ function $CBFG(followup_id){
 			cur_idx_values.set(the_value,value_string);	
 		}	
 	});
-	console.log(followup_id+':  '+cur_idx_values.inspect());
+	//console.log(followup_id+':  '+cur_idx_values.inspect());
 	return cur_idx_values;
 }
 //Get value of radiobutton widgets
@@ -44,7 +44,7 @@ function $FTF(name){
     var second_box = parseFloat($F(name+'_second_box'));
 	if (isNaN(first_box)) {first_box=0};
 	if (isNaN(second_box)) {second_box=0};
-	console.log(first_box * parseFloat($F(name+'_factor')) + second_box);
+	//console.log(first_box * parseFloat($F(name+'_factor')) + second_box);
 	return first_box * parseFloat($F(name+'_factor')) + second_box;
 }
 //Get value of time_interval_with_days widgets
@@ -87,12 +87,14 @@ function setCheckboxGroup(checkboxGroupName,form,value) {
 	} });
 }
 
-function oc(a) {
-	var o = {};
-	for(var i=0;i<a.length;i++) {
-		o[a[i]]='';
+function includes(cur_val,str) {
+	if(Object.isArray(cur_val)){
+		return cur_val.include(str);
 	}
-	return o;
+	if(Object.isHash(cur_val)){
+		return cur_val.keys().include(str);
+	}
+    alert('Woah!  You are calling includes on a field whose value is not an array or hash');
 }
 
 
