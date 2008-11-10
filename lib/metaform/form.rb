@@ -199,6 +199,14 @@ class Form
       :type => 'string'
     }.update(opts)
     raise "Duplicate field name: '#{name}'" if fields.has_key?(name)
+    if c = options[:constraints]
+      x = Widget.enumeration(c) if c['enumeration']
+      x ||= Widget.set(c) if c['set']
+      if x
+        h = {}
+        x.each {|label,option| raise "Duplicate set/enumeration option: #{option.inspect}" if h.has_key?(option) ;h[option] = 1 }
+      end
+    end
     @fields_defined << name if @fields_defined
     if options.has_key?(:calculated)
       if options[:calculated].has_key?(:from_condition) 
