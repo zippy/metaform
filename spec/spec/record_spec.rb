@@ -928,35 +928,17 @@ describe Record do
       @record.save('new_entry')      
     end
     it "should take an array of lambda procs in the :zapping_proc attributes" do
-      @record.update_attributes({:education => 'college', :name => 'Sue', :occupation => 'plumber'},'new_entry')
+      @record.update_attributes({:breastfeeding => 'yum', :name => 'Sue', :occupation => 'plumber'},'new_entry')
       @record.sue_is_a_plumber.should == 'true'
-      @record.education.should == 'college'
-      @record.update_attributes({:occupation => 'teacher'},'new_entry',nil,
-        :zapping_proc => {:preflight_state => lambda {|form| 
-                              result = {}
-                              result['sue_is_a_plumber'] = ['education'] if form.field_value('sue_is_a_plumber')
-                              result},
-                          :fields_hit => lambda {|form,preflight_state| 
-                            result = []
-                            preflight_state.each{|k,v| result << v if !kaste(form.field_value('sue_is_a_plumber')) }
-                            {:all => result.flatten}
-                            }})
+      @record.breastfeeding.should == 'yum'
+      @record.update_attributes({:occupation => 'teacher'},'new_entry')
       @record.education.should == nil
     end
     it "should allow you to only hit the database with the force_nil call if the condition-related value has changed" do
       @record.update_attributes({:education => 'college', :name => 'Sue', :occupation => 'plumber'},'new_entry')
       @record.sue_is_a_plumber.should == 'true'
       @record.education.should == 'college'
-      @record.update_attributes({:fruit => 'plum'},'new_entry',nil,
-        :zapping_proc => {:preflight_state => lambda {|form| 
-                              result = {}
-                              result['sue_is_a_plumber'] = ['education'] if form.field_value('sue_is_a_plumber')
-                              result},
-                          :fields_hit => lambda {|form,preflight_state| 
-                              result = []
-                              preflight_state.each{|k,v| result << v if !form.field_value(k) }
-                              {:all => result.flatten}
-                              }})
+      @record.update_attributes({:fruit => 'plum'},'new_entry')
       @record.education.should == 'college'
     end
     it "should apply proc in complex situation with different conditions and indexes" do
@@ -967,34 +949,13 @@ describe Record do
       @record[:fruit,1].should == 'banana'  
       @record[:breastfeeding].should == 'yum'
       @record[:people_num].should == "2"
-      @record.update_attributes({:people_num => "1", :occupation => 'teacher'},'new_entry',nil,
-         :zapping_proc => {:preflight_state => lambda {|form| 
-                               result = {}
-                               result['sue_is_a_plumber'] = ['breastfeeding'] if kaste(form.field_value('sue_is_a_plumber'))
-                               result['people_num'] = [:mult, form.field_value('people_num'),['education','fruit']]
-                               result},
-                           :fields_hit => lambda {|form,preflight_state| 
-                                result = {}
-                                preflight_state.each do |k,v| 
-                                  if v[0] == :mult
-                                    if form.field_value(k).to_i < v[1].to_i
-                                      (form.field_value(k).to_i..v[1].to_i).each{|idx| result[idx] ? result[idx] << v[2] : result[idx] = [v[2]]}
-                                    end
-                                  else
-                                    if !kaste(form.field_value(k))
-                                      result[:all] ? result[:all] << v : result[:all] = [v]                                      
-                                    end
-                                  end
-                                end
-                                result.each_pair{|k,v| result[k] = v.flatten}
-                                }})
-        
-        @record[:education,0].should == 'grad_school'  
-        @record[:education,1].should == nil 
-        @record[:fruit,0].should == 'orange'  
-        @record[:fruit,1].should == nil 
-        @record[:breastfeeding].should == nil
-        @record[:people_num].should == "1"                      
+      @record.update_attributes({:people_num => "1", :occupation => 'teacher'},'new_entry')
+      @record[:education,0].should == 'grad_school'  
+      @record[:education,1].should == nil 
+      @record[:fruit,0].should == 'orange'  
+      @record[:fruit,1].should == nil 
+      @record[:breastfeeding].should == nil
+      @record[:people_num].should == "1"                      
     end
   end
   describe "exporting records" do

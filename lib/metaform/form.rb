@@ -14,7 +14,7 @@ class Form
 
   FieldTypes = ['string','integer','float','decimal','boolean','date','datetime','time','text','hash','array']
 
-  attr_accessor :fields, :conditions, :questions, :presentations, :groups, :workflows, :listings, :tabs, :label_options, :calculated_field_dependencies, :current_tab_label
+  attr_accessor :fields, :conditions, :questions, :presentations, :groups, :workflows, :listings, :tabs, :zapping_proc, :label_options, :calculated_field_dependencies, :current_tab_label
 
   def initialize
     @fields = {}
@@ -25,6 +25,7 @@ class Form
     @workflows = {}
     @listings = {}
     @tabs = {}
+    @zapping_proc = nil
     @label_options = {}
     @calculated_field_dependencies = {}
     
@@ -395,6 +396,10 @@ class Form
   #################################################################################
   def def_tabs(tabs_name,options={},&block)
     tabs[tabs_name] = Tabs.new(:name => tabs_name,:block => block,:render_proc => options[:render_proc])
+  end
+  
+  def def_zapping_proc
+    @zapping_proc = yield
   end
 
   #################################################################################
@@ -1064,6 +1069,7 @@ class Form
   #################################################################################
   # produce the html and javascript necessary to run the form
   def build(presentation_name,record=nil,index=0)
+    index ||= 0
     prepare(index)
     with_record(record,:render) do
       setup_validating(presentation_name)
@@ -1436,7 +1442,7 @@ EOJS
   end
 
   ###########################################################
-  def evaluate_force_nil(field_name,index = nil)
+  def evaluate_force_nil(field_name,index)
     field = fields[field_name]
     return nil unless field.force_nil
     field.force_nil.each do |condition,force_nil_fields,negate|
@@ -1445,7 +1451,7 @@ EOJS
       if negate ? !condition_value : condition_value
 #        puts "FORCE NIL: condition #{condition.name} with negate: #{negate.to_s}"
         force_nil_fields.each do |f|
-#          puts "    FORCING: #{f}"
+          #puts "    FORCING: #{f}"
           yield f
         end
       end

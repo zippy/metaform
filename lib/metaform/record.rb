@@ -7,7 +7,7 @@
 #require 'form_proxy'
 
 DEBUG1 = false
-CACHE = false  #Note:  Didn't implment using :at_index for call to @ficache.clear in def delete_fields
+CACHE = false  #Note:  Didn't implment using :index for call to @ficache.clear in def delete_fields
 
 class Record
   include Utilities
@@ -280,7 +280,7 @@ class Record
       FieldInstance.destroy_all(["form_instance_id = ? and field_id in (?) and idx = ?",@form_instance.id,fields,idx])
     end
     opts = {:attributes => fields}
-    opts.update(:at_index => idx) if idx != :all
+    opts.update(:index => idx) if idx != :all
     @cache.clear(opts)
     @ficache.clear(:attributes => fields)  if CACHE  
   end
@@ -548,15 +548,15 @@ class Record
      end
     preflight_state = []
     zap_fields = {}
-    if options[:zapping_proc]
+    if @form.zapping_proc
       @form.with_record(self)  do
-        preflight_state = options[:zapping_proc][:preflight_state].call(form)
+        preflight_state = @form.zapping_proc[:preflight_state].call(form)
       end
     end    
     set_attributes(attribs,presentation,options) 
-    if options[:zapping_proc]
+    if @form.zapping_proc
       @form.with_record(self)  do
-        zap_fields = options[:zapping_proc][:fields_hit].call(form,preflight_state)
+        zap_fields = @form.zapping_proc[:fields_hit].call(form,preflight_state)
       end
     end
     if zap_fields

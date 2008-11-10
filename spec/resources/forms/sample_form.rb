@@ -79,6 +79,32 @@ def setup
     end
   end
   
+  def_zapping_proc do
+    {:preflight_state => lambda {|form| 
+                          result = {}
+                          result['sue_is_a_plumber'] = ['breastfeeding'] if kaste(form.field_value('sue_is_a_plumber'))
+                          result['people_num'] = [:mult, form.field_value('people_num'),['education','fruit']]
+                          result},
+                      :fields_hit => lambda {|form,preflight_state| 
+                           result = {}
+                           preflight_state.each do |k,v| 
+                             if v[0] == :mult
+                               if form.field_value(k).to_i < v[1].to_i
+                                 (form.field_value(k).to_i..v[1].to_i).each{|idx| result[idx] ? result[idx] << v[2] : result[idx] = [v[2]]}
+                               end
+                             else
+                               if !kaste(form.field_value(k))
+                                 result[:all] ? result[:all] << v : result[:all] = [v]                                      
+                               end
+                             end
+                           end
+                           result.each_pair{|k,v| result[k] = v.flatten}
+                           }}
+  end
+
+  
+  
+  
   def_fields do
     f 'sue_is_a_plumber', :type => 'boolean', :calculated =>  {:from_condition => 'sue_is_a_plumber'}
     f 'people_num_mult_changer', :type => 'integer', :calculated =>  {:from_condition => 'people_num_mult_changer'}

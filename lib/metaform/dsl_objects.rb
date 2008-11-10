@@ -236,8 +236,7 @@ class Condition < Bin
     #The idx_info is used to create the array index for this variable.  Here is how various patterns are interpretted:
     # '' => [0]  (will return only the zeroth value of the array)
     # [*] -> '' (corresponds to :any, will return an array of all values)
-    # [-1] -> [cur_indx]  (will return only value at current index)
-    # [<any other text>] get [<any other text>]   (Used for things like [2])  
+    # [<any other text>] get [<any other text>]   (Used for things like [2] and [cur_idx])  
     if javascript
       js = javascript
       js = js.gsub(/:(\w+)([\[\]\*\-\d]*)/) do |m|
@@ -248,8 +247,6 @@ class Condition < Bin
           idx_string = '[0]'
         when '[*]'
           idx_string = ''
-        when '[-1]'
-          idx_string = '[cur_idx]'
         else
           idx_string = g
         end

@@ -47,6 +47,16 @@ function $FTF(name){
 	console.log(first_box * parseFloat($F(name+'_factor')) + second_box);
 	return first_box * parseFloat($F(name+'_factor')) + second_box;
 }
+//Get value of time_interval_with_days widgets
+function $TIWDF(name){
+    var days = parseFloat($F(name+'_days'));
+    var hours = parseFloat($F(name+'_hours'));
+    var minutes = parseFloat($F(name+'_minutes'));
+	if (isNaN(days)) {days=0};
+	if (isNaN(hours)) {hours=0};
+	if (isNaN(minutes)) {minutes=0};
+	return (days * 1440) + (hours * 60) + minutes;
+}
 //Get value of time_interval widgets
 function $TIF(name){
     var hours = parseFloat($F(name+'_hours'));
