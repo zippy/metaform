@@ -203,6 +203,9 @@ describe SimpleForm do
       it "should create a form with a name field" do
         @form.fields['name'].class.should == Field
       end
+      it "should raise an error if defining a duplicate field" do
+        lambda {@form.f('age')}.should raise_error("Duplicate field name: 'age'")
+      end
       it "should set hash options given to def_fields to all fields defined in the block" do
         @form.fields['name'].constraints.has_key?('required').should == true
         @form.fields['age'].constraints.has_key?('required').should == true

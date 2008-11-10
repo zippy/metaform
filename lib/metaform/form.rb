@@ -198,6 +198,7 @@ class Form
     options = {
       :type => 'string'
     }.update(opts)
+    raise "Duplicate field name: '#{name}'" if fields.has_key?(name)
     @fields_defined << name if @fields_defined
     if options.has_key?(:calculated)
       if options[:calculated].has_key?(:from_condition) 
