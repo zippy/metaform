@@ -134,10 +134,10 @@ describe SimpleForm do
           c4.evaluate.should == true
         end
       end
-       it "should evaluate the condition at index which is passed in as paramter" do
+       it "should evaluate the condition at index which is passed in as parameter" do
         cond = @form.c 'very_old'
         @record[:age,0] = '125'
-        @record[:name,1] = '75'
+        @record[:age,1] = '75'
         @record.save('age_only')
         @form.with_record(@record) do
           cond.evaluate(0).should == true
