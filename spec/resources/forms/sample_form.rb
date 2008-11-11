@@ -31,7 +31,6 @@ def setup
       :javascript => ':indexed_field_no_default.include("pig")' do
         field_value('indexed_field_no_default',:any).include?("pig")
       end
-    f 'indexed_field_no_default', :label => 'AF', :type =>  'string', :indexed_default_from_null_index => true
     def_dependent_fields('condition_for_def_dependent_fields') do
       f 'yale_class', :label => '', :type => 'string', :constraints => {"enumeration"=>[{"math"=>"Cool Math Class"}, {"comp_sci"=>"Lots of Computer Theory"}, {"music"=>"Pretty Music"}]}
     end

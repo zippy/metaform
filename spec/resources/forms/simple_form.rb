@@ -69,6 +69,9 @@ class SimpleForm < Form
       c 'has_children', :description=> 'has children',:javascript => ':children != "" && parseInt(:children)>0' do
         field_value("children").to_i > 0
       end
+      c 'very_old', :javascript => ':age > 100' do |cur_idx|
+        field_value("age",cur_idx).to_i > 100
+      end
       c 'age=44'
       c 'age<44'
       c 'age<15 or age>75'
@@ -106,6 +109,10 @@ class SimpleForm < Form
     
     presentation 'name_only' do
       q 'name'
+    end
+    
+    presentation 'age_only' do
+      q 'age'
     end
 
     presentation 'name_read_only',:force_read_only => true do
