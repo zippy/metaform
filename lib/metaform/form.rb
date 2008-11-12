@@ -1155,7 +1155,7 @@ EOJS
 
       b = get_body.join("\n")
       
-      b.gsub!(/<info>(.*?)<\/info>/) {|match| tip($1)}
+      b.gsub!(/<info(.*?)>(.*?)<\/info>/) {|match| tip($2,$1)}
 
       if @_tip_id
         b = javascript_include_tag("prototip-min") + stylesheet_link_tag('prototip',:media => "screen")+b
@@ -1206,16 +1206,18 @@ EOJS
   #################################################################################
   # add a "tool tip"
   #################################################################################
-  def tip(text="",opts={})
-#    options = {
-#    }.update(opts)
+  def tip(text="",hook_bottom = nil)
     return if !@render
+    options = []
     text += yield if block_given?
     @_tip_id ||= 1
     tip_id = "tip_#{@_tip_id}"
     css_class = Form.get_store(self.class.to_s+"_info_css_class")
-    css_class = ",{ className: '#{css_class}' }" if css_class
-    javascript %Q|new Tip('#{tip_id}',"#{quote_for_javascript(text)}"#{css_class})|
+    #css_class = ",{ className: '#{css_class}' }" if css_class
+    options << "className: '#{css_class}'" if css_class
+    options << "hook: {target: 'bottomRight', tip: 'topLeft'}" if !hook_bottom.blank?
+    option_string = options.size > 0 ? ",{ #{options.join(' , ')} }" : ""
+    javascript %Q|new Tip('#{tip_id}',"#{quote_for_javascript(text)}"#{option_string})|
     @_tip_id += 1
     %Q|<img src="/images/info_circle.gif" alt="info" id="#{tip_id}">|
   end
