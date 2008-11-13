@@ -220,6 +220,10 @@ describe SimpleForm do
         lambda {@form.f('x',:constraints=>{"enumeration"=>[{nil=>"-"}, {nil=>"nil"}]})}.should raise_error("Duplicate set/enumeration option: nil")
         lambda {@form.f('x',:constraints=>{"set"=>[{'1'=>"one"}, {'1'=>"1"}]})}.should raise_error("Duplicate set/enumeration option: \"1\"")
       end
+      it "should raise an error if defining a duplicate set or enum constraint label" do
+        lambda {@form.f('x',:constraints=>{"enumeration"=>[{nil=>"nil"}, {"nil"=>"nil"}]})}.should raise_error("Duplicate set/enumeration label: \"nil\"")
+        lambda {@form.f('x',:constraints=>{"set"=>[{'1'=>"one"}, {'one'=>"one"}]})}.should raise_error("Duplicate set/enumeration label: \"one\"")
+      end
       it "should set hash options given to def_fields to all fields defined in the block" do
         @form.fields['name'].constraints.has_key?('required').should == true
         @form.fields['age'].constraints.has_key?('required').should == true

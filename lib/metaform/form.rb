@@ -199,12 +199,20 @@ class Form
       :type => 'string'
     }.update(opts)
     raise "Duplicate field name: '#{name}'" if fields.has_key?(name)
+
+    #TODO we should really make enums and constraints an first class object and this check should happen there
     if c = options[:constraints]
       x = Widget.enumeration(c) if c['enumeration']
       x ||= Widget.set(c) if c['set']
       if x
-        h = {}
-        x.each {|label,option| raise "Duplicate set/enumeration option: #{option.inspect}" if h.has_key?(option) ;h[option] = 1 }
+        o = {}
+        l = {}
+        x.each do |label,option|
+          raise "Duplicate set/enumeration option: #{option.inspect}" if o.has_key?(option)
+          raise "Duplicate set/enumeration label: #{label.inspect}" if l.has_key?(label)
+          o[option] = 1
+          l[label] = 1
+        end
       end
     end
     @fields_defined << name if @fields_defined
