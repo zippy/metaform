@@ -256,7 +256,11 @@ describe Record do
     end
 
     it "should delete all but the specified fields" do
+      f = FieldInstance.find(:all,:conditions => ['form_instance_id = ?',@record.id])
+      f.collect {|f| f.field_id}.sort.should == ["fruit", "fruit_other", "name", "reverse_name_and_job", "sue_is_a_plumber", "total_bobs"]
       @record.delete_fields_except('name')
+      f = FieldInstance.find(:all,:conditions => ['form_instance_id = ?',@record.id])
+      f.collect {|f| f.field_id}.sort.should == ["name"]
       @nr = @record
       @nr.name.should == 'Bob Smith'
       @nr.fruit.should == nil
