@@ -295,8 +295,10 @@ class Form
         fields.each do |field|
           dependents << field.name
           conds[field.name] = cond
-          field.constraints ||= {}
-          field.constraints['required'] = cond.name
+          if !(field.constraints && field.constraints.has_key?('required'))
+            field.constraints ||= {}
+            field.constraints['required'] = cond.name
+          end
         end
         the_field.set_dependent_fields(dependents)
       end

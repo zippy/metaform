@@ -247,7 +247,7 @@ describe SimpleForm do
         lambda {@form.f('fish',:type => 'squid')}.should raise_error("Unknown field type: squid")
       end
 
-      describe ":followups option"do
+      describe ":followups option" do
         before(:each) do
           @followup = @form.fields['other_eye_color']
         end
@@ -265,6 +265,13 @@ describe SimpleForm do
         end
         it "should generate regex condition objects" do
           @form.fields['higher_ed_years'].followup_conditions['degree'].should == @form.c('higher_ed_years=~/../')
+        end
+        it "should make followup fields required if the condition is true by default" do
+          @followup.constraints['required'].should == 'eye_color=x'
+        end
+        it "should be possbile to override default required behavior by specifying a different required constraint" do
+          @form.f 'medal',:followups => {'purple heart'=>@form.f('year_awarded',:constraints=>{'required'=>false})}
+          @form.fields['year_awarded'].constraints['required'].should == false
         end
       end
 
