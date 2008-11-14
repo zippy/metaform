@@ -426,12 +426,11 @@ class Question < Bin
       field_id = "_#{idx}_#{field_name}"
     end
 
-    if widget.is_a?(String)
-      w = get_widget
-    else
+    if widget.is_a?(Proc)
       w = Widget
       value = widget.call(value)
-      #puts "value = #{value}"
+    else
+      w = get_widget
     end
 
     if erb

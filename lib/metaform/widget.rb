@@ -68,6 +68,10 @@ class Widget
   def self.render(field_instance_id,value,label,options={})
     render_label(label,field_instance_id,options[:read_only] ? render_form_object_read_only(field_instance_id,value,options) : render_form_object(field_instance_id,value,options))
   end
+
+  def self.render_form_object(field_instance_id,value,options)
+    raise "This method should be overrided by your widget class!"
+  end
   
   def self.render_form_object_read_only(field_instance_id,value,options)
     "<span id=\"#{build_html_id(field_instance_id)}\">#{humanize_value(value,options)}</span>"

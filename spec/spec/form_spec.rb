@@ -419,6 +419,11 @@ describe SimpleForm do
         mq = @form.get_current_question_by_field_name('married')
         mq.render(@form,'y').should == "<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record[married]\">Married?</label><select name=\"record[married]\" id=\"record_married\">\n\t<option value=\"y\" selected=\"selected\">Yes</option>\n<option value=\"n\">No</option>\n</select>\n</div>"
       end
+      it "should render a lambda widget" do
+        @form.setup_presentation('lambda_widget',@record)
+        q = @form.get_current_question_by_field_name('name')
+        q.render(@form,'Joe',:read_only=>true).should == "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><span id=\"record_name\">Joe is a the name!</span></div>"
+      end
       it "should render in read-only mode" do
         @name_q.render(@form,'Bob Smith',true).should == "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><span id=\"record_name\">Bob Smith</span></div>"
       end

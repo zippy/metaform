@@ -561,10 +561,14 @@ class Form
     # get triggered in the build phase by specific values of the question.  So we must 
     # allways be ready to define a question if it wasn't already defined  
     the_q = questions[question_name]
-    widget_type,widget_parameters = parse_widget(widget)
-    field_types_allowed = Widget.fetch(widget_type).field_types_allowed
-     if field_types_allowed 
-      raise MetaformException,"#{widget_type}(#{field_name}) must belong to a field of type #{field_types_allowed.inspect}" if !field_types_allowed.include?(fields[field_name][:type])
+    if widget.is_a?(Proc)
+      widget_type = widget
+    else
+      widget_type,widget_parameters = parse_widget(widget)
+      field_types_allowed = Widget.fetch(widget_type).field_types_allowed
+      if field_types_allowed 
+        raise MetaformException,"#{widget_type}(#{field_name}) must belong to a field of type #{field_types_allowed.inspect}" if !field_types_allowed.include?(fields[field_name][:type])
+      end
     end
     if the_q
       the_q.params = widget_parameters

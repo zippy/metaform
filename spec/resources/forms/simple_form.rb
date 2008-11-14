@@ -115,6 +115,10 @@ class SimpleForm < Form
       q 'age'
     end
 
+    presentation 'lambda_widget' do
+      q 'name', :widget => lambda{|value| "#{value} is a the name!"}
+    end
+
     presentation 'name_read_only',:force_read_only => true do
       p 'name_only'
     end
