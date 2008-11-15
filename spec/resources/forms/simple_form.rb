@@ -101,6 +101,8 @@ class SimpleForm < Form
       f 'dr_other', :label => "more info"
     end
     f 'test'
+    f 'dog_type'
+    f 'owner'
         
  #  def_constraints do
  #    cs :fields=> ['senior'],:constraints => {'must_be' => if_c('Flg!=Y',nil)}, :force_on_save => true

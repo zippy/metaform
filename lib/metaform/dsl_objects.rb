@@ -38,7 +38,7 @@ end
 
 class Condition < Bin
   Expression = Struct.new("Expression",:field_name,:field_value,:operator,:index)
-  OperatorMatch = /([a-zA-Z_\[\]0-9]*)\s*((<>=)|(>=)|(<=)|(<>)|(<)|(>)|(!=)|(=!)|(=~)|(!~)|(~!)|(=+)|(includes)|(!includes)|(answered)|(!answered))\s*(.*)/
+  OperatorMatch = /([a-zA-Z_\[\]0-9\*]*)\s*((<>=)|(>=)|(<=)|(<>)|(<)|(>)|(!=)|(=!)|(=~)|(!~)|(~!)|(=+)|(includes)|(!includes)|(answered)|(!answered))\s*(.*)/
   def bins
     { :form => nil,:name => nil, :description => nil, :ruby => nil,:javascript => nil,:booleanjoins=>nil,:expressions=>nil,:fields_to_use => nil}
   end
@@ -81,7 +81,7 @@ class Condition < Bin
         if exp.field_name =~ /(.*)\[([0-9]+)\]/ 
           exp.field_name = $1
           exp.index = $2.to_i
-        elsif exp.field_name =~ /(.*)\[(:any)\]/ 
+        elsif exp.field_name =~ /(.*)\[(\*)\]/ 
           exp.field_name = $1
           exp.index = $2
         end
@@ -238,32 +238,23 @@ class Condition < Bin
     end
   end
   
-  def make_index_string(fn,idx)
+  def make_javascript_index_string(fn,idx)
     if idx.blank?
       field = form.fields[fn]
       # puts "fn = #{fn.inspect}"
       # puts "   field = #{field.inspect}"
       field.indexed ? '[cur_idx]' : '[0]'          
     else
-      (idx == '[:any]') ? '' : idx
+      (idx == '*') ? '' : "[#{idx}]"
     end
   end
 
   def generate_javascript_function(field_widget_map)
     if javascript
       js = javascript
-      js = js.gsub(/:(\w+)(\[\:any\])/) do |m|
+      js = js.gsub(/:(\w+)(\[((\*)|([\d]*))\])*/) do |m|
         f = $1
-        # puts "js = #{js}"
-        # puts "f = #{f}"
-        idx_string = make_index_string(f,$2)
-        "values_for_#{f}#{idx_string}"
-      end
-      js = js.gsub(/:(\w+)([\[\]\d]*)/) do |m|
-        f = $1
-        # puts "js = #{js}"
-        # puts "f = #{f}"
-        idx_string = make_index_string(f,$2)
+        idx_string = make_javascript_index_string(f,$3)
         "values_for_#{f}#{idx_string}"
       end
     else
@@ -283,7 +274,7 @@ class Condition < Bin
     field_name = expr.field_name
     # puts "field_name = #{field_name}"
     # puts "field_value = #{field_value}"
-    idx_string = make_index_string(field_name,expr.index)
+    idx_string = make_javascript_index_string(field_name,expr.index)
     if field_widget_map.has_key?(field_name)
       (widget,widget_options) = field_widget_map[field_name]
     end
