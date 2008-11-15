@@ -112,7 +112,7 @@ describe SimpleForm do
         the_c.humanize.should == "has black eyes"
         the_c.instance_of?(Condition).should == true
         the_c.ruby.should == nil
-        the_c.generate_javascript_function({'eye_color'=>[TextFieldWidget,nil]}).should == "function has_black_eyes() {return values_for_eye_color[cur_idx] == \"ffffff\"}"
+        the_c.generate_javascript_function({'eye_color'=>[TextFieldWidget,nil]}).should == "function has_black_eyes() {return values_for_eye_color[0] == \"ffffff\"}"
         @form.with_record(@record) do
           the_c.evaluate.should == false
           @record.eye_color = 'ffffff'
@@ -134,14 +134,16 @@ describe SimpleForm do
           c4.evaluate.should == true
         end
       end
-       it "should evaluate the condition at index which is passed in as parameter" do
-        cond = @form.c 'very_old'
-        @record[:age,0] = '125'
-        @record[:age,1] = '75'
-        @record.save('age_only')
+       it "should evaluate the condition at index which has been set in the form" do
+        cond = @form.c 'is_mansion'
+        @record[:house_value,0] = '125'
+        @record[:house_value,1] = '75'
+        @record.save('houses')
         @form.with_record(@record) do
-          cond.evaluate(0).should == true
-          cond.evaluate(1).should == false
+          @form.set_current_index(0)
+          cond.evaluate.should == true
+          @form.set_current_index(1)
+          cond.evaluate.should == false
         end
       end
     end
@@ -979,7 +981,7 @@ describe SimpleForm do
         r = @form.build('simple',@record)
         r.should == [
           "<script>var cur_idx=find_current_idx();var values_for_eye_color = new Array();</script><div id=\"presentation_simple\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>\n<div id=\"question_age\" class=\"question\"><label class=\"label\" for=\"record[age]\">Age:</label><input id=\"record_age\" name=\"record[age]\" type=\"text\" />g question!</div>\n<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>\n<div id=\"question_eye_color\" class=\"question\"><label class=\"label\" for=\"record[eye_color]\">Eye color:</label><input id=\"record_eye_color\" name=\"record[eye_color]\" type=\"text\" /></div>\n<div id=\"uid_1\" class=\"followup\" style=\"display:none\">\n<div id=\"question_other_eye_color\" class=\"question\"><label class=\"label\" for=\"record[other_eye_color]\">Other eye color:</label><textarea id=\"record_other_eye_color\" name=\"record[other_eye_color]\"></textarea></div>\n</div>\n<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record[married]\">Married?</label><input id=\"record_married\" name=\"record[married]\" type=\"text\" /></div>\n</div>\n<input type=\"hidden\" name=\"meta[last_updated]\" id=\"meta_last_updated\" value=0>", 
-          "function actions_for_eye_color_is_x() {\n  if (eye_color_is_x()) {Element.show('uid_1')}\n  else {Element.hide('uid_1')}\n}\n\nfunction eye_color_is_x() {return values_for_eye_color[cur_idx] == \"x\"}\nEvent.observe('record_eye_color', 'change', function(e){ values_for_eye_color[cur_idx] = $F('record_eye_color');actions_for_eye_color_is_x(); });"
+          "function actions_for_eye_color_is_x() {\n  if (eye_color_is_x()) {Element.show('uid_1')}\n  else {Element.hide('uid_1')}\n}\n\nfunction eye_color_is_x() {return values_for_eye_color[0] == \"x\"}\nEvent.observe('record_eye_color', 'change', function(e){ values_for_eye_color[0] = $F('record_eye_color');actions_for_eye_color_is_x(); });"
           ]
       end
     end # build
@@ -1009,16 +1011,12 @@ describe SimpleForm do
            1 => {:name =>'Bob Smith 1',:fruit => 'banana'},
            0 => {:name =>'Bob Smith 0'}
            },:multi_index => true)
-        @form.with_record(@record) do
-          @form.field_value('name',0)
-          @form.field_value('name',:any)
-        end
         @record.save('new_entry')
         @form.with_record(@record) do
-          @form.field_value('name',0).should == 'Bob Smith 0'
-          @form.field_value('name',1).should == 'Bob Smith 1'
-          @form.field_value('name',2).should == 'Bob Smith 2'
-          @form.field_value('name',:any).should == ['Bob Smith 0','Bob Smith 1','Bob Smith 2']
+          @form.field_value_at('name',0).should == 'Bob Smith 0'
+          @form.field_value_at('name',1).should == 'Bob Smith 1'
+          @form.field_value_at('name',2).should == 'Bob Smith 2'
+          @form.field_value_at('name',:any).should == ['Bob Smith 0','Bob Smith 1','Bob Smith 2']
         end
       end
     end

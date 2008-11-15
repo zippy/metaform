@@ -1,5 +1,5 @@
 class FieldNameHasG < Property
-  def self.evaluate(form,field,value,index)
+  def self.evaluate(form,field,value)
     field.name =~ /g/ ? true : false
   end
   def self.render(question_html,property_value,question,form,read_only)
@@ -48,9 +48,10 @@ class SimpleForm < Form
         :followups => {'x'=>f('other_eye_color')}
       f 'age_plus_education', :calculated => {
         :based_on_fields => ['age','higher_ed_years'],
-        :proc => Proc.new { |form,index| (form.field_value('age',index).to_i+form.field_value('higher_ed_years',index).to_i).to_s}
+        :proc => Proc.new { |form,index| (form.field_value_at('age',index).to_i+form.field_value_at('higher_ed_years',index).to_i).to_s}
       }
       f 'hash_field', :type => 'hash'
+      f 'house_value', :type => 'integer', :indexed => true
     end
     
     def_conditions do
@@ -71,6 +72,9 @@ class SimpleForm < Form
       end
       c 'very_old', :javascript => ':age > 100' do
         field_value("age").to_i > 100
+      end
+      c 'is_mansion', :javascript => ':house_value > 100' do
+        field_value("house_value").to_i > 100
       end
       c 'age=44'
       c 'age<44'
@@ -111,8 +115,8 @@ class SimpleForm < Form
       q 'name'
     end
     
-    presentation 'age_only' do
-      q 'age'
+    presentation 'houses' do
+      q 'house_value'
     end
 
     presentation 'lambda_widget' do

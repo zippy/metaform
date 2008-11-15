@@ -1056,11 +1056,16 @@ class Form
 
   #################################################################################
   def prepare(index)
-    @_index = index
+    set_current_index(index)
     @_stuff = {}
     @_stuff[:current_questions] = {}
     @_use_multi_index = nil
     @force_read_only = 0
+  end
+
+  #################################################################################
+  def set_current_index(index)
+    @_index = index
   end
 
   #################################################################################

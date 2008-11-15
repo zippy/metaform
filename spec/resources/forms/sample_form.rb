@@ -29,7 +29,7 @@ def setup
     f 'indexed_field_no_default', :label => 'AF', :type => 'string', :indexed_default_from_null_index => true
     c 'condition_for_def_dependent_fields', :fields_to_use =>  'indexed_field_no_default',
       :javascript => ':indexed_field_no_default.include("pig")' do
-        field_value('indexed_field_no_default',:any).include?("pig")
+        field_value_at('indexed_field_no_default',:any).include?("pig")
       end
     def_dependent_fields('condition_for_def_dependent_fields') do
       f 'yale_class', :label => '', :type => 'string', :constraints => {"enumeration"=>[{"math"=>"Cool Math Class"}, {"comp_sci"=>"Lots of Computer Theory"}, {"music"=>"Pretty Music"}]}
@@ -40,7 +40,7 @@ def setup
     f 'breastfeeding', :label => 'BF', :type => 'string', :indexed_default_from_null_index => true
     f 'reverse_name_and_job', :label => 'reversed name and occupation', :type => 'string', :calculated => {
       :based_on_fields => ['name','occupation'],
-      :proc => Proc.new { |form,index| (form.field_value('name',index).to_s+form.field_value('occupation',index).to_s).reverse}
+      :proc => Proc.new { |form,index| (form.field_value_at('name',index).to_s+form.field_value_at('occupation',index).to_s).reverse}
     }    
     f 'total_bobs', :label => 'total number of Bobs', :type => 'integer', :calculated => {
       :based_on_fields => ['name'],
@@ -74,7 +74,7 @@ def setup
       field_value("name") == 'Sue' && field_value("occupation") == 'plumber'
     end
     c 'people_num_mult_changer', :javascript => ":people_num > 0" do
-        field_value("people_num",0).to_i > 0
+        field_value("people_num").to_i > 0
     end
   end
   

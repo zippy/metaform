@@ -80,7 +80,7 @@ describe Condition do
       c.field_name.should == 'age'
       c.operator.should == '='
       c.field_value.should == '10'
-      c.index.should == '1'
+      c.index.should == 1
     end
     it "should handle equals operator" do
       c = Condition.new(:name=>'age=10',:form=>'x').expressions[0]
@@ -191,11 +191,23 @@ describe Condition do
     end
     it "should create javascript for simple conditions with no widget" do
       c = Condition.new(:name=>'age=~/^[0-9]+$/',:form=>SimpleForm.new)
-      c.generate_javascript_function({}).should == "function age_matches_regex_0_9() {return regexMatch(values_for_age[cur_idx],'^[0-9]+$')}"
+      c.generate_javascript_function({}).should == "function age_matches_regex_0_9() {return regexMatch(values_for_age[0],'^[0-9]+$')}"
+    end
+    it "should create javascript for simple conditions with no widget for indexed fields" do
+      c = Condition.new(:name=>'house_value>100',:form=>SimpleForm.new)
+      c.generate_javascript_function({}).should == "function house_value_is_greater_than_100() {return (values_for_house_value[cur_idx] != null) && (values_for_house_value[cur_idx] != '') && (values_for_house_value[cur_idx] > 100)}"
+    end
+    it "should create javascript for simple conditions with no widget for fields with a specified indexs of fields marked as indexed" do
+      c = Condition.new(:name=>'house_value[0]>100',:form=>SimpleForm.new)
+      c.generate_javascript_function({}).should == "function house_value_is_greater_than_100() {return (values_for_house_value[0] != null) && (values_for_house_value[cur_idx] != '') && (values_for_house_value[0] > 100)}"
+    end
+    it "should create javascript for simple conditions with no widget for fields with a specified indexs of fields not marked as indexed" do
+      c = Condition.new(:name=>'age[cur_idx]>100',:form=>SimpleForm.new)
+      c.generate_javascript_function({}).should == "function age_is_greater_than_100() {return (values_for_age[cur_idx] != null) && (values_for_house_value[cur_idx] != '') && (values_for_age[cur_idx]] > 100)}"
     end
     it "should create javascript for boolean conditions" do
        c = Condition.new(:name=>'age<10 or age>20',:form=>SimpleForm.new)
-       c.generate_javascript_function({}).should == "function age_is_less_than_10_or_age_is_greater_than_20() {return (values_for_age[cur_idx] != null) && (values_for_age[cur_idx] != '') && (values_for_age[cur_idx] < 10) || (values_for_age[cur_idx] != null) && (values_for_age[cur_idx] != '') && (values_for_age[cur_idx] > 20)}"
+       c.generate_javascript_function({}).should == "function age_is_less_than_10_or_age_is_greater_than_20() {return (values_for_age[0] != null) && (values_for_age[0] != '') && (values_for_age[0] < 10) || (values_for_age[0] != null) && (values_for_age[0] != '') && (values_for_age[0] > 20)}"
     end
     it "should create javascript for custom conditions with a widget" do
       c = Condition.new(:name=>'collies_owned_by_joe',:form=>SimpleForm.new,:javascript => ":dog_type == 'collie' && :owner == 'joe'")
