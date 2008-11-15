@@ -72,7 +72,7 @@ module Constraints
         case constraint
         when String
           cond = form.c constraint
-          next if !cond.evaluate(index)
+          next if !cond.evaluate
           condition_extra_err = " when #{cond.humanize}" unless Form.config[:hide_required_extra_errors]
           constraint = true
         when TrueClass

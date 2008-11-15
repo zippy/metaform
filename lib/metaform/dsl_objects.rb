@@ -16,7 +16,8 @@ class Field < Bin
       :indexed_default_from_null_index => nil,
       :groups => nil,
       :force_nil => nil,
-      :dependent_fields => nil
+      :dependent_fields => nil,
+      :indexed => false
     }
   end
   def required_bins
@@ -76,12 +77,17 @@ class Condition < Bin
         exp.field_name = $1
         exp.operator = $2
         exp.field_value = $19
-        if exp.field_name =~ /(.*)\[([0-9]+)\]/
+        #puts "exp.field_name = #{exp.field_name}"
+        if exp.field_name =~ /(.*)\[([0-9]+)\]/ 
+          exp.field_name = $1
+          exp.index = $2.to_i
+        elsif exp.field_name =~ /(.*)\[(:any)\]/ 
           exp.field_name = $1
           exp.index = $2
-        else
-          exp.index = -1
         end
+         #puts "   exp.field_name = #{exp.field_name}"
+         #puts "   exp.index = #{exp.index}"
+         #puts "   exp.field_value = #{exp.field_value}"
         self.expressions << exp
       end
     end
@@ -144,14 +150,14 @@ class Condition < Bin
     js = js.gsub(/\W/,'')
   end
 
-  def evaluate(idx = -1)
+  def evaluate
     raise MetaformException,"attempting to evaluate condition with no record" if form.get_record.nil?
     if ruby
-      ruby.call(idx)
+      ruby.call
     else
       result = false
       expressions.each_with_index do |e,indx|
-        result = evaluate_expression(e,idx)
+        result = evaluate_expression(e)
         if booleanjoins && booleanjoins[indx]
           if booleanjoins[indx] == 'or'
             break if result
@@ -164,13 +170,14 @@ class Condition < Bin
     end
   end
 
-  def evaluate_expression(expr,idx)
+  def evaluate_expression(expr)
     field_name = expr.field_name
     field_value = expr.field_value
-    index = expr.index
-    idx = index.to_i if index != -1
-    cur_val = form.field_value(field_name,idx)
-#    puts "<br> #{field_name}[#{idx}] #{expr.operator} #{field_value} for #{cur_val}"
+    cur_val = expr.index ? form.field_value_at(field_name,expr.index) : form.field_value(field_name)
+    # puts "field_name = #{field_name}"
+    # puts "   field_value = #{field_value}"
+    # puts "   expr.index = #{expr.index}"
+    # puts "   cur_val = #{cur_val}"
     case expr.operator
     when '=','=='
      cur_val == field_value
@@ -221,38 +228,44 @@ class Condition < Bin
     else
       f = []
       if javascript
-        javascript.gsub(/:(\w+)/) {|v| f << $1}
+        javascript.gsub(/:(\w+)/) {|v| f << $1 if $1 != 'any'}
       else
         expressions.each {|e| f << e.field_name}
       end
+      # puts "name = #{name}"
+      # puts "   f = #{f.inspect}"
       f.uniq
+    end
+  end
+  
+  def make_index_string(fn,idx)
+    if idx.blank?
+      field = form.fields[fn]
+      # puts "fn = #{fn.inspect}"
+      # puts "   field = #{field.inspect}"
+      field.indexed ? '[cur_idx]' : '[0]'          
+    else
+      (idx == '[:any]') ? '' : idx
     end
   end
 
   def generate_javascript_function(field_widget_map)
-    #This function is similar to field_value in how it interprets parameters.  
-    #It scans the javascript string for things of the form :<field_name>[<idx info>]
-    #The field_name is used to write the javascript variable as it is printed on the page, values_for_<field_name>
-    #The idx_info is used to create the array index for this variable.  Here is how various patterns are interpretted:
-    # '' => [0]  (will return only the zeroth value of the array)
-    # [*] -> '' (corresponds to :any, will return an array of all values)
-    # [<any other text>] get [<any other text>]   (Used for things like [2] and [cur_idx])  
     if javascript
       js = javascript
-      js = js.gsub(/:(\w+)([\[\]\*\-\d]*)/) do |m|
+      js = js.gsub(/:(\w+)(\[\:any\])/) do |m|
         f = $1
-        g = $2
-        case g
-        when ''
-          idx_string = '[0]'
-        when '[*]'
-          idx_string = ''
-        else
-          idx_string = g
-        end
+        # puts "js = #{js}"
+        # puts "f = #{f}"
+        idx_string = make_index_string(f,$2)
         "values_for_#{f}#{idx_string}"
       end
-
+      js = js.gsub(/:(\w+)([\[\]\d]*)/) do |m|
+        f = $1
+        # puts "js = #{js}"
+        # puts "f = #{f}"
+        idx_string = make_index_string(f,$2)
+        "values_for_#{f}#{idx_string}"
+      end
     else
       js = ""
       jsmap = {'or'=>'||','and'=>'&&'}
@@ -266,11 +279,11 @@ class Condition < Bin
   end
   
   def generate_javascript_expression(expr,field_widget_map)
-    #Note that if the condition does not have the javascript pre-defined and no index value is set for the expression, 
-    #then we assume that the condition only cares about the information on the tab it is being run on.
     field_value = expr.field_value
     field_name = expr.field_name
-    idx_string = expr.index != -1 ? "#{expr.index}" : 'cur_idx'
+    # puts "field_name = #{field_name}"
+    # puts "field_value = #{field_value}"
+    idx_string = make_index_string(field_name,expr.index)
     if field_widget_map.has_key?(field_name)
       (widget,widget_options) = field_widget_map[field_name]
     end
@@ -312,7 +325,7 @@ class Condition < Bin
     end
     js = js.gsub(/:(\w+)/) do |m|
       f = $1
-      "values_for_#{f}[#{idx_string}]"
+      "values_for_#{f}#{idx_string}"
     end
   end
 end
@@ -446,7 +459,7 @@ class Question < Bin
     properties = field.properties
     if properties
       properties.each do |p|
-        property_value = p.evaluate(form,field,value,-1)
+        property_value = p.evaluate(form,field,value)
         if erb
           field_element = p.render(field_element,property_value,self,form,ro)
         end

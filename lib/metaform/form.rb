@@ -193,10 +193,12 @@ class Form
   # * :group - a string name of a group the field is a member of
   # * :groups - a list of string names of groups the field is a member of
   # * :calculated - this field is not stored but calculated from other values.
+  # * :indexed - this field defaults to false and should be set to true when the field will be 
+  #   on an indexed presentation.
   #################################################################################
   def f(name,opts = {})
     options = {
-      :type => 'string'
+      :type => 'string',
     }.update(opts)
     raise "Duplicate field name: '#{name}'" if fields.has_key?(name)
 
@@ -1124,13 +1126,13 @@ class Form
              end
              #Every field_name listed as a fields_used for any condition will have a javascript array set up and printed on the page.  
              #This array will be called values_for_#{field_name}
-             #The array will have the same structure as the result of calling field_value(field_name,:any), ie an array with the ith member
+             #The array will have the same structure as the result of calling field_value_at(field_name,:any), ie an array with the ith member
              #being the answer value for the field_instance with field_id = field_name and idx = i. If the type of the field is a hash we will have
              #to use load_yaml to convert to javascript.
              if !stored_values_added[field_name]
                (widget,widget_options) = field_widget_map[field_name];
                stored_value_string << %Q|var values_for_#{field_name} = new Array();|
-               value_array = field_value(field_name,:any)
+               value_array = field_value_at(field_name,:any)
                field = fields[field_name]
                if value_array.compact.size > 0  #if the whole array is nil, we don't need to put the value on the page
                  if field[:type] == 'hash'
@@ -1255,13 +1257,21 @@ EOJS
     raise MetaformException, "couldn't find field #{field_name} in fields list" if field.nil?
     p = field.properties[0]
     value = field_value(field_name) if value == :get_from_form
-    valid = p.evaluate(self,field,value,@_index).empty?
+    valid = p.evaluate(self,field,value).empty?
     valid
   end
 
-  def field_value(field_name,index = 0)
+  def field_value(field_name)
     raise MetaformException,"attempting to get field value of '#{field_name}' with no record" if @record.nil?
-    index = index == -1 ? @_index : index
+    field = fields[field_name]
+    index = field[:indexed] ? @_index : 0
+    #puts "field[:indexed] = #{field[:indexed].inspect}"
+    #puts "field_name = #{field_name}, index = #{index.inspect}"
+    @record[field_name,index]
+  end
+  
+  def field_value_at(field_name,index)
+    raise MetaformException,"attempting to get field value of '#{field_name}' with no record" if @record.nil?
     @record[field_name,index]
   end
 
@@ -1472,7 +1482,7 @@ EOJS
     return nil unless field.force_nil
     field.force_nil.each do |condition,force_nil_fields,negate|
       condition = make_condition(condition)
-      condition_value = condition.evaluate(index)
+      condition_value = condition.evaluate
       if negate ? !condition_value : condition_value
 #        puts "FORCE NIL: condition #{condition.name} with negate: #{negate.to_s}"
         force_nil_fields.each do |f|

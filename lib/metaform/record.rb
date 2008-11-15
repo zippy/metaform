@@ -846,7 +846,7 @@ class Record
   def _validate_attributes(fields = nil)
     invalid_fields = {}
     @cache.each(:attributes => fields) do |f,value,index|
-      invalid = Invalid.evaluate(@form,@form.fields[f],value,index.to_i)
+      invalid = Invalid.evaluate(@form,@form.fields[f],value)
       if !invalid.empty?
         invalid_fields[f] ||= []
         invalid_fields[f][index.to_i] = invalid

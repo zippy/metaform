@@ -69,8 +69,8 @@ class SimpleForm < Form
       c 'has_children', :description=> 'has children',:javascript => ':children != "" && parseInt(:children)>0' do
         field_value("children").to_i > 0
       end
-      c 'very_old', :javascript => ':age > 100' do |cur_idx|
-        field_value("age",cur_idx).to_i > 100
+      c 'very_old', :javascript => ':age > 100' do
+        field_value("age").to_i > 100
       end
       c 'age=44'
       c 'age<44'

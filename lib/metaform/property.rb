@@ -5,7 +5,7 @@
 #TODO implment caching of property-values
 class Property
   # override evaluate to return the result of the property
-  def self.evaluate(form,field,value,index)
+  def self.evaluate(form,field,value)
     false
   end
   def self.render(question_html,property_value,question,form,read_only)
@@ -14,8 +14,8 @@ class Property
 end
 
 class Invalid < Property
-  def self.evaluate(form,field,value,index)
-    Constraints.verify(field.constraints, value, form,index)
+  def self.evaluate(form,field,value)
+    Constraints.verify(field.constraints, value, form)
   end
   def self.render(question_html,property_value,question,form,read_only)
     if !property_value.empty? && (v = form.validating?) && !read_only
