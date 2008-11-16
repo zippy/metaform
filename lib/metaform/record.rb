@@ -846,6 +846,7 @@ class Record
   def _validate_attributes(fields = nil)
     invalid_fields = {}
     @cache.each(:attributes => fields) do |f,value,index|
+      @form.set_current_index(index)
       invalid = Invalid.evaluate(@form,@form.fields[f],value)
       if !invalid.empty?
         invalid_fields[f] ||= []
@@ -891,6 +892,7 @@ class Record
   def set_force_nil_attributes(fields=nil)
     fields_forced = []
     @cache.each(:attributes => fields) do |attrib,value,index|
+      @form.set_current_index(index)
       form.evaluate_force_nil(attrib,index) do |f|
         set_attribute(f,nil,index)
         fields_forced << f
