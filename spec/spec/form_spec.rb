@@ -275,6 +275,22 @@ describe SimpleForm do
           @form.f 'medal',:followups => {'purple heart'=>@form.f('year_awarded',:constraints=>{'required'=>false})}
           @form.fields['year_awarded'].constraints['required'].should == false
         end
+        it "specifying a requiredness constraint in the common options from def_field should not count as overriding followup requiredness" do
+          @form.def_fields(:constraints => {"required" => true}) do
+            @form.f 'animal',:followups => {'cat'=>@form.f('long_hair')}
+            @form.f 'country',:followups => {'us'=>@form.f('state',:constraints=>{'required'=>false})}
+          end
+          @form.fields['long_hair'].constraints['required'].should == 'animal=cat'
+          @form.fields['state'].constraints['required'].should == false
+        end
+        it "def_dependent_field requiredness should not override followup requiredness" do
+          @form.def_dependent_fields('eye_color=blue') do
+            @form.f 'shade',:followups => {'greenish'=>@form.f('amount_of_green')}
+            @form.f 'clarity',:followups => {'very'=>@form.f('sparkle',:constraints=>{'required'=>false})}
+          end
+          @form.fields['amount_of_green'].constraints['required'].should == 'shade=greenish'
+          @form.fields['sparkle'].constraints['required'].should == false
+        end
       end
 
       describe ":groups option" do

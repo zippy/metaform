@@ -204,6 +204,7 @@ class Form
 
     #TODO we should really make enums and constraints an first class object and this check should happen there
     if c = options[:constraints]
+      required_constraint_given = c.has_key?('required')
       x = Widget.enumeration(c) if c['enumeration']
       x ||= Widget.set(c) if c['set']
       if x
@@ -247,9 +248,9 @@ class Form
       options.delete(:group)
     end
     
-    the_field = Field.new(:name=>name,:type=>options[:type])
+    the_field = Field.new(:name=>name,:type=>options[:type],:required_constraint_given => required_constraint_given)
     options.delete(:type)
-
+    
     @_commons.each do |option_name,option_values|
       option_values.each { |v| set_option_by_class(the_field,option_name,v)}
     end
@@ -297,7 +298,7 @@ class Form
         fields.each do |field|
           dependents << field.name
           conds[field.name] = cond
-          if !(field.constraints && field.constraints.has_key?('required'))
+          if !field.required_constraint_given
             field.constraints ||= {}
             field.constraints['required'] = cond.name
           end
