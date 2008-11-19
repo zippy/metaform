@@ -1185,8 +1185,7 @@ EOJS
 
       js = get_jscripts
       jscripts << js if js
-      
-      b = '<script>var cur_idx=find_current_idx();' + stored_value_string + '</script>' + b if stored_value_string != ''
+      b = '<script>var cur_idx=find_current_idx();' + stored_value_string + '</script>' + b if stored_value_string != '' && !presentations[presentation_name].force_read_only
       [b,jscripts.join("\n")]
     end
   end
