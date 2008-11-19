@@ -1,6 +1,7 @@
 module FormHelper
   include ActionView::Helpers::AssetTagHelper
   include ActionView::Helpers::TagHelper
+  include ActionView::Helpers::UrlHelper
 
   def table(attributes={},&block)
     html_tag 'table',attributes,block
