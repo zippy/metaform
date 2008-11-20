@@ -651,10 +651,12 @@ class Record
       approval_value = approvals[field_instance_id][index.to_s] if is_approval
       if f != nil
         puts "<br>Updating found fi for #{field_instance_id} #{f.attributes.inspect}" if DEBUG1
-        if f.answer != value || (is_explanation && f.explanation != explanation_value) ||
+        if f.answer != (value.nil? ? nil : value.to_s) || (is_explanation && f.explanation != explanation_value) ||
             (is_approval && approval_value)
+            puts "<br>UPDATING #{field_instance_id} because new value #{value.inspect}(#{value.class}) != old value #{f.answer.inspect}(#{f.answer.class})"
           # if we are checking last_updated dates don't do the update if the fields updated_at
           # is greater than the last_updated date passed in, and store this to report later
+          puts "<br>last_updated=#{last_updated.inspect} and f.updated_at.to_i = #{f.updated_at.to_i}"
           if last_updated && f.updated_at.to_i > last_updated
             field_instances_protected << f
           else

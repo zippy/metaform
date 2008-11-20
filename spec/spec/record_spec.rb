@@ -694,7 +694,7 @@ describe Record do
     it "should allow saveing fields if timestamp is latest" do
       @record.save('new_entry')
       t = @record.updated_at.to_i
-      @record.update_attributes({:name => 'Fred'},'new_entry',{:last_updated => t})["name"].should == "Fred"
+      @record.update_attributes({:name => 'Fred',:occupation=>'1'},'new_entry',{:last_updated => t})["name"].should == "Fred"
     end
     it "should prevent overwriting of the same field when using timestamped updating but allow setting of fields that haven't been set and updating of older fields" do
       t = @record.updated_at.to_i  #get the timestamp from the first record
@@ -704,6 +704,13 @@ describe Record do
       lambda {@record.update_attributes({:name => 'Fred',:fruit=>'banana',:education => 'lots'},'new_entry',{:last_updated => t})}.should raise_error('Some field(s) were not saved: ["name"]')
       @record.education.should == 'lots'
       @record.fruit.should == 'banana'
+    end
+    it "should not be faked into preventing overwriting of field when using timestamped updating when the value comes in as a different type" do
+      t = @record.updated_at.to_i  #get the timestamp from the first record
+      Kernel::sleep 2
+      @record.occupation = "3"
+      @record.save('new_entry')
+      @record.update_attributes({:occupation => 3},'new_entry',{:last_updated => t}).has_key?('occupation').should == false
     end
   end
   describe "-- validation" do
