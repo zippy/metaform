@@ -654,7 +654,6 @@ class Record
             (is_approval && approval_value)
           # if we are checking last_updated dates don't do the update if the fields updated_at
           # is greater than the last_updated date passed in, and store this to report later
-          puts "<br>last_updated=#{last_updated.inspect} and f.updated_at.to_i = #{f.updated_at.to_i}"
           if last_updated && f.updated_at.to_i > last_updated
             field_instances_protected << f
           else

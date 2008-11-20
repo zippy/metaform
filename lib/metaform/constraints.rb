@@ -2,7 +2,7 @@
 module Constraints
   RequiredErrMessage = "This information is required"
   RequiredMultiErrMessage = "You must check at least one choice from this list"
-  def Constraints.verify (constraints, value, form,index = -1)
+  def Constraints.verify (constraints, value, form)
     constraint_errors = []
     return constraint_errors if !constraints
     constraints.each do |type, constraint|
@@ -23,7 +23,7 @@ module Constraints
       case type
       when "proc"
         raise MetaformException,"value of proc constraint must be a Proc!" if !constraint.instance_of?(Proc)
-        e = constraint.call(value,form,index)
+        e = constraint.call(value,form)
         constraint_errors << e if e
       when "regex"
         #for the required constraint the value will be the regex to match the value against
