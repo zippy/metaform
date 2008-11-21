@@ -448,10 +448,8 @@ class Form
   def tab_html(presentation_name,opts)
     options = {
       :label => nil,
-      :index => -1
     }.update(opts)
-    index = options[:index]
-    index = index == -1 ? @_index : index
+    index = options[:index] ? options[:index] : 0
     url = Record.url(@record.id,presentation_name,@tabs_name,index)
     label = options[:label]
     if @current_tab == presentation_name
