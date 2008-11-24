@@ -1172,7 +1172,7 @@ class Record
       #puts "eval_Field 1:  expr=#{expr}"
       expr = expr.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|each_with_index|to_i|zip|map|include|any|other\?)/,'f["\1"].\2')
       #puts "eval_field 2:  expr=#{expr}"
-      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\.blank\?/,'f["\1"] ? (f["\1"].is_indexed? ? f["\1"].value[0].blank? : f["\1"].value.blank?) : true')
+      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\.blank\?/,'(f["\1"] ? (f["\1"].is_indexed? ? f["\1"].value[0].blank? : f["\1"].value.blank?) : true)')
       #puts "eval_field 3:  expr=#{expr}"
       expr = expr.gsub(/:([a-zA-Z0-9_-]+)\./,'f["\1"].value.')
       #puts "eval_field 4:  expr=#{expr}"
