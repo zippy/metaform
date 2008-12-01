@@ -1113,7 +1113,7 @@ class Record
       form_instances.each do |r|
         #puts "--------------------"
         #puts "r = #{r.inspect}"
-        f = {'workflow_state' => Answer.new(r.workflow_state),'updated_at' => Answer.new(r.updated_at), 'form_id' => Answer.new(r.form.to_s)}
+        f = {'workflow_state' => Answer.new(r.workflow_state),'created_at' => Answer.new(r.created_at), 'updated_at' => Answer.new(r.updated_at), 'form_id' => Answer.new(r.form.to_s)}
         #puts "1:  f = #{f.inspect}"
         #puts "r.field_instances = #{r.field_instances.inspect}"
         r.field_instances.each do |field_instance|
