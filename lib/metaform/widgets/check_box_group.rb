@@ -102,7 +102,6 @@ class CheckBoxGroupWidget < Widget
     result = ""
     e.each do |key,value|
        new_val = value.chomp('*')
-       #result << %Q|var watcher_#{build_html_multi_id(field_instance_id,new_val)} = new WidgetWatcher('#{build_html_multi_id(field_instance_id,new_val)}', function(e){ #{script} });\n|
        result << %Q|Event.observe('#{build_html_multi_id(field_instance_id,new_val)}', 'click', function(e){ #{script} });\n|
     end
     result
