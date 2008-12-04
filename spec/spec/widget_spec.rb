@@ -50,7 +50,7 @@ describe Widget do
   describe DateWidget do
     it "should render three html input texts and the instructions" do
       DateWidget.render_form_object(1,"2004-10-23",{}).should == 
-        "<input type=\"text\" size=2 class=\"textfield_2\" name=\"record[1][month]\" id=\"record_1_month\" value=\"10\" /> /\n<input type=\"text\" size=2 class=\"textfield_2\" name=\"record[1][day]\" id=\"record_1_day\" value=\"23\" /> /\n<input type=\"text\" size=4 class=\"textfield_4\" name=\"record[1][year]\" id=\"record_1_year\" value=\"2004\" /> <span class=\"instructions\">(MM/DD/YYYY)</span>\n"
+        "<input type=\"text\" size=2 class=\"textfield_2\" name=\"record[1][month]\" id=\"record_1_month\" value=\"10\" maxlength=\"2\"/> /\n<input type=\"text\" size=2 class=\"textfield_2\" name=\"record[1][day]\" id=\"record_1_day\" value=\"23\" maxlength=\"2\"/> /\n<input type=\"text\" size=4 class=\"textfield_4\" name=\"record[1][year]\" id=\"record_1_year\" value=\"2004\" maxlength=\"4\"/> <span class=\"instructions\">(MM/DD/YYYY)</span>\n"
     end
     it "should render date value as text with a read_only parameter" do
       DateWidget.render_form_object_read_only(1,"2004-10-23",{}).should == 
@@ -61,7 +61,7 @@ describe Widget do
   describe TimeWidget do
     it "should render two html input texts plus a select for am/pm" do
       TimeWidget.render_form_object(1,"3:22",{}).should == 
-        "      <input type=\"text\" size=2 class=\"textfield_2\" name=\"record[1][hours]\" id=\"record_1_hours\" value=\"3\" />:\n      <input type=\"text\" class=\"left_margin_neg_5 textfield_2\" size=2 name=\"record[1][minutes]\" id=\"record_1_minutes\" value=\"22\" />\n      <select name=\"record[1][am_pm]\" id=\"record_1_am_pm\">\n      \t<option value=\"am\" selected=\"selected\">AM</option>\n<option value=\"pm\">PM</option>\n\t  </select>\n"
+        "      <input type=\"text\" size=2 class=\"textfield_2\" name=\"record[1][hours]\" id=\"record_1_hours\" value=\"3\" maxlength=\"2\"/>:\n      <input type=\"text\" class=\"left_margin_neg_5 textfield_2\" size=2 name=\"record[1][minutes]\" id=\"record_1_minutes\" value=\"22\" maxlength=\"2\"/>\n      <select name=\"record[1][am_pm]\" id=\"record_1_am_pm\">\n      \t<option value=\"am\" selected=\"selected\">AM</option>\n<option value=\"pm\">PM</option>\n\t  </select>\n"
     end
     it "should render time value as text with a read_only parameter" do
       TimeWidget.render_form_object_read_only(1,"3:22",{}).should == 
