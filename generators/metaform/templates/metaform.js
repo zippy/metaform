@@ -1,4 +1,8 @@
-//Get value of checkbox and check_box_group widgets
+//Get value of checkbox widgets
+function $CB(cb_id){
+	if ($(cb_id).checked) {return "Y";}
+}
+//Get value of check_box_group widgets
 function $CF(cb_class){
 	return $$(cb_class).findAll(function(cb) {return cb.checked}).pluck("value");
 }
@@ -88,13 +92,17 @@ function setCheckboxGroup(checkboxGroupName,form,value) {
 }
 
 function includes(cur_val,str) {
-	if(Object.isArray(cur_val)){
-		return cur_val.include(str);
-	}
-	if(Object.isHash(cur_val)){
-		return cur_val.keys().include(str);
-	}
-    alert('Woah!  You are calling includes on a field whose value is not an array or hash');
+	result = false;
+	str.split(',').each(function(s) {
+	 	if(result) {return};
+		if(Object.isArray(cur_val)){
+			if(cur_val.include(s)){result=true};
+		}
+		if(Object.isHash(cur_val)){
+			if(cur_val.keys().include(s)){result=true};
+		}
+		})
+	return result;
 }
 
 
@@ -222,6 +230,7 @@ function find_current_idx() {
 	return cur_idx;
 }
 function update_date(write_date,read_date) {
+	$('record_'+write_date+'_am_pm').value = $F('record_'+read_date+'_am_pm');
 	$('record_'+write_date+'_month').value = $F('record_'+read_date+'_month');
 	$('record_'+write_date+'_day').value = $F('record_'+read_date+'_day');
 	$('record_'+write_date+'_year').value = $F('record_'+read_date+'_year');
