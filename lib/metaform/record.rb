@@ -702,7 +702,8 @@ class Record
             end
           end
         end
-        vd = form_instance.get_validation_data
+        vd = form_instance.get_validation_data #This holds the validation information which is presented in
+        #red at the top of a form.
         _merge_invalid_fields(vd,field_list,invalid_fields,idx)
         _update_presentation_error_count(vd,presentation,idx,states,validation_exclude_states)
 
