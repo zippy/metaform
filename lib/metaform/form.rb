@@ -648,6 +648,7 @@ class Form
       body %Q|<div id="presentation_#{presentation_name}" class="#{css_class}">|
       if indexed
         raise MetaformException,"reference_field option must be defined" if !indexed[:reference_field]
+        include_buttons = indexed[:include_buttons]
         if @render
           orig_index = @_index
           @_index = MultiIndexMarker
@@ -678,7 +679,7 @@ class Form
             }
           EOJS
           add_button_html = %Q|<input type="button" onclick="doAdd#{presentation_name}()" value="#{indexed[:add_button_text]}">|
-          body add_button_html if indexed[:add_button_position] != 'bottom'
+          body add_button_html if indexed[:add_button_position] != 'bottom' && include_buttons
           body %Q|<ul id="presentation_#{presentation_name}_items">|
           answers = @record[indexed[:reference_field],:any].delete_if {|a| a.blank? }
           @_use_multi_index = answers ? answers.size : 0
@@ -687,7 +688,7 @@ class Form
             @_index = i
             body %Q|<li class="presentation_indexed_item">|
             pres.block.call
-            body %Q|<input type="button" class="float_right" value="#{indexed[:delete_button_text]}" onclick="#{presentation_name}.removeItem($(this).up())"><div class="clear"></div>|
+            body %Q|<input type="button" class="float_right" value="#{indexed[:delete_button_text]}" onclick="#{presentation_name}.removeItem($(this).up())"><div class="clear"></div>| if include_buttons
             body '</li>'
           end
           @_index = orig_index
