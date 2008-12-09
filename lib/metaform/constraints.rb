@@ -69,22 +69,25 @@ module Constraints
         constraint_errors << (err_override || 'Answer must be unique') if records.size > 0 && !records.find{|r| r.id == current_record_id}
       when "required"
         # if the constraint is a string instead of (true | false) then build a condition on the fly
-        case constraint
-        when String
-          cond = form.c constraint
-          next if !cond.evaluate
-          condition_extra_err = " when #{cond.humanize}" unless Form.config[:hide_required_extra_errors]
-          constraint = true
-        when TrueClass
-        when FalseClass
-        else
-          raise MetaformException,"value of required constraint must be a true, false or a condition string!"
-        end
-        if constraint && (value == nil || value == "")
-          msg = err_override if err_override
-          msg = RequiredMultiErrMessage if constraints.has_key?('set')
-          msg ||= RequiredErrMessage
-          constraint_errors << "#{msg}#{condition_extra_err}"
+        #This is ugly as sin, but is the only way we could think of to get a global override for required.
+        unless Form.get_store('override_required') && Form.get_store('override_required').call(form)
+          case constraint
+          when String
+            cond = form.c constraint
+            next if !cond.evaluate
+            condition_extra_err = " when #{cond.humanize}" unless Form.config[:hide_required_extra_errors]
+            constraint = true
+          when TrueClass
+          when FalseClass
+          else
+            raise MetaformException,"value of required constraint must be a true, false or a condition string!"
+          end
+          if constraint && (value == nil || value == "")
+            msg = err_override if err_override
+            msg = RequiredMultiErrMessage if constraints.has_key?('set')
+            msg ||= RequiredErrMessage
+            constraint_errors << "#{msg}#{condition_extra_err}"
+          end
         end
       when "set"
         #for the set constraint the value will be an array of strings or of hashes of the form:
