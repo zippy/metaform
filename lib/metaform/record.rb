@@ -343,7 +343,7 @@ class Record
     reset_attributes
     if index == :any
       attributes_set = {}
-      @form_instance.field_instances.find(:all,:conditions => 'state != "calculated"').each do |fi|
+      @form_instance.field_instances.find(:all,:conditions => "state != 'calculated'").each do |fi|
         if fields.include?(fi.field_id)
           set_attribute(fi.field_id,fi.answer,fi.idx)
           attributes_set[fi.field_id] = 1
@@ -353,7 +353,7 @@ class Record
     else
       index = index.to_i
       fields.each do |field_name|
-        fi = @form_instance.field_instances.find(:all,:conditions => 'state != "calculated"').detect {|f| f.field_id == field_name && f.idx.to_i == index }
+        fi = @form_instance.field_instances.find(:all,:conditions => "state != 'calculated'").detect {|f| f.field_id == field_name && f.idx.to_i == index }
         set_attribute(field_name,fi ? fi.answer : nil,index)
       end
     end
@@ -366,7 +366,7 @@ class Record
     puts "<br>LOADING RECORD" if DEBUG1
 #    reset_attributes if !fields
     @record_loaded = true if !fields
-    condition_string = 'state != "calculated"'
+    condition_string = "state != 'calculated'"
     condition_params = []
     if fields
       condition_string << " and field_id in (?)"
