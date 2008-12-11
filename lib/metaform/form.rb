@@ -375,6 +375,12 @@ class Form
   #
   #################################################################################
   def def_dependent_fields(condition,common_options = {})
+    if required_conds = common_options.delete(:additional_required_conditions)
+      required_conds = [required_conds] if required_conds.is_a?(String)
+      required_conds << condition
+    else
+      required_conds = condition
+    end
     condition = make_condition(condition)
     negate = :unless
     if force_nil_condition = common_options.delete(:force_nil_override)
@@ -384,7 +390,7 @@ class Form
       force_nil_condition = condition
     end
     common_options[:constraints] ||= {}
-    common_options[:constraints]['required'] = condition.name
+    common_options[:constraints]['required'] = required_conds
     def_fields(common_options) do
       yield
     end
@@ -648,7 +654,7 @@ class Form
       body %Q|<div id="presentation_#{presentation_name}" class="#{css_class}">|
       if indexed
         raise MetaformException,"reference_field option must be defined" if !indexed[:reference_field]
-        include_buttons = indexed[:include_buttons]
+        exclude_buttons = indexed[:exclude_buttons]
         if @render
           orig_index = @_index
           @_index = MultiIndexMarker
@@ -679,7 +685,7 @@ class Form
             }
           EOJS
           add_button_html = %Q|<input type="button" onclick="doAdd#{presentation_name}()" value="#{indexed[:add_button_text]}">|
-          body add_button_html if indexed[:add_button_position] != 'bottom' && include_buttons
+          body add_button_html if indexed[:add_button_position] != 'bottom' && !exclude_buttons
           body %Q|<ul id="presentation_#{presentation_name}_items">|
           answers = @record[indexed[:reference_field],:any].delete_if {|a| a.blank? }
           @_use_multi_index = answers ? answers.size : 0
@@ -688,7 +694,7 @@ class Form
             @_index = i
             body %Q|<li class="presentation_indexed_item">|
             pres.block.call
-            body %Q|<input type="button" class="float_right" value="#{indexed[:delete_button_text]}" onclick="#{presentation_name}.removeItem($(this).up())"><div class="clear"></div>| if include_buttons
+            body %Q|<input type="button" class="float_right" value="#{indexed[:delete_button_text]}" onclick="#{presentation_name}.removeItem($(this).up())"><div class="clear"></div>| unless exclude_buttons
             body '</li>'
           end
           @_index = orig_index

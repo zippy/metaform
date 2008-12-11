@@ -143,6 +143,13 @@ describe Constraints do
     it "should not trigger when value is not nil or ''" do
       Constraints.verify({'required' =>true}, 'fish', @form).should == []
     end
+    it "should join conditions in an array with 'and'" do
+      @record = Record.make(@form,'new_entry',{:name =>'Bob'})
+      @form.with_record(@record) do
+        Constraints.verify({'required' =>["name=Bob","name=Sue"]}, '', @form).should == [] 
+        Constraints.verify({'required' =>["name=Bob","name=~B"]}, '', @form).should == [Constraints::RequiredErrMessage] 
+      end   
+    end
   end
   describe 'required conditional' do
     before(:each) do

@@ -71,12 +71,21 @@ module Constraints
         # if the constraint is a string instead of (true | false) then build a condition on the fly
         #This is ugly as sin, but is the only way we could think of to get a global override for required.
         unless Form.get_store('override_required') && Form.get_store('override_required').call(form)
+          constraint = [constraint] if constraint.is_a?(String)
           case constraint
-          when String
-            cond = form.c constraint
-            next if !cond.evaluate
-            condition_extra_err = " when #{cond.humanize}" unless Form.config[:hide_required_extra_errors]
+          when Array
+            err_str = []
+            constraint.each do |cstrnt|
+              cond = form.c cstrnt
+              if !cond.evaluate
+                constraint = false
+                break
+              end
+              err_str << "#{cond.humanize}" unless Form.config[:hide_required_extra_errors]
+            end
+            next unless constraint
             constraint = true
+            condition_extra_err = " when " + err_str.join(' and ') unless Form.config[:hide_required_extra_errors]
           when TrueClass
           when FalseClass
           else
