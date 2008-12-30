@@ -922,6 +922,12 @@ class Record
     field_instances.each {|fi| expl[fi.field_id] = fi.explanation if fi.idx == index}
     expl
   end
+  
+  def any_explanations?
+    field_instances = @form_instance.field_instances.find(:all)
+    field_instances.each {|fi| return true unless fi.explanation.blank?}
+    return false
+  end
 
   def self.human_attribute_name(attribute_key_name) #:nodoc:
     attribute_key_name
