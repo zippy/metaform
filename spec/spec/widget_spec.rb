@@ -109,7 +109,7 @@ describe Widget do
   describe CheckBoxWidget do
     it "should render an html checkbox " do
       CheckBoxWidget.render_form_object(1,"Y",{}).should == 
-        %Q*<input checked=\"checked\" id=\"record_1\" name=\"record[1]\" type=\"checkbox\" value=\"Y\" />*
+        ["<input name=\"record[1][Y]\" id=\"record_1_y\" type=\"checkbox\" checked>", "\n", "<input name=\"record[1][__none__]\" id=\"record_1___none__\" class=\"1\" type=\"hidden\">"]
     end
     it "should render 'Y' checked and read_only" do
       CheckBoxWidget.render_form_object_read_only(1,"Y",{}).should == 
