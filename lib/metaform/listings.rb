@@ -26,22 +26,24 @@ class Listings
       forms = []
       l = self.listings[list_name]
       raise "unknown list #{list_name}" if !l      
-      
       options[:order] ||= l.fields[0]
-      
-      locate_options = {}
-      locate_options[:forms] = l.forms if l.forms
-      locate_options[:fields] = l.fields if l.fields
-      locate_options[:conditions] = l.conditions if l.conditions
-      wsf = []
-      wsf << l.workflow_state_filter if l.workflow_state_filter
-      wsf << options[:workflow_state_filter] if options[:workflow_state_filter]
-      wsf = wsf.flatten
-      locate_options[:workflow_state_filter] = wsf if wsf.size > 0
-      locate_options[:filters] = options[:filters] if options[:filters]
-
-      forms = Record.locate(:all,locate_options)
-
+      if options[:records]
+        forms = Record.gather(options)
+      else
+        #Use the listing to create locate_options
+        locate_options = {}
+        locate_options[:forms] = l.forms if l.forms
+        locate_options[:fields] = l.fields if l.fields
+        locate_options[:conditions] = l.conditions if l.conditions
+        wsf = []
+        wsf << l.workflow_state_filter if l.workflow_state_filter
+        wsf << options[:workflow_state_filter] if options[:workflow_state_filter]
+        wsf = wsf.flatten
+        locate_options[:workflow_state_filter] = wsf if wsf.size > 0
+        #Grab any filters from the options
+        locate_options[:filters] = options[:filters] if options[:filters]
+        forms = Record.locate(:all,locate_options)
+      end
       # TODO-LISA
       # implement 1) sub-sorting, and 2) sorting by type, i.e. this sorting only does
       # alphabetical.  We should be converting dates to dates and sorting by that

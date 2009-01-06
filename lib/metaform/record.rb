@@ -179,15 +179,11 @@ class Record
   # or we create a raw new one here
 
   def initialize(the_instance = nil,the_form = nil,attributes = nil,presentation_name=nil,options = {})
-    #puts "INITIALIZE"
-    #puts "the_instance = #{the_instance.inspect}"
-    #puts "attributes = #{attributes.inspect}"
-    #puts "options = #{options.inspect}"
     @cache = RecordCache.new
     @ficache = RecordCache.new if CACHE
     the_instance = FormInstance.new if !the_instance
     @form_instance = the_instance
-    
+  
     #TODO this is bogus!!
     #what about adding with_record here?  more bogusness
     if the_form.nil?
@@ -1027,20 +1023,31 @@ class Record
     Record.create(forms)
   end
   
-  # Record.locate
-  def Record.locate(what,options = {})
-    #puts "----------"
-    #puts "begin Record.locate"
-    #puts "what = #{what.inspect}"
-    #puts "options = #{options.inspect}"
+  # Record.locate calls record gather and does its own implementation of the find.
+  # This is about building a condition string for a find
+  # Locate knows always calls Gather, with its own proc which does the find
+  # listing -> logOrganization directly calls Gather
+  # Gather calls filter
+  #Record.locate calls Record.gather with a collection of form_instances which are determined by what and locate_options
+  #locate_options are used to create a condition string for the call to FormInstance.find
+  def Record.locate(what,locate_options = {})
+    gather_options = {}
     condition_strings = []
     conditions_params = []
+    field_list = []
     
-   #puts "searching for #{what} options = " + options.inspect
-    
-    field_list = {} 
-    if options.has_key?(:index)
-      idx = options[:index]
+    if locate_options.has_key?(:filters)
+      filters = arrayify(locate_options[:filters])
+      filters.each { |fltr| fltr.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list << z[0]}}
+    end
+
+    if locate_options.has_key?(:fields)
+      gather_options[:fields] = locate_options[:fields]
+      condition_strings << "(field_instances.field_id in (?))"
+      conditions_params << field_list + locate_options[:fields]
+    end
+    if locate_options.has_key?(:index)
+      idx = locate_options[:index]
       if idx != :any
         condition_strings << "(field_instances.idx #{idx ? '=' : 'is'} ?)"
         conditions_params << idx
@@ -1049,36 +1056,25 @@ class Record
       condition_strings << "(field_instances.idx = 0)"      
     end
 
-    if options.has_key?(:forms)
+    if locate_options.has_key?(:forms)
       condition_strings << "(form_id in (?))"
-      conditions_params << options[:forms]
+      conditions_params << locate_options[:forms]
     end
-    
-    if options.has_key?(:workflow_state_filter)
-      if options[:workflow_state_filter].is_a?(Array)
-        condition_strings << "#{"NOT" if options[:workflow_state_filter_negate]} (workflow_state in (?))"
+
+    if locate_options.has_key?(:workflow_state_filter)
+      if locate_options[:workflow_state_filter].is_a?(Array)
+        condition_strings << "#{"NOT" if locate_options[:workflow_state_filter_negate]} (workflow_state in (?))"
       else
-        condition_strings << "(#{"NOT" if options[:workflow_state_filter_negate]} workflow_state like (?))"
+        condition_strings << "(#{"NOT" if locate_options[:workflow_state_filter_negate]} workflow_state like (?))"
       end
-      conditions_params << options[:workflow_state_filter]
+      conditions_params << locate_options[:workflow_state_filter]
     end
 
-    if options.has_key?(:filters)
-      filters = arrayify(options[:filters])
-      filters.each { |fltr| fltr.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1}}
-    end
-    
-    if options.has_key?(:fields)
-      condition_strings << "(field_instances.field_id in (?))"
-      options[:fields].each {|x| field_list[x] = 1 }
-      conditions_params << field_list.keys
-    end
-
-    if options.has_key?(:conditions)
-      c = arrayify(options[:conditions])
+    if locate_options.has_key?(:conditions)
+      c = arrayify(locate_options[:conditions])
       c.each {|x| x =~ /([a-zA-Z0-9_-]+)(.*)/; condition_strings << %Q|if(field_instances.field_id = '#{$1}',if (answer #{$2},true,false),false)|}
     end
-
+    
     if !condition_strings.empty?
       condition_string = condition_strings.join(' and ')
       if !conditions_params.empty?
@@ -1091,87 +1087,97 @@ class Record
         :include => [:field_instances]
       }
     end
-    find_opts ||= {}
-    begin
-      form_instances = FormInstance.find(what,find_opts)
-    rescue ActiveRecord::RecordNotFound
-      form_instances = nil
-    end
-        
-    return_answers_hash = options.has_key?(:return_answers_hash)
-
-    forms = []
-    #puts "1 form_instances = #{form_instances.inspect}"
-    #puts "form_instances.size = #{form_instances.size}" if form_instances.respond_to?('each')
-    #puts "filters = #{filters.inspect}"
-    #puts "return_answers_hash = #{return_answers_hash}"
-    if form_instances && (filters || return_answers_hash)
-      #puts "after if"
-        if !form_instances.respond_to?('each')
-          form_instances = [form_instances]
-          did_it = true
-          #puts "DID IT"
-        end
-      filter_eval_string = filters.collect{|x| "(#{x})"}.join('&&') if filters
-      #puts "filter_eval_string = #{filter_eval_string}"
-      #TODO test for scalability on large datatsets
-      #puts "next line"
-      #puts "2 form_instances = #{form_instances.inspect}"
-      form_instances.each do |r|
-        #puts "--------------------"
-        #puts "r = #{r.inspect}"
-        f = {'workflow_state' => Answer.new(r.workflow_state),'created_at' => Answer.new(r.created_at), 'updated_at' => Answer.new(r.updated_at), 'form_id' => Answer.new(r.form.to_s)}
-        #puts "1:  f = #{f.inspect}"
-        #puts "r.field_instances = #{r.field_instances.inspect}"
-        r.field_instances.each do |field_instance|
-          #puts "field_instance = #{field_instance.inspect}"
-          #puts "key: #{field_instance.field_id}, answer: #{field_instance.answer}, idx: #{field_instance.idx}"
-          if f.has_key?(field_instance.field_id)
-            #puts "     f.has_key?  TRUE field_instance.field_id #{field_instance.field_id}"
-            a = f[field_instance.field_id]
-            #puts "a = #{a.inspect}"
-            #puts "field_instance.idx = #{field_instance.idx}"
-            #puts "field_instance.answer = #{ field_instance.answer}"
-            a[field_instance.idx] = field_instance.answer
-            #puts "a = #{a.inspect}"
-          else
-            #puts "     f.has_key? FALSE field_instance.field_id #{field_instance.field_id}"
-            #puts "field_instance = #{field_instance.inspect}"
-            #puts "field_instance.answer = #{field_instance.answer.inspect}"
-            #puts "field_instance.idx = #{field_instance.idx.inspect}"
-            f[field_instance.field_id]= Answer.new(field_instance.answer,field_instance.idx)
-            #puts "f[#{field_instance.field_id}] = #{f[field_instance.field_id].inspect}"
-          end
-          #puts "!!! f[field_instance.field_id] = #{f[field_instance.field_id].inspect}"
-        end
-        field_list.keys.each {|field_id| f[field_id] = Answer.new(nil,nil) if !f.has_key?(field_id)}
-        the_form = return_answers_hash ? f : r
-        # puts "2:  f = #{f.inspect}"
-        # puts "r = #{r.inspect}"
-        #puts "filters=#{filters.inspect}"
-        if filters && filters.size > 0
-          kept = false
-          begin
-            #puts "expr = #{eval_field(filter_eval_string)}"
-            expr = eval_field(filter_eval_string)
-            kept = eval expr
-            #puts "     kept = #{kept}"
-          rescue Exception => e
-            raise MetaformException,"Eval error '#{e.to_s}' while evaluating: #{expr}"
-          end
-          forms << the_form if kept
-        else
-          forms << the_form
-        end
+    gather_options[:records] = Proc.new {
+      begin
+        FormInstance.find(what,find_opts)
+      rescue ActiveRecord::RecordNotFound
+        nil
       end
-      forms = forms[0] if forms.length == 1 && did_it
-    else
-      forms = form_instances
+    }
+    gather_options[:filters] = locate_options[:filters] if locate_options[:filters]
+    gather_options[:return_answers_hash] = locate_options[:return_answers_hash] if locate_options[:return_answers_hash]
+    Record.gather(gather_options)
+  end
+  
+  #Record.gather can return an Answers Hash (or an array of them) or a FormInstance (or an array of them)
+  #It can start with a list of FormInstances or call a proc to find the desired FormInstances
+  #It can call Record.filter to filter out results based on ruby to call on field values.
+  def Record.gather(gather_options)
+    filter_options = {}
+    field_list = {} 
+    if gather_options.has_key?(:filters)
+      filters = arrayify(gather_options[:filters])
+      filter_options[:filters] = filters
+      filters.each { |fltr| fltr.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1}}
     end
-    #puts "forms = #{forms.map{|f| f.keys}.inspect}"
+    
+    if gather_options.has_key?(:field_list)
+      field_list.update(gather_options[:field_list])
+    elsif gather_options.has_key?(:fields)
+      gather_options[:fields].each {|x| field_list[x] = 1 }
+    end
+    filter_options[:field_list] = field_list
+    
+    if gather_options.has_key?(:return_answers_hash)
+      return_answers_hash = true
+      filter_options[:return_answers_hash] = true
+    else
+      return_answers_hash = false
+    end
+
+    filter_options[:records] = gather_options[:records].is_a?(Proc) ? gather_options[:records].call : gather_options[:records]
+    #puts "filter_options[:records] = #{filter_options[:records].size}"
+    if filter_options[:records]  && (filters || return_answers_hash)
+      forms = Record.filter(filter_options)
+    else
+      forms = filter_options[:records] 
+    end
     return forms if return_answers_hash
     forms ? Record.create(forms) : nil
   end
+  
+  def Record.filter(filter_options)
+    return_answers_hash = filter_options.has_key?(:return_answers_hash)
+    
+    filters = filter_options[:filters]
+    filter_eval_string = filters.collect{|x| "(#{x})"}.join('&&') if filters
+    
+    form_instances = filter_options[:records]
+    if !form_instances.respond_to?('each')
+      form_instances = [form_instances]
+      did_it = true
+    end
+    
+    forms = []
+    form_instances.each do |r|
+      f = {'workflow_state' => Answer.new(r.workflow_state),'created_at' => Answer.new(r.created_at), 'updated_at' => Answer.new(r.updated_at), 'form_id' => Answer.new(r.form.to_s)}
+      r.field_instances.each do |field_instance|
+        if f.has_key?(field_instance.field_id)
+          a = f[field_instance.field_id]
+          a[field_instance.idx] = field_instance.answer
+        else
+          f[field_instance.field_id]= Answer.new(field_instance.answer,field_instance.idx)
+        end
+      end
+      filter_options[:field_list].keys.each {|field_id| f[field_id] = Answer.new(nil,nil) if !f.has_key?(field_id)}
+      the_form = return_answers_hash ? f : r
+      if filters && filters.size > 0
+        kept = false
+        begin
+          expr = eval_field(filter_eval_string)
+          kept = eval expr
+        rescue Exception => e
+          raise MetaformException,"Eval error '#{e.to_s}' while evaluating: #{expr}"
+        end
+        forms << the_form if kept
+      else
+        forms << the_form
+      end
+    end
+    forms = forms[0] if forms.length == 1 && did_it
+    forms
+  end
+    
   def Record.eval_field(expression)
       #puts "---------"
       #puts "eval_Field 0:  expression=#{expression}"

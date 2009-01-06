@@ -9,10 +9,19 @@ describe Listings do
     r[:occupation,1] = 'farmer'
     r.occupation__2 = 'painter'
     r.save('new_entry')
-    
-    @list = Log.get_list('samples')
   end
   it "should return 4 items" do 
+    @list = Log.get_list('samples')
     @list.size.should == 4
+  end
+  
+  it "should return 1 item when called on a single member array of Form Instances" do
+    @list = Log.get_list('samples',:records => [FormInstance.find(:first)])
+    @list.size.should == 1
+  end
+  
+  it "should return 1 item when called via a proc which returns a single member array of Form Instances" do
+    @list = Log.get_list('samples',:records => Proc.new {[FormInstance.find(:first)] })
+    @list.size.should == 1
   end
 end
