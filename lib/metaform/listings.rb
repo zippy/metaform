@@ -28,7 +28,7 @@ class Listings
       raise "unknown list #{list_name}" if !l      
       options[:order] ||= l.fields[0]
       if options[:records]
-        forms = Record.gather(options)
+        forms = Record.gather(options)  #Just call Record.gather directly, not get_list
       else
         #Use the listing to create locate_options
         locate_options = {}

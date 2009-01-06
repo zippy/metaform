@@ -1034,18 +1034,24 @@ class Record
     gather_options = {}
     condition_strings = []
     conditions_params = []
-    field_list = []
+    field_list = {}
     
     if locate_options.has_key?(:filters)
+      gather_options[:filters] = locate_options[:filters]
       filters = arrayify(locate_options[:filters])
-      filters.each { |fltr| fltr.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list << z[0]}}
+      filters.each { |fltr| fltr.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1}}
     end
 
     if locate_options.has_key?(:fields)
-      gather_options[:fields] = locate_options[:fields]
-      condition_strings << "(field_instances.field_id in (?))"
-      conditions_params << field_list + locate_options[:fields]
+      locate_options[:fields].each {|x| field_list[x] = 1 }
     end
+
+    if field_list.size > 0
+      condition_strings << "(field_instances.field_id in (?))"
+      conditions_params << field_list.keys
+      gather_options[:field_list] = field_list
+    end
+    
     if locate_options.has_key?(:index)
       idx = locate_options[:index]
       if idx != :any
@@ -1094,7 +1100,6 @@ class Record
         nil
       end
     }
-    gather_options[:filters] = locate_options[:filters] if locate_options[:filters]
     gather_options[:return_answers_hash] = locate_options[:return_answers_hash] if locate_options[:return_answers_hash]
     Record.gather(gather_options)
   end
@@ -1105,18 +1110,21 @@ class Record
   def Record.gather(gather_options)
     filter_options = {}
     field_list = {} 
+    
     if gather_options.has_key?(:filters)
       filters = arrayify(gather_options[:filters])
       filter_options[:filters] = filters
-      filters.each { |fltr| fltr.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1}}
     end
     
-    if gather_options.has_key?(:field_list)
-      field_list.update(gather_options[:field_list])
-    elsif gather_options.has_key?(:fields)
-      gather_options[:fields].each {|x| field_list[x] = 1 }
+    if gather_options.has_key?(:field_list) 
+        filter_options[:field_list] = gather_options[:field_list]
+    else
+      filters.each { |fltr| fltr.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1}} if filters
+      if gather_options.has_key?(:fields)
+        gather_options[:fields].each {|x| field_list[x] = 1 }
+      end
+      filter_options[:field_list] = field_list
     end
-    filter_options[:field_list] = field_list
     
     if gather_options.has_key?(:return_answers_hash)
       return_answers_hash = true
@@ -1126,7 +1134,6 @@ class Record
     end
 
     filter_options[:records] = gather_options[:records].is_a?(Proc) ? gather_options[:records].call : gather_options[:records]
-    #puts "filter_options[:records] = #{filter_options[:records].size}"
     if filter_options[:records]  && (filters || return_answers_hash)
       forms = Record.filter(filter_options)
     else
