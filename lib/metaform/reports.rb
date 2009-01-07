@@ -42,12 +42,14 @@ class Reports
       r = self.reports[report_name]
       raise "unknown report #{report_name}" if !r 
       results = {}
-
+      locate_records = !options.has_key?(:records)
       locate_options = {}
-      locate_options[:forms] = r.forms if r.forms
-      locate_options[:workflow_state_filter] = r.workflow_state_filter if r.workflow_state_filter
-      locate_options[:workflow_state_filter_negate] = r.workflow_state_filter_negate if r.workflow_state_filter_negate
-
+      if locate_records
+        locate_options[:forms] = r.forms if r.forms
+        locate_options[:workflow_state_filter] = r.workflow_state_filter if r.workflow_state_filter
+        locate_options[:workflow_state_filter_negate] = r.workflow_state_filter_negate if r.workflow_state_filter_negate
+        locate_options[:index] = :any
+      end
       # build up the list of extra fields we need to get from the database by looking in count queries
       field_list = {}
       r.fields.each {|f| field_list[f]=1} if r.fields
@@ -101,7 +103,6 @@ class Reports
       locate_options[:filters] = filters if filters.size>0
       #puts "locate_options[:filters] = #{locate_options[:filters].inspect}"
       locate_options[:return_answers_hash] = true
-      locate_options[:index] = :any
 
 #      w = sql_workflow_condition(r.workflow_state_filter,true)
       #TODO:  Stats will present forms that have passed validation but not data review, 
@@ -114,7 +115,12 @@ class Reports
 #        :conditions => ["form_id in (?) and field_id in (?)" << w ,r.forms,field_list.keys], 
 #        :include => [:field_instances]
 #        )
-      form_instances = Record.locate(:all,locate_options)       
+      if locate_records
+        form_instances = Record.locate(:all,locate_options)  
+      else
+        locate_options[:records] = options[:records]
+        form_instances = Record.gather(locate_options)
+      end     
       total = form_instances.size
       count_queries.each do |stat,q|
         count = Counter.new

@@ -1038,7 +1038,7 @@ class Record
     end
 
     if locate_options.has_key?(:fields)  #Note:  this is needed for when we are returning an answers hash. 
-      #When we return an array of records, they will contain all necessary fields automatically
+      #When we return an array of records, they will contain all fields automatically
       locate_options[:fields].each {|x| field_list[x] = 1 }
     end
 
@@ -1117,7 +1117,7 @@ class Record
     else
       filters.each { |fltr| fltr.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1}} if filters
       if gather_options.has_key?(:fields)  #Note:  this is needed for when we are returning an answers hash. 
-        #When we return an array of records, they will contain all necessary fields automatically
+        #When we return an array of records, they will contain all fields automatically
         gather_options[:fields].each {|x| field_list[x] = 1 }
       end
       filter_options[:field_list] = field_list
