@@ -370,6 +370,23 @@ describe Record do
       r['fruit'].value.should == ['banana','peach','kiwi']
     end
     
+    it "should correctly locate fields with filters with a preset array of records" do
+      @records << Record.make(SampleForm.new,'new_entry',{:name =>'Herbert Wilcox',:fruit => 'banana'})
+      @records.each { |recs| recs.form.set_record(recs);recs.save('new_entry') }
+      Record.gather({:records => FormInstance.find(:all), :filters => ':fruit == "banana"'}).size.should == 3
+      Record.gather({:records => FormInstance.find(:all), :filters => [':name =~ /Smith/',':fruit == "banana"']}).size.should == 2
+      Record.gather({:records => FormInstance.find(:all), :filters => ':name =~ /o/'}).size.should == 3
+     end
+
+     it "should correctly locate fields with filters with a proc to determine the array of records" do
+       @records << Record.make(SampleForm.new,'new_entry',{:name =>'Herbert Wilcox',:fruit => 'banana'})
+       @records.each { |recs| recs.form.set_record(recs);recs.save('new_entry') }
+       Record.gather({:records => Proc.new{FormInstance.find(:all)}, :filters => ':fruit == "banana"'}).size.should == 3
+       Record.gather({:records => Proc.new{FormInstance.find(:all)}, :filters => [':name =~ /Smith/',':fruit == "banana"']}).size.should == 2
+       Record.gather({:records => Proc.new{FormInstance.find(:all)}, :filters => ':name =~ /o/'}).size.should == 3
+      end
+    
+    
 #    it "should return multi-dimentional indexes as arrays of arrays in the answers hash" do
 #      @records[0].fruit__1 = 'peach'
 #      @records[0].fruit__2 = 'kiwi'

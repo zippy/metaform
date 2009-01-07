@@ -1023,11 +1023,6 @@ class Record
     Record.create(forms)
   end
   
-  # Record.locate calls record gather and does its own implementation of the find.
-  # This is about building a condition string for a find
-  # Locate knows always calls Gather, with its own proc which does the find
-  # listing -> logOrganization directly calls Gather
-  # Gather calls filter
   #Record.locate calls Record.gather with a collection of form_instances which are determined by what and locate_options
   #locate_options are used to create a condition string for the call to FormInstance.find
   def Record.locate(what,locate_options = {})
@@ -1042,7 +1037,8 @@ class Record
       filters.each { |fltr| fltr.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1}}
     end
 
-    if locate_options.has_key?(:fields)
+    if locate_options.has_key?(:fields)  #Note:  this is needed for when we are returning an answers hash. 
+      #When we return an array of records, they will contain all necessary fields automatically
       locate_options[:fields].each {|x| field_list[x] = 1 }
     end
 
@@ -1120,7 +1116,8 @@ class Record
         filter_options[:field_list] = gather_options[:field_list]
     else
       filters.each { |fltr| fltr.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1}} if filters
-      if gather_options.has_key?(:fields)
+      if gather_options.has_key?(:fields)  #Note:  this is needed for when we are returning an answers hash. 
+        #When we return an array of records, they will contain all necessary fields automatically
         gather_options[:fields].each {|x| field_list[x] = 1 }
       end
       filter_options[:field_list] = field_list

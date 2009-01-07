@@ -159,10 +159,9 @@ class Log < Listings
     # the conditions hash works like this.  The value portion is a mysql fragment about the field. (or array of fragments
     # to be anded together)
     listing 'samples', 
-      :forms => ['SampleForm'],
+      :forms => ['SampleForm']
 #      :workflow_state_filter => ['logged'],
 #      :conditions => {'fruit' => '!= "pear"'},
-      :fields => ['name','fruit']
 end
 
 class Stats < Reports
