@@ -1037,8 +1037,7 @@ class Record
       filters.each { |fltr| fltr.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1}}
     end
 
-    if locate_options.has_key?(:fields)  #Note:  this is needed for when we are returning an answers hash. 
-      #When we return an array of records, they will contain all fields automatically
+    if locate_options.has_key?(:fields)  
       locate_options[:fields].each {|x| field_list[x] = 1 }
     end
 
@@ -1116,8 +1115,7 @@ class Record
         filter_options[:field_list] = gather_options[:field_list]
     else
       filters.each { |fltr| fltr.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1}} if filters
-      if gather_options.has_key?(:fields)  #Note:  this is needed for when we are returning an answers hash. 
-        #When we return an array of records, they will contain all fields automatically
+      if gather_options.has_key?(:fields) 
         gather_options[:fields].each {|x| field_list[x] = 1 }
       end
       filter_options[:field_list] = field_list
@@ -1129,8 +1127,8 @@ class Record
     else
       return_answers_hash = false
     end
-
-    filter_options[:records] = gather_options[:records].is_a?(Proc) ? gather_options[:records].call : gather_options[:records]
+    #Note:  We pass in the fields so that the proc can use the array to limit the size of what comes back from the <user>.field_instances call (which is what it probably is doing)
+    filter_options[:records] = gather_options[:records].is_a?(Proc) ? gather_options[:records].call(filter_options[:field_list].keys) : gather_options[:records]
     if filter_options[:records]  && (filters || return_answers_hash)
       forms = Record.filter(filter_options)
     else
