@@ -987,16 +987,32 @@ class Record
     when :csv
       result = []
       fields = options[:fields]
+      date_format = options[:date_format]
+      date_time_format = options[:date_time_format]
       raise "you must specify the :fields option with a list of fields to export" if !fields
       @cache.indexes.each do |index|
         row = []
         row << self.form.class.to_s
         row << self.id
         row << index
-        row << self.created_at
-        row << self.updated_at
+        if date_time_format
+          row << self.created_at.strftime(date_time_format)
+          row << self.updated_at.strftime(date_time_format)
+        else
+          row << self.created_at
+          row << self.updated_at
+        end
         row << self.workflow_state
-        fields.each {|f| row << @cache.attributes(index)[f]}
+        fields.each do |f|
+          d = @cache.attributes(index)[f]
+          if date_format && form.fields[f].type == 'date' && !d.blank?
+            row << Time.local(*ParseDate.parsedate(d)[0..2]).strftime(date_format)
+          elsif date_time_format && form.fields[f].type == 'datetime' && !d.blank?
+            row << Time.local(*ParseDate.parsedate(d)[0..4]).strftime(date_time_format)
+          else
+            row << d
+          end
+        end
         result << CSV.generate_line(row)
       end
       result

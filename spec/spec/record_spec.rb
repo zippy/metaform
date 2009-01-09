@@ -995,6 +995,17 @@ describe Record do
         :fields => ['name', 'fruit']
       ).should == ['SampleForm,,0,,,,Bob Smith,banana']
     end
+    it "should be able to export a record and specify date format" do
+      i = Time.now
+      @record[:due_date] = "1/1/2000"
+      @record[:some_time] = "Fri Jan 09 01:10:12 -0500 2009"
+      @record.save('new_entry')
+      @record.export(
+        :fields => ['due_date','some_time'],
+        :date_time_format => "%m/%d/%Y %H:%M",
+        :date_format => "%m/%d/%Y"
+      ).should == ["SampleForm,1,0,#{i.strftime('%m/%d/%Y %H:%M')},#{i.strftime('%m/%d/%Y %H:%M')},,01/01/2000,01/09/2009 01:10"]
+    end
     it "should be able to export an indexed record" do
       @record[:fruit,2] = 'apple'
       @record.export(

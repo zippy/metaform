@@ -19,6 +19,7 @@ def setup
   def_fields :properties => [Shady] do
     f 'name', :label => 'Name', :type => 'string', :constraints => {"required"=>true}
     f 'due_date', :label => 'Due Date', :type => 'date'
+    f 'some_time', :label => 'Some Date Time', :type => 'datetime'
     f 'education', :label => 'Post-secondary formal education (years)', :type => 'integer', :constraints => {"range"=>"0-14"}
     def_dependent_fields('education>0') do
       f 'degree', :type=>'string'
