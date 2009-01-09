@@ -76,17 +76,21 @@ module DateHelper
     date = parse_date_value(value)
     if date
       <<-EOHTML
-<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'month')}" id="#{build_html_multi_id(field_instance_id,'month')}" value="#{date.month}" maxlength="2"/> /
-<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'day')}" id="#{build_html_multi_id(field_instance_id,'day')}" value="#{date.day}" maxlength="2"/> /
+<input type="text" #{auto_tab_text(field_instance_id,'day')} size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'month')}" id="#{build_html_multi_id(field_instance_id,'month')}" value="#{date.month}" maxlength="2"/> /
+<input type="text" #{auto_tab_text(field_instance_id,'year')} size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'day')}" id="#{build_html_multi_id(field_instance_id,'day')}" value="#{date.day}" maxlength="2"/> /
 <input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'year')}" id="#{build_html_multi_id(field_instance_id,'year')}" value="#{date.year.to_s[0..3]}" maxlength="4"/> <span class=\"instructions\">(MM/DD/YYYY)</span>
 EOHTML
     else
       <<-EOHTML
-<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'month')}" id="#{build_html_multi_id(field_instance_id,'month')}" maxlength="2"/> /
-<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'day')}" id="#{build_html_multi_id(field_instance_id,'day')}" maxlength="2" /> /
+<input type="text" #{auto_tab_text(field_instance_id,'day')} size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'month')}" id="#{build_html_multi_id(field_instance_id,'month')}" maxlength="2"/> /
+<input type="text" #{auto_tab_text(field_instance_id,'year')} size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'day')}" id="#{build_html_multi_id(field_instance_id,'day')}" maxlength="2" /> /
 <input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'year')}" id="#{build_html_multi_id(field_instance_id,'year')}"  maxlength="4"/> <span class=\"instructions\">(MM/DD/YYYY)</span>
 EOHTML
     end
+  end
+  
+  def auto_tab_text(f_id, next_field)
+    %Q*onkeyup="tabNext(this,'up',2,$('#{build_html_multi_id(f_id,next_field)}'))" onkeydown="tabNext(this,'down',2)"*
   end
 
   ################################################################################
