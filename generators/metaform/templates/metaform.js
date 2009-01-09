@@ -239,3 +239,11 @@ function update_date(write_date,read_date) {
 function confirmReset() {
 	if (confirm("Are you sure you want to revert the information on this page to what it was when you last loaded the page?")) {window.location.reload()}
 }
+
+var field_length=0;
+function tabNext(obj,event,len,next_field){
+if(event=="down"){field_length=obj.value.length;}
+else if(event=="up"){
+if(obj.value.length!=field_length){
+field_length=obj.value.length;
+if(field_length==len){next_field.focus();}}}}
