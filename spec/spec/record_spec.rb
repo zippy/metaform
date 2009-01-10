@@ -1014,6 +1014,45 @@ describe Record do
       ).should == ['SampleForm,,0,,,,Bob Smith,banana','SampleForm,,2,,,,,apple']
     end
   end
+  describe "Record.search" do
+    def make_record(vals,index=0)
+      form = SampleForm.new
+      record = Record.make(form,'new_entry',[],{:index => index})
+      vals.each {|k,v| record[k] = v}      
+      form.set_record(record)
+      record.save('new_entry')
+    end
+    before(:each) do
+      make_record({:name =>'Bob Smith',:fruit => 'banana'})
+      make_record({:name =>'Fred Smith',:fruit => 'apple'})
+      make_record({:name =>'Bob Feldspar',:fruit => 'orange'})
+      make_record({:name =>'Jane Feldspar',:fruit => 'orange',:due_date => "1/1/2000"})
+    end
+    it "should be able to search for fields" do
+      records = Record.search(:fields => [:name])
+      records.collect{|r| r.attributes}.should == [{"name"=>"Bob Smith", "id"=>1}, {"name"=>"Fred Smith", "id"=>2}, {"name"=>"Bob Feldspar", "id"=>3}, {"name"=>"Jane Feldspar", "id"=>4}]
+    end
+    it "should be able to order fields on search" do
+      records = Record.search(:fields => [:name],:order => [:name])
+      records.collect{|r| r.attributes}.should == [{"name"=>"Bob Feldspar", "id"=>3}, {"name"=>"Bob Smith", "id"=>1}, {"name"=>"Fred Smith", "id"=>2}, {"name"=>"Jane Feldspar", "id"=>4}]
+    end
+    it "should be able to search conditionally on fields" do
+      records = Record.search(:conditions => {:name => "like 'Bob%'"})
+      records.collect{|r| r.attributes}.should == [{"id"=>1}, {"id"=>3}]
+    end
+    it "should be able to add other fields when searching conditionally" do
+      records = Record.search(:fields => [:name,:fruit],:conditions => {:name => "like 'Bob%'"})
+      records.collect{|r| r.attributes}.should == [{"name"=>"Bob Smith", "id"=>1, "fruit"=>'banana'}, {"name"=>"Bob Feldspar", "id"=>3, "fruit"=>'orange'}]
+    end
+    it "should be able to add meta_fields to results" do
+      records = Record.search(:meta_fields => [:workflow_state])
+      records.collect{|r| r.attributes}.should == [{"id"=>1,"workflow_state"=>nil},{"id"=>2,"workflow_state"=>nil},{"id"=>3,"workflow_state"=>nil},{"id"=>4,"workflow_state"=>nil}]
+    end
+    it "should be able to search on a meta condition" do
+      records = Record.search(:meta_condition => "id > 2")
+      records.collect{|r| r.attributes}.should == [{"id"=>3}, {"id"=>4}]
+    end
+  end
 end
 
 describe Record::Answer do
