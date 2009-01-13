@@ -1043,6 +1043,10 @@ describe Record do
       records = Record.search(:fields => [:name])
       records.collect{|r| r.attributes}.should == [{"name"=>"Bob Smith", "id"=>1}, {"name"=>"Fred Smith", "id"=>2}, {"name"=>"Bob Feldspar", "id"=>3}, {"name"=>"Jane Feldspar", "id"=>4}]
     end
+    it "should be able to search for fields and limit results" do
+      records = Record.search(:fields => [:name],:limit => 2)
+      records.collect{|r| r.attributes}.should == [{"name"=>"Bob Smith", "id"=>1}, {"name"=>"Fred Smith", "id"=>2}]
+    end
     it "should be able to order fields on search" do
       records = Record.search(:fields => [:name],:order => [:name])
       records.collect{|r| r.attributes}.should == [{"name"=>"Bob Feldspar", "id"=>3}, {"name"=>"Bob Smith", "id"=>1}, {"name"=>"Fred Smith", "id"=>2}, {"name"=>"Jane Feldspar", "id"=>4}]

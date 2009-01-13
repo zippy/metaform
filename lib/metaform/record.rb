@@ -1316,6 +1316,7 @@ class Record
     where_conditions.push('('+options[:meta_condition]+')') if options[:meta_condition]
     select += ' where ' + where_conditions.join(' and ') if !where_conditions.empty?
     select += " order by "+arrayify(options[:order]).join(',') if options[:order]
+    select += " limit #{options[:limit].to_i}" if options[:limit]
 #    puts select
     r = FormInstance.find_by_sql(select)
   end
