@@ -1037,11 +1037,19 @@ describe Record do
       records.collect{|r| r.attributes}.should == [{"name"=>"Bob Feldspar", "id"=>3}, {"name"=>"Bob Smith", "id"=>1}, {"name"=>"Fred Smith", "id"=>2}, {"name"=>"Jane Feldspar", "id"=>4}]
     end
     it "should be able to search conditionally on fields" do
-      records = Record.search(:conditions => {:name => "like 'Bob%'"})
+      records = Record.search(:conditions => ":name  like 'Bob%'")
       records.collect{|r| r.attributes}.should == [{"id"=>1}, {"id"=>3}]
     end
+    it "should be able to search conditionally on fields with multiple fields in the condition" do
+      records = Record.search(:conditions => ":name  like 'Bob%' or :fruit = 'orange'")
+      records.collect{|r| r.attributes}.should == [{"id"=>1}, {"id"=>3}, {"id"=>4}]
+    end
+    it "should be able to and search multiple conditions on fields" do
+      records = Record.search(:conditions => [":name like 'Bob%'",":fruit = 'orange'"])
+      records.collect{|r| r.attributes}.should == [{"id"=>3}]
+    end
     it "should be able to add other fields when searching conditionally" do
-      records = Record.search(:fields => [:name,:fruit],:conditions => {:name => "like 'Bob%'"})
+      records = Record.search(:fields => [:name,:fruit],:conditions => ":name like 'Bob%'")
       records.collect{|r| r.attributes}.should == [{"name"=>"Bob Smith", "id"=>1, "fruit"=>'banana'}, {"name"=>"Bob Feldspar", "id"=>3, "fruit"=>'orange'}]
     end
     it "should be able to add meta_fields to results" do

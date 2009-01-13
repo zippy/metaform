@@ -1284,22 +1284,29 @@ class Record
   # faster replacement for Record.Locate
   #select form_instances.id,x.answer as H_Ccode,y.answer as Q,z.answer as Z from form_instances left outer join field_instances as x on form_instance_id = form_instances.id and field_id = 'H_Ccode' inner join field_instances as y on y.form_instance_id = form_instances.id and y.field_id='H_Source' and y.answer='PMID0' inner join field_instances as z on z.form_instance_id = form_instances.id and z.field_id = 'Book_EstimatedDueDate' and z.answer like '%-03-%' where workflow_state = 'done' order by id limit 10"
   def Record.search(options)
-    fields = arrayify(options[:fields])
-    left_join_fields = fields
-    if options[:conditions]
-      # if a field is in the conditions inner join, we don't need to add it to the left joins below, so get rid of them
-      left_join_fields -= options[:conditions].keys
-      inner_join_sql = options[:conditions].collect {|f,v| "inner join field_instances as #{f} on #{f}.form_instance_id = form_instances.id and #{f}.field_id = '#{f}' and #{f}.answer #{v}"}.join(' ')
+    fields = arrayify(options[:fields]).collect {|f| f.to_s}
+    left_join_fields = fields.clone
+    where_conditions = []
+    if conditions = options[:conditions]
+      arrayify(conditions).each do |c| 
+        c.scan(/:([a-zA-Z0-9_-]+)/) { |f| left_join_fields.concat(f)}
+        where_conditions.push('('+c.gsub(/:([a-zA-Z0-9_-]+)/,Postgres ? '"\1".answer' : '\1.answer')+')')
+      end
+      left_join_fields = left_join_fields.uniq
+#      # if a field is in the conditions inner join, we don't need to add it to the left joins below, so get rid of them
+#      left_join_fields -= options[:conditions].keys.collect {|f| f.to_s}
+#      inner_join_sql = options[:conditions].collect {|f,v| fq = Postgres ? "\"#{f}\"" : f;"inner join field_instances as #{fq} on #{fq}.form_instance_id = form_instances.id and #{fq}.field_id = '#{f}' and #{fq}.answer #{v}"}.join(' ')
     end
     meta_fields = ['id']
     meta_fields += arrayify(options[:meta_fields]) if options[:meta_fields]
-    fields_sql = fields.collect {|f| "#{f}.answer as #{f}"}.concat(meta_fields.collect {|f| "form_instances.#{f}"}).join(", ")
-    left_join_sql = left_join_fields.collect{|f| "left outer join field_instances as #{f} on #{f}.form_instance_id = form_instances.id and #{f}.field_id = '#{f}' "}.join(" ") if !left_join_fields.empty?
+    fields_sql = fields.collect {|f| fq = Postgres ? "\"#{f}\"" : f;"#{fq}.answer as #{fq}"}.concat(meta_fields.collect {|f| "form_instances.#{f}"}).join(", ")
+    left_join_sql = left_join_fields.collect{|f| fq = Postgres ? "\"#{f}\"" : f;"left outer join field_instances as #{fq} on #{fq}.form_instance_id = form_instances.id and #{fq}.field_id = '#{f}' "}.join(" ") if !left_join_fields.empty?
 
     select = "select #{fields_sql} from form_instances"
     select += ' ' + left_join_sql if left_join_sql
-    select += ' ' + inner_join_sql if inner_join_sql
-    select += ' where ' + options[:meta_condition] if options[:meta_condition]
+#    select += ' ' + inner_join_sql if inner_join_sql
+    where_conditions.push('('+options[:meta_condition]+')') if options[:meta_condition]
+    select += ' where ' + where_conditions.join(' and ') if !where_conditions.empty?
     select += " order by "+arrayify(options[:order]).join(',') if options[:order]
     puts select
     r = FormInstance.find_by_sql(select)
