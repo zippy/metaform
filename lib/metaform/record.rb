@@ -1005,9 +1005,12 @@ class Record
         row << self.workflow_state
         fields.each do |f|
           d = @cache.attributes(index)[f]
-          if date_format && form.fields[f].type == 'date' && !d.blank?
+          field_type = form.fields[f].type
+          if field_type == 'time' && !d.blank?
+            row << Time.local(*ParseDate.parsedate(d)[0..6]).strftime("%H:%M:%S")
+          elsif date_format && field_type == 'date' && !d.blank?
             row << Time.local(*ParseDate.parsedate(d)[0..2]).strftime(date_format)
-          elsif date_time_format && form.fields[f].type == 'datetime' && !d.blank?
+          elsif date_time_format && field_type == 'datetime' && !d.blank?
             row << Time.local(*ParseDate.parsedate(d)[0..4]).strftime(date_time_format)
           else
             row << d
