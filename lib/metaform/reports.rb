@@ -21,6 +21,7 @@ class Reports
         :fields => nil,
         :forms => nil,
         :filters => nil,
+        :sql_prefilters => nil,
         :count_queries => {},
         :sum_queries => {},
         :default_condition => ''
@@ -98,9 +99,15 @@ class Reports
       if options[:filters]
         filters = filters.concat(arrayify(options[:filters]))
       end
-      
+
+      sql_prefilters = arrayify(r.sql_prefilters)
+      if options[:sql_prefilters]
+        sql_prefilters = sql_prefilters.concat(arrayify(options[:sql_prefilters]))
+      end
+
       locate_options[:fields] = field_list.keys
       locate_options[:filters] = filters if filters.size>0
+      locate_options[:sql_prefilters] = sql_prefilters if sql_prefilters.size>0
       #puts "locate_options[:filters] = #{locate_options[:filters].inspect}"
       locate_options[:return_answers_hash] = true
 

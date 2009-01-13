@@ -378,15 +378,26 @@ describe Record do
       Record.gather({:records => FormInstance.find(:all), :filters => ':name =~ /o/'}).size.should == 3
      end
 
-     it "should correctly locate fields with filters with a proc to determine the array of records" do
-       @records << Record.make(SampleForm.new,'new_entry',{:name =>'Herbert Wilcox',:fruit => 'banana'})
-       @records.each { |recs| recs.form.set_record(recs);recs.save('new_entry') }
-       Record.gather({:records => Proc.new{FormInstance.find(:all)}, :filters => ':fruit == "banana"'}).size.should == 3
-       Record.gather({:records => Proc.new{FormInstance.find(:all)}, :filters => [':name =~ /Smith/',':fruit == "banana"']}).size.should == 2
-       Record.gather({:records => Proc.new{FormInstance.find(:all)}, :filters => ':name =~ /o/'}).size.should == 3
-      end
-    
-    
+    it "should correctly locate fields with filters with a proc to determine the array of records" do
+      @records << Record.make(SampleForm.new,'new_entry',{:name =>'Herbert Wilcox',:fruit => 'banana'})
+      @records.each { |recs| recs.form.set_record(recs);recs.save('new_entry') }
+      Record.gather({:records => Proc.new{FormInstance.find(:all)}, :filters => ':fruit == "banana"'}).size.should == 3
+      Record.gather({:records => Proc.new{FormInstance.find(:all)}, :filters => [':name =~ /Smith/',':fruit == "banana"']}).size.should == 2
+      Record.gather({:records => Proc.new{FormInstance.find(:all)}, :filters => ':name =~ /o/'}).size.should == 3
+    end
+
+    it "should be able to prefilter by sql" do
+      @records.each { |recs| recs.form.set_record(recs);recs.save('new_entry') }
+      recs = Record.locate(:all,:sql_prefilters => ":fruit = 'banana'")
+      recs.size.should == 2
+    end
+
+    it "should be able to prefilter by sql as a proc" do
+      @records.each { |recs| recs.form.set_record(recs);recs.save('new_entry') }
+      recs = Record.locate(:all,:sql_prefilters => Proc.new{":fruit = 'banana'"})
+      recs.size.should == 2
+    end
+
 #    it "should return multi-dimentional indexes as arrays of arrays in the answers hash" do
 #      @records[0].fruit__1 = 'peach'
 #      @records[0].fruit__2 = 'kiwi'
@@ -1043,6 +1054,10 @@ describe Record do
     it "should be able to search conditionally on fields with multiple fields in the condition" do
       records = Record.search(:conditions => ":name  like 'Bob%' or :fruit = 'orange'")
       records.collect{|r| r.attributes}.should == [{"id"=>1}, {"id"=>3}, {"id"=>4}]
+    end
+    it "should be able to search conditionally on fields with condition as a proc" do
+      records = Record.search(:conditions => Proc.new{":name  like 'Bob%'"})
+      records.collect{|r| r.attributes}.should == [{"id"=>1}, {"id"=>3}]
     end
     it "should be able to and search multiple conditions on fields" do
       records = Record.search(:conditions => [":name like 'Bob%'",":fruit = 'orange'"])

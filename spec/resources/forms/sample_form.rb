@@ -168,42 +168,53 @@ end
 class Stats < Reports
   def_report('fruits', 
     :forms => ['SampleForm'],
-#    :fields => ['education'],
-#    :workflow_state_filter => ['logged'],
-#    :sql_conditions => {'Dem_MomAge' => '> 0'},
     :count_queries => {
-   		:bananas => 	"count.increment if :fruit == 'banana'",
-   		:apples => "count.increment if :fruit =~ /apple*/",
-   		:painters => "count.increment if :occupation.include?('painter')",
-   		:slackers => "count.increment if :occupation.include?('unemployed')",
-   		:painters_or_slackers => ":occupation.any?('painter','unemployed')",
-   		:other_than_painter_or_slacker => ":occupation.other?('painter','unemployed')"
-   		
-  	}) { |q,forms|
+      :bananas => 	"count.increment if :fruit == 'banana'",
+      :kiwis => 	"count.increment if :fruit == 'kiwi'",
+      :apples => "count.increment if :fruit =~ /apple*/",
+      :painters => "count.increment if :occupation.include?('painter')",
+      :slackers => "count.increment if :occupation.include?('unemployed')",
+      :painters_or_slackers => ":occupation.any?('painter','unemployed')",
+      :other_than_painter_or_slacker => ":occupation.other?('painter','unemployed')"
+
+      }) { |q,forms|
       Struct.new(*(q.keys))[*q.values]
     }
-    
-  def_report('report_with_workflow', 
+
+  def_report('report_with_workflow',
     :forms => ['SampleForm'],
     :workflow_state_filter => "standard%",
-     :count_queries => {
-   		:bananas => 	"count.increment if :fruit == 'banana'",
-   		:apples => "count.increment if :fruit =~ /apple*/",
-   		:bobs => "count.increment if :name =~ /^Bob/",
-   		:joes => "count.increment if :name =~ /^Joe/",
-  	}) { |q,forms|
+    :count_queries => {
+      :bananas => 	"count.increment if :fruit == 'banana'",
+      :apples => "count.increment if :fruit =~ /apple*/",
+      :bobs => "count.increment if :name =~ /^Bob/",
+      :joes => "count.increment if :name =~ /^Joe/",
+    }) { |q,forms|
       Struct.new(*(q.keys))[*q.values]
     }
-    
-    def_report('report_with_2_workflows', 
-      :forms => ['SampleForm'],
-      :workflow_state_filter => ['standard','unusual'],
-       :count_queries => {
-     		:bananas => 	"count.increment if :fruit == 'banana'",
-     		:apples => "count.increment if :fruit =~ /apple*/",
-     		:bobs => "count.increment if :name =~ /^Bob/",
-     		:joes => "count.increment if :name =~ /^Joe/",
-    	}) { |q,forms|
-        Struct.new(*(q.keys))[*q.values]
-      }
+
+  def_report('report_with_2_workflows',
+    :forms => ['SampleForm'],
+    :workflow_state_filter => ['standard','unusual'],
+    :count_queries => {
+      :bananas => 	"count.increment if :fruit == 'banana'",
+      :apples => "count.increment if :fruit =~ /apple*/",
+      :bobs => "count.increment if :name =~ /^Bob/",
+      :joes => "count.increment if :name =~ /^Joe/",
+    }) { |q,forms|
+      Struct.new(*(q.keys))[*q.values]
+    }
+
+  def_report('report_with_', 
+    :forms => ['SampleForm'],
+    :workflow_state_filter => ['standard','unusual'],
+    :count_queries => {
+      :bananas => 	"count.increment if :fruit == 'banana'",
+      :apples => "count.increment if :fruit =~ /apple*/",
+      :bobs => "count.increment if :name =~ /^Bob/",
+      :joes => "count.increment if :name =~ /^Joe/",
+    }) { |q,forms|
+      Struct.new(*(q.keys))[*q.values]
+    }
+
 end

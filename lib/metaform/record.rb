@@ -1046,7 +1046,9 @@ class Record
     condition_strings = []
     conditions_params = []
     field_list = {}
-
+    
+#    puts "LOCATE options: #{locate_options.inspect}"
+    
     if locate_options.has_key?(:filters)
       gather_options[:filters] = locate_options[:filters]
       filters = arrayify(locate_options[:filters])
@@ -1091,7 +1093,14 @@ class Record
       c = arrayify(locate_options[:conditions])
       c.each {|x| x =~ /([a-zA-Z0-9_-]+)(.*)/; condition_strings << %Q|if(field_instances.field_id = '#{$1}',if (answer #{$2},true,false),false)|}
     end
-    
+
+    if pf = locate_options[:sql_prefilters]
+      pfr = Record.search(:conditions => pf)
+      if !pfr.empty?
+        condition_strings << 'form_instances.id in ('+pfr.collect {|r| r.id}.join(',')+')'
+      end
+    end
+
     if !condition_strings.empty?
       condition_string = condition_strings.join(' and ')
       if !conditions_params.empty?
@@ -1286,7 +1295,8 @@ class Record
     left_join_fields = fields.clone
     where_conditions = []
     if conditions = options[:conditions]
-      arrayify(conditions).each do |c| 
+      arrayify(conditions).each do |c|
+        c = c.call if c.is_a?(Proc)
         c.scan(/:([a-zA-Z0-9_-]+)/) { |f| left_join_fields.concat(f)}
         where_conditions.push('('+c.gsub(/:([a-zA-Z0-9_-]+)/,Postgres ? '"\1".answer' : '\1.answer')+')')
       end
