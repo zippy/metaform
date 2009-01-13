@@ -1046,9 +1046,7 @@ class Record
     condition_strings = []
     conditions_params = []
     field_list = {}
-    
-    puts "LOCATE options: #{locate_options.inspect}"
-    
+
     if locate_options.has_key?(:filters)
       gather_options[:filters] = locate_options[:filters]
       filters = arrayify(locate_options[:filters])
@@ -1308,7 +1306,7 @@ class Record
     where_conditions.push('('+options[:meta_condition]+')') if options[:meta_condition]
     select += ' where ' + where_conditions.join(' and ') if !where_conditions.empty?
     select += " order by "+arrayify(options[:order]).join(',') if options[:order]
-    puts select
+#    puts select
     r = FormInstance.find_by_sql(select)
   end
   
