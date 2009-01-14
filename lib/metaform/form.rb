@@ -652,9 +652,11 @@ class Form
     end
     parent_presentation = @current_presentation
     @current_presentation = pres
-      
-#    save_context(:current_presentation,pres) do
-
+    
+    # we put this in begin ensure block to make sure that even if a error is thrown that the
+    # @root_presentation and the @current_presentation get set back to the appropriate values as
+    # the stack is unwound.
+    begin
       @force_read_only += 1 if pres.force_read_only
       pres.confirm_legal_state!(workflow_state) if @root_presentation == pres
       pres.initialized = true
@@ -716,12 +718,13 @@ class Form
         pres.block.call
       end
       body "</div>"
-#    end
-    @force_read_only -= 1 if pres.force_read_only
-    if @root_presentation == pres
-      @root_presentation = nil
+    ensure
+      @force_read_only -= 1 if pres.force_read_only
+      if @root_presentation == pres
+        @root_presentation = nil
+      end
+      @current_presentation = parent_presentation
     end
-    @current_presentation = parent_presentation
   end
 
   #################################################################################
