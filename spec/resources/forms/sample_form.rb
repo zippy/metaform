@@ -54,6 +54,7 @@ def setup
 #  def_workflows do 
     workflow 'standard',[{'logged' => 'Form Logged'},{'completed' => 'Form Completed'},{'verifying' => {:label => 'Form in validation',:validate => true}}] do
     	action 'create',[nil] do
+        validatation :update,{:test => 1}
         state 'logged'
         redirect_url '/'
 #        redirect_to_listing('log')

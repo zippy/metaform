@@ -614,7 +614,13 @@ class Record
         self.action_result = form.do_workflow_action(meta_data[:workflow_action],meta_data)
       end
       if self.action_result[:next_state]
-        form_instance.update_attributes({:workflow_state => self.action_result[:next_state]})
+        attrs = {:workflow_state => self.action_result[:next_state]}
+        if self.action_result[:update_validation_data]
+          vd = form_instance.get_validation_data
+          vd.update(self.action_result[:update_validation_data])
+          attrs[:validation_data] = vd
+        end
+        form_instance.update_attributes(attrs)
       else
         return false
       end

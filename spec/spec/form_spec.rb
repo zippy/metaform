@@ -1134,7 +1134,7 @@ describe SimpleForm do
   describe "-- workflow actions" do
     it "should return the correct state after a workflow action is taken" do
       @form.with_record(@record) do
-        @form.do_workflow_action('create',nil).should == {:next_state=>"logged", :redirect_url=>"/"}
+        @form.do_workflow_action('create',nil).should == {:next_state=>"logged", :redirect_url=>"/", :update_validation_data=>{:test=>1}}
       end
     end
     it "should raise and error for an unknow action" do
@@ -1150,6 +1150,11 @@ describe SimpleForm do
     it "should call after_workflow_action method if defined" do
       @form.with_record(@record) do
         @form.do_workflow_action('create','fish')[:after_workflow_action_meta].should == "fish"
+      end
+    end
+    it "should set the validation data if the validatation dsl method was called as part of the workflow action" do
+      @form.with_record(@record) do
+        @form.do_workflow_action('create','fish')[:update_validation_data].should == {:test => 1}
       end
     end
   end

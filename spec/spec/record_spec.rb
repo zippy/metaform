@@ -922,7 +922,12 @@ describe Record do
 #      @record.update_attributes({:education => 3},'new_entry')
 #      @record.form_instance.get_validation_data['_'].should == {"degree"=>[["This information is required"]]}
 #    end
-  end
+    it "should set validation through the workflow validation command" do
+      @record.form_instance.get_validation_data.has_key?(:test).should == false
+      @record.save('new_entry',{:workflow_action=>'create'})
+      @record.form_instance.get_validation_data[:test].should == 1
+    end
+  end #--validation
   
   describe "force nil" do
     before(:each) do

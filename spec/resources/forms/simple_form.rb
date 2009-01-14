@@ -195,6 +195,7 @@ class SimpleForm < Form
     workflow 'standard', [{'logged' => 'Form Logged'},{'completed' => 'Form Completed'},{'verifying' => {:label => 'Form in validation',:validate => true}}] do
     	action 'create',[nil] do
         state 'logged'
+        validatation :update,{:test => 1}
         redirect_url '/'
     	end
     	action 'continue','logged' do

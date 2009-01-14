@@ -120,6 +120,12 @@ class Form
     @_action_result[:return_data] = data
   end
 
+  def validatation(action,data)
+    case action
+    when :update
+      @_action_result[:update_validation_data] = data
+    end
+  end
 
   #################################################################################
   # a placeholder for defining a bunch of workflows
