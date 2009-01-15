@@ -1035,7 +1035,7 @@ class Record
   end
   
   def self.export_csv_header(field_list)
-    CSV.generate_line(['form','id','index','created_at','updated_at','wofkflow_state'].concat(field_list))
+    CSV.generate_line(['form','id','index','created_at','updated_at','workflow_state'].concat(field_list))
   end
  
   def loaded?
