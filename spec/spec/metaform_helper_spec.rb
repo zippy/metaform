@@ -1,5 +1,7 @@
 require File.dirname(__FILE__) + '/../spec_helper'
 
+include MetaformHelper
+
 describe MetaformHelper do
   
   it 'should be possible to sepecify a paramters that when returned by the client that will be used to search for fields' do
