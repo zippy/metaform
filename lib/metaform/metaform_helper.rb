@@ -1,5 +1,8 @@
 # The metaform helpers are automatically added to all ActionViews
 # You can also use them in controllers with "include MetaformHelper"
+
+ILIKE = UsingPostgres ? 'ilike' : 'like'
+
 module MetaformHelper
 
   #####################################################################################

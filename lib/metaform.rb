@@ -26,6 +26,8 @@ class MetaformUndefinedFieldError < MetaformException
 #  end
 end
 
+UsingPostgres = ActiveRecord::Base.connection.class == ActiveRecord::ConnectionAdapters::PostgreSQLAdapter
+
 require 'metaform/utilities'
 require 'metaform/form_proxy'
 require 'metaform/form_helper'

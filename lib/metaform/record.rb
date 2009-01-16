@@ -1311,17 +1311,17 @@ class Record
       arrayify(conditions).each do |c|
         c = c.call if c.is_a?(Proc)
         c.scan(/:([a-zA-Z0-9_-]+)/) { |f| left_join_fields.concat(f)}
-        where_conditions.push('('+c.gsub(/:([a-zA-Z0-9_-]+)/,Postgres ? '"\1".answer' : '\1.answer')+')')
+        where_conditions.push('('+c.gsub(/:([a-zA-Z0-9_-]+)/,UsingPostgres ? '"\1".answer' : '\1.answer')+')')
       end
       left_join_fields = left_join_fields.uniq
 #      # if a field is in the conditions inner join, we don't need to add it to the left joins below, so get rid of them
 #      left_join_fields -= options[:conditions].keys.collect {|f| f.to_s}
-#      inner_join_sql = options[:conditions].collect {|f,v| fq = Postgres ? "\"#{f}\"" : f;"inner join field_instances as #{fq} on #{fq}.form_instance_id = form_instances.id and #{fq}.field_id = '#{f}' and #{fq}.answer #{v}"}.join(' ')
+#      inner_join_sql = options[:conditions].collect {|f,v| fq = UsingPostgres ? "\"#{f}\"" : f;"inner join field_instances as #{fq} on #{fq}.form_instance_id = form_instances.id and #{fq}.field_id = '#{f}' and #{fq}.answer #{v}"}.join(' ')
     end
     meta_fields = ['id']
     meta_fields += arrayify(options[:meta_fields]) if options[:meta_fields]
-    fields_sql = fields.collect {|f| fq = Postgres ? "\"#{f}\"" : f;"#{fq}.answer as #{fq}"}.concat(meta_fields.collect {|f| "form_instances.#{f}"}).join(", ")
-    left_join_sql = left_join_fields.collect{|f| fq = Postgres ? "\"#{f}\"" : f;"left outer join field_instances as #{fq} on #{fq}.form_instance_id = form_instances.id and #{fq}.field_id = '#{f}' "}.join(" ") if !left_join_fields.empty?
+    fields_sql = fields.collect {|f| fq = UsingPostgres ? "\"#{f}\"" : f;"#{fq}.answer as #{fq}"}.concat(meta_fields.collect {|f| "form_instances.#{f}"}).join(", ")
+    left_join_sql = left_join_fields.collect{|f| fq = UsingPostgres ? "\"#{f}\"" : f;"left outer join field_instances as #{fq} on #{fq}.form_instance_id = form_instances.id and #{fq}.field_id = '#{f}' "}.join(" ") if !left_join_fields.empty?
 
     select = "select #{fields_sql} from form_instances"
     select += ' ' + left_join_sql if left_join_sql
