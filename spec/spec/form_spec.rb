@@ -1083,8 +1083,9 @@ describe SimpleForm do
         the_c = @form.c 'eye_color=ffffff',:description => "has black eyes"
         conds = @form.find_conditions_with_fields(['eye_color'])
         conds.size.should == 2
-        conds[1].name.should == 'eye_color=x'
-        conds[0].name.should == 'eye_color=ffffff'
+        names = conds.map{|c| c.name}
+        names.should include 'eye_color=x'
+        names.should include 'eye_color=ffffff'
      end
     end
     describe "#dependent_fields" do
