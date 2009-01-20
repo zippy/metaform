@@ -1328,7 +1328,13 @@ class Record
 #    select += ' ' + inner_join_sql if inner_join_sql
     where_conditions.push('('+options[:meta_condition]+')') if options[:meta_condition]
     select += ' where ' + where_conditions.join(' and ') if !where_conditions.empty?
-    select += " order by "+arrayify(options[:order]).join(',') if options[:order]
+    if options[:order]
+      order_fields = arrayify(options[:order])
+      if UsingPostgres
+        order_fields = order_fields.collect {|f| "\"#{f}\""}
+      end
+      select += " order by "+order_fields.join(',')
+    end
     select += " limit #{options[:limit].to_i}" if options[:limit]
 #    puts select
     r = FormInstance.find_by_sql(select)
