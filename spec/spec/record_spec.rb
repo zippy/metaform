@@ -1080,6 +1080,14 @@ describe Record do
       records = Record.search(:meta_fields => [:workflow_state])
       records.collect{|r| r.attributes}.should == [{"id"=>1,"workflow_state"=>nil},{"id"=>2,"workflow_state"=>nil},{"id"=>3,"workflow_state"=>nil},{"id"=>4,"workflow_state"=>nil}]
     end
+    it "should be able to add raw_fields to results" do
+      records = Record.search(:fields => [:name,:fruit],:raw_fields => %Q|CASE
+        WHEN workflow_state = 'x' THEN "name".answer
+        WHEN workflow_state = 'y' THEN "fruit".answer
+        END as conditional|
+      )
+      records.collect{|r| r.attributes}.should == [{"name"=>"Bob Smith", "id"=>1, "conditional"=>nil, "fruit"=>"banana"}, {"name"=>"Fred Smith", "id"=>2, "conditional"=>nil, "fruit"=>"apple"}, {"name"=>"Bob Feldspar", "id"=>3, "conditional"=>nil, "fruit"=>"orange"}, {"name"=>"Jane Feldspar", "id"=>4, "conditional"=>nil, "fruit"=>"orange"}]
+    end
     it "should be able to search on a meta condition" do
       records = Record.search(:meta_condition => "id > 2")
       records.collect{|r| r.attributes}.should == [{"id"=>3}, {"id"=>4}]

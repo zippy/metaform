@@ -1320,6 +1320,7 @@ class Record
     meta_fields = ['id']
     meta_fields += arrayify(options[:meta_fields]) if options[:meta_fields]
     fields_sql = fields.collect {|f| fq = UsingPostgres ? "\"#{f}\"" : f;"#{fq}.answer as #{fq}"}.concat(meta_fields.collect {|f| "form_instances.#{f}"}).join(", ")
+    fields_sql += "," + arrayify(options[:raw_fields]).join(',') if options[:raw_fields]
     left_join_sql = left_join_fields.collect{|f| fq = UsingPostgres ? "\"#{f}\"" : f;"left outer join field_instances as #{fq} on #{fq}.form_instance_id = form_instances.id and #{fq}.field_id = '#{f}' "}.join(" ") if !left_join_fields.empty?
 
     select = "select #{fields_sql} from form_instances"

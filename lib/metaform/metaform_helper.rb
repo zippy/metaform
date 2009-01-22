@@ -254,7 +254,13 @@ module MetaformHelper
   end
 
 
-  def fill_recs(fields,meta_fields=nil,per_page = 20)
+  def fill_recs(opts={})
+    opts = {
+      :per_page => 20
+    }.update(opts)
+    per_page = opts[:per_page]
+    opts.delete(:per_page)
+    
     #This method uses Record.search, which uses sql to make a smart hit on the database.
     options = generate_search_options(:search)
     if current_user.can?(:admin) && !@search_params[:manual_filters].blank?
@@ -264,8 +270,7 @@ module MetaformHelper
     end
     if options || @display_all
       options ||= {}
-      options[:fields] = fields
-      options[:meta_fields] = meta_fields if meta_fields
+      options.update(opts)  # pass any other options through to Record.search
       @records = Record.search(options)
       unless @records.empty?
         @records = @records.sort_by{|r| apply_sort_rule(r) }    
