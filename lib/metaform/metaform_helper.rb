@@ -276,7 +276,7 @@ module MetaformHelper
     @records = @records.paginate(:page => @search_params[:page],:per_page => per_page) if @search_params[:paginate]=='yes' && !@records.empty?
   end
 
-  def fill_and_order_records(per_page = 20)
+  def fill_and_order_records(per_page = 20,sql_prefilter=nil)
     #This method uses Record.gather, which pulls un-filtered records out of the database and then filters them via ruby.
     search_rules = generate_search_options(:locate)
     if current_user.can?(:admin) && !@search_params[:manual_filters].blank?
@@ -288,6 +288,7 @@ module MetaformHelper
         @records = Record.gather(options)
       else
         options = {:filters => search_rules,:workflow_state_filter => @search_params[:status]}
+        options[:sql_prefilters] = sql_prefilter if sql_prefilter
         @records = Log.get_list(@listing_name, options)
       end
       unless @records.empty?

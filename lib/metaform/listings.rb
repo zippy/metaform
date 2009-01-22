@@ -38,6 +38,7 @@ class Listings
       locate_options[:workflow_state_filter] = wsf if wsf.size > 0
       #Grab any filters from the options
       locate_options[:filters] = options[:filters] if options[:filters]
+      locate_options[:sql_prefilters] = options[:sql_prefilters] if options[:sql_prefilters]
       forms = Record.locate(:all,locate_options)
       # TODO-LISA
       # implement 1) sub-sorting, and 2) sorting by type, i.e. this sorting only does
