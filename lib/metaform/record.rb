@@ -311,8 +311,7 @@ class Record
   end
 
   def workflow_state_label
-    s = workflow_state
-    s.nil? ? '' : @form.workflows[workflow].label(s)
+    @form.workflow_state_label(workflow,workflow_state)
   end
   
   def created_at

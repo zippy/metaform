@@ -1442,6 +1442,10 @@ EOJS
     fields[field].dependent_fields
   end
   
+  def workflow_state_label(workflow,workflow_state)
+    workflow_state.blank? ? '' : workflows[workflow].label(workflow_state)
+  end
+  
   #################################################################################
   #################################################################################
   # loads all the files in the "forms" directory that end Form.rb as forms
