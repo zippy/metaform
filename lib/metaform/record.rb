@@ -1310,7 +1310,7 @@ class Record
       arrayify(conditions).each do |c|
         c = c.call if c.is_a?(Proc)
         c.scan(/:([a-zA-Z0-9_-]+)/) { |f| left_join_fields.concat(f)}
-        where_conditions.push('('+c.gsub(/:([a-zA-Z0-9_-]+)/,UsingPostgres ? '"\1".answer' : '\1.answer')+')')
+        where_conditions.push('('+sql_fieldname_convert(c)+')')
       end
       left_join_fields = left_join_fields.uniq
 #      # if a field is in the conditions inner join, we don't need to add it to the left joins below, so get rid of them
@@ -1338,6 +1338,10 @@ class Record
     select += " limit #{options[:limit].to_i}" if options[:limit]
 #    puts select
     r = FormInstance.find_by_sql(select)
+  end
+  
+  def Record.sql_fieldname_convert(str)
+    str.gsub(/:([a-zA-Z0-9_-]+)/,UsingPostgres ? '"\1".answer' : '\1.answer')
   end
   
   private
