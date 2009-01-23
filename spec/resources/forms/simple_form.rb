@@ -52,7 +52,6 @@ class SimpleForm < Form
       }
       f 'hash_field', :type => 'hash'
       f 'house_value', :type => 'integer', :indexed => true
-      f 'rent', :type => 'string', :followups => {['simple_changer','rent=Y'] => f('rent_amt')}
     end
     
     def_conditions do

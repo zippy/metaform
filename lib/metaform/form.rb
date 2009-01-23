@@ -273,46 +273,43 @@ class Form
       conds = {}
       the_field.followups.each do |followup_condition,followup_fields|
         fields = arrayify(followup_fields)
-        followup_condition = followup_condition.is_a?(Array) ? followup_condition : [followup_condition]
-        followup_condition.each do |fc|
-          case fc
-          when String
-            if fc =~ Condition::OperatorMatch
-              cond = c(fc)
+        case followup_condition
+        when String
+          if followup_condition =~ Condition::OperatorMatch
+            cond = c(followup_condition)
+          else
+            if the_field.constraints && the_field.constraints['set']
+              cond = c("#{name} includes #{followup_condition}")
             else
-              if the_field.constraints && the_field.constraints['set']
-                cond = c("#{name} includes #{fc}")
+              if followup_condition =~ /^\/.*\/$/
+                cond = c("#{name}=~#{followup_condition}")
+              elsif followup_condition =~ /^!\/.*\/$/
+                  cond = c("#{name}!~#{followup_condition}")
               else
-                if fc =~ /^\/.*\/$/
-                  cond = c("#{name}=~#{fc}")
-                elsif fc =~ /^!\/.*\/$/
-                    cond = c("#{name}!~#{fc}")
-                else
-                  cond = c("#{name}=#{fc}")
-                end
+                cond = c("#{name}=#{followup_condition}")
               end
             end
-          when Condition
-            cond = fc
-          when :answered
-            cond = c("#{name} answered")
-          else
-            raise MetaformException, "followup key '#{fc.inspect}' is invalid.  It must be a value, a full string condition defintion or a condition defined by c(...) or an array of these items"
           end
-        
-          the_field.add_force_nil_case(cond.name,fields.collect {|f| f.name},:unless)
-        
-          dependents = []
-          fields.each do |field|
-            dependents << field.name
-            conds[field.name] = cond
-            if !field.required_constraint_given
-              field.constraints ||= {}
-              field.constraints['required'] = cond.name
-            end
-          end
-          the_field.set_dependent_fields(dependents)
+        when Condition
+          cond = followup_condition
+        when :answered
+          cond = c("#{name} answered")
+        else
+          raise MetaformException, "followup key '#{followup_condition.inspect}' is invalid.  It must be a value, a full string condition defintion or a condition defined by c(...) or an array of these items"
         end
+      
+        the_field.add_force_nil_case(cond.name,fields.collect {|f| f.name},:unless)
+      
+        dependents = []
+        fields.each do |field|
+          dependents << field.name
+          conds[field.name] = cond
+          if !field.required_constraint_given
+            field.constraints ||= {}
+            field.constraints['required'] = cond.name
+          end
+        end
+        the_field.set_dependent_fields(dependents)
       end
       the_field.followup_conditions = conds
     end
