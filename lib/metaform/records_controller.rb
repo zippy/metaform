@@ -18,10 +18,12 @@ class RecordsController < ApplicationController
   def show
     setup_record
     redirected = false
-    redirected = before_show_record(@record) if respond_to?(:before_show_record)
+    
+    render_options = prepare_render_show_options
+    redirected = before_show_record(@record,render_options[:template]) if respond_to?(:before_show_record)
     if !redirected
       respond_to do |format|
-        format.html { render_show}
+        format.html {(@form_html,@form_javascript) = @record.build_html(@presentation,@index); render render_options}
         format.xml  { render :xml => @record.to_xml }
       end
     end
@@ -148,8 +150,7 @@ class RecordsController < ApplicationController
     setup_record_params
   end
   
-  def render_show
-    (@form_html,@form_javascript) = @record.build_html(@presentation,@index)
+  def prepare_render_show_options
     options = {:template => 'records/show'}
     if params[:template]
       tmpl = params[:template]
@@ -159,6 +160,12 @@ class RecordsController < ApplicationController
     options[:template] = 'records/'<< tmpl if tmpl
     options[:layout] = params[:template] if FileTest.exists?("#{RAILS_ROOT}/app/views/layouts/#{tmpl}.html.erb")
     options[:layout] = params[:layout] if params[:layout]
+    options
+  end
+  
+  def render_show
+    (@form_html,@form_javascript) = @record.build_html(@presentation,@index)
+    options = prepare_render_show_options
     render options
   end
   
