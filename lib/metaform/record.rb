@@ -906,8 +906,8 @@ class Record
     form_instance.logger
   end
   
-  def url(presentation,tab=nil,index=0)
-    Record.url(id,presentation,tab,index)
+  def url(presentation,index=0)
+    Record.url(id,presentation,index)
   end
     
   def explanation(field_name,index = 0)
@@ -1240,10 +1240,9 @@ class Record
       expr
   end
   
-  def Record.url(record_id,presentation,tab=nil,index=nil)
+  def Record.url(record_id,presentation,index=nil)
     url = "/records/#{record_id}"
     url << "/#{presentation}" if presentation != ""
-    url << "/#{tab}" if tab
     url << "/#{index}" if index && index != 0 
     url
   end

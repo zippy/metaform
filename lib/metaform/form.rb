@@ -462,7 +462,7 @@ class Form
       :label => nil,
     }.update(opts)
     index = options[:index] ? options[:index] : 0
-    url = Record.url(@record.id,presentation_name,@tabs_name,index)
+    url = Record.url(@record.id,presentation_name,index)
     label = options[:label]
     if @current_tab == presentation_name
       @current_tab_label = label ? label : presentation_name.humanize

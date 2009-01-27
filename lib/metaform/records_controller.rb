@@ -48,7 +48,7 @@ class RecordsController < ApplicationController
 #        flash[:notice] = 'Record was successfully created.'
         redirect_url = @record.action_result[:redirect_url]
         format.html { redirect_to(redirect_url) }
-        format.xml  { head :created, :location => @record.url(@presentation,@tabs) }
+        format.xml  { head :created, :location => @record.url(@presentation) }
       else
         format.html { (@form_html,@form_javascript) = @record.build_html(@presentation,@index); render :action => "new" }
         format.xml  { render :xml => @updated.errors.to_xml }
@@ -138,7 +138,6 @@ class RecordsController < ApplicationController
   def setup_record_params
     @form = @record.form
     @form.set_validating(false)
-    @tabs = params[:tabs]
     @index = params[:index]
     Form.set_store('record',@record)
   end
