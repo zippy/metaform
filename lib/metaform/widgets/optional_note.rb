@@ -8,9 +8,9 @@ class OptionalNoteWidget < Widget
 		opts = size ? {:size => size, :style=>'display:none'} : {:size => 25,:style=>'display:none'}
 		result = "&nbsp;&nbsp;"
 		div_id = build_html_name(field_instance_id)
-		result << link_to_function('',"do_click_#{field_instance_id}()",:id => "#{field_instance_id}_link")
+		result << form.link_to_function('',"do_click_#{field_instance_id}()",:id => "#{field_instance_id}_link")
 		result << middle_html if middle_html
-		result << "#{text_field_tag(build_html_name(field_instance_id),value,opts)}"
+		result << "#{form.text_field_tag(build_html_name(field_instance_id),value,opts)}"
 		js = <<-EOJS
 		function do_click_#{field_instance_id}() {
 			update_label_#{field_instance_id}(false);
