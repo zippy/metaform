@@ -1247,9 +1247,6 @@ EOJS
     text += yield if block_given?
     @_tip_id ||= 1
     tip_id = "tip_#{@_tip_id}"
-    css_class = Form.get_store(self.class.to_s+"_info_css_class")
-    #css_class = ",{ className: '#{css_class}' }" if css_class
-    options << "className: '#{css_class}'" if css_class
     options << "hook: {target: 'bottomRight', tip: 'topLeft'}" if !hook_bottom.blank?
     option_string = options.size > 0 ? ",{ #{options.join(' , ')} }" : ""
     javascript %Q|new Tip('#{tip_id}',"#{quote_for_javascript(text)}"#{option_string})|
