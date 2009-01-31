@@ -341,21 +341,29 @@ class Record
   def load_attributes(fields,index = 0)
     reset_attributes
     if index == :any
-      attributes_set = {}
-      @form_instance.field_instances.find(:all,:conditions => "state != 'calculated'").each do |fi|
-        if fields.include?(fi.field_id)
-          set_attribute(fi.field_id,fi.answer,fi.idx)
-          attributes_set[fi.field_id] = 1
-        end
-      end
-      fields.each {|f| set_attribute(f,nil) if !attributes_set.has_key?(f)}
+      field_instances = @form_instance.field_instances.find(:all,:conditions => "state != 'calculated'")
+      _load_attributes(field_instances,fields,nil)
     else
       index = index.to_i
-      fields.each do |field_name|
-        fi = @form_instance.field_instances.find(:all,:conditions => "state != 'calculated'").detect {|f| f.field_id == field_name && f.idx.to_i == index }
-        set_attribute(field_name,fi ? fi.answer : nil,index)
-      end
+      field_instances = @form_instance.field_instances.find(:all,:conditions => ["state != 'calculated' and idx = ?",index])
+      _load_attributes(field_instances,fields,index)
     end
+    field_instances
+  end
+  
+  def _load_attributes(field_instances,fields,index)
+    fields_found = []
+    field_instances.each do |fi|
+      fields_found << fi.field_id
+      set_attribute(fi.field_id,fi.answer,fi.idx)
+    end
+    _set_nil_attributes(fields-fields_found,index)
+  end
+  
+  def _set_nil_attributes(fields,index=0)
+    puts "setting to nil #{fields.inspect} at #{index}"
+    index = 0 if index == :any
+    fields.each {|f| set_attribute(f,nil,index)}
   end
   
   ######################################################################################

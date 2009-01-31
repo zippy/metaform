@@ -453,7 +453,14 @@ class Form
     if @render
       body tab_html(presentation_name,opts)
     else
-      @_tabs[presentation_name] = opts
+      if @_tabs.has_key?(presentation_name)
+        p = @_tabs[presentation_name]
+        p = [p] if !p.is_a?(Array)
+        p << opts
+        @_tabs[presentation_name] = p
+      else
+        @_tabs[presentation_name] = opts
+      end
     end
   end    
   
