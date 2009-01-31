@@ -109,8 +109,8 @@ module MetaformHelper
         c = 'not '+c if search_rule[:params][:negate]
         search_rule[:params][:meta_condition] ? meta_conditions.push(c) : conditions.push(c)
       end
-      options[:conditions] = conditions if !conditions.empty?
-      options[:meta_condition] = meta_conditions.join(" and ") if !meta_conditions.empty?
+      options[:conditions] = conditions.join(' and ') if !conditions.empty?
+      options[:meta_condition] = meta_conditions.join(' and ') if !meta_conditions.empty?
       options = nil if options.empty?
       options
     end
@@ -254,6 +254,10 @@ module MetaformHelper
   end
 
 
+  ############################################################################
+  # fill_recs uses Record.search which is much faster than Record.locate but it
+  # returns record the values in a fake FormInstances object which is what
+  # Record.search returns.
   def fill_recs(opts={})
     opts = {
       :per_page => 20
@@ -261,12 +265,24 @@ module MetaformHelper
     per_page = opts[:per_page]
     opts.delete(:per_page)
     
-    #This method uses Record.search, which uses sql to make a smart hit on the database.
     options = generate_search_options(:search)
+    
+    #if there's a manual filter then we have to and it to any conditions that allready exist
     if current_user.can?(:admin) && !@search_params[:manual_filters].blank?
       options ||= {}
-      # options[:conditions] may be a nil, or a string or an array, so the flatten.compact deals all three possibilities
-      options[:conditions] = [options[:conditions],@search_params[:manual_filters]].flatten.compact
+      if options[:conditions].blank?
+        options[:conditions] = @search_params[:manual_filters]
+      else
+        and_it = "(#{options[:conditions]}) and (#{@search_params[:manual_filters]})"
+        # if it's an array then the condition string is at the 0th position (i.e. like for ActiveRecord.find)
+        # otherwise the condition should be a string
+        case options[:conditions]
+        when Array
+          options[:conditions][0] = and_it
+        when String
+          options[:conditions] = and_it
+        end
+      end
     end
     if options || @display_all
       options ||= {}
@@ -281,6 +297,9 @@ module MetaformHelper
     @records = @records.paginate(:page => @search_params[:page],:per_page => per_page) if @search_params[:paginate]=='yes' && !@records.empty?
   end
 
+  ############################################################################
+  # fill_and_order_records uses Record.locate which is much slower than Record.search but it
+  # return actual Record objects
   def fill_and_order_records(per_page = 20,sql_prefilter=nil)
     #This method uses Record.gather, which pulls un-filtered records out of the database and then filters them via ruby.
     search_rules = generate_search_options(:locate)

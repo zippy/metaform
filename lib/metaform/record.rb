@@ -1314,11 +1314,16 @@ class Record
     left_join_fields = fields.clone
     where_conditions = []
     if conditions = options[:conditions]
-      arrayify(conditions).each do |c|
-        c = c.call if c.is_a?(Proc)
-        c.scan(/:([a-zA-Z0-9_-]+)/) { |f| left_join_fields.concat(f)}
-        where_conditions.push('('+sql_fieldname_convert(c)+')')
+      c = conditions.is_a?(Array) ? conditions[0] : conditions
+      c = c.call if c.is_a?(Proc)
+      c.scan(/:([a-zA-Z0-9_-]+)/) { |f| left_join_fields.concat(f)}
+      sql = sql_fieldname_convert(c)
+      if conditions.is_a?(Array)
+        idx = 0
+        sql.gsub!(/\?/) {|match| idx +=1;"'#{conditions[idx]}'"}
       end
+      where_conditions.push('('+sql+')')
+
       left_join_fields = left_join_fields.uniq
 #      # if a field is in the conditions inner join, we don't need to add it to the left joins below, so get rid of them
 #      left_join_fields -= options[:conditions].keys.collect {|f| f.to_s}

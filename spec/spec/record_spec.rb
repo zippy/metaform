@@ -1060,6 +1060,10 @@ describe Record do
       records = Record.search(:conditions => ":name  like 'Bob%'")
       records.collect{|r| r.attributes}.should == [{"id"=>1}, {"id"=>3}]
     end
+    it "should be able to search conditionally on fields using rails like array substitution syntax" do
+      records = Record.search(:conditions => [":name  like ?","Bob%"])
+      records.collect{|r| r.attributes}.should == [{"id"=>1}, {"id"=>3}]
+    end
     it "should be able to search conditionally on fields with multiple fields in the condition" do
       records = Record.search(:conditions => ":name  like 'Bob%' or :fruit = 'orange'")
       records.collect{|r| r.attributes}.should == [{"id"=>1}, {"id"=>3}, {"id"=>4}]
@@ -1067,10 +1071,6 @@ describe Record do
     it "should be able to search conditionally on fields with condition as a proc" do
       records = Record.search(:conditions => Proc.new{":name  like 'Bob%'"})
       records.collect{|r| r.attributes}.should == [{"id"=>1}, {"id"=>3}]
-    end
-    it "should be able to and search multiple conditions on fields" do
-      records = Record.search(:conditions => [":name like 'Bob%'",":fruit = 'orange'"])
-      records.collect{|r| r.attributes}.should == [{"id"=>3}]
     end
     it "should be able to add other fields when searching conditionally" do
       records = Record.search(:fields => [:name,:fruit],:conditions => ":name like 'Bob%'")
