@@ -361,7 +361,6 @@ class Record
   end
   
   def _set_nil_attributes(fields,index=0)
-    puts "setting to nil #{fields.inspect} at #{index}"
     index = 0 if index == :any
     fields.each {|f| set_attribute(f,nil,index)}
   end
