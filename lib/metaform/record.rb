@@ -958,48 +958,48 @@ class Record
   def self.human_attribute_name(attribute_key_name) #:nodoc:
     attribute_key_name
   end
-
-  def slice(*field_names)
-    # puts "--------------"
-    # puts "slice:  field_names = #{field_names.inspect}"
-    r = Record.locate(self.id,:index => :any, :fields => field_names)
-    # puts "slice:  r = #{r.inspect}"
+  
+  def Record.slice(id,*field_names)
+    conditions = {:form_instance_id => id, :field_id => field_names}
     result = {}
+    field_instances = FieldInstance.find(:all,:conditions => conditions, :order => 'idx DESC')
     field_names.each {|a| result[a] = {}}
-    r.form_instance.field_instances.collect do |fi| 
+    field_instances.each do |fi|
       result[fi.field_id][fi.idx] = fi.answer
-    end
+    end if field_instances
     result = result[field_names[0]] if field_names.size == 1
-    # puts "result = #{result.inspect}"
     result
   end
+  def slice(*field_names)
+    Record.slice(self.id,*field_names)
+  end
   
+  def Record.answer_num(id,field,answer,index=nil)
+    conditions = {:form_instance_id => id, :field_id => field, :answer => answer.to_s} #We store answers as strings in the database and postgres would like us to do the conversion.
+    conditions.update(:idx => index) if index
+    FieldInstance.find(:all,:conditions => conditions).size
+  end
   def answer_num(field,answer,index=nil)
-    # puts "---------"
-    # puts "answer_num: field = #{field.inspect}"
-    # puts "answer_num: answer = #{answer.inspect}"
-    # puts "answer_num: index = #{index.inspect}"
-    # puts "answer_num: self.id = #{self.id}"
-    r = Record.locate(self.id,:index => :any,:fields => [field], :return_answers_hash => true)
-    if r
-      if index
-        r[field].value.map{ |a| a[index] }.delete_if {|x| x != answer}.size
-      else
-        r[field].value.delete_if{ |x| x != answer}.size
-      end
-    end
+    Record.answer_num(self.id,field,answer,index)
   end
   
-  def last_answer(field,index=nil)
-    r = Record.locate(self.id,:index => :any,:fields => [field], :return_answers_hash => true)
-    if r
-      if index
-        r[field].value.map{ |a| a[index] }.compact[-1]
-      else
-        r[field].value.compact[-1]
-      end
-    end
+  def Record.max_index(id,field)
+    conditions = {:form_instance_id => id, :field_id => field}
+    max_index_field_instance = FieldInstance.find(:first,:conditions => conditions, :order => 'idx DESC')
+    max_index_field_instance ? max_index_field_instance.idx : nil
   end
+  def max_index(field)
+    Record.max_index(self.id,field)
+  end
+  
+  def Record.last_answer(id,field)
+    conditions = {:form_instance_id => id, :field_id => field}
+    max_index_field_instance = FieldInstance.find(:first,:conditions => conditions, :order => 'idx DESC')
+    max_index_field_instance ? max_index_field_instance.answer : nil
+  end
+  def last_answer(field)
+    Record.last_answer(self.id,field)
+  end 
  
   #################################################################################
   # exports the attributes of the record in the format specified
