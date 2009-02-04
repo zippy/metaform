@@ -918,10 +918,12 @@ describe Record do
 #        @record.recalcualte_invalid_fields['_'].should == {"hobby"=>[["This information is required"]], "name"=>[["This information is required"]], "fruit"=>[["This information is required"]]}
 #      end
 #    end #recalculating validation
-#    it "should update the validity of related fields" do
-#      @record.update_attributes({:education => 3},'new_entry')
-#      @record.form_instance.get_validation_data['_'].should == {"degree"=>[["This information is required"]]}
-#    end
+    it "should update the validity of related fields" do
+      @record.update_attributes({:education => 3},'new_entry')
+      @record.form_instance.get_validation_data['_'].should == {"degree"=>[["This information is required"]]}
+      @record.update_attributes({:education => 0},'new_entry')
+      @record.form_instance.get_validation_data['_'].should == {}
+    end
     it "should set validation through the workflow validation command" do
       @record.form_instance.get_validation_data.has_key?(:test).should == false
       @record.save('new_entry',{:workflow_action=>'create'})
