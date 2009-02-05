@@ -20,11 +20,18 @@
 
 .validation_error {
   display: inline;
-	color: #e00;
+	color: #CC0033;
 }
 
 .validation_item {
-	color: #e00;
+	color: #CC0033;
+	background-color: #FFCCFF;
+	margin-bottom: 10px;
+	margin-top: 2px;
+	padding: 2px;
+	border-style: solid;
+	border-width: 0px 1px 1px 1px;
+	border-color: #CC0033;
 }
 
 .followup {
@@ -59,7 +66,9 @@ td.radio_buttons {
 .checkbox_followups {
 	float:right;
 }
-
+.blocky {
+	display: block;
+}
 .clear {
 	clear:both;
 }
@@ -68,6 +77,9 @@ td.radio_buttons {
 }
 .bottom_margin_10 {
 	margin-bottom: 10px;
+}
+.bottom_margin_20 {
+	margin-bottom: 20px;
 }
 .textfield_1 {
 	width:.7em;
