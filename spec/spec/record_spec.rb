@@ -1064,6 +1064,10 @@ describe Record do
       records = Record.search(:fields => [:name],:order => [:name])
       records.collect{|r| r.attributes}.should == [{"name"=>"Bob Feldspar", "id"=>3}, {"name"=>"Bob Smith", "id"=>1}, {"name"=>"Fred Smith", "id"=>2}, {"name"=>"Jane Feldspar", "id"=>4}]
     end
+    it "should be able to order fields on search selecting the table name too" do
+      records = Record.search(:fields => [:name],:order => 'form_instances.created_at')
+      records.collect{|r| r.attributes}.should == [{"name"=>"Bob Smith", "id"=>1}, {"name"=>"Fred Smith", "id"=>2},{"name"=>"Bob Feldspar", "id"=>3},  {"name"=>"Jane Feldspar", "id"=>4}]
+    end
     it "should be able to search conditionally on fields" do
       records = Record.search(:conditions => ":name  like 'Bob%'")
       records.collect{|r| r.attributes}.should == [{"id"=>1}, {"id"=>3}]

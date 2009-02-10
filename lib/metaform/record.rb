@@ -1349,7 +1349,14 @@ class Record
     if options[:order]
       order_fields = arrayify(options[:order])
       if UsingPostgres
-        order_fields = order_fields.collect {|f| "\"#{f}\""}
+        order_fields = order_fields.collect do |f|
+          # quote the field name but not the table name if given
+          if f =~ /(.*)\.(.*)/
+            "#{$1}.\"#{$2}\""
+          else
+            "\"#{f}\""
+          end
+        end
       end
       select += " order by "+order_fields.join(',')
     end
