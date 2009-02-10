@@ -1322,7 +1322,7 @@ class Record
     if conditions = options[:conditions]
       c = conditions.is_a?(Array) ? conditions[0] : conditions
       c = c.call if c.is_a?(Proc)
-      c.scan(/:([a-zA-Z0-9_-]+)/) { |f| left_join_fields.concat(f)}
+      c.scan(/:([a-zA-Z0-9_-]+)/) { |f| left_join_fields = f.concat(left_join_fields)}
       sql = sql_fieldname_convert(c)
       if conditions.is_a?(Array)
         idx = 0
