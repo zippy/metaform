@@ -392,6 +392,12 @@ describe Record do
       recs.size.should == 2
     end
 
+    it "should be able to prefilter by sql where no records match" do
+      @records.each { |recs| recs.form.set_record(recs);recs.save('new_entry') }
+      recs = Record.locate(:all,:sql_prefilters => ":fruit = 'zingo_fruit'")
+      recs.size.should == 0
+    end
+
     it "should be able to prefilter by sql as a proc" do
       @records.each { |recs| recs.form.set_record(recs);recs.save('new_entry') }
       recs = Record.locate(:all,:sql_prefilters => Proc.new{":fruit = 'banana'"})

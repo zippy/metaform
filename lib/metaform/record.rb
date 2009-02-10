@@ -1122,6 +1122,8 @@ class Record
       pfr = Record.search(:conditions => pf)
       if !pfr.empty?
         condition_strings << 'form_instances.id in ('+pfr.collect {|r| r.id}.join(',')+')'
+      else
+        return []
       end
     end
 
