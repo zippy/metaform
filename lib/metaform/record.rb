@@ -1016,20 +1016,25 @@ class Record
         end
         row << self.workflow_state
         fields.each do |f|
-          d = @cache.attributes(index)[f]
-          field_type = form.fields[f].type
-          begin
-            if field_type == 'time' && !d.blank?
-              row << Time.local(*ParseDate.parsedate(d)[0..6]).strftime("%H:%M:%S")
-            elsif date_format && field_type == 'date' && !d.blank?
-              row << Time.local(*ParseDate.parsedate(d)[0..2]).strftime(date_format)
-            elsif date_time_format && field_type == 'datetime' && !d.blank?
-              row << Time.local(*ParseDate.parsedate(d)[0..4]).strftime(date_time_format)
-            else
+          field_def = form.fields[f]
+          if field_def.nil?
+            row << nil
+          else
+            d = @cache.attributes(index)[f]
+            field_type = field_def.type
+            begin
+              if field_type == 'time' && !d.blank?
+                row << Time.local(*ParseDate.parsedate(d)[0..6]).strftime("%H:%M:%S")
+              elsif date_format && field_type == 'date' && !d.blank?
+                row << Time.local(*ParseDate.parsedate(d)[0..2]).strftime(date_format)
+              elsif date_time_format && field_type == 'datetime' && !d.blank?
+                row << Time.local(*ParseDate.parsedate(d)[0..4]).strftime(date_time_format)
+              else
+                row << d
+              end
+            rescue
               row << d
             end
-          rescue
-            row << d
           end
         end
         result << CSV.generate_line(row)
