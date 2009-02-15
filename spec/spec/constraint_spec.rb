@@ -187,12 +187,47 @@ describe Constraints do
       end
     end
   end
+  describe 'enumeration' do
+    describe 'specified with a hash' do
+      before(:each) do
+        @enum = {'enumeration' => [{'apple' => 'Apple'},{'banana' => 'Banana'}]}
+      end
+      it "should trigger when value is not in enum list" do
+        Constraints.verify(@enum, 'kiwi', @form).should == ["Answer must be one of Apple, Banana"]
+      end
+      it "should not trigger when value is in enum list" do
+        Constraints.verify(@enum, 'banana', @form).should == []
+      end
+    end
+    describe 'specified with a simple array' do
+      before(:each) do
+        @enum = {'enumeration' => %w(apple banana)}
+      end
+      it "should trigger when value is not in enum list" do
+        Constraints.verify(@enum, 'kiwi', @form).should == ["Answer must be one of apple, banana, , "]
+      end
+      it "should not trigger when value is in enum list" do
+        Constraints.verify(@enum, 'banana', @form).should == []
+      end
+    end
+    describe 'specified with a rails style select array' do
+      before(:each) do
+        @enum = {'enumeration' => [['Apple','apple'],['Banana', 'banana']]}
+      end
+      it "should trigger when value is not in enum list" do
+        Constraints.verify(@enum, 'kiwi', @form).should == ["Answer must be one of Apple, Banana"]
+      end
+      it "should not trigger when value is in enum list" do
+        Constraints.verify(@enum, 'banana', @form).should == []
+      end
+    end
+  end
   describe 'set' do
     it "should trigger when value is not in set" do
       Constraints.verify({'set' => [{'apple' => 'Apple'},{'banana' => 'Banana'}]}, 'kiwi,apple', @form).should == ["Answer must be one of Apple, Banana"]
     end
 
-    it "should not trigger when value is not in set" do
+    it "should not trigger when value is in set" do
       Constraints.verify({'set' => [{'apple' => 'Apple'},{'banana' => 'Banana'}]}, 'banana', @form).should == []
     end
 
