@@ -338,8 +338,8 @@ class Record
   ######################################################################################
   # Load attributes from the database, setting items to nil if they aren't found in dabase
   # the index parameter can be :any if all indexes should be loaded.
-  def load_attributes(fields,index = 0)
-    reset_attributes
+  def load_attributes(fields,index = 0,reset = true)
+    reset_attributes if reset
     if index == :any
       field_instances = @form_instance.field_instances.find(:all,:conditions => "state != 'calculated'")
       _load_attributes(field_instances,fields,nil)
@@ -545,8 +545,10 @@ class Record
     result = nil
     #puts "BENCHMARK"+ Benchmark.measure {
     load_record #pulls in everything from the database into record cache called @cache
+    extra_validate_fields = []
      if zap_fields = options[:clear_indexes]
-       delete_fields(:all,*zap_fields)  
+       delete_fields(:all,*zap_fields)
+       extra_validate_fields.concat(zap_fields)
      end
     preflight_state = []
     zap_fields = {}
@@ -564,6 +566,7 @@ class Record
     if zap_fields
       zap_fields.each do |idx,fields|
         delete_fields(idx,*fields)
+        extra_validate_fields.concat(fields)
       end
     end    
     if options[:multi_index]
@@ -575,12 +578,13 @@ class Record
       fields = attribs.nil? ? nil : attribs.keys
     end
     index ||= options[:index]
-    result=_update_attributes(presentation,meta_data,fields,index)
+    extra_validate_fields.uniq!
+    result=_update_attributes(presentation,meta_data,fields,index,extra_validate_fields)
     #}.to_s
     result
   end
 
-  def _update_attributes(presentation,meta_data,fields=nil,idx=0)
+  def _update_attributes(presentation,meta_data,fields=nil,idx=0,extra_validate_fields=nil)
     # determine if this presentation is allowed to be used for updating the 
     # record in the current state
     puts "<br>CACHE on entrance to _update_attributes: #{@cache.dump.inspect}" if DEBUG1
@@ -702,7 +706,8 @@ class Record
     		dependents = []
         FieldInstance.transaction do
           field_instances_to_save.each do |i|
-            dependents << @form.dependent_fields(i.field_id)
+            deps = @form.dependent_fields(i.field_id)
+            dependents.concat(deps) if deps
             saved_attributes[i.field_id] = i.answer
             puts "<br>about to save #{i.attributes.inspect}" if DEBUG1
             if !i.save!
@@ -712,18 +717,25 @@ class Record
         end
         vd = form_instance.get_validation_data #This holds the validation information which is presented in
         #red at the top of a form.
-        _merge_invalid_fields(vd,field_list,invalid_fields,idx)
+        
+        # any dependents and fields that were passed in for validation (usually because the were cleared
+        # by a zapping ropt) that aren't being updated in this group of attributes must have
+        # their validity status updated too.
+        dependents.concat(extra_validate_fields).uniq! if extra_validate_fields
+        deps_to_check = dependents-field_list
+        if !deps_to_check.empty?
+          load_attributes(deps_to_check,idx,false)
+          @form.with_record(self) do
+            invalid_deps = _validate_attributes(deps_to_check)
+            invalid_fields.update(invalid_deps)
+          end
+          invalid_field_list = field_list+deps_to_check
+        else
+          invalid_field_list = field_list
+        end
+        _merge_invalid_fields(vd,invalid_field_list,invalid_fields,idx)
         _update_presentation_error_count(vd,presentation,idx,states,validation_exclude_states)
 
-        # any dependents that aren't being updated in this group of attributes must have
-        # their validity status updated too.
-#        dependents = dependents.flatten.uniq.compact.reject {|f| field_list.include?(f)}
-#        if !dependents.empty?
-#          load_attributes(dependents,index)
-#          @form.with_record(self) do
-#            _merge_invalid_fields(vd,dependents,_validate_attributes(dependents),index)
-#          end
-#        end
         if !calculated_fields_to_update.empty?
           form.with_record(self) do
             update_calculated_fields(calculated_fields_to_update)
