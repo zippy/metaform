@@ -24,8 +24,14 @@ class HeightWidget < Widget
 						  $('#{build_html_multi_id(field_instance_id,'inches_box')}').value='';
 						}else{
   						var total_inches = meters * 39.370079;
-  						$('#{build_html_multi_id(field_instance_id,'feet_box')}').value = Math.floor(total_inches / 12);
-  						$('#{build_html_multi_id(field_instance_id,'inches_box')}').value = Math.round(total_inches % 12);
+  						var feet = Math.floor(total_inches / 12);
+  						var inches = Math.round(total_inches % 12);
+  						if (inches == 12) {
+  						  feet++;
+  						  inches = 0;
+  						}
+  						$('#{build_html_multi_id(field_instance_id,'feet_box')}').value = feet;
+  						$('#{build_html_multi_id(field_instance_id,'inches_box')}').value = inches;
 					  }
 					}
 			}
@@ -35,6 +41,10 @@ class HeightWidget < Widget
   		total_inches = (meters * 39.370079).round
   		feet = total_inches / 12
   		inches = total_inches % 12      	
+			if (inches == 12)
+			  feet++
+			  inches = 0
+			end
   		<<-EOHTML
   		<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'feet_box')}" id="#{build_html_multi_id(field_instance_id,'feet_box')}" value="#{feet}" onchange="#{build_html_multi_id(field_instance_id,'update_height')}(true)" /> ft
   		<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'inches_box')}" id="#{build_html_multi_id(field_instance_id,'inches_box')}" value="#{inches}" onchange="#{build_html_multi_id(field_instance_id,'update_height')}(true)" /> in or
