@@ -767,6 +767,22 @@ describe Record do
       f.state.should == 'explained'
       f.explanation.should == 'has studied forever'
     end
+    it "should set the field instance state to 'explained' for fields with an explanation at an index" do
+      @record.update_attributes({:education => '99'},'new_entry',{:explanations => {'education' => {"1" => 'has studied forever'}}},:index => "1")
+      f = @record.form_instance.field_instances.find_by_field_id_and_idx('education',"1")
+      f.state.should == 'explained'
+      f.explanation.should == 'has studied forever'
+    end
+    it "setting explanations at a particular index shouldn't have an effect on the explanation at a different index" do
+      @record.update_attributes({:education => '99'},'new_entry',{:explanations => {'education' => {"0" => 'has studied forever'}}})
+      @record.update_attributes({:education => '99'},'new_entry',{:explanations => {'education' => {"1" => 'has also studied forever'}}},:index => "1")
+      f = @record.form_instance.field_instances.find_by_field_id('education')
+      f.state.should == 'explained'
+      f.explanation.should == 'has studied forever'
+      f = @record.form_instance.field_instances.find_by_field_id_and_idx('education',"1")
+      f.state.should == 'explained'
+      f.explanation.should == 'has also studied forever'
+    end
     it "should set the field instance state to 'explained' for multi_index fields with explanations" do
       @record.update_attributes(
         { 0 => {:education => '99'},1 => {:education => '97'}},'new_entry',

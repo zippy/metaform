@@ -657,12 +657,12 @@ class Record
 #      f = field_instances.find {|fi| fi.field_id == field_instance_id && fi.idx == index}
       f = FieldInstance.find(:first, :conditions=>["form_instance_id = ? and field_id = ? and idx = ?",form_instance.id,field_instance_id,index]) if !CACHE
       f = @ficache.get_attribute(field_instance_id,index) if CACHE
-      is_explanation = explanations && explanations[field_instance_id]
-      explanation_value = explanations[field_instance_id][index.to_s] if is_explanation
+      has_explanation = explanations && explanations[field_instance_id] && explanations[field_instance_id].has_key?(index.to_s)
+      explanation_value = explanations[field_instance_id][index.to_s] if has_explanation
       is_approval = approvals && approvals[field_instance_id]
       approval_value = approvals[field_instance_id][index.to_s] if is_approval
       if f != nil
-        if f.answer != (value.nil? ? nil : value.to_s) || (is_explanation && f.explanation != explanation_value) ||
+        if f.answer != (value.nil? ? nil : value.to_s) || (has_explanation && f.explanation != explanation_value) ||
             (is_approval && approval_value)
           # if we are checking last_updated dates don't do the update if the fields updated_at
           # is greater than the last_updated date passed in, and store this to report later
@@ -670,7 +670,7 @@ class Record
             field_instances_protected << f
           else
             f.answer = value
-            f.explanation = explanation_value if is_explanation
+            f.explanation = explanation_value if has_explanation
             field_instances_to_save << f
           end
         end
@@ -678,7 +678,7 @@ class Record
         puts "<br>Creating new fi for #{field_instance_id}" if DEBUG1
         f = FieldInstance.new({:answer => value, :field_id=>field_instance_id, :form_instance_id => id, :idx => index})
         @ficache.set_attribute(field_instance_id,f,index) if CACHE
-        f.explanation = explanation_value if is_explanation
+        f.explanation = explanation_value if has_explanation
         field_instances_to_save << f
       end
       if @form.calculated_field_dependencies[field_instance_id]
@@ -689,7 +689,7 @@ class Record
         if is_approval
           f.state = approval_value.blank? ? 'explained' : 'approved'
         else
-          f.state = (!is_explanation || explanation_value.blank?) ? 'invalid' : 'explained'
+          f.state = (!has_explanation || explanation_value.blank?) ? 'invalid' : 'explained'
         end
       else
         f.state = 'answered'
