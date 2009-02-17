@@ -168,6 +168,11 @@ class Record
     def muilt_dimensional?
       @value[0].instance_of?(Array)
     end
+    
+    def blank?
+      return true if @value.nil?
+      @value.compact.blank?
+    end
         
   end
   
@@ -1248,10 +1253,8 @@ class Record
       #puts "eval_Field 0:  expression=#{expression}"
       expr = expression.gsub(/\!:(\S+)/,'!(:\1)')
       #puts "eval_Field 1:  expr=#{expr}"
-      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|each_with_index|to_i|zip|map|include|any|other\?)/,'f["\1"].\2')
+      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|each_with_index|to_i|zip|map|include|any|other\?|blank\?)/,'f["\1"].\2')
       #puts "eval_field 2:  expr=#{expr}"
-      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\.blank\?/,'(f["\1"] ? (f["\1"].is_indexed? ? f["\1"].value[0].blank? : f["\1"].value.blank?) : true)')
-      #puts "eval_field 3:  expr=#{expr}"
       expr = expr.gsub(/:([a-zA-Z0-9_-]+)\./,'f["\1"].value.')
       #puts "eval_field 4:  expr=#{expr}"
       expr = expr.gsub(/:([a-zA-Z0-9_-]+)\[/,'f["\1"][')
