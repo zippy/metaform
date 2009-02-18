@@ -38,10 +38,13 @@ module Constraints
           constraint_errors << (err_override || "Answer must not be more than #{constraint} characters long")
         end
       when "range"
-        #for the range constraint the value must be a string "X-Y" where X<Y
+        #for the range constraint the value must be a string "X:Y" where X<Y
         if !value.blank?
-          (low,hi) = constraint.split("-")
-          if value.to_i < low.to_i || value.to_i > hi.to_i
+          (l,h) = constraint.split(":")
+          low = l.to_i
+          hi = h.to_i
+          raise "range constraint #{constraint} is ilegal. Must be of form X:Y where X<Y" if low>hi || hi == nil
+          if value.to_i < low || value.to_i > hi
             constraint_errors << (err_override || "Answer must be between #{low} and #{hi}#{condition_extra_err}")
           end
         end

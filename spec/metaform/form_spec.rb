@@ -243,7 +243,7 @@ describe SimpleForm do
         @form.fields['name'].properties.should == [Invalid,FieldNameHasG]
       end
       it "should allow fields in a def_fields block to override options" do
-        @form.fields['higher_ed_years'].constraints['range'].should == '0-10'
+        @form.fields['higher_ed_years'].constraints['range'].should == '0:10'
       end
       it "should raise an error for unknown field types" do
         lambda {@form.f('fish',:type => 'squid')}.should raise_error("Unknown field type: squid")
@@ -1164,7 +1164,7 @@ describe SimpleForm do
     describe "field widget map" do
       it "should create a field widget map" do
         @form.setup_presentation('simple',@record)
-        @form.current_questions_field_widget_map.should == {"name"=>[TextFieldWidget, {:params=>nil, :constraints=>{"required"=>true}}], "eye_color"=>[TextFieldWidget, {:params=>nil, :constraints=>{"enumeration"=>[{"ffffff"=>"black"}, {"00ff00"=>"green"}, {"0000ff"=>"blue"}, {"x"=>"other"}]}}], "married"=>[TextFieldWidget, {:params=>nil, :constraints=>{"enumeration"=>[{"y"=>"Yes"}, {"n"=>"No"}]}}], "higher_ed_years"=>[TextFieldWidget, {:params=>nil, :constraints=>{"required"=>true, "range"=>"0-10"}}], "other_eye_color"=>[TextAreaWidget, {:params=>nil, :constraints=>{"required"=>"eye_color=x"}}], "age"=>[TextFieldWidget, {:params=>nil, :constraints=>{"required"=>true, "range"=>"1-100"}}]}
+        @form.current_questions_field_widget_map.should == {"name"=>[TextFieldWidget, {:params=>nil, :constraints=>{"required"=>true}}], "eye_color"=>[TextFieldWidget, {:params=>nil, :constraints=>{"enumeration"=>[{"ffffff"=>"black"}, {"00ff00"=>"green"}, {"0000ff"=>"blue"}, {"x"=>"other"}]}}], "married"=>[TextFieldWidget, {:params=>nil, :constraints=>{"enumeration"=>[{"y"=>"Yes"}, {"n"=>"No"}]}}], "higher_ed_years"=>[TextFieldWidget, {:params=>nil, :constraints=>{"required"=>true, "range"=>"0:10"}}], "other_eye_color"=>[TextAreaWidget, {:params=>nil, :constraints=>{"required"=>"eye_color=x"}}], "age"=>[TextFieldWidget, {:params=>nil, :constraints=>{"required"=>true, "range"=>"1:100"}}]}
       end
     end
   end

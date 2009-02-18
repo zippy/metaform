@@ -35,10 +35,10 @@ class SimpleForm < Form
     def_fields :properties=>[FieldNameHasG] do
       def_fields :constraints=>{'required' => true}, :group => 'basic_info' do
         f 'name'
-        def_fields :constraints=>{"range"=>"1-100"} do
+        def_fields :constraints=>{"range"=>"1:100"} do
           f 'age'
           f 'height'
-          f 'higher_ed_years',:constraints=>{'range'=>'0-10'},:followups=>{'/../' => f('degree'),'!0'=>f('no_ed_reason')},:label => 'years of higher education'
+          f 'higher_ed_years',:constraints=>{'range'=>'0:10'},:followups=>{'/../' => f('degree'),'!0'=>f('no_ed_reason')},:label => 'years of higher education'
         end
         f 'senior'
       end

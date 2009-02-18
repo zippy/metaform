@@ -20,19 +20,31 @@ describe Constraints do
   end
 
   describe 'range' do
+    it "should raise an error if a range can't be extracted" do
+      lambda{Constraints.verify({'range' => '5-1'}, 1, @form)}.should raise_error("range constraint 5-1 is ilegal. Must be of form X:Y where X<Y")
+    end
+    it "should raise an error if a range is illegal" do
+      lambda{Constraints.verify({'range' => '5:1'}, 1, @form)}.should raise_error("range constraint 5:1 is ilegal. Must be of form X:Y where X<Y")
+    end
     it "should not trigger when value is nil" do
-      Constraints.verify({'range' => '1-5'}, nil, @form).should == []
+      Constraints.verify({'range' => '1:5'}, nil, @form).should == []
     end
     it "should not trigger when value is empty string" do
-      Constraints.verify({'range' => '1-5'}, '', @form).should == []
+      Constraints.verify({'range' => '1:5'}, '', @form).should == []
     end
     it "should trigger when value is out of range" do
-      Constraints.verify({'range' => '1-5'}, '9', @form).should == ["Answer must be between 1 and 5"]
+      Constraints.verify({'range' => '1:5'}, '9', @form).should == ["Answer must be between 1 and 5"]
+    end
+    it "should not trigger when value is not out of range and negative" do
+      Constraints.verify({'range' => '-5:5'}, '0', @form).should == []
+    end
+    it "should trigger when value is out of range and negative" do
+      Constraints.verify({'range' => '-5:5'}, '-6', @form).should == ["Answer must be between -5 and 5"]
     end
     it "should not trigger when value is in range" do
-      Constraints.verify({'range' => '1-3'}, '1', @form).should == []
-      Constraints.verify({'range' => '1-3'}, '2', @form).should == []
-      Constraints.verify({'range' => '1-3'}, '3', @form).should == []
+      Constraints.verify({'range' => '1:3'}, '1', @form).should == []
+      Constraints.verify({'range' => '1:3'}, '2', @form).should == []
+      Constraints.verify({'range' => '1:3'}, '3', @form).should == []
     end
   end
 
