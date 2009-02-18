@@ -2,6 +2,9 @@ require File.dirname(__FILE__) + '/../spec_helper'
 include UtilityFunctions
 
 describe Record do
+  before(:each) do
+    Form.config[:hide_required_extra_errors] = true
+  end
   def setup_record(index = nil)
     @initial_values = {:name =>'Bob Smith',:fruit => 'banana'}
     @form = SampleForm.new
@@ -1078,11 +1081,11 @@ describe Record do
     end
     it "should be able to order fields on search" do
       records = Record.search(:fields => [:name],:order => [:name])
-      records.collect{|r| r.attributes}.should == [{"name"=>"Bob Feldspar", "id"=>3}, {"name"=>"Bob Smith", "id"=>1}, {"name"=>"Fred Smith", "id"=>2}, {"name"=>"Jane Feldspar", "id"=>4}]
+      records.collect{|r| r.attributes}.collect {|h| h["name"]}.should == ["Bob Feldspar", "Bob Smith", "Fred Smith", "Jane Feldspar"] 
     end
     it "should be able to order fields on search selecting the table name too" do
       records = Record.search(:fields => [:name],:order => 'form_instances.created_at')
-      records.collect{|r| r.attributes}.should == [{"name"=>"Bob Smith", "id"=>1}, {"name"=>"Fred Smith", "id"=>2},{"name"=>"Bob Feldspar", "id"=>3},  {"name"=>"Jane Feldspar", "id"=>4}]
+      records.collect{|r| r.attributes}.collect {|h| h["name"]}.should == ["Bob Smith", "Fred Smith", "Bob Feldspar", "Jane Feldspar"]      
     end
     it "should be able to search conditionally on fields" do
       records = Record.search(:conditions => ":name  like 'Bob%'")
