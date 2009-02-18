@@ -171,7 +171,7 @@ class Record
     
     def blank?
       return true if @value.nil?
-      @value.compact.blank?
+      @value.compact.delete_if{|v| v == ""}.blank?
     end
         
   end
