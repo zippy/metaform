@@ -1356,7 +1356,7 @@ class Record
     fields_sql += "," + arrayify(options[:raw_fields]).join(',') if options[:raw_fields]
     left_join_sql = left_join_fields.collect{|f| fq = UsingPostgres ? "\"#{f}\"" : f;"left outer join field_instances as #{fq} on #{fq}.form_instance_id = form_instances.id and #{fq}.field_id = '#{f}' "}.join(" ") if !left_join_fields.empty?
 
-    select = "select #{fields_sql} from form_instances"
+    select = "#{fields_sql} from form_instances"
     select += ' ' + left_join_sql if left_join_sql
 #    select += ' ' + inner_join_sql if inner_join_sql
     where_conditions.push('('+options[:meta_condition]+')') if options[:meta_condition]
@@ -1373,11 +1373,13 @@ class Record
           end
         end
       end
-      select += " order by "+order_fields.join(',')
+      order_fields = order_fields.join(',')
+      select = order_fields+","+select
+      select += " order by "+order_fields
     end
     select += " limit #{options[:limit].to_i}" if options[:limit]
 #    puts select
-    r = FormInstance.find_by_sql(select)
+    r = FormInstance.find_by_sql("select distinct "+select)
   end
   
   def Record.sql_fieldname_convert(str)
