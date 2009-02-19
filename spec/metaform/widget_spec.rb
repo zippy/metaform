@@ -119,12 +119,12 @@ describe Widget do
 
   describe CheckBoxGroupWidget do
     before(:each) do
-      @options = {:constraints => {'set'=>[{'val1'=>'Value 1'},{'val2'=>'Value 2'},{'val3'=>'Value 3'}]}}
+      @options = {:constraints => {'set'=>[{'val1'=>'Value 1'},{'val2'=>'Value 2'},{'val3<x'=>'Value 3'}]}}
     end
      
     it "should render html checkboxes with a custom label" do
       CheckBoxGroupWidget.render(1,"val1",'the label',@options).should == 
-        "<span class=\"label\">the label</span><input name=\"record[1][val1]\" id=\"record_1_val1\" class=\"1\" type=\"checkbox\" value=\"val1\" checked onClick=\"\"> <label for=\"record_1_val1\">Value 1</label>\n<input name=\"record[1][val2]\" id=\"record_1_val2\" class=\"1\" type=\"checkbox\" value=\"val2\" onClick=\"\"> <label for=\"record_1_val2\">Value 2</label>\n<input name=\"record[1][val3]\" id=\"record_1_val3\" class=\"1\" type=\"checkbox\" value=\"val3\" onClick=\"\"> <label for=\"record_1_val3\">Value 3</label><input name=\"record[1][__none__]\" id=\"record_1___none__\" type=\"hidden\"}>"
+        "<span class=\"label\">the label</span><input name=\"record[1][val1]\" id=\"record_1_val1\" class=\"1\" type=\"checkbox\" value=\"val1\" checked onClick=\"\"> <label for=\"record_1_val1\">Value 1</label>\n<input name=\"record[1][val2]\" id=\"record_1_val2\" class=\"1\" type=\"checkbox\" value=\"val2\" onClick=\"\"> <label for=\"record_1_val2\">Value 2</label>\n<input name=\"record[1][val3<x]\" id=\"record_1_val360x\" class=\"1\" type=\"checkbox\" value=\"val3<x\" onClick=\"\"> <label for=\"record_1_val360x\">Value 3</label><input name=\"record[1][__none__]\" id=\"record_1___none__\" type=\"hidden\"}>"
     end
     it "should render the list of human enumerations values if read_only" do
       CheckBoxGroupWidget.render_form_object_read_only(1,"val1,val3",@options).should == 

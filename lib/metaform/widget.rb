@@ -140,7 +140,9 @@ class Widget
     result = "record_#{field_name}_"
     if multi_elem_widget_value
       value = multi_elem_widget_value.to_s.downcase
-      value = value.gsub(/[^a-z0-9_]/i,'')
+      if value =~ /[^a-z0-9_]/
+        value = value.split(//).collect {|c| c =~ /[^a-z0-9_]/ ? c[0].to_s : c}.join('')
+      end
       result << value
     end
     result
