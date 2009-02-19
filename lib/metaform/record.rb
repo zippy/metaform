@@ -1364,6 +1364,12 @@ class Record
     if options[:order]
       order_fields = arrayify(options[:order])
       if UsingPostgres
+        # got to add the order fields into the column list (if they aren't there)
+        # because in Postgres distinct requires them to be in the column list too
+        order_fields = order_fields.collect {|o| o.to_s}
+        order_fields_for_select = order_fields-(fields+left_join_fields)
+        select = order_fields_for_select.join(',')+","+select if !order_fields_for_select.empty?
+
         order_fields = order_fields.collect do |f|
           # quote the field name but not the table name if given
           if f =~ /(.*)\.(.*)/
@@ -1372,9 +1378,10 @@ class Record
             "\"#{f}\""
           end
         end
+        
+        
       end
       order_fields = order_fields.join(',')
-      select = order_fields+","+select
       select += " order by "+order_fields
     end
     select += " limit #{options[:limit].to_i}" if options[:limit]
