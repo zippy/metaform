@@ -90,7 +90,7 @@ EOHTML
   end
   
   def auto_tab_text(f_id, next_field)
-    %Q*onkeyup="tabNext(this,'up',2,$('#{build_html_multi_id(f_id,next_field)}'))" onkeydown="tabNext(this,'down',2)"*
+    # %Q*onkeyup="tabNext(this,'up',2,$('#{build_html_multi_id(f_id,next_field)}'))" onkeydown="tabNext(this,'down',2)"*
   end
 
   ################################################################################
