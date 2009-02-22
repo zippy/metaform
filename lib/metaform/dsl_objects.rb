@@ -449,7 +449,8 @@ class Question < Bin
 
     properties = field.properties
     if properties
-      properties.each do |p|
+      properties.each_with_index do |p,i|
+        next if i == 0 && !form.validating?
         property_value = p.evaluate(form,field,value)
         if erb
           field_element = p.render(field_element,property_value,self,form,ro)
