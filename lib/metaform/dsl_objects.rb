@@ -13,7 +13,6 @@ class Field < Bin
       :properties => [Invalid],
       :calculated => nil,
       :default => nil,
-      :indexed_default_from_null_index => nil,
       :groups => nil,
       :force_nil => nil,
       :dependent_fields => nil,
