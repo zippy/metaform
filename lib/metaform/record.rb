@@ -251,11 +251,11 @@ class Record
     @record_loaded = false
   end 
   
-  def set_attribute(attribute,value,index=0)
+  def set_attribute(attribute,value,index=0,load_calculated_fields=false)
     raise "whoops index was :any" if index == :any
     attrib = attribute.to_s
     raise MetaformUndefinedFieldError, attrib if !form.field_exists?(attrib)
-    return if form.fields[attrib].calculated
+    return if form.fields[attrib].calculated && !load_calculated_fields
 #    raise MetaformException,"you can't store a value to a calculated field (#{attrib})" if form.fields[attrib].calculated
     @cache.set_attribute(attribute,value,index)
     value
@@ -372,28 +372,29 @@ class Record
   
   ######################################################################################
   # Load attributes from the database
-  def load_record(fields=nil,index=nil,force = false)
+  def load_record(fields=nil,index=nil,force = false,load_calculated_fields = false)
     return if !force && (@record_loaded || @form_instance.new_record?)
     puts "<br>LOADING RECORD" if DEBUG1
 #    reset_attributes if !fields
     @record_loaded = true if !fields
-    condition_string = "state != 'calculated'"
+    conditions = []
+    conditions << "state != 'calculated'" unless load_calculated_fields
     condition_params = []
     if fields
-      condition_string << " and field_id in (?)"
+      conditions << "field_id in (?)"
       condition_params << fields
     end
     if index
-      condition_string << " and idx = ?"
+      conditions << "idx = ?"
       condition_params << index
     end
     #    field_instances = @form_instance.field_instances.find(:all, :conditions => ["field_id in (?) and form_instance_id = ?",field_list,id])
 
-    instances = @form_instance.field_instances.find(:all,:conditions => [condition_string].concat(condition_params))
+    instances = @form_instance.field_instances.find(:all,:conditions => [conditions.join(' and ')].concat(condition_params))
     attributes_set = {}
     instances.each do |fi|
       next if !form.field_exists?(fi.field_id)
-      set_attribute(fi.field_id,fi.answer,fi.idx)
+      set_attribute(fi.field_id,fi.answer,fi.idx,load_calculated_fields)
       @ficache.set_attribute(fi.field_id,fi,fi.idx) if CACHE
       attributes_set[fi.field_id] ||= []
       attributes_set[fi.field_id] << fi.idx
@@ -1019,6 +1020,7 @@ class Record
       date_format = options[:date_format]
       date_time_format = options[:date_time_format]
       raise "you must specify the :fields option with a list of fields to export" if !fields
+      puts "<br>CACHE on entrance to export: #{@cache.dump.inspect}" if DEBUG1
       @cache.indexes.each do |index|
         row = []
         row << self.form.class.to_s
