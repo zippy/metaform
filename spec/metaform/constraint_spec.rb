@@ -2,6 +2,7 @@ require File.dirname(__FILE__) + '/../spec_helper'
 
 describe Constraints do
   before(:each) do
+    Form.config[:hide_required_extra_errors] = false
     @form = SampleForm.new
   end
   describe 'regex' do
@@ -159,13 +160,12 @@ describe Constraints do
       @record = Record.make(@form,'new_entry',{:name =>'Bob'})
       @form.with_record(@record) do
         Constraints.verify({'required' =>["name=Bob","name=Sue"]}, '', @form).should == [] 
-        Constraints.verify({'required' =>["name=Bob","name=~B"]}, '', @form).should == [Constraints::RequiredErrMessage] 
+        Constraints.verify({'required' =>["name=Bob","name=~B"]}, '', @form).should == ["#{Constraints::RequiredErrMessage} when Name is Bob and Name matches regex B"] 
       end   
     end
   end
   describe 'required conditional' do
     before(:each) do
-      Form.config[:hide_required_extra_errors] = false
       @record = Record.make(@form,'new_entry',{:name =>'Bob Smith'})
     end
     describe '-- using related field and = operator' do
