@@ -478,6 +478,41 @@ describe Record do
       @record.save('new_entry')
       nr = Record.locate(:first, :index => :any)
     end
+    
+    describe "#slice" do
+      it "should return an empty hash when no matching records are found"  do
+        nr = after_init_save_and_get_from_locate
+        Record.locate(nr.id,:index => :any,:fields => ['breastfeeding'], :return_answers_hash => true).should == nil
+        nr.slice("breastfeeding").should == {}
+      end
+      it "should return a hash of one value set at the zeroth index"  do
+        nr = after_init_save_and_get_from_locate do
+          @record[:breastfeeding] = 'A'    #Only one baby, first PP visit
+        end
+        nr.slice("breastfeeding").should == {0=>"A"}
+      end
+      it "should return a hash of multiple values set at various indexes"  do
+        nr = after_init_save_and_get_from_locate do
+          @record[:breastfeeding] = 'A'    #Only one baby, first PP visit
+          @record[:breastfeeding,1] = 'B'  #Only one baby, second PP visit
+          @record[:breastfeeding,3] = 'D'  #Only one baby, fourth PP visit
+        end
+        nr.slice("breastfeeding").should == {0=>"A", 1 => 'B', 3 => 'D'}
+      end
+      it "should return a hash of hashes, one for each field id, of multiple values set at various indexes"  do
+        nr = after_init_save_and_get_from_locate do
+          @record[:breastfeeding] = 'A'    #Only one baby, first PP visit
+          @record[:breastfeeding,1] = 'B'  #Only one baby, second PP visit
+          @record[:breastfeeding,3] = 'D'  #Only one baby, fourth PP visit
+          @record[:fruit] = 'apple'    #Only one baby, first PP visit
+          @record[:fruit,2] = 'orange'  #Only one baby, second PP visit
+          @record[:fruit,3] = 'kiwi'  #Only one baby, fourth PP visit
+          
+        end
+        nr.slice("breastfeeding","fruit").should == {"breastfeeding"=>{0=>"A", 1=>"B", 3=>"D"}, "fruit"=>{0=>"apple", 2=>"orange", 3=>"kiwi"}}
+      end
+      
+    end
 
     describe "#last_answer" do
       it "should return nil when no matching records will be found within last_answer"  do
@@ -494,15 +529,15 @@ describe Record do
         end
         nr.last_answer("breastfeeding").should == 'D'
       end
-      it "should get the highest index non-nil value of a field" do
-        nr = after_init_save_and_get_from_locate do
-          @record[:breastfeeding] = 'A'    #Only one baby, first PP visit
-          @record[:breastfeeding,1] = 'B'  #Only one baby, second PP visit
-          @record[:breastfeeding,2] = 'C'  #Only one baby, third PP visit
-          @record[:breastfeeding,3] = nil  #Only one baby, fourth PP visit
-        end
-        nr.last_answer("breastfeeding").should == 'C'
-      end    
+      it "should get the highest index value of a field, even when that value is nil" do
+         nr = after_init_save_and_get_from_locate do
+           @record[:breastfeeding] = 'A'    #Only one baby, first PP visit
+           @record[:breastfeeding,1] = 'B'  #Only one baby, second PP visit
+           @record[:breastfeeding,2] = 'C'  #Only one baby, third PP visit
+           @record[:breastfeeding,3] = nil  #Only one baby, fourth PP visit
+         end
+         nr.last_answer("breastfeeding").should == nil
+       end    
 #      it "should get highest index array when the answer is multi-dimensional" do
 #        nr = after_init_save_and_get_from_locate do
 #          @record[:breastfeeding,1,1] = 'A'    #Three babies, first PP visit, first baby
@@ -546,12 +581,39 @@ describe Record do
 #        nr.last_answer("breastfeeding",2).should == 'b'
 #      end
     end    
-  
-    describe "#answer_num" do
-      it "should return nil when no matching records will be found within answer_num"  do
+    
+    describe "#max_index" do
+      it "should return nil when no matching field_instances are found for this record"  do
         nr = after_init_save_and_get_from_locate
         Record.locate(nr.id,:index => :any,:fields => ['breastfeeding'], :return_answers_hash => true).should == nil
-        nr.answer_num("breastfeeding",'Z').should == nil
+        nr.max_index("breastfeeding").should == nil
+      end
+      it "should get highest index of field"  do
+        nr = after_init_save_and_get_from_locate do
+          @record[:breastfeeding] = 'A'    #Only one baby, first PP visit
+          @record[:breastfeeding,1] = 'B'  #Only one baby, second PP visit
+          @record[:breastfeeding,2] = 'C'  #Only one baby, third PP visit
+          @record[:breastfeeding,3] = 'D'  #Only one baby, fourth PP visit
+        end
+        nr.max_index("breastfeeding").should == 3
+      end
+      it "should get highest index of field even when the answer at the highest index is nil"  do
+        nr = after_init_save_and_get_from_locate do
+          @record[:breastfeeding] = 'A'    #Only one baby, first PP visit
+          @record[:breastfeeding,1] = 'B'  #Only one baby, second PP visit
+          @record[:breastfeeding,2] = 'C'  #Only one baby, third PP visit
+          @record[:breastfeeding,3] = nil  #Only one baby, fourth PP visit
+        end
+        nr.max_index("breastfeeding").should == 3
+      end
+      
+    end
+  
+    describe "#answer_num" do
+      it "should return 0 when no matching records will be found within answer_num"  do
+        nr = after_init_save_and_get_from_locate
+        Record.locate(nr.id,:index => :any,:fields => ['breastfeeding'], :return_answers_hash => true).should == nil
+        nr.answer_num("breastfeeding",'Z').should == 0
       end
 
       it "should return 0 when there are no matching answers for a given field"  do
@@ -583,6 +645,26 @@ describe Record do
         end
         nr.answer_num("breastfeeding",'B').should == 2
       end
+      
+      it "should return 2 when that number of matches answers for a given field, even when the desired answer is ''"  do
+        nr = after_init_save_and_get_from_locate do
+          @record[:breastfeeding] = 'A'    #Only one baby, first PP visit
+          @record[:breastfeeding,1] = ''  #Only one baby, second PP visit
+          @record[:breastfeeding,2] = ''  #Only one baby, third PP visit
+          @record[:breastfeeding,3] = 'D'  #Only one baby, fourth PP visit
+        end
+        nr.answer_num("breastfeeding",'').should == 2
+      end
+      it "should return 2 when that number of matches answers for a given field, even when the desired answer is nil"  do
+        nr = after_init_save_and_get_from_locate do
+          @record[:breastfeeding] = 'A'    #Only one baby, first PP visit
+          @record[:breastfeeding,1] = nil  #Only one baby, second PP visit
+          @record[:breastfeeding,2] = nil  #Only one baby, third PP visit
+          @record[:breastfeeding,3] = 'D'  #Only one baby, fourth PP visit
+        end
+        nr.answer_num("breastfeeding",nil).should == 2
+      end
+      
 
 #      it "should return 1 when that is the correct number of matching arrays and the answer is multi-dimensional" do
 #        nr = after_init_save_and_get_from_locate do

@@ -975,7 +975,8 @@ class Record
   end
   
   def Record.answer_num(id,field,answer,index=nil)
-    conditions = {:form_instance_id => id, :field_id => field, :answer => answer.to_s} #We store answers as strings in the database and postgres would like us to do the conversion.
+    answer = answer.to_s if answer #If answer is nil, search for nil.
+    conditions = {:form_instance_id => id, :field_id => field, :answer => answer} #We store answers as strings in the database and postgres would like us to do the conversion.
     conditions.update(:idx => index) if index
     FieldInstance.find(:all,:conditions => conditions).size
   end
