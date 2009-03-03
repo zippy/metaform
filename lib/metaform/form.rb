@@ -606,7 +606,18 @@ class Form
       
     if @render
       field = the_q.field
-      value = @record && @_index != MultiIndexMarker ? @record[field.name,@_index] : nil 
+      if @record && @_index != MultiIndexMarker
+        index_to_use = @_index 
+        if options[:flow_through]
+          highest_index = @record.max_index(field.name)
+          if @_index.to_i > highest_index.to_i
+            index_to_use = highest_index
+          end
+        end
+        value =  @record[field.name,index_to_use]
+      else
+        value = nil
+      end
       body the_q.render(self,value,read_only)
     end
     
@@ -628,7 +639,7 @@ class Form
         else
           raise MetaformException,"followups must be specified with a String or a Hash"
         end
-          
+        followup_question_options[:flow_through] = true if options[:flow_through]  #A followup is flow-through if it's parent is.  
         conds = the_q.field.followup_conditions
         cond = conds[followup_field_name]
         opts = {:css_class => 'followup',:condition=>cond}
