@@ -841,6 +841,19 @@ class Form
   end
   
   #################################################################################
+  #This method is used to create all of the html and javscript to control whether a 
+  #tab is displayed, based on a condition.
+  #Options:
+  # :tab - name of presentation displayed by this tab
+  # :anchor_css - used to find tab which this tab will go immediately before
+  # :multi - used when a tab is controlled by a numbered field, ie when the number of this flavor of tab is variable
+  # :tabs_name - group the tab is a part of
+  # :current_tab - whether or not the page is currently on this tab
+  # :label - label for the tab 
+  # :default_anchor_css - if desired tab isn't there, use this tab as an anchor
+  # :condition - condition which should be checked to see if tab should be shown.  If this is not present, then
+  # the default is :tab followed by '_changer'
+  # :before_anchor - whether the tab appears before or after the anchor tab, defaults to true
   def js_conditional_tab(opts={})
     return if !@render
     options = {
