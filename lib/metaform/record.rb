@@ -384,7 +384,7 @@ class Record
       conditions << "field_id in (?)"
       condition_params << fields
     end
-    if index
+    if index && index != :any
       conditions << "idx = ?"
       condition_params << index
     end
