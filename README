@@ -107,7 +107,11 @@ To load definitions at the class level (constants, helper methods etc) use:
 
 == Listings
 
-TBD
+Record has several methods for creating filtered lists of records.  Record.search uses sql filters to have the database perform the filtering.  Record.locate uses ruby filters, with an optional sql_prefilter.  Record.locate first calls Record.search to process the sql_prefilter, if any.  Then Record.locate calls Record.gather to perform the actual ruby filtering.  If you have not passed an sql_prefilter to Record.locate, then Record.gather will do its ruby filtering on the entire database, which is time intensive.  It may be fastest to use only one field_id in the sql_prefilter, so use the biggest limiter there and save the other limiting field_ids for the ruby filter.
+
+Record.gather can also be called directly on a list of FormInstances which you pass in as a parameter or can be given a proc to create the list of FormInstances. 
+
+Record.search always returns an array of FormInstances, where Record.gather/locate can also return an answers hash.  An answers hash will allow the handling of indexed fields.
 
 == Reports
 	
