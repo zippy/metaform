@@ -603,12 +603,13 @@ class Form
     if @_stuff[:current_questions] && ! read_only
       @_stuff[:current_questions][field_name] = the_q 
     end
-      
-    if @render
+
+    if @render      
       field = the_q.field
       if @record && @_index != MultiIndexMarker
         index_to_use = @_index 
         if options[:flow_through]
+          raise "#The question #{field_name} is set as flow_through, but its field is not indexed" if !fields[field_name][:indexed]
           highest_index = @record.max_index(field.name)
           if @_index.to_i > highest_index.to_i
             index_to_use = highest_index

@@ -454,16 +454,15 @@ describe SimpleForm do
         end
         @form.get_body.should == ["<div id=\"question_house_value\" class=\"question\"><label class=\"label\" for=\"record[house_value]\">House value:</label><input id=\"record_house_value\" name=\"record[house_value]\" type=\"text\" value=\"200\" /></div>"]
       end
-      # it "should not render with value for previous highest index answer, if set as flow-through but field is not set as indexed" do
-      #   @form.set_current_index(2)
-      #   @form.with_record(@record,:render) do
-      #     @record[:name,0] = 'William'
-      #     @record[:name,1] = 'Willy'
-      #     @record.save('create')
-      #     @form.q 'name', :flow_through => true
-      #   end
-      #   @form.get_body.should_not == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Willy\" /></div>"] 
-      # end
+      it "should raise an error if q is set as flow-through but field is not set as indexed" do
+        @form.set_current_index(2)
+        @form.with_record(@record,:render) do
+          @record[:name,0] = 'William'
+          @record[:name,1] = 'Willy'
+          @record.save('create')
+          lambda {@form.q 'name', :flow_through => true}.should raise_error
+        end
+      end
       
       it "should render read-only if forced" do
         @name_q.render(@form,'Bob Smith',true).should == "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><span id=\"record_name\">Bob Smith</span></div>"
