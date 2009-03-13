@@ -179,7 +179,7 @@ class Record
 class AnswersHash < Hash
   def method_missing(method,*args)
     a = method.to_s
-    if self[a]
+    if self.has_key?(a)
       return self[a].value[args[0]] if args.size > 0  #If there is an arg, assume it's the index we want from the value of the Answer.
       return self[a].value
     end
