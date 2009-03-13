@@ -173,6 +173,29 @@ class Record
       return true if @value.nil?
       @value.compact.delete_if{|v| v == ""}.blank?
     end
+    
+    
+    def method_missing(method,*args)
+      #is this an attribute setter? or questioner?
+      a = method.to_s
+      a =~ /^(.*?)(__([^=?]))*([=?])*$/
+      (attribute,index,action) = [$1,$3,$4]
+      if form.field_exists?(attribute)
+        case action
+        when '?'
+          val = self[attribute,index]
+          return val && val != ''
+        when '='
+          value = args[0]
+          return set_attribute(attribute,value,index)
+        else
+          #otherwise assume an attribute getter
+          return self[attribute,index]
+        end
+      end
+      super
+    end
+
         
   end
   
@@ -1170,6 +1193,7 @@ end
         :include => [:field_instances]
       }
     end
+    puts "find_opts = #{find_opts.inspect}"
     gather_options[:records] = Proc.new {
       begin
         FormInstance.find(what,find_opts)
@@ -1185,6 +1209,7 @@ end
   #It can start with a list of FormInstances or call a proc to find the desired FormInstances
   #It can call Record.filter to filter out results based on ruby to call on field values.
   def Record.gather(gather_options)
+    puts "gather_options = #{gather_options.inspect}"
     filter_options = {}
     field_list = {} 
     
@@ -1228,6 +1253,7 @@ end
   end
   
   def Record.filter(filter_options)
+    puts "filter_options = #{filter_options.inspect}"
     return_answers_hash = filter_options.has_key?(:return_answers_hash)
     
     filters = filter_options[:filters]
@@ -1241,12 +1267,16 @@ end
     
     forms = []
     form_instances.each do |r|
-      f = {'workflow_state' => Answer.new(r.workflow_state),'created_at' => Answer.new(r.created_at), 'updated_at' => Answer.new(r.updated_at), 'form_id' => Answer.new(r.form.to_s)}
+      puts "r.id = #{r.id}"
+      puts "r.field_instances = #{r.field_instances.inspect}"
+      f = {'id' => Answer.new(r.id), 'workflow_state' => Answer.new(r.workflow_state),'created_at' => Answer.new(r.created_at), 'updated_at' => Answer.new(r.updated_at), 'form_id' => Answer.new(r.form.to_s)}
       r.field_instances.each do |field_instance|
         if f.has_key?(field_instance.field_id)
+          puts "if:  #{field_instance.field_id}"
           a = f[field_instance.field_id]
           a[field_instance.idx] = field_instance.answer
         else
+          puts "else:  #{field_instance.field_id}"
           f[field_instance.field_id]= Answer.new(field_instance.answer,field_instance.idx)
         end
       end

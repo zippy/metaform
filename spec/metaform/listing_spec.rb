@@ -14,4 +14,6 @@ describe Listings do
     @list = Log.get_list('samples')
     @list.size.should == 4
   end
+  #order
+  #search (pass in search params)
 end
