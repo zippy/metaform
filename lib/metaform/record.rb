@@ -176,6 +176,17 @@ class Record
         
   end
   
+class AnswersHash < Hash
+  def method_missing(method,*args)
+    a = method.to_s
+    if self[a]
+      return self[a].value[args[0]] if args.size > 0  #If there is an arg, assume it's the index we want from the value of the Answer.
+      return self[a].value
+    end
+    super
+  end
+end
+  
   attr :form_instance
   attr :errors
   attr_accessor :action_result,:cache
@@ -1205,8 +1216,15 @@ class Record
     else
       forms = filter_options[:records] 
     end
-    return forms if return_answers_hash
-    forms ? Record.create(forms) : nil
+    return nil if !forms
+    if return_answers_hash
+      if forms.is_a?(Hash)
+        return AnswersHash.new.update(forms)
+      else
+        return forms.map{|r| AnswersHash.new.update(r) }
+      end
+    end
+    return Record.create(forms)
   end
   
   def Record.filter(filter_options)

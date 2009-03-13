@@ -357,8 +357,9 @@ describe Record do
       recs = Record.locate(:all,{:return_answers_hash => true})
       recs.size.should == 3
       r = recs[0]
-      r.instance_of?(Hash).should == true
+      r.instance_of?(Record::AnswersHash).should == true
       r['name'].instance_of?(Record::Answer).should == true
+      r.name.instance_of?(String).should == true
     end
     
     it "should return indexed fields as arrays in the answers hash" do
