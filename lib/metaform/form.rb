@@ -14,7 +14,7 @@ class Form
 
   FieldTypes = ['string','integer','float','decimal','boolean','date','datetime','time','text','hash','array']
 
-  attr_accessor :fields, :conditions, :questions, :presentations, :groups, :workflows, :listings, :tabs, :zapping_proc, :label_options, :calculated_field_dependencies, :current_tab_label
+  attr_accessor :fields, :conditions, :questions, :presentations, :groups, :workflows, :lists, :tabs, :zapping_proc, :label_options, :calculated_field_dependencies, :current_tab_label
 
   def initialize
     @fields = {}
@@ -23,7 +23,7 @@ class Form
     @presentations = {}
     @groups = {}
     @workflows = {}
-    @listings = {}
+    @lists = {}
     @tabs = {}
     @zapping_proc = nil
     @label_options = {}
