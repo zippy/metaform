@@ -173,6 +173,7 @@ class Stats < Reports
       :bananas => 	"count.increment if :fruit == 'banana'",
       :kiwis => 	"count.increment if :fruit == 'kiwi'",
       :apples => "count.increment if :fruit =~ /apple*/",
+      :null_fruits => "count.increment if :fruit.nil?",
       :painters => "count.increment if :occupation.include?('painter')",
       :slackers => "count.increment if :occupation.include?('unemployed')",
       :painters_or_slackers => ":occupation.any?('painter','unemployed')",

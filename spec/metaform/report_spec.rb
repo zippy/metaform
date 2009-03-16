@@ -24,6 +24,12 @@ describe Reports do
     it "should report 2 apples" do
       @report.apples.should == 2
     end
+
+    it "should report 2 nil fruits, even when field instances don't exist" do
+      FieldInstance.find(:all,:conditions => "field_id = 'fruit'").size.should == 4
+      FormInstance.find(:all).size.should == 6
+      @report.null_fruits.should == 2
+    end
   
     it "should report 1 painter" do
       @report.painters.should == 1
