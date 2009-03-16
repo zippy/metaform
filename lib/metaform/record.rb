@@ -1273,9 +1273,7 @@ end
     
     forms = []
     form_instances.each do |r|
-      puts "r.id = #{r.id}"
-      puts "r.field_instances = #{r.field_instances.inspect}"
-      f = {'id' => Answer.new(r.id), 'workflow_state' => Answer.new(r.workflow_state),'created_at' => Answer.new(r.created_at), 'updated_at' => Answer.new(r.updated_at), 'form_id' => Answer.new(r.form.to_s)}
+      f = {'form_instance_id' => Answer.new(r.id), 'workflow_state' => Answer.new(r.workflow_state),'created_at' => Answer.new(r.created_at), 'updated_at' => Answer.new(r.updated_at), 'form_id' => Answer.new(r.form.to_s)}
       r.field_instances.each do |field_instance|
         if f.has_key?(field_instance.field_id)
           puts "if:  #{field_instance.field_id}"
