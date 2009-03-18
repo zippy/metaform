@@ -4,29 +4,29 @@ class Listings
   class << self
     include Utilities
 
-    def listings
-      @listings ||= {}
-      @listings
+    def lists
+      @lists ||= {}
+      @lists
     end
 
     #################################################################################
     # expected options are :workflow_state_filter,:fields,:conditions,:forms
-    def listing(listing_name, opts, &block)
+    def list(list_name, opts, &block)
       options = {
         :workflow_state_filter => nil,
         :fields => nil,
         :conditions => nil,
         :forms => nil 
       }.update(opts)
-      self.listings[listing_name] = Struct.new(:block,*options.keys)[block,*options.values]
+      self.lists[list_name] = Struct.new(:block,*options.keys)[block,*options.values]
     end
 
     #################################################################################
     def get_list(list_name,options = {})
       forms = []
-      l = self.listings[list_name]
+      l = self.lists[list_name]
       raise "unknown list #{list_name}" if !l      
-      #Use the listing to create locate_options
+      #Use the list to create locate_options
       locate_options = {}
       locate_options[:forms] = l.forms if l.forms
       locate_options[:fields] = l.fields if l.fields
