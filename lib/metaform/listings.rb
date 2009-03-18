@@ -31,7 +31,7 @@ class Listings
       locate_options[:forms] = l.forms if l.forms
       locate_options[:fields] = l.fields if l.fields
       locate_options[:conditions] = l.conditions if l.conditions
-      locate_options[:return_answers_hash] = l.return_answers_hash if l.return_answers_hash
+      #locate_options[:return_answers_hash] = l.return_answers_hash if l.return_answers_hash
       wsf = []
       wsf << l.workflow_state_filter if l.workflow_state_filter
       wsf << options[:workflow_state_filter] if options[:workflow_state_filter]
