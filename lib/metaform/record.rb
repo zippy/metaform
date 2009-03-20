@@ -726,9 +726,14 @@ end
             deps = @form.dependent_fields(i.field_id)
             dependents.concat(deps) if deps
             saved_attributes[i.field_id] = i.answer
-            puts "<br>about to save #{i.attributes.inspect}" if DEBUG1
-            if !i.save!
-              errors.add(i.field_id,i.errors.full_messages.join(','))
+            if (i.answer == nil || i.answer == '') && i.state== 'answered' && i.explanation.blank? && i.idx == 0
+              puts "<br>about to delete #{i.attributes.inspect}" if DEBUG1
+              i.delete unless i.new_record?
+            else
+              puts "<br>about to save #{i.attributes.inspect}" if DEBUG1
+              if !i.save!
+                errors.add(i.field_id,i.errors.full_messages.join(','))
+              end
             end
           end
         end

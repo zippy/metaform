@@ -260,7 +260,7 @@ describe Record do
 
     it "should delete all but the specified fields" do
       f = FieldInstance.find(:all,:conditions => ['form_instance_id = ?',@record.id])
-      f.collect {|f| f.field_id}.sort.should == ["fruit", "fruit_other", "name", "reverse_name_and_job", "sue_is_a_plumber", "total_bobs"]
+      f.collect {|f| f.field_id}.sort.should == ["fruit", "name", "reverse_name_and_job", "sue_is_a_plumber", "total_bobs"]
       @record.delete_fields_except('name')
       f = FieldInstance.find(:all,:conditions => ['form_instance_id = ?',@record.id])
       f.collect {|f| f.field_id}.sort.should == ["name"]
@@ -268,6 +268,16 @@ describe Record do
       @nr.name.should == 'Bob Smith'
       @nr.fruit.should == nil
       @nr.occupation.should == nil #and also delete other things in the attributes cache
+    end
+    
+    it "should delete field instance if answer=nil and state='answered' and no explanation" do
+      @record.save('new_entry')
+      f = FieldInstance.find(:all,:conditions => ['field_id = ?','occupation'])
+      f.size.should == 1
+      @record.occupation = nil
+      @record.save('new_entry')
+      f = FieldInstance.find(:all,:conditions => ['field_id = ?','occupation'])
+      f.size.should == 0
     end
   end
   
@@ -956,7 +966,7 @@ describe Record do
       end
       describe "get_attribute_states" do
         it "should return a hash of all the attributes state" do
-          @record.get_attribute_states.should == {"name"=>["answered"], "sue_is_a_plumber"=>["calculated"], "fruit_other"=>["answered"], "reverse_name_and_job"=>["calculated"], "total_bobs"=>["calculated"], "fruit"=>["answered"], "education"=>["invalid"]}
+          @record.get_attribute_states.should == {"name"=>["answered"], "sue_is_a_plumber"=>["calculated"], "reverse_name_and_job"=>["calculated"], "total_bobs"=>["calculated"], "fruit"=>["answered"], "education"=>["invalid"]}
         end
       end
     end
