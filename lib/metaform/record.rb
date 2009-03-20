@@ -1237,6 +1237,7 @@ end
     
     filters = filter_options[:filters]
     filter_eval_string = filters.collect{|x| "(#{x})"}.join('&&') if filters
+    filter_expr = eval_field(filter_eval_string) if filters
     
     form_instances = filter_options[:records]
     if !form_instances.respond_to?('each')
@@ -1260,10 +1261,9 @@ end
       if filters && filters.size > 0
         kept = false
         begin
-          expr = eval_field(filter_eval_string)
-          kept = eval expr
+          kept = eval filter_expr
         rescue Exception => e
-          raise MetaformException,"Eval error '#{e.to_s}' while evaluating: #{expr}"
+          raise MetaformException,"Eval error '#{e.to_s}' while evaluating: #{filter_expr}"
         end
         forms << the_form if kept
       else
