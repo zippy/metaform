@@ -454,7 +454,23 @@ describe Record do
 #      nr['breastfeeding'][2].should == [nil,'A','a']
 #      nr['breastfeeding'][2,1].should == 'A'
 #    end
-    
+    describe "-- limiting fields" do
+      before(:each) do
+        Record.make(SampleForm.new,'new_entry',{:name =>'Bob Smith',:fruit => 'banana',:occupation => 'unemployed'}).save('new_entry')
+        Record.make(SampleForm.new,'new_entry',{:name =>'Joe Smith',:fruit => 'apple',:occupation => 'unemployed'}).save('new_entry')
+        Record.make(SampleForm.new,'new_entry',{:name =>'Will Smith',:occupation => ''}).save('new_entry')
+        Record.make(SampleForm.new,'new_entry',{:name =>'Oliver Smith'}).save('new_entry')
+      end
+      it "should find records and limit fields instances returned" do
+        r = Record.locate(:all,:fields=>["name"])
+        r.size.should == 4
+        r[0].form_instance.field_instances.size.should == 1
+      end
+      it "should not find records if fields are nill or empty string" do
+        r = Record.locate(:all,:fields=>["occupation"])
+        r.size.should == 2
+      end
+    end
   end 
   
   describe "-- defaults options"  do

@@ -123,7 +123,7 @@ class Reports
 #        :include => [:field_instances]
 #        )
       if locate_records
-        form_instances = Record.locate(:all,locate_options)  
+        form_instances = Record.locate(:all,locate_options)
       else
         locate_options[:records] = options[:records]
         form_instances = Record.gather(locate_options)

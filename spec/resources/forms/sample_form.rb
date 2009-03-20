@@ -169,6 +169,7 @@ end
 class Stats < Reports
   def_report('fruits', 
     :forms => ['SampleForm'],
+    :fields => ['name'],  #gotta include this so that the null_fruits querry will count over all records.
     :count_queries => {
       :bananas => 	"count.increment if :fruit == 'banana'",
       :kiwis => 	"count.increment if :fruit == 'kiwi'",

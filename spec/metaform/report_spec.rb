@@ -1,6 +1,6 @@
 require File.dirname(__FILE__) + '/../spec_helper'
 
-describe Reports do
+describe Reports do  
   describe "using sample form as 'schema'" do
     before(:each) do
       Record.make(SampleForm.new,'new_entry',{:name =>'Bob Smith',:fruit => 'banana',:occupation => 'unemployed'}).save('new_entry')
@@ -28,6 +28,7 @@ describe Reports do
     it "should report 2 nil fruits, even when field instances don't exist" do
       FieldInstance.find(:all,:conditions => "field_id = 'fruit'").size.should == 4
       FormInstance.find(:all).size.should == 6
+      
       @report.null_fruits.should == 2
     end
   
