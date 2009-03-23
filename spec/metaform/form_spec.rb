@@ -436,32 +436,55 @@ describe SimpleForm do
       it "should render with a value" do
         @name_q.render(@form,'Bob Smith').should == "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>"
       end
-      it "should render with no value if set as flow-through with no previous stored values for this field" do
-        @form.set_current_index(2)
+      
+      it "should raise an error if q is set as flow_through but field is not set as indexed" do
         @form.with_record(@record,:render) do
-          @record.save('create')
-          @form.q 'house_value', :flow_through => true
+          lambda {@form.q 'name', :flow_through => true}.should raise_error
         end
-        @form.get_body.should == ["<div id=\"question_house_value\" class=\"question\"><label class=\"label\" for=\"record[house_value]\">House value:</label><input id=\"record_house_value\" name=\"record[house_value]\" type=\"text\" /></div>"]
       end
-      it "should render with value for previous highest index answer, if set as flow-through" do
-        @form.set_current_index(2)
+      it "should raise an error if q is set as flow_through but is not set with a flow_through proc" do
         @form.with_record(@record,:render) do
-          @record[:house_value,0] = '100'
-          @record[:house_value,1] = '200'
+          lambda {@form.q 'house_value', :flow_through => true}.should raise_error
+        end
+      end
+      it "should call the flow_through proc with the current index if q is set as flow_through" do
+          @form.with_record(@record,:render) do
+            lambda{@form.q 'house_value', :flow_through => Proc.new{|index,record| raise "index is #{index}"}}.should raise_error("index is #{@form.get_current_index}")
+          end
+      end
+      it "should call the flow_through proc with the current record if q is set as flow_through" do
+          @form.with_record(@record,:render) do
+            lambda{@form.q 'house_value', :flow_through => Proc.new{|index,record| raise "record is #{record}"}}.should raise_error("record is #{@record}")
+          end
+      end
+      it "should render the q with the value determined by the current index if the flow_through proc returns nil" do
+        @record[:house_value,0] = '0'
+        @record[:house_value,1] = '100'
+        @record[:house_value,2] = '200'
+        @form.with_record(@record,:render) do
           @record.save('create')
-          @form.q 'house_value', :flow_through => true
+          @form.q 'house_value', :flow_through => Proc.new{|index,record| nil}
         end
         @form.get_body.should == ["<div id=\"question_house_value\" class=\"question\"><label class=\"label\" for=\"record[house_value]\">House value:</label><input id=\"record_house_value\" name=\"record[house_value]\" type=\"text\" value=\"200\" /></div>"]
       end
-      it "should raise an error if q is set as flow-through but field is not set as indexed" do
-        @form.set_current_index(2)
+      it "should render the q with the value determined by the index returned by the flow_through proc" do
+        @record[:house_value,0] = '0'
+        @record[:house_value,1] = '100'
+        @record[:house_value,2] = '200'
         @form.with_record(@record,:render) do
-          @record[:name,0] = 'William'
-          @record[:name,1] = 'Willy'
           @record.save('create')
-          lambda {@form.q 'name', :flow_through => true}.should raise_error
+          @form.q 'house_value', :flow_through => Proc.new{|index,record| 1}
         end
+        @form.get_body.should == ["<div id=\"question_house_value\" class=\"question\"><label class=\"label\" for=\"record[house_value]\">House value:</label><input id=\"record_house_value\" name=\"record[house_value]\" type=\"text\" value=\"100\" /></div>"]
+      end
+      it "should render the q with no value if the there is no value for the index returned by the flow_through proc" do
+        @record[:house_value,0] = '0'
+        @record[:house_value,1] = '100'
+        @form.with_record(@record,:render) do
+          @record.save('create')
+          @form.q 'house_value', :flow_through => Proc.new{|index,record| 2}
+        end
+        @form.get_body.should == ["<div id=\"question_house_value\" class=\"question\"><label class=\"label\" for=\"record[house_value]\">House value:</label><input id=\"record_house_value\" name=\"record[house_value]\" type=\"text\" /></div>"]
       end
       
       it "should render read-only if forced" do
