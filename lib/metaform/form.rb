@@ -606,14 +606,12 @@ class Form
     if @render      
       field = the_q.field
       if @record && @_index != MultiIndexMarker
-        index_to_use = @_index 
         if options[:flow_through]
-          raise "#The question #{field_name} is set as flow_through, but its field is not indexed" if !fields[field_name][:indexed]
-          highest_index = @record.max_index(field.name)
-          if @_index.to_i > highest_index.to_i
-            index_to_use = highest_index
-          end
+          raise "The question #{field_name} is set as flow_through, but its field is not indexed" if !fields[field_name][:indexed]
+          raise "The question #{field_name} is set as flow_through, but was not given a proc" if !options[:flow_through].is_a?(Proc)
+          index_to_use = options[:flow_through].call(@_index,@record)  #This will return either an index to use, or nil if we should use the default
         end
+        index_to_use ||= @_index 
         value =  @record[field.name,index_to_use]
       else
         value = nil
@@ -1111,7 +1109,11 @@ class Form
 
   #################################################################################
   def set_current_index(index)
+    #raise "set_current_index:  index = #{index}" if index == 2
     @_index = index
+  end
+  def get_current_index
+    @_index
   end
 
   #################################################################################
