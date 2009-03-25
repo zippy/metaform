@@ -123,7 +123,7 @@ class Reports
 #        :include => [:field_instances]
 #        )
       if locate_records
-        form_instances = Record.locate(:all,locate_options)  
+        form_instances = Record.locate(:all,locate_options)
       else
         locate_options[:records] = options[:records]
         form_instances = Record.gather(locate_options)
@@ -131,12 +131,9 @@ class Reports
       total = form_instances.size
       count_queries.each do |stat,q|
         count = Counter.new
+        expr = Record.eval_field(q)
         form_instances.each do |f|
-          #puts "f['TransNonmedical_ProviderWent'] = #{ f['TransNonmedical_ProviderWent'].inspect}" if stat == :medical
-           
-          #puts "f['Birth_IPprocs_Details'] = #{ f['Birth_IPprocs_Details'].inspect}"
           begin
-            expr = Record.eval_field(q)
             #puts "count_query expr = #{expr}" if  stat == :blah
             eval(expr)
             #puts "count.value = #{count.value}" if  stat == :blah
@@ -150,11 +147,9 @@ class Reports
       sum_queries.each do |stat,q|
         #puts "sum_queries:  stat = #{stat}, q = #{q}"
         count = Counter.new
+        expr = Record.eval_field(q)
         form_instances.each do |f|
-          #puts "f['c_sections'] = #{ f['c_sections'].inspect}" if :c_sections
-          #puts "f['New_Grams'] = #{ f['New_Grams'].inspect}"
           begin
-            expr = Record.eval_field(q)
             #puts "sum_query expr = #{expr}"
             eval(expr)
             #puts "count.value = #{count.value}"
