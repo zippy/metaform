@@ -749,9 +749,14 @@ end
             deps = @form.dependent_fields(i.field_id)
             dependents.concat(deps) if deps
             saved_attributes[i.field_id] = i.answer
-            puts "<br>about to save #{i.attributes.inspect}" if DEBUG1
-            if !i.save!
-              errors.add(i.field_id,i.errors.full_messages.join(','))
+            if (i.answer == nil || i.answer == '') && i.state== 'answered' && i.explanation.blank? && i.idx == 0
+              puts "<br>about to delete #{i.attributes.inspect}" if DEBUG1
+              i.delete unless i.new_record?
+            else
+              puts "<br>about to save #{i.attributes.inspect}" if DEBUG1
+              if !i.save!
+                errors.add(i.field_id,i.errors.full_messages.join(','))
+              end
             end
           end
         end
@@ -1258,6 +1263,7 @@ end
     
     filters = filter_options[:filters]
     filter_eval_string = filters.collect{|x| "(#{x})"}.join('&&') if filters
+    filter_expr = eval_field(filter_eval_string) if filters
     
     form_instances = filter_options[:records]
     if !form_instances.respond_to?('each')
@@ -1283,10 +1289,9 @@ end
       if filters && filters.size > 0
         kept = false
         begin
-          expr = eval_field(filter_eval_string)
-          kept = eval expr
+          kept = eval filter_expr
         rescue Exception => e
-          raise MetaformException,"Eval error '#{e.to_s}' while evaluating: #{expr}"
+          raise MetaformException,"Eval error '#{e.to_s}' while evaluating: #{filter_expr}"
         end
         forms << the_form if kept
       else
