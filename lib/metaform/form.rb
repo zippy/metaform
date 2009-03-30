@@ -10,6 +10,7 @@ class Form
   @@cache = {}
   @@store = {}
   @@config = {}
+  @@_loaded_helpers = {}
   cattr_accessor :forms_dir,:cache,:config
 
   FieldTypes = ['string','integer','float','decimal','boolean','date','datetime','time','text','hash','array']
@@ -1497,6 +1498,8 @@ EOJS
   #################################################################################
   # helper function to allow separating the DSL commands into multiple files
   def include_helpers(file)
+    return if @@_loaded_helpers[file] == self.class
+    @@_loaded_helpers[file] = self.class
     fn = Form.forms_dir+'/'+file
     file_contents = IO.read(fn)
     Form.class_eval(file_contents,fn)
