@@ -15,6 +15,14 @@ describe Widget do
     it "should include #humanize_value that works on enumerations defined in rails array style" do
       Widget.humanize_value('CAN',:constraints => {'enumeration' => [	[ "-" , nil ],[ "US" , "US" ],	[ "Canada" , "CAN" ]]}).should == 'Canada'
     end
+    it "should include #humanize_value that works on sets defined with hashes" do
+      Widget.humanize_value('1',:constraints => {'set' => [{'1' => 'This'},{'2'=>'That'}]}).should == 'This'
+      Widget.humanize_value('2,1',:constraints => {'set' => [{'1' => 'This'},{'2'=>'That'}]}).should == 'That, This'
+    end
+    it "should include #humanize_value that works on sets defined in rails array style" do
+      Widget.humanize_value('CAN',:constraints => {'set' => [	[ "-" , nil ],[ "US" , "US" ],	[ "Canada" , "CAN" ]]}).should == 'Canada'
+      Widget.humanize_value('CAN,US',:constraints => {'set' => [	[ "-" , nil ],[ "US" , "US" ],	[ "Canada" , "CAN" ]]}).should == 'Canada, US'
+    end
   end
   
   describe TextFieldWidget do
