@@ -92,6 +92,7 @@ class Widget
           end
         end
       when options[:constraints]["set"]
+        return nil if value.nil?
         pairs = {}
         options[:constraints]["set"].each do |value_pair|
           case value_pair
