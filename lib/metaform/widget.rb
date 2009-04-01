@@ -78,8 +78,9 @@ class Widget
   end
 
   def self.humanize_value(value,options=nil)
-    if options && options[:constraints] 
-      if options[:constraints]["enumeration"]
+    if options && options[:constraints]
+      case
+      when options[:constraints]["enumeration"]
         options[:constraints]["enumeration"].each do |value_pair|
           case value_pair
           when Hash
@@ -90,7 +91,21 @@ class Widget
             return value_pair = value == value_pair
           end
         end
-      elsif options[:constraints]['enumeration_lookup']
+      when options[:constraints]["set"]
+        return nil if value.nil?
+        pairs = {}
+        options[:constraints]["set"].each do |value_pair|
+          case value_pair
+          when Hash
+            pairs[value_pair.keys[0]] = value_pair.values[0]
+          when Array
+            pairs[value_pair[1]] = value_pair[0]
+          else
+            pairs[value_pair] = value_pair
+          end
+        end
+        return value.split(/,/).collect {|v| pairs[v]}.join(', ')
+      when options[:constraints]['enumeration_lookup']
         return "" if value.blank?
         spec = options[:constraints]['enumeration_lookup'] 
         results = spec[:func].call

@@ -313,7 +313,7 @@ module MetaformHelper
         @records = Record.gather(options)
       else
         options = {:filters => search_rules,:workflow_state_filter => @search_params[:status]}.update(options)
-        @records = Log.get_list(@listing_name, options)
+        @records = Listings.get_list(@listing_name, options)
       end
       unless @records.empty?
         if @search_params['on_main'] == 'my_records'
