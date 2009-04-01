@@ -51,7 +51,9 @@ class SimpleForm < Form
         :proc => Proc.new { |form,index| (form.field_value_at('age',index).to_i+form.field_value_at('higher_ed_years',index).to_i).to_s}
       }
       f 'hash_field', :type => 'hash'
-      f 'house_value', :type => 'integer', :indexed => true
+      def_fields(:indexed => true) do
+        f 'house_value', :type => 'integer', :followups => {'house_value>10000' => f('bathroom_number')}
+      end
     end
     
     def_conditions do
