@@ -3,7 +3,7 @@ class Field < Bin
     {
       :name => nil,
       :label => nil,
-      :type => nil,
+      :type => 'string',
       :constraints => nil,
       :followups => nil,
       :followup_conditions => nil,
