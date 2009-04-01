@@ -457,24 +457,11 @@ describe SimpleForm do
             lambda{@form.q 'house_value', :flow_through => Proc.new{|index,record| raise "record is #{record}"}}.should raise_error("record is #{@record}")
           end
       end
-      it "should use the current index to determine the value if the flow_through proc returns nil " do
-        #Write this spec
-      end
-      it "should use the index returned by the flow_through proc to determine the value if the proc does not return nil" do
-        #Write this spec
-      end
       it "should assign the flow_through proc from a parent to all of its followups" do
           @form.with_record(@record,:render) do
             lambda{ @form.q 'house_value', :flow_through => Proc.new{|index,record| }, :followups => 'bathroom_number'}.should_not raise_error
           end
-      end
-      it "should use the current index to determine the value for the follow up if the flow_through proc returns nil" do
-        #Write this spec
-      end
-      it "should use the index returned by the flow_through proc to determine the value for the follow up, if the proc does not return ni" do
-        #Write this spec
-      end
-      
+      end      
       it "should render the q with the value determined by the current index if the flow_through proc returns nil" do
         @record[:house_value,0] = '0'
         @record[:house_value,1] = '100'
@@ -503,6 +490,36 @@ describe SimpleForm do
           @form.q 'house_value', :flow_through => Proc.new{|index,record| 2}
         end
         @form.get_body.should == ["<div id=\"question_house_value\" class=\"question\"><label class=\"label\" for=\"record[house_value]\">House value:</label><input id=\"record_house_value\" name=\"record[house_value]\" type=\"text\" /></div>"]
+      end
+      it "should use the index returned by the flow_through proc to determine the value for the follow up, if the proc does not return nil" do
+        @record[:house_value,0] = '100000'
+        @record[:bathroom_number,0] = '1XXX'
+        @record[:house_value,1] = '200000'
+        @record[:bathroom_number,1] = '2'
+        @record[:house_value,2] = '300000'
+        @record[:bathroom_number,2] = '3'
+        @record[:house_value,3] = '400000'
+        @record[:bathroom_number,3] = '4'
+        @form.with_record(@record,:render) do
+          @record.save('create')
+          @form.q 'bathroom_number', :flow_through => Proc.new{|index,record| 1}
+        end
+        (@form.get_body =~ /1XXX/).should_not == nil
+      end
+      it "should use the current index to determine the value for the follow up if the flow_through proc returns nil" do
+        @record[:house_value,0] = '100000'
+        @record[:bathroom_number,0] = '1XXX'
+        @record[:house_value,1] = '200000'
+        @record[:bathroom_number,1] = '2'
+        @record[:house_value,2] = '300000'
+        @record[:bathroom_number,2] = '3'
+        @record[:house_value,3] = '400000'
+        @record[:bathroom_number,3] = '4XXX'
+        @form.with_record(@record,:render) do
+          @record.save('create')
+          @form.q 'bathroom_number', :flow_through => Proc.new{|index,record| nil}
+        end
+        (@form.get_body =~ /4XXX/).should_not == nil
       end
       
       it "should render read-only if forced" do
