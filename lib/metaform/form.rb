@@ -637,7 +637,7 @@ class Form
         else
           raise MetaformException,"followups must be specified with a String or a Hash"
         end
-        followup_question_options[:flow_through] = true if options[:flow_through]  #A followup is flow-through if it's parent is.  
+        followup_question_options[:flow_through] = options[:flow_through] if options[:flow_through]  #A followup is flow-through if it's parent is.  
         conds = the_q.field.followup_conditions
         cond = conds[followup_field_name]
         opts = {:css_class => 'followup',:condition=>cond}

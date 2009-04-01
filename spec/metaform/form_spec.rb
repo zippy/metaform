@@ -439,7 +439,7 @@ describe SimpleForm do
       
       it "should raise an error if q is set as flow_through but field is not set as indexed" do
         @form.with_record(@record,:render) do
-          lambda {@form.q 'name', :flow_through => true}.should raise_error
+          lambda {@form.q 'name', :flow_through => Proc.new{|index,record| }}.should raise_error
         end
       end
       it "should raise an error if q is set as flow_through but is not set with a flow_through proc" do
@@ -457,6 +457,24 @@ describe SimpleForm do
             lambda{@form.q 'house_value', :flow_through => Proc.new{|index,record| raise "record is #{record}"}}.should raise_error("record is #{@record}")
           end
       end
+      it "should use the current index to determine the value if the flow_through proc returns nil " do
+        #Write this spec
+      end
+      it "should use the index returned by the flow_through proc to determine the value if the proc does not return nil" do
+        #Write this spec
+      end
+      it "should assign the flow_through proc from a parent to all of its followups" do
+          @form.with_record(@record,:render) do
+            lambda{ @form.q 'house_value', :flow_through => Proc.new{|index,record| }, :followups => 'bathroom_number'}.should_not raise_error
+          end
+      end
+      it "should use the current index to determine the value for the follow up if the flow_through proc returns nil" do
+        #Write this spec
+      end
+      it "should use the index returned by the flow_through proc to determine the value for the follow up, if the proc does not return ni" do
+        #Write this spec
+      end
+      
       it "should render the q with the value determined by the current index if the flow_through proc returns nil" do
         @record[:house_value,0] = '0'
         @record[:house_value,1] = '100'
