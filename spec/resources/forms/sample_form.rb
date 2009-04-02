@@ -164,12 +164,6 @@ class Log < Listings
       :forms => ['SampleForm']
 #      :workflow_state_filter => ['logged'],
 #      :conditions => {'fruit' => '!= "pear"'},
-
-  # list 'snapshot', :forms => ['SampleForm']
-  # list 'restricted_snapshot',:forms => ['SampleForm'] do
-  #   def_search_rules(:search,'n' => 'name')
-  # end
-    
 end
 
 class Stats < Reports
