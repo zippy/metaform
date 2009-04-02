@@ -1014,7 +1014,8 @@ end
   end
   
   def Record.answer_num(id,field,answer,index=nil)
-    answer = answer.to_s if answer #If answer is nil, search for nil.
+    raise "You can not request the answer_num for a nil or empty string answer" if answer.blank?
+    answer = answer.to_s
     conditions = {:form_instance_id => id, :field_id => field, :answer => answer} #We store answers as strings in the database and postgres would like us to do the conversion.
     conditions.update(:idx => index) if index
     FieldInstance.find(:all,:conditions => conditions).size
@@ -1023,6 +1024,9 @@ end
     Record.answer_num(self.id,field,answer,index)
   end
   
+  #This method will return the highest index for a particular field.  Note that if a field has been
+  #set to a nil or '' value, it will not be stored in the database and will thus not affect this
+  #calculation.  It is therefore the highest non-blank index.
   def Record.max_index(id,field)
     conditions = {:form_instance_id => id, :field_id => field}
     max_index_field_instance = FieldInstance.find(:first,:conditions => conditions, :order => 'idx DESC')
