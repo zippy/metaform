@@ -298,11 +298,11 @@ module MetaformHelper
   end
 
   ############################################################################
-  # fill_and_order_records uses Record.locate which is much slower than Record.search but it
-  # return actual Record objects
+  #This method uses Record.gather, which pulls un-filtered records out of the database and then filters them via ruby. It can
+  #call Record.gather directly on a list of records, or find the desired records first via Record.locate.  Record.locate is much
+  #slower than Record.search, but it returns actual Record objects
   def fill_and_order_records(opts)
     options = {:per_page => 20}.update(opts)
-    #This method uses Record.gather, which pulls un-filtered records out of the database and then filters them via ruby.
     search_rules = generate_search_options(:locate)
     if current_user.can?(:admin) && !@search_params[:manual_filters].blank?
       search_rules = search_rules.nil? ? @search_params[:manual_filters] : "(#{search_rules}) and (#{@search_params[:manual_filters]})"
@@ -313,7 +313,7 @@ module MetaformHelper
         @records = Record.gather(options)
       else
         options = {:filters => search_rules,:workflow_state_filter => @search_params[:status]}.update(options)
-        @records = Listings.get_list(@listing_name, options)
+        @records = Record.locate(:all,options)
       end
       unless @records.empty?
         if @search_params['on_main'] == 'my_records'
