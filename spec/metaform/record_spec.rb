@@ -556,15 +556,17 @@ describe Record do
         end
         nr.last_answer("breastfeeding").should == 'D'
       end
-      it "should get the highest index value of a field, even when that value is nil" do
+      it "should get the highest index non-blank value of a field" do
          nr = after_init_save_and_get_from_locate do
            @record[:breastfeeding] = 'A'    #Only one baby, first PP visit
            @record[:breastfeeding,1] = 'B'  #Only one baby, second PP visit
            @record[:breastfeeding,2] = 'C'  #Only one baby, third PP visit
            @record[:breastfeeding,3] = nil  #Only one baby, fourth PP visit
+           @record[:breastfeeding,4] = ''  #Only one baby, fifth PP visit
          end
-         nr.last_answer("breastfeeding").should == nil
+         nr.last_answer("breastfeeding").should == "C"
        end    
+       
 #      it "should get highest index array when the answer is multi-dimensional" do
 #        nr = after_init_save_and_get_from_locate do
 #          @record[:breastfeeding,1,1] = 'A'    #Three babies, first PP visit, first baby
