@@ -673,23 +673,23 @@ describe Record do
         nr.answer_num("breastfeeding",'B').should == 2
       end
       
-      it "should return 2 when that number of matches answers for a given field, even when the desired answer is ''"  do
+      it "should raise an error when the desired answer is ''"  do
         nr = after_init_save_and_get_from_locate do
           @record[:breastfeeding] = 'A'    #Only one baby, first PP visit
           @record[:breastfeeding,1] = ''  #Only one baby, second PP visit
           @record[:breastfeeding,2] = ''  #Only one baby, third PP visit
           @record[:breastfeeding,3] = 'D'  #Only one baby, fourth PP visit
         end
-        nr.answer_num("breastfeeding",'').should == 2
+        lambda{nr.answer_num("breastfeeding",'')}.should raise_error "You can not request the answer_num for a nil or empty string answer"
       end
-      it "should return 2 when that number of matches answers for a given field, even when the desired answer is nil"  do
+      it "should raise an error when the desired answer is nil"  do
         nr = after_init_save_and_get_from_locate do
           @record[:breastfeeding] = 'A'    #Only one baby, first PP visit
           @record[:breastfeeding,1] = nil  #Only one baby, second PP visit
           @record[:breastfeeding,2] = nil  #Only one baby, third PP visit
           @record[:breastfeeding,3] = 'D'  #Only one baby, fourth PP visit
         end
-        nr.answer_num("breastfeeding",nil).should == 2
+        lambda{nr.answer_num("breastfeeding",nil)}.should raise_error "You can not request the answer_num for a nil or empty string answer"
       end
       
 
