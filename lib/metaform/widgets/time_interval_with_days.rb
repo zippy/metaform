@@ -25,7 +25,7 @@ class TimeIntervalWithDaysWidget < Widget
   def self.humanize_value(value,options=nil)
     return '' if value.nil?
     days = value.to_i / 1440
-    minutes_left = value - days* 1440
+    minutes_left = value.to_i - days* 1440
     hours = minutes_left.to_i / 60
     minutes = minutes_left.to_i % 60
     "#{days} days, #{hours} hours, #{minutes} minutes"
