@@ -384,6 +384,17 @@ describe Record do
       r['fruit'].value.should == ['banana','peach','kiwi']
     end
     
+    it "should return the correct number of answers with answer_num" do
+      @records[0].fruit__1 = 'peach'
+      @records[0].fruit__2 = 'kiwi'
+      @records.each { |recs| recs.form.set_record(recs);recs.save('new_entry') }
+      recs = Record.locate(:all,{:index => :any,:return_answers_hash => true})
+      r = recs[0]
+      r.answer_num('fruit','peach').should == 1
+      r.answer_num('fruit','apple').should == 0
+    end
+    
+  
     it "should correctly locate fields with filters with a preset array of records" do
       @records << Record.make(SampleForm.new,'new_entry',{:name =>'Herbert Wilcox',:fruit => 'banana'})
       @records.each { |recs| recs.form.set_record(recs);recs.save('new_entry') }

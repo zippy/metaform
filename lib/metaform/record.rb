@@ -200,6 +200,15 @@ class Record
   end
   
 class AnswersHash < Hash
+  
+  def answer_num(field,answer)
+    raise "You can not request the answer_num for a nil or empty string answer" if answer.blank?
+    answers = self[field].value
+    answers = [answers] if answers.is_a?(String)
+    return 0 if !answers
+    answers.find_all{ |x| x == answer}.size
+  end
+  
   def method_missing(method,*args)
     a = method.to_s
     if self.has_key?(a)
@@ -1013,15 +1022,14 @@ end
     Record.slice(self.id,*field_names)
   end
   
-  def Record.answer_num(id,field,answer,index=nil)
+  def Record.answer_num(id,field,answer)
     raise "You can not request the answer_num for a nil or empty string answer" if answer.blank?
     answer = answer.to_s
     conditions = {:form_instance_id => id, :field_id => field, :answer => answer} #We store answers as strings in the database and postgres would like us to do the conversion.
-    conditions.update(:idx => index) if index
     FieldInstance.find(:all,:conditions => conditions).size
   end
-  def answer_num(field,answer,index=nil)
-    Record.answer_num(self.id,field,answer,index)
+  def answer_num(field,answer)
+    Record.answer_num(self.id,field,answer)
   end
   
   #This method will return the highest index for a particular field.  Note that if a field has been
