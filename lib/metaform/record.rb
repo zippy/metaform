@@ -201,12 +201,16 @@ class Record
   
 class AnswersHash < Hash
   
-  def answer_num(field,answer)
+  def answer_num(field,answer,other_than = false)
     raise "You can not request the answer_num for a nil or empty string answer" if answer.blank?
     answers = self[field].value
     answers = [answers] if answers.is_a?(String)
     return 0 if !answers
-    answers.find_all{ |x| x == answer}.size
+    if other_than
+      answers.find_all{ |x| x != answer}.size
+    else
+      answers.find_all{ |x| x == answer}.size
+    end
   end
   
   def method_missing(method,*args)
@@ -1013,7 +1017,8 @@ end
     field_instances = FieldInstance.find(:all,:conditions => conditions, :order => 'idx DESC')
     field_names.each {|a| result[a] = {}}
     field_instances.each do |fi|
-      result[fi.field_id][fi.idx] = fi.answer
+      result[fi.field_id][fi.idx] = fi.answer unless fi.answer.blank?   #To-do:  Use this line when database no longer has blank answers
+      #result[fi.field_id][fi.idx] = fi.answer #To-do:  Use this line when database no longer has blank answers
     end if field_instances
     result = result[field_names[0]] if field_names.size == 1
     result
@@ -1022,14 +1027,19 @@ end
     Record.slice(self.id,*field_names)
   end
   
-  def Record.answer_num(id,field,answer)
+  def Record.answer_num(id,field,answer,other_than=false)
     raise "You can not request the answer_num for a nil or empty string answer" if answer.blank?
     answer = answer.to_s
-    conditions = {:form_instance_id => id, :field_id => field, :answer => answer} #We store answers as strings in the database and postgres would like us to do the conversion.
+    if other_than
+      #conditions = "form_instance_id = '#{id}' and field_id = '#{field}' and answer != '#{answer}'" To-do:  Use this line when database no longer has blank answers
+      conditions = "form_instance_id = '#{id}' and field_id = '#{field}' and answer != '#{answer}' and answer is not null and answer != ''"
+    else
+      conditions = {:form_instance_id => id, :field_id => field, :answer => answer} #We store answers as strings in the database and postgres would like us to do the conversion.
+    end
     FieldInstance.find(:all,:conditions => conditions).size
   end
-  def answer_num(field,answer)
-    Record.answer_num(self.id,field,answer)
+  def answer_num(field,answer,other_than=false)
+    Record.answer_num(self.id,field,answer,other_than)
   end
   
   #This method will return the highest index for a particular field.  Note that if a field has been

@@ -394,6 +394,18 @@ describe Record do
       r.answer_num('fruit','apple').should == 0
     end
     
+    it "should return the correct number of answers with answer_num with the other_than parameter" do
+      @records[0].fruit__1 = 'peach'
+      @records[0].fruit__2 = 'peach'
+      @records[0].fruit__3 = 'kiwi'
+      @records.each { |recs| recs.form.set_record(recs);recs.save('new_entry') }
+      recs = Record.locate(:all,{:index => :any,:return_answers_hash => true})
+      r = recs[0]
+      r.answer_num('fruit','kiwi',true).should == 3
+      r.answer_num('fruit','kiwi',false).should == 1
+      r.answer_num('fruit','kiwi').should == 1
+    end
+    
   
     it "should correctly locate fields with filters with a preset array of records" do
       @records << Record.make(SampleForm.new,'new_entry',{:name =>'Herbert Wilcox',:fruit => 'banana'})
@@ -703,6 +715,17 @@ describe Record do
           @record[:breastfeeding,3] = 'D'  #Only one baby, fourth PP visit
         end
         lambda{nr.answer_num("breastfeeding",nil)}.should raise_error "You can not request the answer_num for a nil or empty string answer"
+      end
+      it "should return 1 when that number of answers don't match for a given field when  using the other_than paramter"  do
+        nr = after_init_save_and_get_from_locate do
+          @record[:breastfeeding] = 'B'    #Only one baby, first PP visit
+          @record[:breastfeeding,1] = 'B'  #Only one baby, second PP visit
+          @record[:breastfeeding,2] = 'B'  #Only one baby, third PP visit
+          @record[:breastfeeding,3] = 'D'  #Only one baby, fourth PP visit
+        end
+        nr.answer_num("breastfeeding",'B',false).should == 3
+        nr.answer_num("breastfeeding",'B').should == 3
+        nr.answer_num("breastfeeding",'B',true).should == 1
       end
       
 
