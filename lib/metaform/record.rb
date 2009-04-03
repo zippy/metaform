@@ -1037,7 +1037,8 @@ end
   end
   
   def Record.last_answer(id,field)
-    conditions = {:form_instance_id => id, :field_id => field}
+    conditions = "form_instance_id = '#{id}' and field_id = '#{field}' and answer is not null and answer != ''"
+    #conditions = {:form_instance_id => id, :field_id => field}  To-do:  Use this line when database no longer has blank answers
     max_index_field_instance = FieldInstance.find(:first,:conditions => conditions, :order => 'idx DESC')
     max_index_field_instance ? max_index_field_instance.answer : nil
   end
