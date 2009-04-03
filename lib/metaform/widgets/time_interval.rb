@@ -19,6 +19,7 @@ class TimeIntervalWidget < Widget
 
   ################################################################################
   def self.humanize_value(value,options=nil)
+    return '' if value.nil?
     hours = value.to_i / 60
     minutes = value.to_i % 60
     "#{hours} hours, #{minutes} minutes"

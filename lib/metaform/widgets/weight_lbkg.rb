@@ -42,9 +42,10 @@ class WeightLbkgWidget < Widget
   
   ################################################################################
   def self.humanize_value(value,options=nil)
+    return '' if value.nil?
     kilograms = (value.to_f / 1000)
     pounds = (kilograms * 2.20462262)
-    "#{sprintf("%.1f",pounds)}lb (#{sprintf("%.1f",kilograms)} kg)"
+    "#{sprintf("%.1f",pounds)} lb (#{sprintf("%.1f",kilograms)} kg)"
   end
 
   ################################################################################
