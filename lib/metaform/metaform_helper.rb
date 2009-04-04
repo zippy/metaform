@@ -42,7 +42,7 @@ module MetaformHelper
   end
   def sort_rule_date(sort_key)
     @sort_rules[sort_key] = Proc.new do |r|
-      (r && r[sort_key] && r[sort_key] != '') ? Date.new(*ParseDate.parsedate(r[sort_key])[0..3]) : Date.new
+      (r && r[sort_key] && r[sort_key] != '') ? Time.mktime(*ParseDate.parsedate(r[sort_key])[0..2]) : Time.new
     end
   end
   def apply_sort_rule(r = nil)
