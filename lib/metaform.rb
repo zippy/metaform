@@ -33,7 +33,6 @@ require 'metaform/form_proxy'
 require 'metaform/form_helper'
 require 'metaform/bin'
 require 'metaform/property'
-require 'metaform/dsl_objects'
 #require 'metaform/forms'
 require 'metaform/form'
 require 'metaform/reports'
@@ -45,6 +44,7 @@ require 'metaform/records_controller'
 require 'metaform/field_instance'
 require 'metaform/form_instance'
 require 'metaform/metaform_helper'
+require 'metaform/dsl_objects'
 
 =begin
 ################################################################################

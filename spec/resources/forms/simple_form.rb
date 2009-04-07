@@ -88,6 +88,14 @@ class SimpleForm < Form
       end
     end
     
+    def_listings do
+      listing 'plain'  do
+      end
+      listing 'filter_by_name', 
+              :ruby_filters => {'doula' => Proc.new{|search_for| ":name =~ /^J/"}} do
+      end
+    end
+    
     def_fields :groups => ['family_info'] do
       f 'married', :constraints=>{'enumeration' => [{'y' => 'Yes'},{'n'=>'No'}]}
       f 'children', :type=>'integer', :group => 'kids', :force_nil => [['has_children',['oldest_child_age'],:unless]]

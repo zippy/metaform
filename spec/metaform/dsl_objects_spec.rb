@@ -247,6 +247,13 @@ describe Tabs do
   end
 end
 
+describe Listing do
+  it "should require name" do
+    lambda {Listing.new(:form => 'x')}.should raise_error("Listing reqires 'name' to be defined")
+    lambda {Listing.new(:form => 'x',:name=>'plain')}.should_not raise_error
+  end
+end
+
 
 #describe Constraint do
 #  it "should require " do
