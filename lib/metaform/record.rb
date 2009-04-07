@@ -1152,8 +1152,7 @@ end
     condition_strings = []
     conditions_params = []
     field_list = {}
-    
-#    puts "LOCATE options: #{locate_options.inspect}"
+   puts "LOCATE OPTIONS: #{locate_options.inspect}"
     
     if locate_options.has_key?(:filters)
       gather_options[:filters] = locate_options[:filters]
@@ -1194,7 +1193,8 @@ end
       end
       conditions_params << locate_options[:workflow_state_filter]
     end
-
+    puts "condition_strings = #{condition_strings.inspect}"
+puts "conditions_params = #{conditions_params.inspect}"
     if locate_options.has_key?(:conditions)
       c = arrayify(locate_options[:conditions])
       c.each {|x| x =~ /([a-zA-Z0-9_-]+)(.*)/; condition_strings << %Q|if(field_instances.field_id = '#{$1}',if (answer #{$2},true,false),false)|}
@@ -1224,6 +1224,8 @@ end
     #puts "find_opts = #{find_opts.inspect}"
     gather_options[:records] = Proc.new {
       begin
+        puts "what = #{what.inspect}"
+        puts "find_opts = #{find_opts.inspect}"
         FormInstance.find(what,find_opts)
       rescue ActiveRecord::RecordNotFound
         nil
@@ -1237,7 +1239,7 @@ end
   #It can start with a list of FormInstances or call a proc to find the desired FormInstances
   #It can call Record.filter to filter out results based on ruby to call on field values.
   def Record.gather(gather_options)
-    #puts "gather_options = #{gather_options.inspect}"
+    puts "GATHER OPTIONS = #{gather_options.inspect}"
     filter_options = {}
     field_list = {} 
     
@@ -1281,7 +1283,7 @@ end
   end
   
   def Record.filter(filter_options)
-    #puts "filter_options = #{filter_options.inspect}"
+    puts "FILTER OPTIONS = #{filter_options.inspect}"
     return_answers_hash = filter_options.has_key?(:return_answers_hash)
     
     filters = filter_options[:filters]
@@ -1322,6 +1324,7 @@ end
       end
     end
     forms = forms[0] if forms.length == 1 && did_it
+    puts "forms[0]['workflow_state]=#{forms[0]['workflow_state']}"
     forms
   end
     

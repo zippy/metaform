@@ -488,3 +488,22 @@ class Tabs < Bin
     %Q|<li class="#{css_class}"> <a href="#" onClick="return submitAndRedirect('#{url}')" title="Click here to go to #{label}"><span>#{label}#{extra}</span></a></li>|
   end
 end
+
+class Listing < Bin
+   include MetaformHelper
+  
+  def bins
+    { :form => nil, :name => nil, :filler => nil, :workflow_state_filter => nil}
+  end
+  def required_bins
+    [:form, :name]
+  end
+  
+  def get_records
+    generate_options
+    options = {}
+    options[:workflow_state_filter] = workflow_state_filter if workflow_state_filter
+    Record.locate(:all,options)
+  end
+  
+end

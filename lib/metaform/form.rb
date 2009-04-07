@@ -15,12 +15,13 @@ class Form
 
   FieldTypes = ['string','integer','float','decimal','boolean','date','datetime','time','text','hash','array']
 
-  attr_accessor :fields, :conditions, :questions, :presentations, :groups, :workflows, :tabs, :zapping_proc, :label_options, :calculated_field_dependencies, :current_tab_label
+  attr_accessor :fields, :conditions, :questions, :listings, :presentations, :groups, :workflows, :tabs, :zapping_proc, :label_options, :calculated_field_dependencies, :current_tab_label
 
   def initialize
     @fields = {}
     @conditions = {}
     @questions = {}
+    @listings = {}
     @presentations = {}
     @groups = {}
     @workflows = {}
@@ -171,6 +172,33 @@ class Form
       conditions[name]
     end
   end
+  
+  
+  #################################################################################
+  # a placeholder for defining a bunch of listings
+  def def_listings()
+    yield
+  end
+
+  #################################################################################
+  #################################################################################
+  # defines a listing
+  # The options for a condition definition are:
+  #################################################################################
+  def listing(name,opts = {},&block)
+    if !listings.has_key?(name) || opts.has_key?(:overwrite)
+      options = {:form => self}.update(opts)
+      # if block_given?
+      #   options[:ruby] = block
+      # end
+      options[:name] = name
+      the_listing = Listing.new(options)
+      listings[name] = the_listing
+    else
+      listings[name]
+    end
+  end
+  
 
   #################################################################################
   #################################################################################
