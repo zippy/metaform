@@ -63,7 +63,12 @@ class HeightWidget < Widget
   
   ################################################################################
   def self.humanize_value(value,options=nil)
-    "#{value} meters"
+    return '' if value.nil?
+    meters = value.to_f / 100 # We store the value as centimeters	
+  	total_inches = (meters * 39.370079).round
+  	feet = total_inches / 12
+  	inches = total_inches % 12      	
+    %Q|#{feet}' #{inches}" (#{value} cm)|
   end
 
   ################################################################################

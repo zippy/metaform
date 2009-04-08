@@ -30,6 +30,7 @@ EOHTML
 
   ################################################################################
   def self.humanize_value(value,options=nil)
+    return '' if value.nil?
     date = parse_value(value)
     if date
       "#{date.month}/#{date.year}"
