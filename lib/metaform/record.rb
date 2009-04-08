@@ -200,12 +200,12 @@ class Record
   end
   
 class AnswersHash < Hash
-  
-  def answer_num(field,answer,other_than = false)
+  def answer_num(field,answer,other_than = false,max_index = false)
     raise "You can not request the answer_num for a nil or empty string answer" if answer.blank?
     answers = self[field].value
     answers = [answers] if answers.is_a?(String)
     return 0 if !answers
+    answers = answers[0..max_index] if max_index
     if other_than
       answers.find_all{ |x| x != answer}.size
     else
@@ -1025,21 +1025,24 @@ end
   end
   def slice(*field_names)
     Record.slice(self.id,*field_names)
-  end
+  end  
   
-  def Record.answer_num(id,field,answer,other_than=false)
+  def Record.answer_num(id,field,answer,other_than=false,max_index = false)
     raise "You can not request the answer_num for a nil or empty string answer" if answer.blank?
-    answer = answer.to_s
+    answer = answer.to_s  #We store answers as strings in the database and postgres would like us to do the conversion.
     if other_than
       #conditions = "form_instance_id = '#{id}' and field_id = '#{field}' and answer != '#{answer}'" To-do:  Use this line when database no longer has blank answers
       conditions = "form_instance_id = '#{id}' and field_id = '#{field}' and answer != '#{answer}' and answer is not null and answer != ''"
     else
-      conditions = {:form_instance_id => id, :field_id => field, :answer => answer} #We store answers as strings in the database and postgres would like us to do the conversion.
+      conditions = "form_instance_id = '#{id}' and field_id = '#{field}' and answer = '#{answer}'"
+    end
+    if max_index
+      conditions << " and idx < #{max_index+1}"
     end
     FieldInstance.find(:all,:conditions => conditions).size
   end
-  def answer_num(field,answer,other_than=false)
-    Record.answer_num(self.id,field,answer,other_than)
+  def answer_num(field,answer,other_than=false,max_index = false)
+    Record.answer_num(self.id,field,answer,other_than,max_index)
   end
   
   #This method will return the highest index for a particular field.  Note that if a field has been
