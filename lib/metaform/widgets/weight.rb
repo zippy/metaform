@@ -53,6 +53,7 @@ class WeightWidget < Widget
   
   ################################################################################
   def self.humanize_value(value,options=nil)
+    return '' if value.nil?
     "#{value} grams"
   end
 

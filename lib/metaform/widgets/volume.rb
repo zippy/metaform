@@ -42,6 +42,7 @@ class VolumeWidget < Widget
   
   ################################################################################
   def self.humanize_value(value,options=nil)
+    return '' if value.nil?
     "#{value} ml"
   end
 
