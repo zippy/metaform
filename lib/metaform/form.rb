@@ -847,7 +847,8 @@ class Form
     js = yield
     css_class = options[:css_class]
     css_class = %Q| class="#{css_class}"| if css_class
-    body %Q|<input type="button" value="#{name}"#{css_class} onclick="#{js}">|
+    disabled = options[:disabled] ? ' disabled="disabled"' : ''
+    body %Q|<input type="button" value="#{name}"#{css_class} onclick="#{js}"#{disabled}>|
   end
   
   #################################################################################
