@@ -406,6 +406,34 @@ describe Record do
       r.answer_num('fruit','kiwi').should == 1
     end
     
+    it "should return the correct number of answers with answer_num with the max_index parameter for an AnswersHash" do
+      @records[0].fruit__1 = 'kiwi'
+      @records[0].fruit__2 = 'peach'
+      @records[0].fruit__4 = 'peach'
+      @records.each { |recs| recs.form.set_record(recs);recs.save('new_entry') }
+      recs = Record.locate(:all,{:index => :any,:return_answers_hash => true})
+      r = recs[0]
+      r.answer_num('fruit','peach',false,1).should == 0
+      r.answer_num('fruit','peach',false,2).should == 1
+      r.answer_num('fruit','peach',false,3).should == 1
+      r.answer_num('fruit','peach',false,4).should == 2
+      r.answer_num('fruit','peach',false,5).should == 2
+    end
+    it "should return the correct number of answers with answer_num with the max_index parameter" do
+      @records[0].fruit__1 = 'kiwi'
+      @records[0].fruit__2 = 'peach'
+      @records[0].fruit__4 = 'peach'
+      @records.each { |recs| recs.form.set_record(recs);recs.save('new_entry') }
+      recs = Record.locate(:all,{:index => :any})
+      r = recs[0]
+      r.answer_num('fruit','peach',false,1).should == 0
+      r.answer_num('fruit','peach',false,2).should == 1
+      r.answer_num('fruit','peach',false,3).should == 1
+      r.answer_num('fruit','peach',false,4).should == 2
+      r.answer_num('fruit','peach',false,5).should == 2
+    end
+    
+    
   
     it "should correctly locate fields with filters with a preset array of records" do
       @records << Record.make(SampleForm.new,'new_entry',{:name =>'Herbert Wilcox',:fruit => 'banana'})
