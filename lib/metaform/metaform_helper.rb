@@ -22,25 +22,30 @@ module MetaformHelper
  
   def def_sort_rules(*args)
     @sort_rules = {}
-    args.each{|k| sort_rule(k)}
+    args.each{|k| def_sort_rule(k)}
     yield if block_given?
   end
-  def sort_rule(sort_key,&block)
+  
+  def def_sort_rule(sort_key,proc=nil,&block)  #This was previously just def sort_rule
     if block_given?
       @sort_rules[sort_key] = block
     else
       if sort_key.is_a?(String)
-        @sort_rules[sort_key] = Proc.new do |r|
-          r && r["#{sort_key}"] ? r["#{sort_key}"].downcase : ""
+        if proc
+          @sort_rules[sort_key] = proc
+        else
+          @sort_rules[sort_key] = Proc.new do |r|
+            r && r["#{sort_key}"] ? r["#{sort_key}"].downcase : ""
+          end
         end
-      else
+      else  #This style only works for Rails models & find
         @sort_rules[sort_key[0]] = Proc.new do 
           sort_key[1] ? sort_key[1].downcase : ""
         end
       end
     end
   end
-  def sort_rule_date(sort_key)
+  def def_sort_rule_date(sort_key) #This was previously just def sort_rule_date
     @sort_rules[sort_key] = Proc.new do |r|
       (r && r[sort_key] && r[sort_key] != '') ? Time.mktime(*ParseDate.parsedate(r[sort_key])[0..2]) : Time.new
     end
@@ -59,7 +64,7 @@ module MetaformHelper
     end
     orders.map{|order| @sort_rules[order].call(r)} 
   end
- 
+    
   def def_search_rules(kind,pairs)
     @search_rules ||= {}
     @search_rules['all'] = 'dummy value'
@@ -73,8 +78,8 @@ module MetaformHelper
       end
     when :locate #The search rules generated here will be used for a call to Record.locate, via fill_and_locate_records
       pairs.each do |key,field|
-        def_search_rule(key+'_b') {|search_for| ":#{field} =~ /^#{search_for}/i"}
-        def_search_rule(key+'_c') {|search_for| ":#{field} =~ /#{search_for}/i"}
+        def_search_rule(key+'_b', :regex=>true) {|search_for| ":#{field} =~ /^#{search_for}/i"}
+        def_search_rule(key+'_c', :regex=>true) {|search_for| ":#{field} =~ /#{search_for}/i"}
         def_search_rule(key+'_is') {|search_for| ":#{field} == '#{search_for}'"}
         def_search_rule(key+'_not') {|search_for| ":#{field} != '#{search_for}'"}
       end
@@ -87,12 +92,18 @@ module MetaformHelper
       end
     end
   end
-
+  
   def def_search_rule(key,params={},&block)
     @search_rules ||= {}
-    @search_rules[key] = {:block => block,:params => params}
+    if params.is_a?(Proc)
+      @search_rules[key] = {:block => params}
+    elsif block
+      @search_rules[key] = params.update(:block => block) 
+    else
+      @search_rules[key] = params
+    end
   end
-    
+  
   def generate_search_options(kind)
     case kind
     when :sql
@@ -106,8 +117,8 @@ module MetaformHelper
       generate_options do |search_rule,search_for|
         # searching for something with | in it requires ust to generate the full conditions ored together
         c = '('+search_for.split(/\W*\|\W*/).collect {|search_for| search_rule[:block].call(search_for)}.join(' or ')+')'
-        c = 'not '+c if search_rule[:params][:negate]
-        search_rule[:params][:meta_condition] ? meta_conditions.push(c) : conditions.push(c)
+        c = 'not '+c if search_rule[:negate]
+        search_rule[:meta_condition] ? meta_conditions.push(c) : conditions.push(c)
       end
       options[:conditions] = conditions.join(' and ') if !conditions.empty?
       options[:meta_condition] = meta_conditions.join(' and ') if !meta_conditions.empty?
@@ -134,12 +145,17 @@ module MetaformHelper
   end
   
   def apply_search_rules(sql)
-    @filters ||= []
+    filters ||= []
     generate_options do |search_rule,search_for|
-      search_for = Regexp.escape(search_for).gsub('/','\/') unless sql
-      search_for = search_for.split(/\\\||\|/)
+      if search_rule[:regex]
+        search_for = Regexp.escape(search_for).gsub('/','\/') unless sql
+        search_for = search_for.split(/\\\||\|/)
+      else
+        search_for = [search_for]
+      end
       queries = []
       terms = [] if sql
+      #puts "search_for = #{search_for.inspect}"
       search_for.map!{|s| search_rule[:block].call(s)}.each do |s|
         if sql
           queries << s[0]
@@ -153,20 +169,20 @@ module MetaformHelper
       else
         search_for = queries.join(' || ')
       end
-      @filters << search_for
+      filters << search_for
     end
     if sql #Combine filters in format sql likes
       conditions = []
       sql_terms = []
-      @filters.each do |f|
+      filters.each do |f|
         sql_terms << f[0]
         conditions = conditions + f[1]
       end
       sql_terms = sql_terms << @search_params[:sql] if (@search_params[:sql] && @search_params[:sql] != '')
-      @filters = [sql_terms.join(" and ")] + conditions if (sql_terms != [] || conditions != [])
+      filters = [sql_terms.join(" and ")] + conditions if (sql_terms != [] || conditions != [])
     end
-    @filters = nil if @filters.empty? 
-    @filters
+    filters = nil if filters.empty? 
+    filters
   end
   
   def field_blank_sql(field)
@@ -174,6 +190,8 @@ module MetaformHelper
   end
   
   def set_params(listing_type,use_session,defaults={})  
+    #To do:  Need to check that everything in the params is allowed by the application
+    #Manastats case:  if current_user.can?(:admin), then @search_params[:manual_filters] is ok, otherwise, strip it out
     if !params[:search] 
       # if the search params aren't in the actual params from the request
       # then you can look for them in the session, if that's what the page would like
@@ -296,42 +314,4 @@ module MetaformHelper
     @records ||= []
     @records = @records.paginate(:page => @search_params[:page],:per_page => per_page) if @search_params[:paginate]=='yes' && !@records.empty?
   end
-
-  ############################################################################
-  #This method uses Record.gather, which pulls un-filtered records out of the database and then filters them via ruby. It can
-  #call Record.gather directly on a list of records, or find the desired records first via Record.locate.  Record.locate is much
-  #slower than Record.search, but it returns actual Record objects
-  def fill_and_order_records(opts)
-    options = {:per_page => 20}.update(opts)
-    search_rules = generate_search_options(:locate)
-    if current_user.can?(:admin) && !@search_params[:manual_filters].blank?
-      search_rules = search_rules.nil? ? @search_params[:manual_filters] : "(#{search_rules}) and (#{@search_params[:manual_filters]})"
-    end
-    if search_rules || @display_all
-      if @records
-        options = {:filters => search_rules,:records => @records}.update(options)
-        @records = Record.gather(options)
-      else
-        options = {:filters => search_rules,:workflow_state_filter => @search_params[:status]}.update(options)
-        @records = Record.locate(:all,options)
-      end
-      unless @records.empty?
-        if @search_params['on_main'] == 'my_records'
-        @records.delete_if{|r| 
-          @use_createdby_workflows.include?(r.workflow_state) ? 
-          !@ids_to_check.include?(r.H_CreatedBy) : 
-          !@ids_to_check.include?(r.H_ClaimedBy) }            
-        end
-        unless @records.empty?
-          @records = @records.sort_by{|r| apply_sort_rule(r) }    
-          @records.reverse! if @search_params[:desc] || @search_params[:order_current] =~ /DESC/
-        end
-      end
-    elsif @records && @records.size > 0
-      @records = []
-    end
-    @records ||= []
-    @records = @records.paginate(:page => @search_params[:page],:per_page => per_page) if @search_params[:paginate]=='yes' && !@records.empty?
-  end
-
 end

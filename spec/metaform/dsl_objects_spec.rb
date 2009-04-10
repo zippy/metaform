@@ -249,8 +249,8 @@ end
 
 describe Listing do
   it "should require name" do
-    lambda {Listing.new(:form => 'x')}.should raise_error("Listing reqires 'name' to be defined")
-    lambda {Listing.new(:form => 'x',:name=>'plain')}.should_not raise_error
+    lambda {Listing.new(:form => 'x', :kind => :locate)}.should raise_error("Listing reqires 'name' to be defined")
+    lambda {Listing.new(:form => 'x',:name=>'plain', :kind => :locate)}.should_not raise_error
   end
 end
 

@@ -54,6 +54,7 @@ class SimpleForm < Form
       def_fields(:indexed => true) do
         f 'house_value', :type => 'integer', :followups => {'house_value>10000' => f('bathroom_number')}
       end
+      f 'favorite_date', :type => 'date'
     end
     
     def_conditions do
@@ -89,11 +90,34 @@ class SimpleForm < Form
     end
     
     def_listings do
-      listing 'plain'  do
+      listing 'plain', 
+        :kind => :locate  do
       end
-      listing 'filter_by_name', 
-              :ruby_filters => {'doula' => Proc.new{|search_for| ":name =~ /^J/"}} do
+      listing 'plain_with_workflow_state_filter', 
+        :kind => :locate,
+        :workflow_state_filter => 'logged'  do
       end
+      listing 'filters', 
+        :kind => :locate,
+        :search_rules => {
+          'doula_name_is' => Proc.new{|search_for| ":name == '#{search_for}'"},
+          'doula_age_is' => Proc.new{|search_for| ":age == '#{search_for}'"},
+          'doula_name_begins_with' => {:reg_ex => true, :block => Proc.new{|search_for| ":name =~ /^#{search_for}/"}},
+          'doula_name_ends_with' => {:regex => true, :block => Proc.new{|search_for| ":name =~ /#{search_for}$/"}},
+          'doula_name_begins_with_j_or_b' => {:regex => true, :block => Proc.new{|search_for| ":name =~ /^J/ || :name =~ /^B/"}}} do
+      end
+      listing 'generate_filters_by_name',
+        :kind => :locate,
+        :search_rules => {:generators => [['doula_name', :name]]} do
+      end
+      listing 'sort_rules',
+        :kind => :locate,
+        :sort_rules => {
+          'married_first' => Proc.new{|r| r.married == 'y' ? 'a' : 'b' },
+          :date_generators => ['favorite_date'],
+          :regular_generators => ['name']} do
+      end
+      #fave_date
     end
     
     def_fields :groups => ['family_info'] do
