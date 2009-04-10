@@ -493,17 +493,86 @@ class Listing < Bin
    include MetaformHelper
   
   def bins
-    { :form => nil, :name => nil, :filler => nil, :workflow_state_filter => nil}
-  end
-  def required_bins
-    [:form, :name]
+    { :form => nil, :name => nil, :kind => nil, :workflow_state_filter => nil, :search_rules => nil, :fields => nil,
+      :return_answers_hash => nil, :records => nil, :per_page => 20, :sort_rules => nil}
   end
   
-  def get_records
-    generate_options
-    options = {}
-    options[:workflow_state_filter] = workflow_state_filter if workflow_state_filter
-    Record.locate(:all,options)
+  def required_bins
+    [:form, :name, :kind]
+  end
+  
+  def option_bins
+    [:workflow_state_filter, :fields, :return_answers_hash, :records, :per_page]
+  end
+  
+  def initialize(bins)
+    super bins
+    if search_rules
+      pairs = false
+      @search_rules = search_rules
+      if @search_rules[:generators]
+        pairs = @search_rules[:generators] 
+        @search_rules.delete(:generators)
+      end
+      @search_rules.each do |k,v|
+        def_search_rule(k,v)
+      end
+      def_search_rules(kind,pairs) if pairs
+      search_rules = @search_rules
+    end
+    if sort_rules
+      reg_gens = false
+      date_gens = false
+      @sort_rules = sort_rules
+      if @sort_rules[:regular_generators]
+        reg_gens = @sort_rules[:regular_generators] 
+        @sort_rules.delete(:regular_generators)
+      end
+      if @sort_rules[:date_generators]
+        date_gens = @sort_rules[:date_generators] 
+        @sort_rules.delete(:date_generators)
+      end
+      @sort_rules.each do |k,v|
+        def_sort_rule(k,v)
+      end
+      reg_gens.each{|k| def_sort_rule(k)} if reg_gens
+      date_gens.each{|k| def_sort_rule_date(k)} if date_gens
+      sort_rules = @sort_rules
+    end
+  end
+
+  def fill_records(search_params)
+    case kind
+    when :locate
+      #This case uses Record.gather, which pulls un-filtered records out of the database and then filters them via ruby. It can
+      #call Record.gather directly on a list of records, or find the desired records first via Record.locate.  Record.locate is much
+      #slower than Record.search, but it returns actual Record objects
+      @search_params = search_params
+      @search_rules = search_rules
+      @sort_rules = sort_rules
+      filters = generate_search_options(:locate)
+      filters = filters.nil? ? @search_params[:manual_filters] : "(#{filters}) and (#{@search_params[:manual_filters]})" unless @search_params[:manual_filters].blank?
+      if  @display_all
+        #NEED TO SPEC THIS & IMPLEMENT THIS
+      end
+      options = {}
+      options[:filters] = filters
+      option_bins.each do |b|
+        options[b] = self[b] if self[b]
+      end
+      @records = options[:records] ? Record.gather(options) : Record.locate(:all,options)
+      @records = @records.paginate(:page => @search_params[:page],:per_page => per_page) if @search_params[:paginate]=='yes' && !@records.empty?
+      unless @records.empty?
+        @records = @records.sort_by{|r| apply_sort_rule(r) }    
+        @records.reverse! if @search_params[:desc] || @search_params[:order_current] =~ /DESC/
+      end
+      @records ||= []
+      @records = @records.paginate(:page => @search_params[:page],:per_page => per_page) if @search_params[:paginate]=='yes' && !@records.empty?
+    else
+      raise "Haven't implemented other Listing kinds yet"
+    end
+    @records ||= []
+    @records
   end
   
 end
