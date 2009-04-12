@@ -494,7 +494,8 @@ class Listing < Bin
   
   def bins
     { :form => nil, :name => nil, :kind => nil, :workflow_state_filter => nil, :search_rules => nil, :fields => nil,
-      :return_answers_hash => nil, :records => nil, :per_page => 20, :sort_rules => nil}
+      :return_answers_hash => nil, :records => nil, :per_page => 20, :sort_rules => nil, :sql_prefilters => nil, 
+      :order => nil, :index => nil}
   end
   
   def required_bins
@@ -502,7 +503,7 @@ class Listing < Bin
   end
   
   def option_bins
-    [:workflow_state_filter, :fields, :return_answers_hash, :records, :per_page]
+    [:workflow_state_filter, :fields, :return_answers_hash, :records, :per_page, :sql_prefilters, :order, :index]
   end
   
   def initialize(bins)
@@ -541,38 +542,65 @@ class Listing < Bin
     end
   end
 
-  def fill_records(search_params)
+  def fill_records(params,session = {})
+    @params = params
+    @session = session
+    @search_rules = search_rules
+    @sort_rules = sort_rules
+    use_session = !@params[:use_session].nil? ? @params[:use_session] : true
+    defaults = order ? {:order_current => order} : {}
+    set_params(name,use_session,defaults)
+    filters = generate_search_options(kind)
     case kind
+    when :search
+      # This case uses Record.search which is much faster than Record.locate but it
+      # returns the values in a fake FormInstances object which is what Record.search returns.
+
+      # #if there's a manual filter then we have to and it to any conditions that already exist
+      if !@search_params[:manual_filters].blank?
+        filters ||= {}
+        if filters[:conditions].blank?
+          filters[:conditions] = @search_params[:manual_filters]
+        else
+          and_it = "(#{filters[:conditions]}) and (#{@search_params[:manual_filters]})"
+          # if it's an array then the condition string is at the 0th position (i.e. like for ActiveRecord.find)
+          # otherwise the condition should be a string
+          case filters[:conditions]
+          when Array
+            filters[:conditions][0] = and_it
+          when String
+            filters[:conditions] = and_it
+          end
+        end
+      end
+      filters ||= {}
+      option_bins.each do |b|
+        filters[b] = self[b] if self[b]
+      end
+      @records = Record.search(filters)
+      unless @records.empty?
+        @records = @records.sort_by{|r| apply_sort_rule(r) }    
+        @records.reverse! if @search_params[:desc] || @search_params[:order_current] =~ /DESC/
+        @records = @records.paginate(:page => @search_params[:page],:per_page => per_page) if @search_params[:paginate]=='yes' && !@records.empty?
+      end
     when :locate
       #This case uses Record.gather, which pulls un-filtered records out of the database and then filters them via ruby. It can
       #call Record.gather directly on a list of records, or find the desired records first via Record.locate.  Record.locate is much
-      #slower than Record.search, but it returns actual Record objects
-      @search_params = search_params
-      @search_rules = search_rules
-      @sort_rules = sort_rules
-      filters = generate_search_options(:locate)
-      filters = filters.nil? ? @search_params[:manual_filters] : "(#{filters}) and (#{@search_params[:manual_filters]})" unless @search_params[:manual_filters].blank?
-      if  @display_all
-        #NEED TO SPEC THIS & IMPLEMENT THIS
-      end
+      #slower than Record.search, but it returns actual Record objects or an AnswersHash, if preferred.
       options = {}
       options[:filters] = filters
       option_bins.each do |b|
         options[b] = self[b] if self[b]
       end
       @records = options[:records] ? Record.gather(options) : Record.locate(:all,options)
+    end
+    unless @records.empty?
+      @records = @records.sort_by{|r| apply_sort_rule(r) }    
+      @records.reverse! if @search_params[:desc] || @search_params[:order_current] =~ /DESC/
       @records = @records.paginate(:page => @search_params[:page],:per_page => per_page) if @search_params[:paginate]=='yes' && !@records.empty?
-      unless @records.empty?
-        @records = @records.sort_by{|r| apply_sort_rule(r) }    
-        @records.reverse! if @search_params[:desc] || @search_params[:order_current] =~ /DESC/
-      end
-      @records ||= []
-      @records = @records.paginate(:page => @search_params[:page],:per_page => per_page) if @search_params[:paginate]=='yes' && !@records.empty?
-    else
-      raise "Haven't implemented other Listing kinds yet"
     end
     @records ||= []
-    @records
+    [@records,@search_params]
   end
   
 end
