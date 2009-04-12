@@ -155,7 +155,6 @@ module MetaformHelper
       end
       queries = []
       terms = [] if sql
-      #puts "search_for = #{search_for.inspect}"
       search_for.map!{|s| search_rule[:block].call(s)}.each do |s|
         if sql
           queries << s[0]
@@ -190,19 +189,21 @@ module MetaformHelper
   end
   
   def set_params(listing_type,use_session,defaults={})  
+    @params = params if self.methods.include?('params')
+    @session = session if self.methods.include?('session')
     #To do:  Need to check that everything in the params is allowed by the application
     #Manastats case:  if current_user.can?(:admin), then @search_params[:manual_filters] is ok, otherwise, strip it out
-    if !params[:search] 
+    if !@params[:search] 
       # if the search params aren't in the actual params from the request
       # then you can look for them in the session, if that's what the page would like
       if use_session
-        @search_params = session[listing_type]
+        @search_params = @session[listing_type]
       end
     else
-      @search_params = params[:search].update({:page => params[:page]})
+      @search_params = @params[:search].update({:page => @params[:page]})
     end
     @search_params ||= {}
-    @search_params[:order_last] = session[listing_type][:order_current] if session[listing_type] && session[listing_type].key?(:order_current)  
+    @search_params[:order_last] = @session[listing_type][:order_current] if @session[listing_type] && @session[listing_type].key?(:order_current)  
     #grab order param from session for secondary sort, if it's nontrivial and not the current order
     defaults.each do |param,default|
       if (!use_session || param = :order_current) && (!@search_params.key?(param) || @search_params[param] == '')
@@ -215,7 +216,8 @@ module MetaformHelper
         @search_params[matching_params_key] = ''
       end
     end
-    session[listing_type] = @search_params #Store in session in case needed later
+    #@session[listing_type] = @search_params #Store in session in case needed later
+    #TO-DO:  How do I do the storing in session (above)?
   end
 
   def get_sql_options
@@ -269,49 +271,5 @@ module MetaformHelper
       <p><input type='submit' name='Submit' value='Search'></p>
     </fieldset>
     EOHTML
-  end
-
-
-  ############################################################################
-  # fill_recs uses Record.search which is much faster than Record.locate but it
-  # returns record the values in a fake FormInstances object which is what
-  # Record.search returns.
-  def fill_recs(opts={})
-    opts = {
-      :per_page => 20
-    }.update(opts)
-    per_page = opts[:per_page]
-    opts.delete(:per_page)
-    
-    options = generate_search_options(:search)
-    
-    #if there's a manual filter then we have to and it to any conditions that allready exist
-    if current_user.can?(:admin) && !@search_params[:manual_filters].blank?
-      options ||= {}
-      if options[:conditions].blank?
-        options[:conditions] = @search_params[:manual_filters]
-      else
-        and_it = "(#{options[:conditions]}) and (#{@search_params[:manual_filters]})"
-        # if it's an array then the condition string is at the 0th position (i.e. like for ActiveRecord.find)
-        # otherwise the condition should be a string
-        case options[:conditions]
-        when Array
-          options[:conditions][0] = and_it
-        when String
-          options[:conditions] = and_it
-        end
-      end
-    end
-    if options || @display_all
-      options ||= {}
-      options.update(opts)  # pass any other options through to Record.search
-      @records = Record.search(options)
-      unless @records.empty?
-        @records = @records.sort_by{|r| apply_sort_rule(r) }    
-        @records.reverse! if @search_params[:desc] || @search_params[:order_current] =~ /DESC/
-      end
-    end
-    @records ||= []
-    @records = @records.paginate(:page => @search_params[:page],:per_page => per_page) if @search_params[:paginate]=='yes' && !@records.empty?
   end
 end

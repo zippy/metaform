@@ -9,6 +9,7 @@ class RecordsController < ApplicationController
     redirected = false
     redirected = before_list_records(@listing_name) if respond_to?(:before_list_records)
     if !redirected
+      #(@records,@search_params) = Form.listings[@listing_name].fill_records(params,session)
       render(:template => "records/#{@listing_name}")
     end
   end

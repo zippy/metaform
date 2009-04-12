@@ -89,35 +89,69 @@ class SimpleForm < Form
       end
     end
     
-    def_listings do
-      listing 'plain', 
-        :kind => :locate  do
-      end
-      listing 'plain_with_workflow_state_filter', 
+    Form.def_listings do
+      Form.listing 'locate_plain', 
+        :kind => :locate  
+        
+      Form.listing 'locate_plain_with_workflow_state_filter', 
         :kind => :locate,
-        :workflow_state_filter => 'logged'  do
-      end
-      listing 'filters', 
+        :workflow_state_filter => ['logged','dummy']  
+        
+      Form.listing 'locate_filters', 
         :kind => :locate,
         :search_rules => {
           'doula_name_is' => Proc.new{|search_for| ":name == '#{search_for}'"},
           'doula_age_is' => Proc.new{|search_for| ":age == '#{search_for}'"},
-          'doula_name_begins_with' => {:reg_ex => true, :block => Proc.new{|search_for| ":name =~ /^#{search_for}/"}},
+          'doula_name_begins_with' => {:regex => true, :block => Proc.new{|search_for| ":name =~ /^#{search_for}/"}},
           'doula_name_ends_with' => {:regex => true, :block => Proc.new{|search_for| ":name =~ /#{search_for}$/"}},
-          'doula_name_begins_with_j_or_b' => {:regex => true, :block => Proc.new{|search_for| ":name =~ /^J/ || :name =~ /^B/"}}} do
-      end
-      listing 'generate_filters_by_name',
+          'doula_name_begins_with_j_or_b' => {:regex => true, :block => Proc.new{|search_for| ":name =~ /^J/ || :name =~ /^B/"}}} 
+          
+      Form.listing 'locate_generate_filters_by_name',
         :kind => :locate,
-        :search_rules => {:generators => [['doula_name', :name]]} do
-      end
-      listing 'sort_rules',
+        :search_rules => {:generators => [['doula_name', :name]]} 
+        
+      Form.listing 'locate_sort_rules',
         :kind => :locate,
         :sort_rules => {
           'married_first' => Proc.new{|r| r.married == 'y' ? 'a' : 'b' },
           :date_generators => ['favorite_date'],
-          :regular_generators => ['name']} do
-      end
-      #fave_date
+          :regular_generators => ['name']} 
+          Form.listing 'locate_plain', 
+            :kind => :locate  
+
+      Form.listing 'search_plain', 
+        :kind => :search  
+
+      Form.listing 'search_plain_with_workflow_state_filter', 
+        :kind => :search,
+        :search_rules => {'workflow_state_is_logged_or_dummy' => {:meta_condition_is => true, :block => Proc.new{|search_for| "workflow_state = 'logged' or workflow_state = 'dummy' "}}}
+
+      Form.listing 'search_filters', 
+        :kind => :search,
+        :search_rules => {
+          'doula_name_is' => Proc.new{|search_for| ":name = '#{search_for}'"},
+          'doula_age_is' => Proc.new{|search_for| ":age = '#{search_for}'"},
+          'doula_name_begins_with' => {:regex => true, :block => Proc.new{|search_for| ":name #{ILIKE} '#{search_for}%' "}},
+          'doula_name_ends_with' => {:regex => true, :block => Proc.new{|search_for| ":name #{ILIKE} '%#{search_for}' "}},
+          'doula_name_begins_with_j_or_b' => {:regex => true, :block => Proc.new{|search_for| ":name #{ILIKE} 'J%' or :name #{ILIKE} 'B%' "}}} 
+
+      Form.listing 'search_generate_filters_by_name',
+        :kind => :search,
+        :search_rules => {:generators => [['doula_name', :name]]} 
+
+      Form.listing 'search_sort_rules',
+        :kind => :search,
+        :fields => [:married,:name,:favorite_date],
+        :sort_rules => {
+          'married_first' => Proc.new{|r| r.married == 'y' ? 'a' : 'b' },
+          :date_generators => ['favorite_date'],
+          :regular_generators => ['name']} 
+        
+      Form.listing 'search_with_manual_filter',
+          :kind => :search,
+          :search_rules => {
+            'doula_name_begins_with' => {:regex => true, :block => Proc.new{|search_for| ":name #{ILIKE} '#{search_for}%' "}}}
+        
     end
     
     def_fields :groups => ['family_info'] do
