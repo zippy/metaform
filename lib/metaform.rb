@@ -28,6 +28,7 @@ end
 
 UsingPostgres = ActiveRecord::Base.connection.class.to_s == 'ActiveRecord::ConnectionAdapters::PostgreSQLAdapter'
 
+require 'metaform/listing_utilities'
 require 'metaform/utilities'
 require 'metaform/form_proxy'
 require 'metaform/form_helper'
@@ -43,7 +44,7 @@ require 'metaform/record_cache'
 require 'metaform/records_controller'
 require 'metaform/field_instance'
 require 'metaform/form_instance'
-require 'metaform/metaform_helper'
+require 'metaform/metaform_helper_methods'
 require 'metaform/dsl_objects'
 
 =begin

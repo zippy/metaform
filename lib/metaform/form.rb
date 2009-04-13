@@ -2,7 +2,11 @@
 class Form
   include Utilities
   include FormHelper
-
+  include ListingUtilities
+  #class << self
+    # include ListingUtilities
+  #end
+  
   MultiIndexMarker = '%X%'
 
   # directory in which to auto-load form setup files

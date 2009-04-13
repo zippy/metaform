@@ -490,12 +490,12 @@ class Tabs < Bin
 end
 
 class Listing < Bin
-   include MetaformHelper
+  include ListingUtilities
   
   def bins
     { :form => nil, :name => nil, :kind => nil, :workflow_state_filter => nil, :search_rules => nil, :fields => nil,
       :return_answers_hash => nil, :records => nil, :per_page => 20, :sort_rules => nil, :sql_prefilters => nil, 
-      :order => nil, :index => nil}
+      :order => nil, :index => nil, :meta_fields => nil, :search_form => nil}
   end
   
   def required_bins
@@ -505,7 +505,7 @@ class Listing < Bin
   def option_bins
     [:workflow_state_filter, :fields, :return_answers_hash, :records, :per_page, :sql_prefilters, :order, :index]
   end
-  
+    
   def initialize(bins)
     super bins
     if search_rules
@@ -540,6 +540,10 @@ class Listing < Bin
       date_gens.each{|k| def_sort_rule_date(k)} if date_gens
       sort_rules = @sort_rules
     end
+  end
+  
+  def get_search_form_params
+    search_form
   end
 
   def fill_records(params,session = {})
@@ -578,11 +582,6 @@ class Listing < Bin
         filters[b] = self[b] if self[b]
       end
       @records = Record.search(filters)
-      unless @records.empty?
-        @records = @records.sort_by{|r| apply_sort_rule(r) }    
-        @records.reverse! if @search_params[:desc] || @search_params[:order_current] =~ /DESC/
-        @records = @records.paginate(:page => @search_params[:page],:per_page => per_page) if @search_params[:paginate]=='yes' && !@records.empty?
-      end
     when :locate
       #This case uses Record.gather, which pulls un-filtered records out of the database and then filters them via ruby. It can
       #call Record.gather directly on a list of records, or find the desired records first via Record.locate.  Record.locate is much

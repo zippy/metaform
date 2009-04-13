@@ -1,8 +1,8 @@
 require File.dirname(__FILE__) + '/../spec_helper'
 
-include MetaformHelper
+include ListingUtilities
 
-describe MetaformHelper do
+describe ListingUtilities do
   
   it 'should be possible to sepecify a paramters that when returned by the client that will be used to search for fields' do
     def_search_rule('n') {|search_for| ["name = ?", search_for]}
@@ -66,14 +66,15 @@ describe MetaformHelper do
   end
   
   it 'should generate default search rules' do
+    ilike = UsingPostgres ? 'ilike' : 'like'
     def_search_rules(:search,'birth_code' => 'H_Ccode')
     @search_params = {'on_w'=>'birth_code_is','for_w'=>'ABCD'}
     generate_search_options(:search).should == {:conditions=>"(:H_Ccode = 'ABCD')"}
     @search_params = {'on_w'=>'birth_code_not','for_w'=>'ABCD'}
     generate_search_options(:search).should == {:conditions=>"not (:H_Ccode = 'ABCD')"}
     @search_params = {'on_w'=>'birth_code_b','for_w'=>'ABCD'}
-    generate_search_options(:search).should == {:conditions=>"(:H_Ccode ilike 'ABCD%')"}
+    generate_search_options(:search).should == {:conditions=>"(:H_Ccode #{ilike} 'ABCD%')"}
     @search_params = {'on_w'=>'birth_code_c','for_w'=>'ABCD'}
-    generate_search_options(:search).should == {:conditions=>"(:H_Ccode ilike '%ABCD%')"}
+    generate_search_options(:search).should == {:conditions=>"(:H_Ccode #{ilike} '%ABCD%')"}
   end
 end
