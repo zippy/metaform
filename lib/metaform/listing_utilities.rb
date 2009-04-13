@@ -1,24 +1,9 @@
-# The metaform helpers are automatically added to all ActionViews
-# You can also use them in controllers with "include MetaformHelper"
+#These listing utility methods are used by Listings.  ActionController::Base subclasses
+#can also include them to take advantage of nice methods for organizing search and sort parameters.
 
 ILIKE = UsingPostgres ? 'ilike' : 'like'
 
-module MetaformHelper
-
-  #####################################################################################
-  # use include_metaform_assets in your layouts that will be rendering metaform forms
-  # then you can turn on actually including these assets programatically in a view-by-view
-  # bases by setting @metaform_include_assets to true
-  def include_metaform_assets
-    if @metaform_include_assets
-	    javascript_include_tag('metaform') << stylesheet_link_tag('metaform', :media => "all")
-    else
-      ''
-    end
-  end
-
-  #####################################################################################
-
+module ListingUtilities
  
   def def_sort_rules(*args)
     @sort_rules = {}
@@ -191,8 +176,6 @@ module MetaformHelper
   def set_params(listing_type,use_session,defaults={})  
     @params = params if self.methods.include?('params')
     @session = session if self.methods.include?('session')
-    #To do:  Need to check that everything in the params is allowed by the application
-    #Manastats case:  if current_user.can?(:admin), then @search_params[:manual_filters] is ok, otherwise, strip it out
     if !@params[:search] 
       # if the search params aren't in the actual params from the request
       # then you can look for them in the session, if that's what the page would like
@@ -216,8 +199,7 @@ module MetaformHelper
         @search_params[matching_params_key] = ''
       end
     end
-    #@session[listing_type] = @search_params #Store in session in case needed later
-    #TO-DO:  How do I do the storing in session (above)?
+    session[listing_type] = @search_params if self.methods.include?('session')   #Store in session in case needed later
   end
 
   def get_sql_options
@@ -227,49 +209,4 @@ module MetaformHelper
     options
   end
   
-  def get_search_form_html(order_choices,form_pair_info,select_options = nil,allow_manual_filters = false)
-    form_pairs_html = []
-    form_pair_info.each do |pair|
-      first_focus = pair[:first_focus] ? {:class => 'first_focus'} : {}
-      this_html = pair[:label] ? pair[:label] : ''
-      this_html << 
-        case pair[:on]
-        when :select
-          select_tag("search[on_#{pair[:name]}]", options_for_select(select_options[pair[:name]],@search_params["on_#{pair[:name]}"])) 
-        when :text_field
-          text_field_tag("search[on_#{pair[:name]}]", @search_params["on_#{pair[:name]}"])
-        when :hidden
-          hidden_field(:search, "on_#{pair[:name]}", :value => pair[:value])
-        else
-          ''
-        end
-      this_html <<
-        case pair[:for]
-        when :select
-          select_tag("search[for_#{pair[:name]}]", options_for_select(select_options[pair[:name]],@search_params["for_#{pair[:name]}"]),first_focus) 
-        when :text_field
-          val = ''
-          val = @search_params["for_#{pair[:name]}"] if !['all','',nil].include?(@search_params["on_#{pair[:name]}"]) 
-          text_field_tag("search[for_#{pair[:name]}]", val,first_focus)
-        when :hidden
-          hidden_field(:search, "for_#{pair[:name]}", :value => pair[:value])
-        else
-          ''
-        end
-      this_html << text_field_tag("search[sql]", @search_params[:sql]) if pair[:sql]
-      form_pairs_html << this_html
-    end
-  	order_select = "Order by:  " + select_tag('search[order_current]', options_for_select(order_choices,@search_params[:order_current]))
-  	mf = %Q|<p>Manual filters: #{ text_field_tag('search[manual_filters]', @search_params[:manual_filters], :size=>60)}</p>| if allow_manual_filters
-    
-    html =<<-EOHTML
-    <fieldset class='search_box'><legend>Search</legend><p>#{form_pairs_html.join("</p><p>")}</p>
-      <p>#{order_select}</p>#{mf}
-      <p>#{check_box_tag('search[paginate]','yes',@search_params[:paginate]=='yes')} Paginate results
-        <input id='search[paginate]' name='search[paginate]' type='hidden' value='no' />
-      </p>
-      <p><input type='submit' name='Submit' value='Search'></p>
-    </fieldset>
-    EOHTML
-  end
 end
