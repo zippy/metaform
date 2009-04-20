@@ -61,14 +61,14 @@ module ListingUtilities
         def_search_rule(key+'_is') {|search_for| ["#{field} = ?", search_for]}
         def_search_rule(key+'_not') {|search_for| ["#{field} != ?", search_for]}
       end
-    when :locate #The search rules generated here will be used for a call to Record.locate, via fill_and_locate_records
+    when :locate #The search rules generated here will be used for a call to Record.locate
       pairs.each do |key,field|
         def_search_rule(key+'_b', :regex=>true) {|search_for| ":#{field} =~ /^#{search_for}/i"}
         def_search_rule(key+'_c', :regex=>true) {|search_for| ":#{field} =~ /#{search_for}/i"}
         def_search_rule(key+'_is') {|search_for| ":#{field} == '#{search_for}'"}
         def_search_rule(key+'_not') {|search_for| ":#{field} != '#{search_for}'"}
       end
-    when :search  #The search rules generated here will be used for a call to Record.search via fill_recs
+    when :search  #The search rules generated here will be used for a call to Record.search
       pairs.each do |key,field|
         def_search_rule(key+'_b') {|search_for| ":#{field} #{ILIKE} '#{search_for}%'"}
         def_search_rule(key+'_c') {|search_for| ":#{field} #{ILIKE} '%#{search_for}%'"}

@@ -3,9 +3,6 @@ class Form
   include Utilities
   include FormHelper
   include ListingUtilities
-  #class << self
-    # include ListingUtilities
-  #end
   
   MultiIndexMarker = '%X%'
 

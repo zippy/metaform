@@ -122,6 +122,9 @@ class SimpleForm < Form
       Form.listing 'search_plain', 
         :kind => :search  
 
+      Form.listing 'search_plain_with_meta_fields', 
+        :kind => :search, :meta_fields => ['workflow_state']  
+
       Form.listing 'search_plain_with_workflow_state_filter', 
         :kind => :search,
         :search_rules => {'workflow_state_is_logged_or_dummy' => {:meta_condition_is => true, :block => Proc.new{|search_for| "workflow_state = 'logged' or workflow_state = 'dummy' "}}}

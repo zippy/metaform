@@ -11,8 +11,9 @@ class RecordsController < ApplicationController
     if !redirected
       #Need to check that the application allows the use of manual filters.  If the application does not specifically allow,
       #then we dis-allow its use for security reasons.
-      raise "Naughty!!!" if @search_params &&  @search_params[:manual_filters] && (!respond_to?(:enable_manual_filters) || enable_manual_filters)
+      raise MetaformIllegalSearchParameterError if params[:search] &&  params[:search][:manual_filters] && (!respond_to?(:enable_manual_filters) || enable_manual_filters)
       the_listing = Form.listings[@listing_name]
+      raise "No listing found for #{@listing_name}" if !the_listing
       (@records,@search_params) = the_listing.fill_records(params,session)
       session[@listing_name] = @search_params  #Store in session in case needed later
       @search_form_params = the_listing.get_search_form_params
