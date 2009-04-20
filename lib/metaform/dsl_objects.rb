@@ -495,7 +495,7 @@ class Listing < Bin
   def bins
     { :form => nil, :name => nil, :kind => nil, :workflow_state_filter => nil, :search_rules => nil, :fields => nil,
       :return_answers_hash => nil, :records => nil, :per_page => 20, :sort_rules => nil, :sql_prefilters => nil, 
-      :order => nil, :index => nil, :meta_fields => nil, :search_form => nil}
+      :order => nil, :index => nil, :meta_fields => nil, :search_form => nil, :use_session => false}
   end
   
   def required_bins
@@ -503,7 +503,7 @@ class Listing < Bin
   end
   
   def option_bins
-    [:workflow_state_filter, :fields, :return_answers_hash, :records, :per_page, :sql_prefilters, :order, :index]
+    [:workflow_state_filter, :fields, :return_answers_hash, :records, :per_page, :sql_prefilters, :index, :meta_fields]
   end
     
   def initialize(bins)
@@ -547,13 +547,17 @@ class Listing < Bin
   end
 
   def fill_records(params,session = {})
+    @search_params = nil
+    @display_all = nil
+    @records = nil
     @params = params
     @session = session
     @search_rules = search_rules
     @sort_rules = sort_rules
-    use_session = !@params[:use_session].nil? ? @params[:use_session] : true
     defaults = order ? {:order_current => order} : {}
-    set_params(name,use_session,defaults)
+    use_session_this_time = params[:search][:use_session] if params[:search]
+    use_session_this_time ||= use_session  #Use this listing's value for use_session if it is not set in the params
+    set_params(name,use_session_this_time,defaults)
     filters = generate_search_options(kind)
     case kind
     when :search
@@ -577,28 +581,32 @@ class Listing < Bin
           end
         end
       end
-      filters ||= {}
-      option_bins.each do |b|
-        filters[b] = self[b] if self[b]
+      if filters || @display_all
+        filters ||= {}
+        option_bins.each do |b|
+          filters[b] = self[b] if self[b]
+        end
+        @records = Record.search(filters)
       end
-      @records = Record.search(filters)
     when :locate
       #This case uses Record.gather, which pulls un-filtered records out of the database and then filters them via ruby. It can
       #call Record.gather directly on a list of records, or find the desired records first via Record.locate.  Record.locate is much
       #slower than Record.search, but it returns actual Record objects or an AnswersHash, if preferred.
-      options = {}
-      options[:filters] = filters
-      option_bins.each do |b|
-        options[b] = self[b] if self[b]
+      if filters || @display_all
+        options = {}
+        options[:filters] = filters
+        option_bins.each do |b|
+          options[b] = self[b] if self[b]
+        end
+        @records = options[:records] ? Record.gather(options) : Record.locate(:all,options)
       end
-      @records = options[:records] ? Record.gather(options) : Record.locate(:all,options)
     end
+    @records ||= []
     unless @records.empty?
       @records = @records.sort_by{|r| apply_sort_rule(r) }    
       @records.reverse! if @search_params[:desc] || @search_params[:order_current] =~ /DESC/
       @records = @records.paginate(:page => @search_params[:page],:per_page => per_page) if @search_params[:paginate]=='yes' && !@records.empty?
     end
-    @records ||= []
     [@records,@search_params]
   end
   

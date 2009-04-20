@@ -38,10 +38,10 @@ describe SimpleForm do
         @params = {}
       end
       
-      it "should return 4 items with no limits on the search" do 
+      it "should return no items when no search filters are chosen" do 
         the_list = Form.listings['locate_plain']
         (@records,@search_params) = the_list.fill_records({})
-        @records.size.should == 4
+        @records.size.should == 0
       end
       
       it "should return 4 items when all is chosen" do 
@@ -54,10 +54,11 @@ describe SimpleForm do
       it "should return the number of items that match a fixed workflow_state filter" do 
          the_list = Form.listings['locate_plain']
          the_list.workflow_state_filter = 'logged'
-         (@records,@search_params) = the_list.fill_records({})
+         @params[:search] = {'on_main' => 'all', 'for_main' => '' }
+         (@records,@search_params) = the_list.fill_records(@params)
          @records.size.should == 3
          the_list = Form.listings['locate_plain_with_workflow_state_filter']
-         (@records,@search_params) = the_list.fill_records({})
+         (@records,@search_params) = the_list.fill_records(@params)
          @records.size.should == 3
       end
             
@@ -117,8 +118,7 @@ describe SimpleForm do
       
       it "should sort based on a sort rule" do
         the_list = Form.listings['locate_sort_rules']
-        # params[:search] = {"order_current"=>"name","order_last"=>"practice_midwife","desc"=>"practice_midwife"}
-        @params[:search] = {:order_current => "married_first"}
+        @params[:search] = {:order_current => "married_first", 'on_main' => 'all', 'for_main' => '' }
         (@records,@search_params) = the_list.fill_records(@params)
         @records[3].id.should == 1
       end
@@ -126,14 +126,14 @@ describe SimpleForm do
       
       it "should sort based on a generated sort rule" do
         the_list = Form.listings['locate_sort_rules']
-        @params[:search] = {:order_current => "name"}
+        @params[:search] = {:order_current => "name", 'on_main' => 'all', 'for_main' => ''}
         (@records,@search_params) = the_list.fill_records(@params)
         @records.map{|r| r.id}.should == [1, 4, 2, 3]
       end
       
       it "should sort based on a date sort rule" do
         the_list = Form.listings['locate_sort_rules']
-        @params[:search] = {:order_current => "favorite_date"}
+        @params[:search] = {:order_current => "favorite_date", 'on_main' => 'all', 'for_main' => ''}
         (@records,@search_params) = the_list.fill_records(@params)
         @records.map{|r| r.id}.should == [1, 3, 2, 4]
       end
@@ -153,10 +153,10 @@ describe SimpleForm do
         @params = {}
       end
       
-      it "should return 4 items with no limits on the search" do 
+      it "should return no items when no search filters are chosen" do 
         the_list = Form.listings['search_plain']
         (@records,@search_params) = the_list.fill_records({})
-        @records.size.should == 4
+        @records.size.should == 0
       end
 
       it "should return 4 items when all is chosen" do 
@@ -220,10 +220,19 @@ describe SimpleForm do
         @records.size.should == 1
       end
       
+      it "should be able to add meta_fields to results" do
+        the_list = Form.listings['search_plain']
+        @params[:search] = {'on_main' => 'all', 'for_main' => ''}
+        (@records,@search_params) = the_list.fill_records(@params)
+        @records[0]['workflow_state'].should == nil
+        the_list = Form.listings['search_plain_with_meta_fields']
+        (@records,@search_params) = the_list.fill_records(@params)
+        @records[0]['workflow_state'].should == 'logged'
+      end
+      
       it "should sort based on a sort rule" do
         the_list = Form.listings['search_sort_rules']
-        # params[:search] = {"order_current"=>"name","order_last"=>"practice_midwife","desc"=>"practice_midwife"}
-        @params[:search] = {:order_current => "married_first"}
+        @params[:search] = {:order_current => "married_first", 'on_main' => 'all', 'for_main' => ''}
         (@records,@search_params) = the_list.fill_records(@params)
         @records[3].id.should == 1
       end
@@ -231,14 +240,14 @@ describe SimpleForm do
       
       it "should sort based on a generated sort rule" do
         the_list = Form.listings['search_sort_rules']
-        @params[:search] = {:order_current => "name"}
+        @params[:search] = {:order_current => "name", 'on_main' => 'all', 'for_main' => ''}
         (@records,@search_params) = the_list.fill_records(@params)
         @records.map{|r| r.id}.should == [1, 4, 2, 3]
       end
       
       it "should sort based on a date sort rule" do
         the_list = Form.listings['search_sort_rules']
-        @params[:search] = {:order_current => "favorite_date"}
+        @params[:search] = {:order_current => "favorite_date", 'on_main' => 'all', 'for_main' => ''}
         (@records,@search_params) = the_list.fill_records(@params)
         @records.map{|r| r.id}.should == [1, 3, 2, 4]
       end

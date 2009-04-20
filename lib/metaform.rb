@@ -26,6 +26,9 @@ class MetaformUndefinedFieldError < MetaformException
 #  end
 end
 
+class MetaformIllegalSearchParameterError < MetaformException
+end
+
 UsingPostgres = ActiveRecord::Base.connection.class.to_s == 'ActiveRecord::ConnectionAdapters::PostgreSQLAdapter'
 
 require 'metaform/listing_utilities'

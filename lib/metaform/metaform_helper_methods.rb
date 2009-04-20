@@ -19,12 +19,12 @@ module MetaformHelperMethods
 
   def get_search_form_html(params)
     order_choices = params[:order_choices]
-    form_pair_info = params[:form_pair_info]
+    search_pair_info = params[:search_pair_info]
     select_options = params[:select_options]
     allow_manual_filters = params[:allow_manual_filters]
     allow_manual_filters ||= false
     form_pairs_html = []
-    form_pair_info.each do |pair|
+    search_pair_info.each do |pair|
       first_focus = pair[:first_focus] ? {:class => 'first_focus'} : {}
       this_html = pair[:label] ? pair[:label] : ''
       this_html = this_html + 
