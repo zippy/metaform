@@ -23,7 +23,8 @@ module MetaformHelperMethods
     order_choices = params[:order_choices]
     search_pair_info = params[:search_pair_info]
     select_options = {}
-    params[:select_options].each{|k,v| select_options[k] = v.is_a?(Proc) ? v.call : v }
+    params[:select_options].each{|k,v| select_options[k] = v.is_a?(Proc) ? v.call : v } #If the select_option was
+    #set at compile time in a listing, then we may need to run it now to populate the select with current options.
     allow_manual_filters = params[:allow_manual_filters]
     allow_manual_filters ||= false
     form_pairs_html = []
