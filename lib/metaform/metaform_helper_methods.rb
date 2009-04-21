@@ -17,6 +17,8 @@ module MetaformHelperMethods
   end
   #####################################################################################
 
+  #This method creates a fieldset which holds a form used to set filters for a search.  It can be used
+  #for metaform records searches by listings and also by Rails-model searches.  
   def get_search_form_html(params)
     order_choices = params[:order_choices]
     search_pair_info = params[:search_pair_info]
