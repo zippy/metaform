@@ -20,7 +20,8 @@ module MetaformHelperMethods
   def get_search_form_html(params)
     order_choices = params[:order_choices]
     search_pair_info = params[:search_pair_info]
-    select_options = params[:select_options]
+    select_options = {}
+    params[:select_options].each{|k,v| select_options[k] = v.is_a?(Proc) ? v.call : v }
     allow_manual_filters = params[:allow_manual_filters]
     allow_manual_filters ||= false
     form_pairs_html = []
