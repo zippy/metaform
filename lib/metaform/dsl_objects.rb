@@ -489,6 +489,25 @@ class Tabs < Bin
   end
 end
 
+#Listings are used to set up searches at compile time.  They can hold various search and sort rules which are 
+#initialized to be ready for a search.  Here are the possible settings:
+# :form - set automatically when listing is created
+# :name - used to request the listing from Form
+# :kind - distinguishes between using Record.search and Record.locate
+# :workflow_state_filter - restricts workflows that will show up in search results
+# :search_rules - used to create search filters
+# :fields - used to store field_instance answers in the records or form_instances which are returned
+# :return_answers_hash - option for :locate which allows an AnswersHash to be returned
+# :records - option for :locate which allows records to be passed in and given directly to Record.gather
+# :per_page - used for pagination
+# :sort_rules - used to sort the results
+# :sql_prefilters - options for :locate which reduces the number of records filtered
+# :order - default sort order
+# :index - restricts field_instance index which are returned
+# :meta_fields - used to store form_instance fields in the records or form_instances which are returned
+# :search_form - holds information used to create a search form on the view associated with this listing
+# :use_session - instructs the listing to use parameters stored in the session if none are delivered
+
 class Listing < Bin
   include ListingUtilities
   
