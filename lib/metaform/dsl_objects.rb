@@ -583,7 +583,7 @@ class Listing < Bin
     default_bins.each do |b|
       defaults[b] = self[b] if self[b]
     end
-    use_session_this_time = params[:search][:use_session] if params[:search]
+    use_session_this_time = params[:use_session] 
     use_session_this_time ||= use_session  #Use this listing's value for use_session if it is not set in the params
     set_params(name,use_session_this_time,defaults)
     filters = generate_search_options(kind)
