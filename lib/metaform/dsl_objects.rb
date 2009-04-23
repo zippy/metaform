@@ -514,7 +514,8 @@ class Listing < Bin
   def bins
     { :form => nil, :name => nil, :kind => nil, :workflow_state_filter => nil, :search_rules => nil, :fields => nil,
       :return_answers_hash => nil, :records => nil, :per_page => 20, :sort_rules => nil, :sql_prefilters => nil, 
-      :order => nil, :index => nil, :meta_fields => nil, :search_form => nil, :use_session => false}
+      :order => nil, :order_second => nil, :index => nil, :meta_fields => nil, :search_form => nil, :use_session => false,
+      :model => nil, :included_model => nil, :paginate => nil}
   end
   
   def required_bins
@@ -523,6 +524,10 @@ class Listing < Bin
   
   def option_bins
     [:workflow_state_filter, :fields, :return_answers_hash, :records, :per_page, :sql_prefilters, :index, :meta_fields]
+  end
+  
+  def default_bins 
+    [:paginate,:order]
   end
     
   def initialize(bins)
@@ -573,7 +578,11 @@ class Listing < Bin
     @session = session
     @search_rules = search_rules
     @sort_rules = sort_rules
-    defaults = order ? {:order_current => order} : {}
+    @order_second = order_second
+    defaults = {}
+    default_bins.each do |b|
+      defaults[b] = self[b] if self[b]
+    end
     use_session_this_time = params[:search][:use_session] if params[:search]
     use_session_this_time ||= use_session  #Use this listing's value for use_session if it is not set in the params
     set_params(name,use_session_this_time,defaults)
@@ -582,7 +591,7 @@ class Listing < Bin
     when :search
       # This case uses Record.search which is much faster than Record.locate but it
       # returns the values in a fake FormInstances object which is what Record.search returns.
-
+    
       # #if there's a manual filter then we have to and it to any conditions that already exist
       if !@search_params[:manual_filters].blank?
         filters ||= {}
@@ -619,11 +628,21 @@ class Listing < Bin
         end
         @records = options[:records] ? Record.gather(options) : Record.locate(:all,options)
       end
+    when :sql
+      sql_options = included_model ? {:include => included_model} : {}
+      sql_options = get_sql_options.update(sql_options)
+      if sql_options[:conditions] || @display_all
+        if @search_params[:paginate]=='yes'
+          @records = model.to_s.camelize.constantize.paginate(:all,sql_options.update({:page => @search_params[:page]}))
+        else
+          @records = model.to_s.camelize.constantize.find(:all,sql_options)
+        end
+      end
     end
     @records ||= []
-    unless @records.empty?
+    unless @records.empty? || kind == :sql
       @records = @records.sort_by{|r| apply_sort_rule(r) }    
-      @records.reverse! if @search_params[:desc] || @search_params[:order_current] =~ /DESC/
+      @records.reverse! if @search_params[:desc] || @search_params[:order] =~ /DESC/
       @records = @records.paginate(:page => @search_params[:page],:per_page => per_page) if @search_params[:paginate]=='yes' && !@records.empty?
     end
     [@records,@search_params]

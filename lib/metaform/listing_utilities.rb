@@ -37,14 +37,16 @@ module ListingUtilities
   end
   def apply_sort_rule(r = nil)
     orders = []
-    order_current = @search_params[:order_current]
-    if order_current
-      raise "No sort rule is defined for #{order_current}" if  !@sort_rules[order_current]
-      orders << order_current
-      order_last = @search_params[:order_last]
-      if order_last
-        raise "No sort rule is defined for #{order_last}" if order_last && !@sort_rules[order_last]
-        orders = orders << order_last
+    order = @search_params[:order]
+    if order
+      raise "No sort rule is defined for #{order}" if  !@sort_rules[order]
+      orders << order
+      if @order_second
+        order_second = @order_second.is_a?(Proc) ? @order_second.call(order) : @order_second
+        if order_second
+          raise "No sort rule is defined for #{order_second}" if order_second && !@sort_rules[order_second]
+          orders = orders << order_second
+        end
       end
     end
     orders.map{|order| @sort_rules[order].call(r)} 
@@ -186,10 +188,11 @@ module ListingUtilities
       @search_params = @params[:search].update({:page => @params[:page]})
     end
     @search_params ||= {}
-    @search_params[:order_last] = @session[listing_type][:order_current] if @session[listing_type] && @session[listing_type].key?(:order_current)  
+    #This is currently deprecated.  Rewrite in the current listings framework if it is ever necessary:
+    #@search_params[:order_last] = @session[listing_type][:order] if @session[listing_type] && @session[listing_type].key?(:order)  
     #grab order param from session for secondary sort, if it's nontrivial and not the current order
     defaults.each do |param,default|
-      if (!use_session || param = :order_current) && (!@search_params.key?(param) || @search_params[param] == '')
+      if (!use_session || param = :order) && (!@search_params.key?(param) || @search_params[param] == '')
         @search_params[param] = default
       end
     end

@@ -118,7 +118,7 @@ describe SimpleForm do
       
       it "should sort based on a sort rule" do
         the_list = Form.listings['locate_sort_rules']
-        @params[:search] = {:order_current => "married_first", 'on_main' => 'all', 'for_main' => '' }
+        @params[:search] = {:order => "married_first", 'on_main' => 'all', 'for_main' => '' }
         (@records,@search_params) = the_list.fill_records(@params)
         @records[3].id.should == 1
       end
@@ -126,17 +126,41 @@ describe SimpleForm do
       
       it "should sort based on a generated sort rule" do
         the_list = Form.listings['locate_sort_rules']
-        @params[:search] = {:order_current => "name", 'on_main' => 'all', 'for_main' => ''}
+        @params[:search] = {:order => "name", 'on_main' => 'all', 'for_main' => ''}
         (@records,@search_params) = the_list.fill_records(@params)
         @records.map{|r| r.id}.should == [1, 4, 2, 3]
       end
       
       it "should sort based on a date sort rule" do
         the_list = Form.listings['locate_sort_rules']
-        @params[:search] = {:order_current => "favorite_date", 'on_main' => 'all', 'for_main' => ''}
+        @params[:search] = {:order => "favorite_date", 'on_main' => 'all', 'for_main' => ''}
         (@records,@search_params) = the_list.fill_records(@params)
         @records.map{|r| r.id}.should == [1, 3, 2, 4]
       end
+      
+      it "should sort based on a sort rule and a constant secondary sort rule" do
+        the_list = Form.listings['locate_sort_rules']
+        @params[:search] = {:order => "married_first", 'on_main' => 'all', 'for_main' => '' }
+        (@records,@search_params) = the_list.fill_records(@params)
+        @records[0].id.should == 3
+      end
+      
+       it "should sort based on a sort rule and a secondary sort rule Proc" do
+         the_list = Form.listings['locate_sort_rules']
+         the_list[:order_second] = Proc.new do |order| 
+           if order == "married_first" 
+             'favorite_date'
+           else
+             'name'
+           end
+         end
+         @params[:search] = {:order => "married_first", 'on_main' => 'all', 'for_main' => '' }
+         (@records,@search_params) = the_list.fill_records(@params)
+         @records[3].id.should == 1
+         @params[:search] = {:order => "favorite_date", 'on_main' => 'all', 'for_main' => '' }
+         (@records,@search_params) = the_list.fill_records(@params)
+         @records[3].id.should == 4
+       end
             
     end
     
@@ -232,7 +256,7 @@ describe SimpleForm do
       
       it "should sort based on a sort rule" do
         the_list = Form.listings['search_sort_rules']
-        @params[:search] = {:order_current => "married_first", 'on_main' => 'all', 'for_main' => ''}
+        @params[:search] = {:order => "married_first", 'on_main' => 'all', 'for_main' => ''}
         (@records,@search_params) = the_list.fill_records(@params)
         @records[3].id.should == 1
       end
@@ -240,17 +264,42 @@ describe SimpleForm do
       
       it "should sort based on a generated sort rule" do
         the_list = Form.listings['search_sort_rules']
-        @params[:search] = {:order_current => "name", 'on_main' => 'all', 'for_main' => ''}
+        @params[:search] = {:order => "name", 'on_main' => 'all', 'for_main' => ''}
         (@records,@search_params) = the_list.fill_records(@params)
         @records.map{|r| r.id}.should == [1, 4, 2, 3]
       end
       
       it "should sort based on a date sort rule" do
         the_list = Form.listings['search_sort_rules']
-        @params[:search] = {:order_current => "favorite_date", 'on_main' => 'all', 'for_main' => ''}
+        @params[:search] = {:order => "favorite_date", 'on_main' => 'all', 'for_main' => ''}
         (@records,@search_params) = the_list.fill_records(@params)
         @records.map{|r| r.id}.should == [1, 3, 2, 4]
       end
+      
+      it "should sort based on a sort rule and a constant secondary sort rule" do
+        the_list = Form.listings['search_sort_rules']
+        @params[:search] = {:order => "married_first", 'on_main' => 'all', 'for_main' => '' }
+        (@records,@search_params) = the_list.fill_records(@params)
+        @records[0].id.should == 3
+      end
+      
+       it "should sort based on a sort rule and a secondary sort rule Proc" do
+         the_list = Form.listings['search_sort_rules']
+         the_list[:order_second] = Proc.new do |order| 
+           if order == "married_first" 
+             'favorite_date'
+           else
+             'name'
+           end
+         end
+         @params[:search] = {:order => "married_first", 'on_main' => 'all', 'for_main' => '' }
+         (@records,@search_params) = the_list.fill_records(@params)
+         @records[3].id.should == 1
+         @params[:search] = {:order => "favorite_date", 'on_main' => 'all', 'for_main' => '' }
+         (@records,@search_params) = the_list.fill_records(@params)
+         @records[3].id.should == 4
+       end
+      
             
     end
     
