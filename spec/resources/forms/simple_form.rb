@@ -111,13 +111,11 @@ class SimpleForm < Form
         :search_rules => {:generators => [['doula_name', :name]]} 
         
       Form.listing 'locate_sort_rules',
-        :kind => :locate,
+        :kind => :locate, :order_second => 'favorite_date',
         :sort_rules => {
           'married_first' => Proc.new{|r| r.married == 'y' ? 'a' : 'b' },
           :date_generators => ['favorite_date'],
           :regular_generators => ['name']} 
-          Form.listing 'locate_plain', 
-            :kind => :locate  
 
       Form.listing 'search_plain', 
         :kind => :search  
@@ -143,7 +141,7 @@ class SimpleForm < Form
         :search_rules => {:generators => [['doula_name', :name]]} 
 
       Form.listing 'search_sort_rules',
-        :kind => :search,
+        :kind => :search, :order_second => 'favorite_date',
         :fields => [:married,:name,:favorite_date],
         :sort_rules => {
           'married_first' => Proc.new{|r| r.married == 'y' ? 'a' : 'b' },

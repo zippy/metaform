@@ -58,7 +58,7 @@ module MetaformHelperMethods
       this_html = this_html + text_field_tag("search[sql]", @search_params[:sql]) if pair[:sql]
       form_pairs_html << this_html
     end
-  	order_select = "Order by:  " + select_tag('search[order_current]', options_for_select(order_choices,@search_params[:order_current]))
+  	order_select = "Order by:  " + select_tag('search[order]', options_for_select(order_choices,@search_params[:order]))
   	mf = %Q|<p>Manual filters: #{ text_field_tag('search[manual_filters]', @search_params[:manual_filters], :size=>60)}</p>| if allow_manual_filters
   
     html =<<-EOHTML
