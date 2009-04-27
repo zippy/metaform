@@ -302,7 +302,32 @@ describe SimpleForm do
       
             
     end
-    
+    describe "listing with only sort" do
+      before(:each) do
+        @records = []
+        rec = Record.make(SimpleForm.new,'create',{:name =>'Bob Smith',:age => '30',:married => 'n', :favorite_date => (Time.now - 1.year).to_s})
+        rec.save('simple',{:workflow_action=>'create'})        
+        @records << rec
+        rec = Record.make(SimpleForm.new,'create',{:name =>'Joe Smith',:age => '30',:married => 'y', :favorite_date => (Time.now - 1.day).to_s})
+        rec.save('simple',{:workflow_action=>'create'})        
+        @records << rec
+        rec = Record.make(SimpleForm.new,'create',{:name =>'Will Smith',:age => '35',:married => 'y', :favorite_date => (Time.now - 1.month).to_s})
+        rec.save('simple',{:workflow_action=>'create'})        
+        @records << rec
+        rec = Record.make(SimpleForm.new,'create',{:name =>'Jane Doe',:age => '55',:married => 'y', :favorite_date => (Time.now - 1.minute).to_s})
+        rec.save('simple')      
+        @records << rec
+        @params = {}
+      end
+      
+      it "should sort based on a sort rule" do
+        the_list = Form.listings['sort_only']
+        the_list.records = @records
+        @params[:search] = {:order => "married_first"}
+        (@records,@search_params) = the_list.fill_records(@params)
+        @records[3].id.should == 1
+      end
+    end
     
     
     describe "c (define a condition)" do

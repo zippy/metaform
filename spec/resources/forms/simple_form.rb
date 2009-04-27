@@ -152,6 +152,13 @@ class SimpleForm < Form
           :kind => :search,
           :search_rules => {
             'doula_name_begins_with' => {:regex => true, :block => Proc.new{|search_for| ":name #{ILIKE} '#{search_for}%' "}}}
+       
+      Form.listing 'sort_only',
+        :kind => :sort_only, :order_second => 'favorite_date',
+        :sort_rules => {
+          'married_first' => Proc.new{|r| r.married == 'y' ? 'a' : 'b' },
+          :date_generators => ['favorite_date'],
+          :regular_generators => ['name']} 
         
     end
     

@@ -638,6 +638,8 @@ class Listing < Bin
           @records = model.to_s.camelize.constantize.find(:all,sql_options)
         end
       end
+    when :sort_only
+      @records = records
     end
     @records ||= []
     unless @records.empty? || kind == :sql
