@@ -430,7 +430,8 @@ end
 #    puts "[#{attribute.to_s},#{index.to_s}]<br>"
     attribute = attribute.to_s
     load_record
-
+    
+    raise MetaformUndefinedFieldError, attribute if !form.field_exists?(attribute)
     if c = form.fields[attribute].calculated
       form.set_record(self)
       if index == :any
