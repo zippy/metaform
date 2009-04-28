@@ -128,6 +128,10 @@ class Form
       @_action_result[:update_validation_data] = data
     end
   end
+  
+  def flash(key,value)
+    @_action_result[:flash] = {:key=> key,:value=>value}
+  end
 
   #################################################################################
   # a placeholder for defining a bunch of workflows

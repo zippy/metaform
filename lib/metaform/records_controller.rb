@@ -53,7 +53,10 @@ class RecordsController < ApplicationController
       if saved_attributes = @record.save(@presentation,get_meta_data)
         after_create_record(@record) if respond_to?(:after_create_record)
         after_save_record(@record,saved_attributes) if respond_to?(:after_save_record)
-#        flash[:notice] = 'Record was successfully created.'
+        f = @record.action_result[:flash]
+        if f
+          flash[f[:key]] = f[:value]
+        end
         redirect_url = @record.action_result[:redirect_url]
         format.html { redirect_to(redirect_url) }
         format.xml  { head :created, :location => @record.url(@presentation) }
