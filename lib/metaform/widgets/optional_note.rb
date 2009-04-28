@@ -7,7 +7,7 @@ class OptionalNoteWidget < Widget
   		(size,middle_html) = params.split(/,/)
 		opts = size ? {:size => size, :style=>'display:none'} : {:size => 25,:style=>'display:none'}
 		result = "&nbsp;&nbsp;"
-		div_id = build_html_name(field_instance_id)
+		div_id = build_html_id(field_instance_id)
 		result << form.link_to_function('',"do_click_#{field_instance_id}()",:id => "#{field_instance_id}_link")
 		result << middle_html if middle_html
 		result << "#{form.text_field_tag(build_html_name(field_instance_id),value,opts)}"
