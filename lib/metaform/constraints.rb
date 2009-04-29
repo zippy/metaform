@@ -50,12 +50,7 @@ module Constraints
         end
       when "date"
         if !value.blank?
-          date = *ParseDate.parsedate(value)
-          while (date.last.nil? and date.size>0 ) do
-            date.pop
-          end
-          raise "value #{value} produced empty date!" if date == []
-          date = Time.local(*date)
+          date = parse_date(value)
           if constraint == :in_past
             if date > Time.now
               constraint_errors << (err_override || "Date cannot be in the future")

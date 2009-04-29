@@ -45,4 +45,13 @@ module Utilities
   def kaste(strng)
     return (strng == "true")
   end
+  
+  def parse_date(value)
+    tz = Form.get_store(:time_zone)
+    if tz
+      Time.use_zone(tz) {Time.zone.parse(value)}
+    else
+      Time.parse(value)
+    end
+  end
 end

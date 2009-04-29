@@ -1,5 +1,5 @@
 require File.dirname(__FILE__) + '/../spec_helper'
-
+include Utilities
 describe Constraints do
   before(:each) do
     Form.config[:hide_required_extra_errors] = false
