@@ -929,6 +929,11 @@ describe SimpleForm do
             @form.javascript_submit(:workflow_action => 'create').should == ["$('meta_workflow_action').value = 'create';$('metaForm').submit();"]
           end
         end
+        it "should generate a script that assumes workflow actions is hard-coded with the :workflow_action_force option" do
+          @form.with_record(@record,:render) do
+            @form.javascript_submit(:workflow_action => 'create',:workflow_action_force => true).should == ["$('metaForm').submit();"]
+          end
+        end
       end #javascript_submit
     end #javascript
 
@@ -1027,6 +1032,14 @@ describe SimpleForm do
           "<script>var cur_idx=find_current_idx();var values_for_eye_color = new Array();</script><div id=\"presentation_simple\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>\n<div id=\"question_age\" class=\"question\"><label class=\"label\" for=\"record[age]\">Age:</label><input id=\"record_age\" name=\"record[age]\" type=\"text\" />g question!</div>\n<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record[higher_ed_years]\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>\n<div id=\"question_eye_color\" class=\"question\"><label class=\"label\" for=\"record[eye_color]\">Eye color:</label><input id=\"record_eye_color\" name=\"record[eye_color]\" type=\"text\" /></div>\n<div id=\"uid_1\" class=\"followup\" style=\"display:none\">\n<div id=\"question_other_eye_color\" class=\"question\"><label class=\"label\" for=\"record[other_eye_color]\">Other eye color:</label><textarea id=\"record_other_eye_color\" name=\"record[other_eye_color]\"></textarea></div>\n</div>\n<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record[married]\">Married?</label><input id=\"record_married\" name=\"record[married]\" type=\"text\" /></div>\n</div>\n<input type=\"hidden\" name=\"meta[last_updated]\" id=\"meta_last_updated\" value=0>", 
           "function actions_for_eye_color_is_x() {\n  if (eye_color_is_x()) {Element.show('uid_1')}\n  else {Element.hide('uid_1')}\n}\n\nfunction eye_color_is_x() {return values_for_eye_color[0] == \"x\"}\nEvent.observe('record_eye_color', 'change', function(e){ values_for_eye_color[cur_idx] = $F('record_eye_color');actions_for_eye_color_is_x(); });"
           ]
+      end
+      it "should build html with :workflow_action javascript buttons" do
+        r = @form.build('js_button_not_forced',@record)
+        r.should == ["<div id=\"presentation_js_button_not_forced\" class=\"presentation\">\n<input type=\"button\" value=\"Continue\" onclick=\"$('meta_workflow_action').value = 'continue';$('metaForm').submit();\">\n</div>\n<input type=\"hidden\" name=\"meta[last_updated]\" id=\"meta_last_updated\" value=0>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\">", ""]
+      end
+      it "should build html with :workflow_action_force javascript buttons" do
+        r = @form.build('js_button_forced',@record)
+        r.should == ["<div id=\"presentation_js_button_forced\" class=\"presentation\">\n<input type=\"button\" value=\"Continue\" onclick=\"$('metaForm').submit();\">\n</div>\n<input type=\"hidden\" name=\"meta[last_updated]\" id=\"meta_last_updated\" value=0>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\"value=\"continue\">", ""]
       end
     end # build
   end # generators

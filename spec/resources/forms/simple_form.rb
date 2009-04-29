@@ -191,6 +191,18 @@ class SimpleForm < Form
       q 'oldest_child_age'
     end
 
+    presentation 'js_button_forced' do
+      function_button "Continue" do
+        javascript_submit :workflow_action => 'continue', :workflow_action_force=> true
+      end
+    end
+
+    presentation 'js_button_not_forced' do
+      function_button "Continue" do
+        javascript_submit :workflow_action => 'continue'
+      end
+    end
+
     workflow 'standard', [{'logged' => 'Form Logged'},{'completed' => 'Form Completed'},{'verifying' => {:label => 'Form in validation',:validate => true}}] do
     	action 'create',[nil] do
         state 'logged'

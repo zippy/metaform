@@ -1052,8 +1052,12 @@ class Form
     save_context(:js) do
       js = %Q|$('metaForm').submit();|
       if options[:workflow_action]
-        js = %Q|$('meta_workflow_action').value = '#{options[:workflow_action]}';#{js}|
-        @_stuff[:need_workflow_action] = true
+        if options[:workflow_action_force]
+          @_stuff[:need_workflow_action] = options[:workflow_action]
+        else
+          js = %Q|$('meta_workflow_action').value = '#{options[:workflow_action]}';#{js}|
+          @_stuff[:need_workflow_action] = true
+        end
       end
       javascript js
     end
@@ -1153,7 +1157,7 @@ class Form
       p(presentation_name)
       body %Q|<input type="hidden" name="meta[last_updated]" id="meta_last_updated" value=#{record.updated_at.to_i}>|
       if @_stuff[:need_workflow_action]
-        body %Q|<input type="hidden" name="meta[workflow_action]" id="meta_workflow_action">| 
+        body %Q|<input type="hidden" name="meta[workflow_action]" id="meta_workflow_action"#{@_stuff[:need_workflow_action].is_a?(String) ? %Q*value="#{@_stuff[:need_workflow_action]}"* : ''}>|
       end
       if use_multi_index?
         body %Q|<input type="hidden" name="multi_index" id="multi_index" value="#{@_use_multi_index}">|
