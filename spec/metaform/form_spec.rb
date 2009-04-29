@@ -696,9 +696,15 @@ describe SimpleForm do
       end
 
       it "should set the use_multi_index? flag" do
+        @form.any_multi_index?.should == nil
+        do_p
+        @form.any_multi_index?.should == 1
+      end
+      
+      it "should reset the use_multi_index? flag to nil after creating the presentation" do
         @form.use_multi_index?.should == nil
         do_p
-        @form.use_multi_index?.should == 1
+        @form.use_multi_index?.should == nil
       end
 
       it "should add indexed presentation html to the body" do
