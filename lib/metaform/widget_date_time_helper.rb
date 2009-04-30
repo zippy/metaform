@@ -74,19 +74,30 @@ module DateHelper
   ################################################################################
   def date_html(field_instance_id,value,options)
     date = parse_date_value(value)
+    id = build_html_id(field_instance_id)
+    jsy = %Q|onblur="mark_invalid_date('#{id}');#{id}_first_pass = true;"|
+    js = %Q|onblur="if (#{id}_first_pass) {mark_invalid_date('#{id}')}"|
     if date
-      <<-EOHTML
-<input type="text" #{auto_tab_text(field_instance_id,'day')} size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'month')}" id="#{build_html_multi_id(field_instance_id,'month')}" value="#{date.month}" maxlength="2"/> /
-<input type="text" #{auto_tab_text(field_instance_id,'year')} size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'day')}" id="#{build_html_multi_id(field_instance_id,'day')}" value="#{date.day}" maxlength="2"/> /
-<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'year')}" id="#{build_html_multi_id(field_instance_id,'year')}" value="#{date.year.to_s[0..3]}" maxlength="4"/> <span class=\"instructions\">(MM/DD/YYYY)</span>
+      result = <<-EOHTML
+<input #{js} type="text" #{auto_tab_text(field_instance_id,'day')} size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'month')}" id="#{build_html_multi_id(field_instance_id,'month')}" value="#{date.month}" maxlength="2"/> /
+<input #{js} type="text" #{auto_tab_text(field_instance_id,'year')} size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'day')}" id="#{build_html_multi_id(field_instance_id,'day')}" value="#{date.day}" maxlength="2"/> /
+<input #{jsy} type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'year')}" id="#{build_html_multi_id(field_instance_id,'year')}" value="#{date.year.to_s[0..3]}" maxlength="4"/> <span class=\"instructions\">(MM/DD/YYYY)</span>
 EOHTML
     else
-      <<-EOHTML
-<input type="text" #{auto_tab_text(field_instance_id,'day')} size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'month')}" id="#{build_html_multi_id(field_instance_id,'month')}" maxlength="2"/> /
-<input type="text" #{auto_tab_text(field_instance_id,'year')} size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'day')}" id="#{build_html_multi_id(field_instance_id,'day')}" maxlength="2" /> /
-<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'year')}" id="#{build_html_multi_id(field_instance_id,'year')}"  maxlength="4"/> <span class=\"instructions\">(MM/DD/YYYY)</span>
+      result = <<-EOHTML
+<input #{js} type="text" #{auto_tab_text(field_instance_id,'day')} size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'month')}" id="#{build_html_multi_id(field_instance_id,'month')}" maxlength="2"/> /
+<input #{js} type="text" #{auto_tab_text(field_instance_id,'year')} size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'day')}" id="#{build_html_multi_id(field_instance_id,'day')}" maxlength="2" /> /
+<input #{jsy} type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'year')}" id="#{build_html_multi_id(field_instance_id,'year')}"  maxlength="4"/> <span class=\"instructions\">(MM/DD/YYYY)</span>
 EOHTML
     end
+    <<-EOHTML
+<script type="text/javascript">
+//<![CDATA[
+var #{id}_first_pass = false
+//]]>
+</script>
+<span id="#{id}_wrapper">#{result}</span>
+EOHTML
   end
   
   def auto_tab_text(f_id, next_field)
