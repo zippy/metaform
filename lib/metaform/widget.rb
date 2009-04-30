@@ -166,6 +166,12 @@ class Widget
   def self.field_types_allowed
     return nil
   end
+  
+  def self.multi_field_wrapper_html(field_name,html)
+    <<-EOHTML
+    <span id="#{build_html_id(field_name)}_wrapper">#{html}</span>
+    EOHTML
+  end
 
   protected
   

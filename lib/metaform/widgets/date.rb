@@ -6,7 +6,14 @@ class DateWidget < Widget
   end
   ################################################################################
   def self.render_form_object(field_instance_id,value,options)
-    date_html(field_instance_id,value,options)
+    html = <<-EOHTML
+    <script type="text/javascript">
+    //<![CDATA[
+    var record_#{field_instance_id}_first_pass =  #{value.blank? ? 'false' : 'true'};
+    //]]>
+    </script> 
+    EOHTML
+    html + multi_field_wrapper_html(field_instance_id,date_html(field_instance_id,value,options))
   end
 
   ################################################################################
