@@ -22,17 +22,19 @@ module TimeHelper
   end
   ################################################################################
   def parse_time_value(value)
-    return nil if value.nil? 
-    require 'parsedate'
-    d = *ParseDate.parsedate(value)
-    date = Time.local(1,1,1,d[3],d[4])      
+    return nil if value.nil?
+    date = Time.parse(value)
     hours = date.hour
     meridian = "am"
     if (hours > 12)
     	hours = hours - 12
     	meridian =  "pm"
+  	elsif (hours == 0)
+  	  hours = 12
+  	elsif (hours == 12)
+    	meridian =  "pm"
     end
-    [hours,sprintf("%02d",date.min),meridian]
+    [hours.to_s,sprintf("%02d",date.min),meridian]
   end
 
   ################################################################################
@@ -57,9 +59,9 @@ module TimeHelper
   def convert_time_html_value(value,params={})
     begin
       if !value['hours'].blank? && !value['minutes'].blank?
-        hours = value['hours'].to_i
-        factor = value['am_pm'] == 'pm' && hours != 12 ? 12 : 0	
-        date = Time.local(1,1,1,hours + factor,value['minutes'])
+        str = "#{value['hours']}:#{value['minutes']}"
+        str << " #{value['am_pm']}" if value['hours'].to_i < 13
+        date = Time.parse(str)
       else
         nil
       end

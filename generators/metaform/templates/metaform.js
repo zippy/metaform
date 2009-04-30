@@ -35,11 +35,10 @@ function $DF(name){
 //Get value of time widgets
 function $TF(name){
 	var hours = parseInt($F(name+'_hours'));
-	if (isNaN(hours)) {hours=0};
-	if ($F(name+'_am_pm') == 'pm') {hours = hours + 12};
+	if (isNaN(hours) || hours > 12 || hours < 1) {return null};
 	var minutes = parseInt($F(name+'_minutes'));
-	if (isNaN(minutes)) {minutes=0};
-	var d = new Date("0/0/0 "+ hours + ':' + minutes);
+	if (isNaN(minutes) || minutes > 59 || minutes < 0) {return null};
+	var d = new Date("1/1/1 "+ hours + ':' + minutes + ' ' + $F(name+'_am_pm'));
 	return (d == "Invalid Date") ? null : d;
 }
 //Get value of factor_textfield widgets
