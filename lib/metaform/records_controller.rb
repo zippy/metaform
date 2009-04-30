@@ -46,6 +46,7 @@ class RecordsController < ApplicationController
   # POST /form/<form_id>/records/new[/<presentation_id>[/<tab>]]
   # POST /records.xml
   def create
+    raise MetaformException,"record create requires a workflow action" if params[:meta]['workflow_action'].blank?
     setup_new_record
     before_create_record(@record) if respond_to?(:before_create_record)
     before_save_record(@record) if respond_to?(:before_save_record)

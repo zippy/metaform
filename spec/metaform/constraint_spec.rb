@@ -1,5 +1,5 @@
 require File.dirname(__FILE__) + '/../spec_helper'
-
+include Utilities
 describe Constraints do
   before(:each) do
     Form.config[:hide_required_extra_errors] = false
@@ -53,8 +53,11 @@ describe Constraints do
     it "should not trigger when date is nil" do
       Constraints.verify({'date' => :in_past}, nil, @form).should == []
     end
-    it ":in_past should trigger when date is in the future" do
+    it ":in_past should complain when date is in the future" do
       Constraints.verify({'date' => :in_past}, (Time.now+100).to_s, @form).should == ["Date cannot be in the future"]
+    end
+    it ":in_past should not trigger when date is now" do
+      Constraints.verify({'date' => :in_past}, (Time.now).to_s, @form).should == []
     end
     it ":in_past should trigger when date is in the past" do
       Constraints.verify({'date' => :in_past}, (Time.now-100).to_s, @form).should == []
@@ -64,6 +67,9 @@ describe Constraints do
     end
     it ":in_future should trigger when date is in the past" do
       Constraints.verify({'date' => :in_future}, (Time.now+100).to_s, @form).should == []
+    end
+    it ":in_future should trigger when date is now" do
+      Constraints.verify({'date' => :in_future}, (Time.now).to_s, @form).should == []
     end
   end
 

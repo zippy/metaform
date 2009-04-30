@@ -2,6 +2,9 @@
 module Constraints
   RequiredErrMessage = "This information is required"
   RequiredMultiErrMessage = "You must check at least one choice from this list"
+  class << self 
+    include Utilities
+  end
   def Constraints.verify (constraints, value, form)
     constraint_errors = []
     return constraint_errors if !constraints
@@ -50,12 +53,7 @@ module Constraints
         end
       when "date"
         if !value.blank?
-          date = *ParseDate.parsedate(value)
-          while (date.last.nil? and date.size>0 ) do
-            date.pop
-          end
-          raise "value #{value} produced empty date!" if date == []
-          date = Time.local(*date)
+          date = parse_date(value)
           if constraint == :in_past
             if date > Time.now
               constraint_errors << (err_override || "Date cannot be in the future")

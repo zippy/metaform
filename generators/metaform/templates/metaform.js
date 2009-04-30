@@ -220,10 +220,6 @@ function insert_tabs(tab_html,anchor_css,before_anchor,default_anchor_css,desire
 	}
 }
 
-
-
-
-
 function find_current_idx() {
 	cur_idx = location.href.split('/').pop();
 	if (!cur_idx.match(/\d/)) {cur_idx = 0};
@@ -234,6 +230,21 @@ function update_date(write_date,read_date) {
 	$('record_'+write_date+'_month').value = $F('record_'+read_date+'_month');
 	$('record_'+write_date+'_day').value = $F('record_'+read_date+'_day');
 	$('record_'+write_date+'_year').value = $F('record_'+read_date+'_year');
+}
+
+function date_invalid(field_id) {
+	return $DF(field_id) == null;
+}
+
+function mark_invalid_date(field_id) {
+	var the_style;
+	if (date_invalid(field_id)) {
+		the_style = "background-color: #FFCCFF;padding: 3px; border-style: solid;border-width: 2px 2px 2px 2px; border-color: #CC0033;"
+	}
+	else {
+		the_style = "background-color: white; border-style: none;"		
+	}
+	$(field_id+'_wrapper').setStyle(the_style)
 }
 
 function confirmReset() {

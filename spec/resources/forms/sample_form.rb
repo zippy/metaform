@@ -119,7 +119,7 @@ def setup
     q 'fruit', :widget => 'RadioButtons', :followups => [{'fruit_other' => {:widget=>'TextField'}}]
     q 'breastfeeding', :widget => 'TextField'
     function_button "New Entry" do
-      javascript_submit :workflow_action => 'create'
+      javascript_submit :workflow_action => 'create', :workflow_action_force=> true
     end
   end
 

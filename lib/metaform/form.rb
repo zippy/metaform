@@ -758,6 +758,8 @@ class Form
           @_index = orig_index
           body '</ul>'
           body add_button_html if indexed[:add_button_position] == 'bottom'
+          @_any_multi_index = @_use_multi_index  #This is used to properly set up the hidden fields necessary for an indexed presentation
+          @_use_multi_index = nil
         else
           pres.block.call
         end
@@ -1084,8 +1086,12 @@ class Form
     save_context(:js) do
       js = %Q|$('metaForm').submit();|
       if options[:workflow_action]
-        js = %Q|$('meta_workflow_action').value = '#{options[:workflow_action]}';#{js}|
-        @_stuff[:need_workflow_action] = true
+        if options[:workflow_action_force]
+          @_stuff[:need_workflow_action] = options[:workflow_action]
+        else
+          js = %Q|$('meta_workflow_action').value = '#{options[:workflow_action]}';#{js}|
+          @_stuff[:need_workflow_action] = true
+        end
       end
       javascript js
     end
@@ -1138,7 +1144,8 @@ class Form
     set_current_index(index)
     @_stuff = {}
     @_stuff[:current_questions] = {}
-    @_use_multi_index = nil
+    @_use_multi_index = nil  #This will be set to true during def p of any presentation which is multi-indexed, then reset to nil
+    @_any_multi_index = nil  #This will be set to true if any single presentation is multi-indexed
     @force_read_only = 0
   end
 
@@ -1189,13 +1196,13 @@ class Form
       p(presentation_name)
       body %Q|<input type="hidden" name="meta[last_updated]" id="meta_last_updated" value=#{record.updated_at.to_i}>|
       if @_stuff[:need_workflow_action]
-        body %Q|<input type="hidden" name="meta[workflow_action]" id="meta_workflow_action">| 
+        body %Q|<input type="hidden" name="meta[workflow_action]" id="meta_workflow_action"#{@_stuff[:need_workflow_action].is_a?(String) ? %Q*value="#{@_stuff[:need_workflow_action]}"* : ''}>|
       end
-      if use_multi_index?
-        body %Q|<input type="hidden" name="multi_index" id="multi_index" value="#{@_use_multi_index}">|
+      if any_multi_index?
+        body %Q|<input type="hidden" name="multi_index" id="multi_index" value="#{@_any_multi_index}">|
         body %Q|<input type="hidden" name="multi_index_fields" id="multi_index_fields" value="#{@_multi_index_fields.keys.join(',')}">|
       end
-      
+      @_multi_index_fields = nil
       jscripts = []
       stored_value_string = ''
       stored_values_added = {}
@@ -1479,10 +1486,15 @@ EOJS
     @_hiding_js
   end
   
+  #If the presentation currently being handled is multi_index, this will return true
   def use_multi_index?
     @_use_multi_index
   end
-
+  #If any presentation is multi_index, this will return true
+  def any_multi_index?
+    @_any_multi_index 
+  end
+  
   def index
     @_index
   end
