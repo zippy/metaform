@@ -63,7 +63,9 @@ module TimeHelper
   def convert_time_html_value(value,params={})
     begin
       if !value['hours'].blank? && !value['minutes'].blank?
-        date = Time.parse("#{value['hours']}:#{value['minutes']} #{value['am_pm']}")
+        str = "#{value['hours']}:#{value['minutes']}"
+        str << " #{value['am_pm']}" if value['hours'].to_i < 13
+        date = Time.parse(str)
       else
         nil
       end

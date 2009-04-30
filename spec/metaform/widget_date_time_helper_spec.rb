@@ -40,8 +40,14 @@ describe TimeHelper do
     it 'should convert 1:00 pm to 13:00' do
       convert_time_html_value({'hours'=>'1','minutes'=>'0','am_pm'=>'pm'}).strftime("%H:%M").should == "13:00"
     end
-    it 'should convert 1:00 pm to 23:00' do
+    it 'should convert 11:00 pm to 23:00' do
       convert_time_html_value({'hours'=>'11','minutes'=>'0','am_pm'=>'pm'}).strftime("%H:%M").should == "23:00"
     end
-  end
+      it 'should convert 13:00 am to 13:00' do
+        convert_time_html_value({'hours'=>'13','minutes'=>'00','am_pm'=>'am'}).strftime("%H:%M").should == "13:00"
+      end
+      it 'should convert 13:00 pm to 13:00' do
+        convert_time_html_value({'hours'=>'13','minutes'=>'00','am_pm'=>'pm'}).strftime("%H:%M").should == "13:00"
+      end
+    end
 end
