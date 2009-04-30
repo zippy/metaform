@@ -5,7 +5,8 @@ class Form
   include ListingUtilities
   
   MultiIndexMarker = '%X%'
-
+  EventObserveMarker = 'EventObserveMarker'
+  RecalculateConditionsMarker = 'RecalculateConditionsMarker'
   # directory in which to auto-load form setup files
   @@forms_dir = 'forms'
   @@cache = {}
@@ -734,15 +735,24 @@ class Form
 
           javascript %Q|var #{presentation_name} = new indexedItems;#{presentation_name}.elem_id="presentation_#{presentation_name}_items";#{presentation_name}.delete_text="#{indexed[:delete_button_text]}";#{presentation_name}.self_name="#{presentation_name}";|
           javascript <<-EOJS
-            function doAdd#{presentation_name}() {
+            function doAddIndexedPresentationItem() {
               var t = "#{template}";
               var idx = parseInt($F('multi_index'));
               t = t.replace(/#{MultiIndexMarker}/g,idx);
               $('multi_index').value = idx+1;
-              #{presentation_name}.addItem(t);
+              #{presentation_name}.addItem(t,idx);
+              var js = "#{EventObserveMarker}"
+              js = js.replace(/#{MultiIndexMarker}/g,idx);
+              #{presentation_name}.addJavaScript(js);
+            }
+            function doRemoveIndexedPresentationItem(item,idx) {
+              #{presentation_name}.removeItem($(item).up())
+              var js = "#{RecalculateConditionsMarker}"
+              js = js.replace(/#{MultiIndexMarker}/g,idx);
+              #{presentation_name}.addJavaScript(js);
             }
           EOJS
-          add_button_html = %Q|<input type="button" onclick="doAdd#{presentation_name}()" value="#{indexed[:add_button_text]}">|
+          add_button_html = %Q|<input type="button" onclick="doAddIndexedPresentationItem()" value="#{indexed[:add_button_text]}">|
           body add_button_html if indexed[:add_button_position] != 'bottom' && !exclude_buttons
           body %Q|<ul id="presentation_#{presentation_name}_items">|
           answers = @record[indexed[:reference_field],:any].delete_if {|a| a.blank? }
@@ -752,7 +762,7 @@ class Form
             @_index = i
             body %Q|<li class="presentation_indexed_item">|
             pres.block.call
-            body %Q|<input type="button" class="float_right" value="#{indexed[:delete_button_text]}" onclick="#{presentation_name}.removeItem($(this).up())"><div class="clear"></div>| unless exclude_buttons
+            body %Q|<input type="button" class="float_right" value="#{indexed[:delete_button_text]}" onclick="doRemoveIndexedPresentationItem(this,#{i})"><div class="clear"></div>| unless exclude_buttons
             body '</li>'
           end
           @_index = orig_index
@@ -1202,13 +1212,14 @@ class Form
         body %Q|<input type="hidden" name="multi_index" id="multi_index" value="#{@_any_multi_index}">|
         body %Q|<input type="hidden" name="multi_index_fields" id="multi_index_fields" value="#{@_multi_index_fields.keys.join(',')}">|
       end
-      @_multi_index_fields = nil
       jscripts = []
       stored_value_string = ''
       stored_values_added = {}
       
       field_widget_map = current_questions_field_widget_map
       ojs = get_observer_jscripts
+      observe_js_for_add_function = ''
+      recalculate_conditions_js_for_remove_function = ''
        if ojs
         field_name_action_hash = {}
         ojs.collect do |condition_name,actions|
@@ -1258,14 +1269,24 @@ EOJS
           js = cond.generate_javascript_function(field_widget_map)
           jscripts << js
         end
+        multi_index_field_names = @_multi_index_fields.keys.flatten
         field_name_action_hash.each do |the_field_name,the_functions|
           (widget,widget_options) = field_widget_map[the_field_name];
-          jscripts << widget.javascript_build_observe_function(the_field_name,"values_for_#{the_field_name}[cur_idx] = #{widget.javascript_get_value_function(the_field_name)};#{the_functions.join('();')}();",widget_options)
+          if multi_index_field_names.include?(the_field_name)
+            the_field_name_with_index = "_#{MultiIndexMarker}_#{the_field_name}"
+            observe_js_for_add_function << widget.javascript_build_observe_function(the_field_name_with_index,"values_for_#{the_field_name}[#{MultiIndexMarker}] = #{widget.javascript_get_value_function(the_field_name_with_index)};#{the_functions.join('();')}();",widget_options).gsub!(/\n/,'')
+            recalculate_conditions_js_for_remove_function = %Q|values_for_#{the_field_name}[#{MultiIndexMarker}] = undefined;#{the_functions.join('();')}();|
+            (0..@_any_multi_index - 1).each do |i|
+              the_field_name_with_index = "_#{i}_#{the_field_name}"
+              jscripts << widget.javascript_build_observe_function(the_field_name_with_index,"values_for_#{the_field_name}[#{i}] = #{widget.javascript_get_value_function(the_field_name_with_index)};#{the_functions.join('();')}();",widget_options)
+            end
+          else
+            jscripts << widget.javascript_build_observe_function(the_field_name,"values_for_#{the_field_name}[cur_idx] = #{widget.javascript_get_value_function(the_field_name)};#{the_functions.join('();')}();",widget_options)
+          end
         end
       end
-
-      b = get_body.join("\n")
       
+      b = get_body.join("\n")
       b.gsub!(/<info(.*?)>(.*?)<\/info>/) {|match| tip($2,$1)}
 
       if @_tip_id
@@ -1275,7 +1296,10 @@ EOJS
       js = get_jscripts
       jscripts << js if js
       b = '<script>var cur_idx=find_current_idx();' + stored_value_string + '</script>' + b if stored_value_string != '' && !presentations[presentation_name].force_read_only
-      [b,jscripts.join("\n")]
+      js = jscripts.join("\n")
+      js.gsub!(/#{EventObserveMarker}/,observe_js_for_add_function) if observe_js_for_add_function != ''      
+      js.gsub!(/#{RecalculateConditionsMarker}/,recalculate_conditions_js_for_remove_function) if recalculate_conditions_js_for_remove_function != ''      
+      [b,js]
     end
   end
     
