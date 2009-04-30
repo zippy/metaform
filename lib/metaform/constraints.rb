@@ -2,6 +2,9 @@
 module Constraints
   RequiredErrMessage = "This information is required"
   RequiredMultiErrMessage = "You must check at least one choice from this list"
+  class << self 
+    include Utilities
+  end
   def Constraints.verify (constraints, value, form)
     constraint_errors = []
     return constraint_errors if !constraints
