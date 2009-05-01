@@ -26,7 +26,7 @@ module TimeHelper
   end
   ################################################################################
   def parse_time_value(value)
-    return nil if value.nil?
+    return nil if value.blank?
     date = Time.parse(value)
     hours = date.hour
     meridian = "am"

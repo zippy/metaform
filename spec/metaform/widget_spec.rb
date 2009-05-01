@@ -70,6 +70,13 @@ describe Widget do
       DateWidget.render_form_object_read_only(1,"2004-10-23",{}).should == 
         "<span id=\"record_1\">10/23/2004</span>"
     end
+    it "should convert html values to an SQL style string date" do
+      DateWidget.convert_html_value({'month'=>'12','day'=>'01','year'=>'2001'}).should == '2001-12-01'
+    end
+    it "should convert bad html values to nil" do
+      DateWidget.convert_html_value({'month'=>'xx','day'=>'77','year'=>'2001'}).should == nil
+      DateWidget.convert_html_value({'month'=>'','day'=>'','year'=>''}).should == nil
+    end
   end
   
   describe TimeWidget do
@@ -85,7 +92,30 @@ describe Widget do
       TimeWidget.render_form_object_read_only(1,"13:02",{}).should == 
         "<span id=\"record_1\">1:02 pm</span>"
     end
+    it "should convert html values to a 24 hour string date" do
+      TimeWidget.convert_html_value({'hours'=>'12','minutes'=>'00','am_pm'=>'am'}).should == '00:00'
+      TimeWidget.convert_html_value({'hours'=>'12','minutes'=>'00','am_pm'=>'pm'}).should == '12:00'
+      TimeWidget.convert_html_value({'hours'=>'13','minutes'=>'00','am_pm'=>'am'}).should == '13:00'
+      TimeWidget.convert_html_value({'hours'=>'1','minutes'=>'00','am_pm'=>'pm'}).should == '13:00'
+    end
+    it "should convert bad html values to nil" do
+      TimeWidget.convert_html_value({'hours'=>'33','minutes'=>'xx','am_pm'=>'am'}).should == nil
+      TimeWidget.convert_html_value({'hours'=>'99','minutes'=>'00','am_pm'=>'pm'}).should == nil
+      TimeWidget.convert_html_value({'hours'=>'','minutes'=>'','am_pm'=>''}).should == nil
+    end
   end
+  
+  describe DateTimeWidget do
+    it "should convert html values to a date-time string" do
+      d = {'month'=>'12','day'=>'01','year'=>'2001', 'hours'=>'12','minutes'=>'00','am_pm'=>'am'}
+      DateTimeWidget.convert_html_value(d).should == '2001-12-01 00:00'
+    end
+    it "should convert bad html values to nil" do
+      d = {'month'=>'','day'=>'','year'=>'', 'hours'=>'','minutes'=>'','am_pm'=>'am'}
+      DateTimeWidget.convert_html_value(d).should == nil
+    end
+  end
+  
 
   describe TimeIntervalWidget do
     it "should render two html input texts plus a select for am/pm" do

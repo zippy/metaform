@@ -45,7 +45,7 @@ class DateTimeWidget < Widget
     date = convert_date_html_value(value,params)
     time = convert_time_html_value(value,params)
     return nil if date.nil? || time.nil?
-    Time.mktime(date.year,date.month,date.day,time.hour,time.min).to_s
+    Time.mktime(date.year,date.month,date.day,time.hour,time.min).strftime('%Y-%m-%d %H:%M')
   end
 
 end

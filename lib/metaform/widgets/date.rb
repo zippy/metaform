@@ -33,7 +33,8 @@ class DateWidget < Widget
 
   ################################################################################
   def self.convert_html_value(value,params={})
-    convert_date_html_value(value,params).to_s
+    d = convert_date_html_value(value,params)
+    d.strftime("%Y-%m-%d") if !d.nil?
   end
 
 end

@@ -3,6 +3,31 @@ require File.dirname(__FILE__) + '/../spec_helper'
 include TimeHelper
 include DateHelper
 
+describe DateHelper do
+  describe 'parse_date_value' do
+    it 'should convert date to a Date object' do
+      parse_date_value("1/2/2001").should == Date.new(2001,1,2)
+    end
+    it 'should convert nil to a nil' do
+      parse_date_value(nil).should == nil
+    end
+    it 'should convert empty string to a nil' do
+      parse_date_value('').should == nil
+    end
+  end
+  describe 'convert_date_html_value' do
+    it 'should convert html values to a Time object' do
+      convert_date_html_value({'year'=>'2001','month'=>'1','day'=>'2'}).should == Time.mktime(2001,1,2)
+    end
+    it 'should convert empty html values to nil' do
+      convert_date_html_value({'year'=>'','month'=>'','day'=>''}).should == nil
+    end
+    it 'should convert invalid html values to nil' do
+      convert_date_html_value({'year'=>'xsy','month'=>'99','day'=>''}).should == nil
+    end
+  end
+end
+
 describe TimeHelper do
   describe 'parse_time_value' do
     it 'should convert 0:0 to 12:00 am' do
@@ -22,6 +47,12 @@ describe TimeHelper do
     end
     it 'should convert 23:0 to 11:00 pm' do
       parse_time_value("23:0").should == ['11','00','pm']
+    end
+    it 'should convert nil to nil' do
+      parse_time_value(nil).should == nil
+    end
+    it 'should convert empty string to nil' do
+      parse_time_value('').should == nil
     end
   end
   describe 'convert_time_html_value' do
@@ -48,6 +79,9 @@ describe TimeHelper do
     end
     it 'should convert 13:00 pm to 13:00' do
       convert_time_html_value({'hours'=>'13','minutes'=>'00','am_pm'=>'pm'}).strftime("%H:%M").should == "13:00"
+    end
+    it 'should convert no values to nil' do
+      convert_time_html_value({'hours'=>'','minutes'=>'','am_pm'=>'pm'}).should == nil
     end
     it 'should convert x:00 pm to nil' do
       convert_time_html_value({'hours'=>'x','minutes'=>'00','am_pm'=>'pm'}).should == nil
