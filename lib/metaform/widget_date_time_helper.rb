@@ -61,14 +61,14 @@ module TimeHelper
 
   ################################################################################
   def convert_time_html_value(value,params={})
+    h = value['hours']
+    m = value['minutes']
+    return nil if h.blank? || m.blank?
+    return nil if h =~ /[^0-9]/ || m =~ /[^0-9]/
     begin
-      if !value['hours'].blank? && !value['minutes'].blank?
-        str = "#{value['hours']}:#{value['minutes']}"
-        str << " #{value['am_pm']}" if value['hours'].to_i < 13
-        date = Time.parse(str)
-      else
-        nil
-      end
+      str = "#{h}:#{m}"
+      str << " #{value['am_pm']}" if h.to_i < 13
+      date = Time.parse(str)
     rescue
       nil
     end

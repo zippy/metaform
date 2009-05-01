@@ -46,9 +46,14 @@ function $DTF(name){
 }
 //Get value of time widgets
 function $TF(name){
-	var hours = parseInt($F(name+'_hours'));
+	var hours = $F(name+'_hours');
+	var minutes = $F(name+'_minutes');
+	if (/[^\d]/.exec(hours) || /[^\d]/.exec(minutes)) {
+		return null
+	}
+	var hours = parseInt(hours);
 	if (isNaN(hours) || hours > 12 || hours < 1) {return null};
-	var minutes = parseInt($F(name+'_minutes'));
+	var minutes = parseInt(minutes);
 	if (isNaN(minutes) || minutes > 59 || minutes < 0) {return null};
 	var d = new Date("1/1/1 "+ hours + ':' + minutes + ' ' + $F(name+'_am_pm'));
 	return (d == "Invalid Date") ? null : d;
