@@ -229,7 +229,7 @@ function insert_tabs(tab_html,anchor_css,before_anchor,default_anchor_css,desire
 		current_tab_num = current_tab_num + 1;
 		if (multi) {
 			display_num = current_tab_num + 1;
-			this_tab_html = this_tab_html.gsub(/NUM/,' '+display_num).gsub(/INDEX/,display_num);
+			this_tab_html = this_tab_html.gsub(/NUM/,' '+display_num).gsub(/INDEX/,display_num-1);
 		}
 		before_anchor ? next_tabs.invoke('insert',{before:  this_tab_html}) : next_tabs.invoke('insert',{after:  this_tab_html});
 		
