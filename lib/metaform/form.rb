@@ -1287,10 +1287,9 @@ class Form
           jscripts << js
         end
       end
-      multi_index_field_names = @_multi_index_fields.keys.flatten
       field_name_action_hash.each do |the_field_name,the_functions|
         (widget,widget_options) = field_widget_map[the_field_name];
-        if multi_index_field_names.include?(the_field_name)
+        if @_multi_index_fields && @_multi_index_fields.keys && @_multi_index_fields.keys.flatten.include?(the_field_name)
           the_field_name_with_index = "_#{MultiIndexMarker}_#{the_field_name}"
           the_functions_for_this_presentation = ["#{special_fnname}_#{MultiIndexMarker}"]
           the_functions.each do |func|
