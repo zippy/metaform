@@ -64,18 +64,25 @@ describe Widget do
   describe DateWidget do
     it "should render three html input texts and the instructions" do
       DateWidget.render_form_object(1,"2004-10-23",{}).should == 
-      "<input type=\"text\"  size=2 class=\"textfield_2\" name=\"record[1][month]\" id=\"record_1_month\" value=\"10\" maxlength=\"2\"/> /\n<input type=\"text\"  size=2 class=\"textfield_2\" name=\"record[1][day]\" id=\"record_1_day\" value=\"23\" maxlength=\"2\"/> /\n<input type=\"text\" size=4 class=\"textfield_4\" name=\"record[1][year]\" id=\"record_1_year\" value=\"2004\" maxlength=\"4\"/> <span class=\"instructions\">(MM/DD/YYYY)</span>\n" 
+      "    <script type=\"text/javascript\">\n    //<![CDATA[\n    var record_1_first_pass =  true;\n    //]]>\n    </script> \n    <span id=\"record_1_wrapper\"><input onblur=\"if (record_1_first_pass) {mark_invalid_date('record_1')}\" type=\"text\"  size=2 class=\"textfield_2\" name=\"record[1][month]\" id=\"record_1_month\" value=\"10\" maxlength=\"2\"/> /\n<input onblur=\"if (record_1_first_pass) {mark_invalid_date('record_1')}\" type=\"text\"  size=2 class=\"textfield_2\" name=\"record[1][day]\" id=\"record_1_day\" value=\"23\" maxlength=\"2\"/> /\n<input onblur=\"mark_invalid_date('record_1');record_1_first_pass = true;\" type=\"text\" size=4 class=\"textfield_4\" name=\"record[1][year]\" id=\"record_1_year\" value=\"2004\" maxlength=\"4\"/> <span class=\"instructions\">(MM/DD/YYYY)</span>\n</span>\n"
     end
     it "should render date value as text with a read_only parameter" do
       DateWidget.render_form_object_read_only(1,"2004-10-23",{}).should == 
         "<span id=\"record_1\">10/23/2004</span>"
+    end
+    it "should convert html values to an SQL style string date" do
+      DateWidget.convert_html_value({'month'=>'12','day'=>'01','year'=>'2001'}).should == '2001-12-01'
+    end
+    it "should convert bad html values to nil" do
+      DateWidget.convert_html_value({'month'=>'xx','day'=>'77','year'=>'2001'}).should == nil
+      DateWidget.convert_html_value({'month'=>'','day'=>'','year'=>''}).should == nil
     end
   end
   
   describe TimeWidget do
     it "should render two html input texts plus a select for am/pm" do
       TimeWidget.render_form_object(1,"3:22",{}).should == 
-        "      <input type=\"text\" size=2 class=\"textfield_2\" name=\"record[1][hours]\" id=\"record_1_hours\" value=\"3\" maxlength=\"2\"/>:\n      <input type=\"text\" class=\"left_margin_neg_5 textfield_2\" size=2 name=\"record[1][minutes]\" id=\"record_1_minutes\" value=\"22\" maxlength=\"2\"/>\n      <select name=\"record[1][am_pm]\" id=\"record_1_am_pm\">\n      \t<option value=\"am\" selected=\"selected\">AM</option>\n<option value=\"pm\">PM</option>\n\t  </select>\n"
+        "     <script type=\"text/javascript\">\n     //<![CDATA[\n     var record_1_first_pass = true;\n     //]]>\n     </script> \n    <span id=\"record_1_wrapper\">      <input onblur=\"if (record_1_first_pass) {mark_invalid_time('record_1')}\" type=\"text\" size=2 class=\"textfield_2\" name=\"record[1][hours]\" id=\"record_1_hours\" value=\"3\" maxlength=\"2\"/>:\n      <input onblur=\"mark_invalid_time('record_1');record_1_first_pass = true;\" type=\"text\" class=\"left_margin_neg_5 textfield_2\" size=2 name=\"record[1][minutes]\" id=\"record_1_minutes\" value=\"22\" maxlength=\"2\"/>\n      <select onblur=\"if (record_1_first_pass) {mark_invalid_time('record_1')}\" name=\"record[1][am_pm]\" id=\"record_1_am_pm\">\n      \t<option value=\"am\" selected=\"selected\">AM</option>\n<option value=\"pm\">PM</option>\n\t  </select>\n</span>\n"
     end
     it "should render time value as text with a read_only parameter" do
       TimeWidget.render_form_object_read_only(1,"3:22",{}).should == 
@@ -85,7 +92,30 @@ describe Widget do
       TimeWidget.render_form_object_read_only(1,"13:02",{}).should == 
         "<span id=\"record_1\">1:02 pm</span>"
     end
+    it "should convert html values to a 24 hour string date" do
+      TimeWidget.convert_html_value({'hours'=>'12','minutes'=>'00','am_pm'=>'am'}).should == '00:00'
+      TimeWidget.convert_html_value({'hours'=>'12','minutes'=>'00','am_pm'=>'pm'}).should == '12:00'
+      TimeWidget.convert_html_value({'hours'=>'13','minutes'=>'00','am_pm'=>'am'}).should == '13:00'
+      TimeWidget.convert_html_value({'hours'=>'1','minutes'=>'00','am_pm'=>'pm'}).should == '13:00'
+    end
+    it "should convert bad html values to nil" do
+      TimeWidget.convert_html_value({'hours'=>'33','minutes'=>'xx','am_pm'=>'am'}).should == nil
+      TimeWidget.convert_html_value({'hours'=>'99','minutes'=>'00','am_pm'=>'pm'}).should == nil
+      TimeWidget.convert_html_value({'hours'=>'','minutes'=>'','am_pm'=>''}).should == nil
+    end
   end
+  
+  describe DateTimeWidget do
+    it "should convert html values to a date-time string" do
+      d = {'month'=>'12','day'=>'01','year'=>'2001', 'hours'=>'12','minutes'=>'00','am_pm'=>'am'}
+      DateTimeWidget.convert_html_value(d).should == '2001-12-01 00:00'
+    end
+    it "should convert bad html values to nil" do
+      d = {'month'=>'','day'=>'','year'=>'', 'hours'=>'','minutes'=>'','am_pm'=>'am'}
+      DateTimeWidget.convert_html_value(d).should == nil
+    end
+  end
+  
 
   describe TimeIntervalWidget do
     it "should render two html input texts plus a select for am/pm" do

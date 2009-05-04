@@ -7,8 +7,17 @@ class DateTimeWidget < Widget
   end
   ################################################################################
   def self.render_form_object(field_instance_id,value,options)
-    time_html(field_instance_id,value,options) +
-    date_html(field_instance_id,value,options)
+    html = <<-EOHTML
+    <script type="text/javascript">
+    //<![CDATA[
+    var record_#{field_instance_id}_first_pass =  #{value.blank? ? 'false' : 'true'};
+    //]]>
+    </script> 
+    EOHTML
+    html + multi_field_wrapper_html(field_instance_id,
+      time_html(field_instance_id,value,options,true) +
+      date_html(field_instance_id,value,options,true)
+      )
   end
 
   ################################################################################
@@ -22,7 +31,7 @@ class DateTimeWidget < Widget
 
   ################################################################################
   def self.javascript_get_value_function (field_instance_id) 
-    %Q|$DF('#{build_html_id(field_instance_id)}')|
+    %Q|$DTF('#{build_html_id(field_instance_id)}')|
   end
 
   ################################################################################
@@ -36,7 +45,7 @@ class DateTimeWidget < Widget
     date = convert_date_html_value(value,params)
     time = convert_time_html_value(value,params)
     return nil if date.nil? || time.nil?
-    Time.mktime(date.year,date.month,date.day,time.hour,time.min).to_s
+    Time.mktime(date.year,date.month,date.day,time.hour,time.min).strftime('%Y-%m-%d %H:%M')
   end
 
 end

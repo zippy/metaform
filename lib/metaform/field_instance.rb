@@ -6,12 +6,7 @@ class FieldInstance < ActiveRecord::Base
   States = %w(unanswered answered invalid explained calculated approved)
   validates_inclusion_of :state, :in => States
 
-  # Instead of standard use of validates_uniqueness_of which would be:
-  #  validates_uniqueness_of :field_id, :scope => [:form_instance_id,:idx], :message => Proc.new {|x| "XIPYS"}
-  # we customize it to produce a dynamic message based on the the field id
-  def validate
-    FieldInstance.validates_uniqueness_of :field_id, :scope => [:form_instance_id,:idx],:message => "attempt to create duplicate field instance for: #{self.field_id}"
-  end
+  validates_uniqueness_of :field_id, :scope => [:form_instance_id,:idx]
     
   def field
     form_instance.form.field_exists?(field_id)

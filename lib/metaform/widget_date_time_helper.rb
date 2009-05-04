@@ -1,19 +1,23 @@
 module TimeHelper
-  def time_html(field_instance_id,value,options)
+  def time_html(field_instance_id,value,options,date_time=false)
     meridian_options = [ ["AM","am"] , ["PM","pm"] ]
+    id = build_html_id(field_instance_id)
+    fn = date_time ? 'mark_invalid_date_time' : 'mark_invalid_time'
+    js = %Q|onblur="if (#{id}_first_pass) {#{fn}('#{id}')}"|
+    jsh = !date_time ?  %Q|onblur="#{fn}('#{id}');#{id}_first_pass = true;"| : js
     if value
       (hours,minutes,meridian) = parse_time_value(value)
       <<-EOHTML
-      <input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'hours')}" id="#{build_html_multi_id(field_instance_id,'hours')}" value="#{hours}" maxlength="2"/>:
-      <input type="text" class="left_margin_neg_5 textfield_2" size=2 name="#{build_html_multi_name(field_instance_id,'minutes')}" id="#{build_html_multi_id(field_instance_id,'minutes')}" value="#{minutes}" maxlength="2"/>
-      <select name="#{build_html_multi_name(field_instance_id,'am_pm')}" id="#{build_html_multi_id(field_instance_id,'am_pm')}">
+      <input #{js} type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'hours')}" id="#{build_html_multi_id(field_instance_id,'hours')}" value="#{hours}" maxlength="2"/>:
+      <input #{jsh} type="text" class="left_margin_neg_5 textfield_2" size=2 name="#{build_html_multi_name(field_instance_id,'minutes')}" id="#{build_html_multi_id(field_instance_id,'minutes')}" value="#{minutes}" maxlength="2"/>
+      <select #{js} name="#{build_html_multi_name(field_instance_id,'am_pm')}" id="#{build_html_multi_id(field_instance_id,'am_pm')}">
       	#{form.options_for_select(meridian_options, meridian)}
 	  </select>
       EOHTML
     else
       <<-EOHTML
-      <input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'hours')}" id="#{build_html_multi_id(field_instance_id,'hours')}" maxlength="2"/>:
-      <input type="text" class="left_margin_neg_5 textfield_2" size=2 name="#{build_html_multi_name(field_instance_id,'minutes')}" id="#{build_html_multi_id(field_instance_id,'minutes')}" maxlength="2" />
+      <input #{js} type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'hours')}" id="#{build_html_multi_id(field_instance_id,'hours')}" maxlength="2"/>:
+      <input #{jsh} type="text" class="left_margin_neg_5 textfield_2" size=2 name="#{build_html_multi_name(field_instance_id,'minutes')}" id="#{build_html_multi_id(field_instance_id,'minutes')}" maxlength="2" />
       <select name="#{build_html_multi_name(field_instance_id,'am_pm')}" id="#{build_html_multi_id(field_instance_id,'am_pm')}">
 	  	   #{form.options_for_select(meridian_options, "am")}
 	  </select>
@@ -22,17 +26,19 @@ module TimeHelper
   end
   ################################################################################
   def parse_time_value(value)
-    return nil if value.nil? 
-    require 'parsedate'
-    d = *ParseDate.parsedate(value)
-    date = Time.local(1,1,1,d[3],d[4])      
+    return nil if value.blank?
+    date = Time.parse(value)
     hours = date.hour
     meridian = "am"
     if (hours > 12)
     	hours = hours - 12
     	meridian =  "pm"
+  	elsif (hours == 0)
+  	  hours = 12
+  	elsif (hours == 12)
+    	meridian =  "pm"
     end
-    [hours,sprintf("%02d",date.min),meridian]
+    [hours.to_s,sprintf("%02d",date.min),meridian]
   end
 
   ################################################################################
@@ -55,28 +61,28 @@ module TimeHelper
 
   ################################################################################
   def convert_time_html_value(value,params={})
+    h = value['hours']
+    m = value['minutes']
+    return nil if h.blank? || m.blank?
+    return nil if h =~ /[^0-9]/ || m =~ /[^0-9]/
     begin
-      if !value['hours'].blank? && !value['minutes'].blank?
-        hours = value['hours'].to_i
-        factor = value['am_pm'] == 'pm' && hours != 12 ? 12 : 0	
-        date = Time.local(1,1,1,hours + factor,value['minutes'])
-      else
-        nil
-      end
+      str = "#{h}:#{m}"
+      str << " #{value['am_pm']}" if h.to_i < 13
+      date = Time.parse(str)
     rescue
       nil
     end
   end
 end
 
-
 module DateHelper
   ################################################################################
-  def date_html(field_instance_id,value,options)
+  def date_html(field_instance_id,value,options,date_time=false)
     date = parse_date_value(value)
     id = build_html_id(field_instance_id)
-    jsy = %Q|onblur="mark_invalid_date('#{id}');#{id}_first_pass = true;"|
-    js = %Q|onblur="if (#{id}_first_pass) {mark_invalid_date('#{id}')}"|
+    fn = date_time ? 'mark_invalid_date_time' : 'mark_invalid_date'
+    js = %Q|onblur="if (#{id}_first_pass) {#{fn}('#{id}')}"|
+    jsy = %Q|onblur="#{fn}('#{id}');#{id}_first_pass = true;"|
     if date
       result = <<-EOHTML
 <input #{js} type="text" #{auto_tab_text(field_instance_id,'day')} size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'month')}" id="#{build_html_multi_id(field_instance_id,'month')}" value="#{date.month}" maxlength="2"/> /
@@ -90,16 +96,8 @@ EOHTML
 <input #{jsy} type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'year')}" id="#{build_html_multi_id(field_instance_id,'year')}"  maxlength="4"/> <span class=\"instructions\">(MM/DD/YYYY)</span>
 EOHTML
     end
-    <<-EOHTML
-<script type="text/javascript">
-//<![CDATA[
-var #{id}_first_pass = false
-//]]>
-</script>
-<span id="#{id}_wrapper">#{result}</span>
-EOHTML
+    result
   end
-  
   def auto_tab_text(f_id, next_field)
     # %Q*onkeyup="tabNext(this,'up',2,$('#{build_html_multi_id(f_id,next_field)}'))" onkeydown="tabNext(this,'down',2)"*
   end

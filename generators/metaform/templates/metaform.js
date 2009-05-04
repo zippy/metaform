@@ -25,21 +25,37 @@ function $RF(rb_class){
 	var chosen_element = $$(rb_class).find(function(rb){return rb.checked});
 	return (chosen_element != null) ? chosen_element.value : null;
 }
-//Get value of date, date_time and month_year widgets
+//Get value of date and month_year widgets
 function $DF(name){
 	var yield_field = $F(name+'_year');
 	var year = yield_field.length > 0 ? (new Date).getFullYear().toString().substring(0,4-yield_field.length) + yield_field : "";
 	var d = new Date($F(name+'_month') + "/" + $F(name+'_day')  + "/" + year);
 	return (d == "Invalid Date") ? null : d;
 }
-//Get value of time widgets
-function $TF(name){
+//Get value of date_time widgets
+function $DTF(name){
+	var yield_field = $F(name+'_year');
+	var year = yield_field.length > 0 ? (new Date).getFullYear().toString().substring(0,4-yield_field.length) + yield_field : "";
 	var hours = parseInt($F(name+'_hours'));
-	if (isNaN(hours)) {hours=0};
+	if (isNaN(hours)) {return null};
 	if ($F(name+'_am_pm') == 'pm') {hours = hours + 12};
 	var minutes = parseInt($F(name+'_minutes'));
-	if (isNaN(minutes)) {minutes=0};
-	var d = new Date("0/0/0 "+ hours + ':' + minutes);
+	if (isNaN(minutes)) {return null};
+	var d = new Date($F(name+'_month') + "/" + $F(name+'_day')  + "/" + year + " "+ hours + ':' + minutes);
+	return (d == "Invalid Date") ? null : d;
+}
+//Get value of time widgets
+function $TF(name){
+	var hours = $F(name+'_hours');
+	var minutes = $F(name+'_minutes');
+	if (/[^\d]/.exec(hours) || /[^\d]/.exec(minutes)) {
+		return null
+	}
+	var hours = parseInt(hours);
+	if (isNaN(hours) || hours > 12 || hours < 1) {return null};
+	var minutes = parseInt(minutes);
+	if (isNaN(minutes) || minutes > 59 || minutes < 0) {return null};
+	var d = new Date("1/1/1 "+ hours + ':' + minutes + ' ' + $F(name+'_am_pm'));
 	return (d == "Invalid Date") ? null : d;
 }
 //Get value of factor_textfield widgets
@@ -213,7 +229,7 @@ function insert_tabs(tab_html,anchor_css,before_anchor,default_anchor_css,desire
 		current_tab_num = current_tab_num + 1;
 		if (multi) {
 			display_num = current_tab_num + 1;
-			this_tab_html = this_tab_html.gsub(/NUM/,' '+display_num).gsub(/INDEX/,display_num);
+			this_tab_html = this_tab_html.gsub(/NUM/,' '+display_num).gsub(/INDEX/,display_num-1);
 		}
 		before_anchor ? next_tabs.invoke('insert',{before:  this_tab_html}) : next_tabs.invoke('insert',{after:  this_tab_html});
 		
@@ -232,19 +248,57 @@ function update_date(write_date,read_date) {
 	$('record_'+write_date+'_year').value = $F('record_'+read_date+'_year');
 }
 
+function date_time_invalid(field_id) {
+	if ($F(field_id+'_year') == '' && $F(field_id+'_month') == '' && $F(field_id+'_day') == '' && $F(field_id+'_hours') == '' && $F(field_id+'_minutes') == '') {
+		return false;
+	}
+	return $DTF(field_id) == null;
+}
+
 function date_invalid(field_id) {
+	if ($F(field_id+'_year') == '' && $F(field_id+'_month') == '' && $F(field_id+'_day') == '') {
+		return false;
+	}
 	return $DF(field_id) == null;
 }
 
-function mark_invalid_date(field_id) {
+function time_invalid(field_id) {
+	if ($F(field_id+'_hours') == '' && $F(field_id+'_minutes') == '') {
+		return false;
+	}
+	return $TF(field_id) == null;
+}
+
+function mark_field_validity(field_id,is_invalid,invalid_text) {
 	var the_style;
-	if (date_invalid(field_id)) {
-		the_style = "background-color: #FFCCFF;padding: 3px; border-style: solid;border-width: 2px 2px 2px 2px; border-color: #CC0033;"
+	var wrapper = $(field_id+'_wrapper');
+	var title = wrapper.title;
+	if (title == 'undefined') {title = ""};
+	title = title.gsub(invalid_text,"");
+	if (is_invalid) {
+		the_style = "background-color: #FFCCFF;padding: 3px; border-style: solid;border-width: 2px 2px 2px 2px; border-color: #CC0033;";
+		if (title.length > 0) {
+			title = title + "; "
+		}
+		wrapper.title = title + invalid_text;
 	}
 	else {
-		the_style = "background-color: white; border-style: none;"		
+		the_style = "background-color: white; border-style: none;padding: 0px;";
+		wrapper.title = title;
 	}
-	$(field_id+'_wrapper').setStyle(the_style)
+	wrapper.setStyle(the_style);
+}
+
+function mark_invalid_date_time(field_id) {
+	mark_field_validity(field_id,date_time_invalid(field_id),"Invalid date-time")
+}
+
+function mark_invalid_date(field_id) {
+	mark_field_validity(field_id,date_invalid(field_id),"Invalid date")
+}
+
+function mark_invalid_time(field_id) {
+	mark_field_validity(field_id,time_invalid(field_id),"Invalid time")
 }
 
 function confirmReset() {

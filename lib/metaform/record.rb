@@ -768,8 +768,8 @@ end
               i.delete unless i.new_record?
             else
               puts "<br>about to save #{i.attributes.inspect}" if DEBUG1
-              if !i.save!
-                errors.add(i.field_id,i.errors.full_messages.join(','))
+              if !i.save
+                raise "ActiveRecord error:'#{i.errors.full_messages.join(',')}' encountered when saving #{i.field_id}"
               end
             end
           end

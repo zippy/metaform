@@ -40,7 +40,11 @@ class RecordsController < ApplicationController
   # GET /form/<form_id>/records/new[/<presentation_id>[/<tab>]]
   def new
     setup_new_record
-    (@form_html,@form_javascript) = @record.build_html(@presentation,@index)
+    redirected = false
+    redirected = before_new_record(@record) if respond_to?(:before_new_record)
+    if !redirected
+      (@form_html,@form_javascript) = @record.build_html(@presentation,@index)
+    end
   end
 
   # POST /form/<form_id>/records/new[/<presentation_id>[/<tab>]]
