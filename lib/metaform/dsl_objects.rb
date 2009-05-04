@@ -251,10 +251,17 @@ class Condition < Bin
   def generate_javascript_function(field_widget_map)
     if javascript
       js = javascript
-      js = js.gsub(/:(\w+)(\[((\*)|([\d]*))\])*/) do |m|
-        f = $1
-        idx_string = make_javascript_index_string(f,$3)
-        "values_for_#{f}#{idx_string}"
+      if js =~ /:(\w+\[%X%\])/
+        js = js.gsub(/:(\w+\[%X%\])/) do |m|
+          f = $1
+          "values_for_#{$1}"
+        end
+      else
+        js = js.gsub(/:(\w+)(\[((\*)|([\d]*))\])*/) do |m|
+          f = $1
+          idx_string = make_javascript_index_string(f,$3)
+          "values_for_#{f}#{idx_string}"
+        end
       end
     else
       js = ""

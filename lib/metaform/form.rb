@@ -721,7 +721,6 @@ class Form
           template = save_context(:body) do
             pres.block.call
           end
-          
           template = template.join('')
 
           #TODO-Eric for now this just removes info icons from newly created items, but in the future
@@ -746,10 +745,10 @@ class Form
               #{presentation_name}.addJavaScript(js);
             }
             function doRemoveIndexedPresentationItem(item,idx) {
-              #{presentation_name}.removeItem($(item).up())
               var js = "#{RecalculateConditionsMarker}"
               js = js.replace(/#{MultiIndexMarker}/g,idx);
               #{presentation_name}.addJavaScript(js);
+              #{presentation_name}.removeItem($(item).up())
             }
           EOJS
           add_button_html = %Q|<input type="button" onclick="doAddIndexedPresentationItem()" value="#{indexed[:add_button_text]}">|
@@ -975,7 +974,6 @@ class Form
      :jsaction_show => nil,
      :jsaction_hide => nil
     }.update(opts)
-
     # if we are not actually building skip the generation of javascript
     # but yield so that any sub-questions and stuff can be processed.
     if !@render
@@ -997,12 +995,13 @@ class Form
     show_actions << options[:jsaction_show] if options[:jsaction_show]
     hide_actions << options[:jsaction_hide] if options[:jsaction_hide]
     if invoke_on_class = options[:invoke_on_class]
-      show_actions << %Q|$$(".#{invoke_on_class}").invoke("show")|
-      hide_actions << %Q|$$(".#{invoke_on_class}").invoke("hide")|
+      show_actions << %Q|$$('.#{invoke_on_class}').invoke('show')|
+      hide_actions << %Q|$$('.#{invoke_on_class}').invoke('hide')|
     else
       show_actions << "Element.show('#{wrapper_id}')"
       hide_actions << "Element.hide('#{wrapper_id}')"
     end
+  
     add_observer_javascript(condition.name,show_actions.join(';'),!show)
     add_observer_javascript(condition.name,hide_actions.join(';'),show)
     
@@ -1213,95 +1212,123 @@ class Form
         body %Q|<input type="hidden" name="multi_index_fields" id="multi_index_fields" value="#{@_multi_index_fields.keys.join(',')}">|
       end
       jscripts = []
+      multi_index_jscripts = []
       stored_value_string = ''
       stored_values_added = {}
-      
+
       field_widget_map = current_questions_field_widget_map
       ojs = get_observer_jscripts
       observe_js_for_add_function = ''
       recalculate_conditions_js_for_remove_function = ''
-       if ojs
-        field_name_action_hash = {}
-        ojs.collect do |condition_name,actions|
-          cond = conditions[condition_name]
-          raise condition_name if cond.nil?
+      special_fnname = ''
+    if ojs
+      field_name_action_hash = {}
+      ojs.collect do |condition_name,actions|
+        cond = conditions[condition_name]
+        raise condition_name if cond.nil?
+        if condition_name =~ /(.*)_#{MultiIndexMarker}$/
+          multi_indexed_presentation = $1
+          special_fnname = 'actions_for_' + multi_indexed_presentation
+          fnname = 'actions_for_'+cond.js_function_name.gsub('_X',"_#{MultiIndexMarker}")
+        else
+          multi_indexed_presentation = nil
           fnname = 'actions_for_'+cond.js_function_name
-          cond.fields_used.each do |field_name|
-            if field_widget_map.has_key?(field_name)
-              field_name_action_hash.key?(field_name) ? field_name_action_hash[field_name] << fnname : field_name_action_hash[field_name] = [fnname]
-             end
-             #Every field_name listed as a fields_used for any condition will have a javascript array set up and printed on the page.  
-             #This array will be called values_for_#{field_name}
-             #The array will have the same structure as the result of calling field_value_at(field_name,:any), ie an array with the ith member
-             #being the answer value for the field_instance with field_id = field_name and idx = i. If the type of the field is a hash we will have
-             #to use load_yaml to convert to javascript.
-             if !stored_values_added[field_name]
-               (widget,widget_options) = field_widget_map[field_name];
-               stored_value_string << %Q|var values_for_#{field_name} = new Array();|
-               value_array = field_value_at(field_name,:any)
-               field = fields[field_name]
-               if value_array.compact.size > 0  #if the whole array is nil, we don't need to put the value on the page
-                 if field[:type] == 'hash'
-                   result = ''
-                   value_array.map! do |val_string| 
-                     js_hash_builder = []
-                     load_yaml(val_string).each{|k,v| js_hash_builder << "'#{k}':'#{v}'"}
-                     "{#{js_hash_builder.join(',')}}"
-                   end
-                   val = "[$H(#{value_array.join('),$H(')})]"
-                 elsif field[:type] == 'array'
-                   val = '[' + value_array.inspect[1..-2].split(', ').map{|val_string| val_string == 'nil' ? "undefined" : %Q|[#{val_string.split(',').join('","')}]|}.join(",") + ']' 
-                 else
-                   val = "[" + value_array.inspect[1..-2].split(', ').map{|val_string| val_string == 'nil'? "undefined" : val_string}.join(",") +"]"
+        end
+        cond.fields_used.each do |field_name|
+          if field_widget_map.has_key?(field_name)
+            field_name_action_hash.key?(field_name) ? field_name_action_hash[field_name] << fnname : field_name_action_hash[field_name] = [fnname]
+           end
+           #Every field_name listed as a fields_used for any condition will have a javascript array set up and printed on the page.  
+           #This array will be called values_for_#{field_name}
+           #The array will have the same structure as the result of calling field_value_at(field_name,:any), ie an array with the ith member
+           #being the answer value for the field_instance with field_id = field_name and idx = i. If the type of the field is a hash we will have
+           #to use load_yaml to convert to javascript.
+           if !stored_values_added[field_name]
+             (widget,widget_options) = field_widget_map[field_name];
+             stored_value_string << %Q|var values_for_#{field_name} = new Array();|
+             value_array = field_value_at(field_name,:any)
+             field = fields[field_name]
+             if value_array.compact.size > 0  #if the whole array is nil, we don't need to put the value on the page
+               if field[:type] == 'hash'
+                 result = ''
+                 value_array.map! do |val_string| 
+                   js_hash_builder = []
+                   load_yaml(val_string).each{|k,v| js_hash_builder << "'#{k}':'#{v}'"}
+                   "{#{js_hash_builder.join(',')}}"
                  end
-                 stored_value_string <<  %Q|values_for_#{field_name} = #{val};|
+                 val = "[$H(#{value_array.join('),$H(')})]"
+               elsif field[:type] == 'array'
+                 val = '[' + value_array.inspect[1..-2].split(', ').map{|val_string| val_string == 'nil' ? "undefined" : %Q|[#{val_string.split(',').join('","')}]|}.join(",") + ']' 
+               else
+                 val = "[" + value_array.inspect[1..-2].split(', ').map{|val_string| val_string == 'nil'? "undefined" : val_string}.join(",") +"]"
                end
-               stored_values_added[field_name] = true
+               stored_value_string <<  %Q|values_for_#{field_name} = #{val};|
              end
-          end          
-          
-          jscripts << <<-EOJS
-function #{fnname}() {
-  if (#{cond.js_function_name}()) {#{actions[:pos].join(";")}}
-  else {#{actions[:neg].join(";")}}
-}
-EOJS
-          js = cond.generate_javascript_function(field_widget_map)
+             stored_values_added[field_name] = true
+           end
+         end unless multi_indexed_presentation         
+         #fnname is like actions_for_<condition_name>     
+         if multi_indexed_presentation
+           multi_index_jscripts << "function #{fnname}() {if (#{cond.js_function_name}()) {#{actions[:pos].join(";")}}else {#{actions[:neg].join(";")}}}"
+         else
+           jscripts << <<-EOJS
+      function #{fnname}() {
+        if (#{cond.js_function_name}()) {#{actions[:pos].join(";")}}
+        else {#{actions[:neg].join(";")}}
+      }
+      EOJS
+        end
+        if multi_indexed_presentation
+          js = cond.generate_javascript_function(field_widget_map) 
+          js = js.gsub('_X',"_#{MultiIndexMarker}")
+          multi_index_jscripts << js
+        else
+          js = cond.generate_javascript_function(field_widget_map) 
           jscripts << js
         end
-        multi_index_field_names = @_multi_index_fields.keys.flatten
-        field_name_action_hash.each do |the_field_name,the_functions|
-          (widget,widget_options) = field_widget_map[the_field_name];
-          if multi_index_field_names.include?(the_field_name)
-            the_field_name_with_index = "_#{MultiIndexMarker}_#{the_field_name}"
-            observe_js_for_add_function << widget.javascript_build_observe_function(the_field_name_with_index,"values_for_#{the_field_name}[#{MultiIndexMarker}] = #{widget.javascript_get_value_function(the_field_name_with_index)};#{the_functions.join('();')}();",widget_options).gsub!(/\n/,'')
-            recalculate_conditions_js_for_remove_function = %Q|values_for_#{the_field_name}[#{MultiIndexMarker}] = undefined;#{the_functions.join('();')}();|
-            (0..@_any_multi_index - 1).each do |i|
-              the_field_name_with_index = "_#{i}_#{the_field_name}"
-              jscripts << widget.javascript_build_observe_function(the_field_name_with_index,"values_for_#{the_field_name}[#{i}] = #{widget.javascript_get_value_function(the_field_name_with_index)};#{the_functions.join('();')}();",widget_options)
-            end
-          else
-            jscripts << widget.javascript_build_observe_function(the_field_name,"values_for_#{the_field_name}[cur_idx] = #{widget.javascript_get_value_function(the_field_name)};#{the_functions.join('();')}();",widget_options)
+      end
+      multi_index_field_names = @_multi_index_fields.keys.flatten
+      field_name_action_hash.each do |the_field_name,the_functions|
+        (widget,widget_options) = field_widget_map[the_field_name];
+        if multi_index_field_names.include?(the_field_name)
+          the_field_name_with_index = "_#{MultiIndexMarker}_#{the_field_name}"
+          the_functions_for_this_presentation = ["#{special_fnname}_#{MultiIndexMarker}"]
+          the_functions.each do |func|
+            the_functions_for_this_presentation << func unless func =~ /#{special_fnname}/
           end
+          the_functions_for_this_presentation = "#{the_functions_for_this_presentation.join('();')}();"
+          recalculate_conditions_js_for_remove_function = %Q|values_for_#{the_field_name}[#{MultiIndexMarker}] = undefined;#{the_functions_for_this_presentation}|
+          (0..@_any_multi_index).each do |i|
+            i = MultiIndexMarker if i == @_any_multi_index #Use the last index to set up the general js for the indexed presentation Add button
+            observe_functions = widget.javascript_build_observe_function(the_field_name_with_index,"values_for_#{the_field_name}[#{i}] = #{widget.javascript_get_value_function(the_field_name_with_index)};#{the_functions_for_this_presentation}",widget_options)
+            if i == MultiIndexMarker
+              observe_js_for_add_function = (observe_functions +';'+ multi_index_jscripts.join(";")).gsub(/\n/,'').gsub('_X',"_#{MultiIndexMarker}") +';'+ the_functions_for_this_presentation
+            else
+              jscripts << observe_functions.gsub(/#{MultiIndexMarker}/,i.to_s)
+            end
+          end
+        else
+          jscripts << widget.javascript_build_observe_function(the_field_name,"values_for_#{the_field_name}[cur_idx] = #{widget.javascript_get_value_function(the_field_name)};#{the_functions.join('();')}();",widget_options)
         end
       end
-      
-      b = get_body.join("\n")
-      b.gsub!(/<info(.*?)>(.*?)<\/info>/) {|match| tip($2,$1)}
+    end 
+  
+    b = get_body.join("\n")
+    b.gsub!(/<info(.*?)>(.*?)<\/info>/) {|match| tip($2,$1)}
 
-      if @_tip_id
-        b = javascript_include_tag("prototip-min") + stylesheet_link_tag('prototip',:media => "screen")+b
-      end
-
-      js = get_jscripts
-      jscripts << js if js
-      b = '<script>var cur_idx=find_current_idx();' + stored_value_string + '</script>' + b if stored_value_string != '' && !presentations[presentation_name].force_read_only
-      js = jscripts.join("\n")
-      js.gsub!(/#{EventObserveMarker}/,observe_js_for_add_function) if observe_js_for_add_function != ''      
-      js.gsub!(/#{RecalculateConditionsMarker}/,recalculate_conditions_js_for_remove_function) if recalculate_conditions_js_for_remove_function != ''      
-      [b,js]
+    if @_tip_id
+      b = javascript_include_tag("prototip-min") + stylesheet_link_tag('prototip',:media => "screen")+b
     end
+
+    js = get_jscripts
+    jscripts << js if js
+    b = '<script>var cur_idx=find_current_idx();' + stored_value_string + '</script>' + b if stored_value_string != '' && !presentations[presentation_name].force_read_only
+    js = jscripts.join("\n")
+    js.gsub!(/#{EventObserveMarker}/,observe_js_for_add_function) if observe_js_for_add_function != ''      
+    js.gsub!(/#{RecalculateConditionsMarker}/,recalculate_conditions_js_for_remove_function) if recalculate_conditions_js_for_remove_function != ''      
+    [b,js]
   end
+end
     
   # build a field_name to widget mapping so that we can pass it into the conditions
   # to build the necessary javascript
