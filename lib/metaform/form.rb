@@ -1272,11 +1272,11 @@ class Form
            multi_index_jscripts << "function #{fnname}() {if (#{cond.js_function_name}()) {#{actions[:pos].join(";")}}else {#{actions[:neg].join(";")}}}"
          else
            jscripts << <<-EOJS
-      function #{fnname}() {
-        if (#{cond.js_function_name}()) {#{actions[:pos].join(";")}}
-        else {#{actions[:neg].join(";")}}
-      }
-      EOJS
+function #{fnname}() {
+  if (#{cond.js_function_name}()) {#{actions[:pos].join(";")}}
+  else {#{actions[:neg].join(";")}}
+}
+EOJS
         end
         if multi_indexed_presentation
           js = cond.generate_javascript_function(field_widget_map) 
