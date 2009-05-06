@@ -1290,7 +1290,7 @@ EOJS
     option_string = options.size > 0 ? ",{ #{options.join(' , ')} }" : ""
     javascript %Q|new Tip('#{tip_id}',"#{quote_for_javascript(text)}"#{option_string})|
     @_tip_id += 1
-    %Q|<img src="/images/info_circle.gif" alt="info" id="#{tip_id}">|
+    %Q|<img src="/images/info_circle.gif" alt="" id="#{tip_id}">|
   end
 
   #################################################################################
