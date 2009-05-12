@@ -281,6 +281,26 @@ describe Record do
     end
   end
   
+  describe "-- deleting record fields and wiping their validation data" do
+    before(:each) do
+      @initial_values = {:education => 15, :name => 'Joe', :fruit => nil, :occupation => 'Bum'}
+      @form = SampleForm.new
+      @record = Record.make(@form,'new_entry',@initial_values)
+      @form.set_record(@record)
+      @record.save('new_entry')
+    end
+    it "should delete specified fields" do
+      @record.form_instance.get_validation_data['_'].should == {"degree"=>[["This information is required"]], "fruit"=>[["This information is required"]], "education"=>[["Answer must be between 0 and 14"]]}
+      @record.delete_fields_and_validation_data('education','degree')
+      @nr = @record
+      @nr.name.should == 'Joe'
+      @nr.occupation.should == 'Bum'
+      @nr.education.should == nil
+      @nr.degree .should == nil
+      @record.form_instance.get_validation_data['_'].should == {"fruit"=>[["This information is required"]]}
+    end
+  end
+  
 #  describe "-- lower level attribute functions" do
 #    describe "-- load_attributes" do
 #      before(:each) do
