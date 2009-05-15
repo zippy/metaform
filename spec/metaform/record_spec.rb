@@ -1253,6 +1253,39 @@ describe Record do
       records.collect{|r| r.attributes}.should == [{"id"=>3}, {"id"=>4}]
     end
   end
+  
+  #The following two specs were written when we were trying to implement the use of force_nil on fields in indexed presentations.
+  #Currently, fields with a force_nil bin will wipe the fields listed only on the index at which the triggering field was located.
+  #We tried to talk through how to add in a parameter for force_nil which told it to wipe all indexes of a given field, and
+  #kept running into assumptions which made it not work easily.  Instead, we make use of a before_save_record call to wipe the
+  #fields and any related validation_data manually.  
+  # describe "Indexed Presentations" do
+  #   before(:each) do
+  #     @form = SampleForm.new
+  #     @record = Record.make(@form,'indexed_presentation_by_flag')
+  #     @form.set_record(@record)
+  #     @record.save('indexed_presentation_by_flag',{:workflow_action=>'create'})
+  #     @record.update_attributes({ 
+  #         0 => {:prev_preg_flag => 'Y',:prev_preg_REF => 1, :prev_preg_outcome => 'Jane'},
+  #         1 => {:prev_preg_REF => 1, :prev_preg_outcome => nil}, 
+  #         2 => {:prev_preg_REF => 1, :prev_preg_outcome => 'David'}},'indexed_presentation_by_flag',nil,:multi_index => true)
+  #   end
+  # 
+  #   it "should wipe values for fields in indexed presentation when a force nil is set to do so" do
+  #     @record.prev_preg_flag = 'N'
+  #     @record.save('indexed_presentation_by_flag')
+  #     @record['prev_preg_outcome',0].should == nil
+  #     @record['prev_preg_outcome',1].should == nil
+  #     @record['prev_preg_outcome',2].should == nil
+  #   end
+  #   
+  #   it "should wipe validation data for fields in indexed presentation when a force nil is set to do so" do
+  #     @record.form_instance.get_validation_data['_'].should == {"prev_preg_outcome"=>[nil, ["This information is required"]]}
+  #     @record.prev_preg_flag = 'N'
+  #     @record.save('indexed_presentation_by_flag')
+  #     @record.form_instance.get_validation_data['_'].should == {"name"=>[["This information is required"]], "prev_preg_outcome"=>[nil, nil]}
+  #   end
+  # end
 end
 
 describe Record::Answer do
