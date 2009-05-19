@@ -1149,13 +1149,13 @@ class Form
   end
 
   #################################################################################
-  def prepare(index)
+  def prepare(index,force_read_only=false)
     set_current_index(index)
     @_stuff = {}
     @_stuff[:current_questions] = {}
     @_use_multi_index = nil  #This will be set to true during def p of any presentation which is multi-indexed, then reset to nil
     @_any_multi_index = nil  #This will be set to true if any single presentation is multi-indexed
-    @force_read_only = 0
+    @force_read_only = force_read_only ? 1 : 0
   end
 
   #################################################################################
@@ -1197,12 +1197,13 @@ class Form
 
   #################################################################################
   # produce the html and javascript necessary to run the form
-  def build(presentation_name,record=nil,index=0)
+  def build(presentation_name,record=nil,index=0,force_read_only = false)
     index ||= 0
-    prepare(index)
+    prepare(index,force_read_only)
     with_record(record,:render) do
       setup_validating(presentation_name)
       p(presentation_name)
+      body %Q|<input type="hidden" name="meta[force_read_only]" id="meta_force_read_only" value="1">| if force_read_only
       body %Q|<input type="hidden" name="meta[last_updated]" id="meta_last_updated" value=#{record.updated_at.to_i}>|
       if @_stuff[:need_workflow_action]
         body %Q|<input type="hidden" name="meta[workflow_action]" id="meta_workflow_action"#{@_stuff[:need_workflow_action].is_a?(String) ? %Q*value="#{@_stuff[:need_workflow_action]}"* : ''}>|

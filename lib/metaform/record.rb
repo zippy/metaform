@@ -538,9 +538,9 @@ end
     form.build_tabs(tabs,current,self)
   end
   
-  def build_html(presentation = 0,index=nil)
+  def build_html(presentation = 0,index=nil,force_read_only=nil)
     if form.presentation_exists?(presentation)
-      form.build(presentation,self,index)
+      form.build(presentation,self,index,force_read_only)
 #    p = form.find_presentation(presentation_id)
 #    if p
 #      p.build_html(f,self,current)

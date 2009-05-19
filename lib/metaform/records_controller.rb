@@ -31,7 +31,7 @@ class RecordsController < ApplicationController
     redirected = before_show_record(@record,render_options[:template]) if respond_to?(:before_show_record)
     if !redirected
       respond_to do |format|
-        format.html {(@form_html,@form_javascript) = @record.build_html(@presentation,@index); render render_options}
+        format.html {(@form_html,@form_javascript) = @record.build_html(@presentation,@index,@force_read_only); render render_options}
         format.xml  { render :xml => @record.to_xml }
       end
     end

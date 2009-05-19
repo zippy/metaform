@@ -124,7 +124,7 @@ function includes(cur_val,str) {
 
 function submitAndRedirect(url)
 {
-	if ($('metaForm')) {
+	if ($('metaForm') && $('meta_force_read_only') == null) {
 		$('_redirect_url').value = url;
 		$('metaForm').submit();
 		return false;

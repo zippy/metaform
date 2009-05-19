@@ -1395,6 +1395,12 @@ describe SimpleForm do
           ""
         ]
       end
+      it "should generate html for a simple presentation forced read only" do
+        @form.build('name_only',@record,0,true).should == [
+          "<div id=\"presentation_name_only\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[name]\">Name:</label><span id=\"record_name\">Bob Smith</span></div>\n</div>\n<input type=\"hidden\" name=\"meta[force_read_only]\" id=\"meta_force_read_only\" value=\"1\">\n<input type=\"hidden\" name=\"meta[last_updated]\" id=\"meta_last_updated\" value=0>",
+          ""
+        ]
+      end
       it "should generate all the html and javascript for a complex presentation" do
         r = @form.build('simple',@record)
         r.should == [
