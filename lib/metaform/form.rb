@@ -742,12 +742,12 @@ class Form
               #{presentation_name}.addItem(t,idx);
               var js = "#{EventObserveMarker}"
               js = js.replace(/#{MultiIndexMarker}/g,idx);
-              #{presentation_name}.addJavaScript(js);
+              window.globalEval(js)
             }
             function doRemoveIndexedPresentationItem(item,idx) {
               var js = "#{RecalculateConditionsMarker}"
               js = js.replace(/#{MultiIndexMarker}/g,idx);
-              #{presentation_name}.addJavaScript(js);
+              window.globalEval(js)
               #{presentation_name}.removeItem($(item).up())
             }
           EOJS
