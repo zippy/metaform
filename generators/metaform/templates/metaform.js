@@ -20,6 +20,41 @@ function $CBFG(followup_id){
 	//console.log(followup_id+':  '+cur_idx_values.inspect());
 	return cur_idx_values;
 }
+
+function check_year(year) {
+	if (/[^\d]/.exec(year)) {return null;}
+	if (year.length == 4) {return year;}
+	if (year.length == 2) {
+		var y = parseInt(year);
+		if (y <= 37) {return "20"+year;}
+		if (y>37 && y <100) {return "19"+year;}
+	}
+	return null;
+}
+
+function check_num(num) {
+	if (/[^\d]/.exec(num)) {return null;}
+	var n = parseInt(num);
+	if (isNaN(n)) {return null}
+	return n;
+}
+
+function make_date(year,month,date) {
+	year = check_year(year);
+	if (year == null || year == 0)  {return null};
+	month = check_num(month)
+	if (month == null || month == 0)  {return null};
+	var day = check_num(date)
+	if (day == null || day == 0)  {return null};
+  var d = new Date(month + "/" + day + "/" + year);
+	// implementations of javascript do different things if date is invalid, sometimes return "Invalid Date"
+	// other times returning NaN and other times just interpolating higher values than it should
+  if ((d == "Invalid Date") || isNaN(d) || d.getMonth() + 1 != month || d.getDate() != day || d.getFullYear() != year) {
+		return null
+	}
+	return d
+}
+
 //Get value of radiobutton widgets
 function $RF(rb_class){
 	var chosen_element = $$(rb_class).find(function(rb){return rb.checked});
@@ -27,36 +62,28 @@ function $RF(rb_class){
 }
 //Get value of date and month_year widgets
 function $DF(name){
-	var yield_field = $F(name+'_year');
-	var year = yield_field.length > 0 ? (new Date).getFullYear().toString().substring(0,4-yield_field.length) + yield_field : "";
-	var d = new Date($F(name+'_month') + "/" + $F(name+'_day')  + "/" + year);
-	return (d == "Invalid Date") ? null : d;
-}
-//Get value of date_time widgets
-function $DTF(name){
-	var yield_field = $F(name+'_year');
-	var year = yield_field.length > 0 ? (new Date).getFullYear().toString().substring(0,4-yield_field.length) + yield_field : "";
-	var hours = parseInt($F(name+'_hours'));
-	if (isNaN(hours)) {return null};
-	if ($F(name+'_am_pm') == 'pm') {hours = hours + 12};
-	var minutes = parseInt($F(name+'_minutes'));
-	if (isNaN(minutes)) {return null};
-	var d = new Date($F(name+'_month') + "/" + $F(name+'_day')  + "/" + year + " "+ hours + ':' + minutes);
-	return (d == "Invalid Date") ? null : d;
+	return make_date($F(name+'_year'),$F(name+'_month'),$F(name+'_day'));
 }
 //Get value of time widgets
 function $TF(name){
-	var hours = $F(name+'_hours');
-	var minutes = $F(name+'_minutes');
-	if (/[^\d]/.exec(hours) || /[^\d]/.exec(minutes)) {
-		return null
-	}
-	var hours = parseInt(hours);
-	if (isNaN(hours) || hours > 12 || hours < 1) {return null};
-	var minutes = parseInt(minutes);
-	if (isNaN(minutes) || minutes > 59 || minutes < 0) {return null};
+	var hours = check_num($F(name+'_hours'));
+	if (hours == null || hours > 12 || hours < 1) {return null};
+	var minutes = check_num($F(name+'_minutes'));
+	if (minutes == null || minutes > 59 || minutes < 0) {return null};
 	var d = new Date("1/1/1 "+ hours + ':' + minutes + ' ' + $F(name+'_am_pm'));
-	return (d == "Invalid Date") ? null : d;
+	return ((d == "Invalid Date")||isNaN(d)) ? null : d;
+}
+//Get value of date_time widgets
+function $DTF(name){
+	d = make_date($F(name+'_year'),$F(name+'_month'),$F(name+'_day'));
+	if (d == null) {return null};
+	var hours = check_num($F(name+'_hours'));
+	if (hours == null || hours > 24) {return null};
+	if ($F(name+'_am_pm') == 'pm') {hours = hours + 12};
+	var minutes = check_num($F(name+'_minutes'));
+	if (minutes == null || minutes > 59 || minutes < 0) {return null};
+	d = new Date((d.getMonth()+1) + "/" + d.getDate() + "/" + d.getFullYear() + " "+ hours + ':' + minutes);
+	return ((d == "Invalid Date")||isNaN(d)) ? null : d;
 }
 //Get value of factor_textfield widgets
 function $FTF(name){
@@ -242,6 +269,11 @@ function find_current_idx() {
 	return cur_idx;
 }
 function update_date(write_date,read_date) {
+	if (window.execScript) {
+				window.execScript('record_'+write_date+'_first_pass = true;'); //ie
+			}else{
+			 	top.eval('record_'+write_date+'_first_pass = true;'); //others
+			}
 	$('record_'+write_date+'_am_pm').value = $F('record_'+read_date+'_am_pm');
 	$('record_'+write_date+'_month').value = $F('record_'+read_date+'_month');
 	$('record_'+write_date+'_day').value = $F('record_'+read_date+'_day');

@@ -281,6 +281,26 @@ describe Record do
     end
   end
   
+  describe "-- deleting record fields and wiping their validation data" do
+    before(:each) do
+      @initial_values = {:education => 15, :name => 'Joe', :fruit => nil, :occupation => 'Bum'}
+      @form = SampleForm.new
+      @record = Record.make(@form,'new_entry',@initial_values)
+      @form.set_record(@record)
+      @record.save('new_entry')
+    end
+    it "should delete specified fields" do
+      @record.form_instance.get_validation_data['_'].should == {"degree"=>[["This information is required"]], "fruit"=>[["This information is required"]], "education"=>[["Answer must be between 0 and 14"]]}
+      @record.delete_fields_and_validation_data('education','degree')
+      @nr = @record
+      @nr.name.should == 'Joe'
+      @nr.occupation.should == 'Bum'
+      @nr.education.should == nil
+      @nr.degree .should == nil
+      @record.form_instance.get_validation_data['_'].should == {"fruit"=>[["This information is required"]]}
+    end
+  end
+  
 #  describe "-- lower level attribute functions" do
 #    describe "-- load_attributes" do
 #      before(:each) do
@@ -1297,6 +1317,39 @@ describe Record do
       records.collect{|r| r.attributes}.should == [{"id"=>3}, {"id"=>4}]
     end
   end
+  
+  #The following two specs were written when we were trying to implement the use of force_nil on fields in indexed presentations.
+  #Currently, fields with a force_nil bin will wipe the fields listed only on the index at which the triggering field was located.
+  #We tried to talk through how to add in a parameter for force_nil which told it to wipe all indexes of a given field, and
+  #kept running into assumptions which made it not work easily.  Instead, we make use of a before_save_record call to wipe the
+  #fields and any related validation_data manually.  
+  # describe "Indexed Presentations" do
+  #   before(:each) do
+  #     @form = SampleForm.new
+  #     @record = Record.make(@form,'indexed_presentation_by_flag')
+  #     @form.set_record(@record)
+  #     @record.save('indexed_presentation_by_flag',{:workflow_action=>'create'})
+  #     @record.update_attributes({ 
+  #         0 => {:prev_preg_flag => 'Y',:prev_preg_REF => 1, :prev_preg_outcome => 'Jane'},
+  #         1 => {:prev_preg_REF => 1, :prev_preg_outcome => nil}, 
+  #         2 => {:prev_preg_REF => 1, :prev_preg_outcome => 'David'}},'indexed_presentation_by_flag',nil,:multi_index => true)
+  #   end
+  # 
+  #   it "should wipe values for fields in indexed presentation when a force nil is set to do so" do
+  #     @record.prev_preg_flag = 'N'
+  #     @record.save('indexed_presentation_by_flag')
+  #     @record['prev_preg_outcome',0].should == nil
+  #     @record['prev_preg_outcome',1].should == nil
+  #     @record['prev_preg_outcome',2].should == nil
+  #   end
+  #   
+  #   it "should wipe validation data for fields in indexed presentation when a force nil is set to do so" do
+  #     @record.form_instance.get_validation_data['_'].should == {"prev_preg_outcome"=>[nil, ["This information is required"]]}
+  #     @record.prev_preg_flag = 'N'
+  #     @record.save('indexed_presentation_by_flag')
+  #     @record.form_instance.get_validation_data['_'].should == {"name"=>[["This information is required"]], "prev_preg_outcome"=>[nil, nil]}
+  #   end
+  # end
 end
 
 describe Record::Answer do

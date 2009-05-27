@@ -49,6 +49,10 @@ def setup
       :proc => Proc.new { |form,index| answers = form.get_record.answers_hash('name');answers['name'].count("answer =~ /Bob/")}
     }    
     f 'people_num', :label => '', :type => 'string'
+    f 'prev_preg_REF', :type => 'integer'
+  	f 'prev_preg_outcome', :label => 'Name', :type => 'string', :constraints => {"required" => 'prev_preg_flag[0]=Y'}, :indexed => true
+    f 'prev_preg_flag', :constraints => {'enumeration' => [{nil => '-'},{'Y' => 'Yes'},{'N' => 'No'}]},
+      :force_nil => [[c('prev_preg_flag=Y'),['prev_preg_outcome'],:unless]]
   end
 
 #  def_workflows do 
@@ -137,8 +141,17 @@ def setup
     q 'degree'
   end
   
-  presentation 'indexed_sub_presentation' do
-    p 'simple',:indexed => {:appearance => :list, :add_button_text => 'Add a name', :delete_button_text => 'Delete this name', :reference_field=>'name'}
+  presentation 'prev_preg' do
+    q 'prev_preg_REF'
+    q 'prev_preg_outcome'
+  end
+  
+  presentation 'prev_preg_flag' do
+    p 'prev_preg',:indexed => {:appearance => :list, :add_button_text => 'Add a name', :delete_button_text => 'Delete this name', :reference_field=>'prev_preg_REF'}
+  end
+  
+  presentation 'indexed_presentation_by_flag',:create_with_workflow => 'standard' do
+    flagq 'prev_preg_flag', :default_state_hidden => true
   end
   
 	presentation 'update_entry',:legal_states =>'logged' do

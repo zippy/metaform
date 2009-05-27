@@ -339,6 +339,18 @@ end
     @ficache.clear(:attributes => fields,:except => true) if CACHE
   end
   
+  def delete_fields_and_validation_data(*fields)
+    delete_fields(:all,*fields)
+    vd = form_instance.get_validation_data
+    error_messages = vd['_']
+    error_messages ||= {}
+    fields.each do |fn|  #Remove fields from validation data
+      error_messages.delete(fn)
+    end
+    vd['_'] = error_messages
+    form_instance.update_validation_data(vd)
+  end
+  
   ######################################################################################
   # some paramaters are just those of the form instance object
   def id
