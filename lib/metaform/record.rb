@@ -339,13 +339,23 @@ end
     @ficache.clear(:attributes => fields,:except => true) if CACHE
   end
   
-  def delete_fields_and_validation_data(*fields)
-    delete_fields(:all,*fields)
-    vd = form_instance.get_validation_data
+  def delete_fields_and_validation_data(idx,*fields)
+    delete_fields(idx,*fields)
+    vd = form_instance.get_fresh_validation_data
     error_messages = vd['_']
     error_messages ||= {}
-    fields.each do |fn|  #Remove fields from validation data
-      error_messages.delete(fn)
+    if idx == :all
+      fields.each do |fn|  #Remove fields from validation data
+        error_messages.delete(fn)
+      end
+    else
+      fields.each do |fn|  #Remove fields from validation data
+        if error_messages[fn] && error_messages[fn][idx]
+           em = error_messages[fn]
+           em[idx] = nil
+           error_messages[fn] = em
+        end
+      end
     end
     vd['_'] = error_messages
     form_instance.update_validation_data(vd)

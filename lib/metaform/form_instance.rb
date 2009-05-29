@@ -13,6 +13,11 @@ class FormInstance < ActiveRecord::Base
     v ||= {}
   end  
     
+  def get_fresh_validation_data
+    f = FormInstance.find(id)
+    f.get_validation_data
+  end
+  
   def FormInstance.update_validation_data(id,updated_vd)
     f = FormInstance.find(id)
     f.validation_data = f.get_validation_data.update(updated_vd)
@@ -22,5 +27,6 @@ class FormInstance < ActiveRecord::Base
   def update_validation_data(updated_vd)
     FormInstance.update_validation_data(self.id,updated_vd)
   end
+    
 end
 

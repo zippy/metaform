@@ -291,13 +291,13 @@ describe Record do
     end
     it "should delete specified fields" do
       @record.form_instance.get_validation_data['_'].should == {"degree"=>[["This information is required"]], "fruit"=>[["This information is required"]], "education"=>[["Answer must be between 0 and 14"]]}
-      @record.delete_fields_and_validation_data('education','degree')
+      @record.delete_fields_and_validation_data(:all,'education','degree')
       @nr = @record
       @nr.name.should == 'Joe'
       @nr.occupation.should == 'Bum'
       @nr.education.should == nil
       @nr.degree .should == nil
-      @record.form_instance.get_validation_data['_'].should == {"fruit"=>[["This information is required"]]}
+      @record.form_instance.get_fresh_validation_data['_'].should == {"fruit"=>[["This information is required"]]}
     end
   end
   
