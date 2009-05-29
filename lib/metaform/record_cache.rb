@@ -90,7 +90,7 @@ class RecordCache
           end
         end
       end
-      while @attributes[-1].nil? do
+      while @attributes[-1].nil? && @attributes.size > 0 do
         @attributes.pop
       end
     else
