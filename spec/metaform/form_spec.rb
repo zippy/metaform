@@ -768,6 +768,11 @@ describe SimpleForm do
           end
       end      
       it "should render the q with the value determined by the current index if the flow_through proc returns nil" do
+        #This spec may be bogus.  It passes, but we aren't using flow_through procs anywhere in mana or chc.
+        #We were looking at record#_validate_attributes and record#set_force_nil_attributes, both of which call
+        #set_current_index, but don't reset it back to the original index.  There's not really a sense in which @form (below)
+        #has an index, so it takes the value that it was last set at, which is determined by those two record methods. 
+        #The whole thing doesn't make sense, really, but we can't see a problem with it now.
         @record[:house_value,0] = '0'
         @record[:house_value,1] = '100'
         @record[:house_value,2] = '200'

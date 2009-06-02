@@ -945,6 +945,13 @@ end
   # Returns a hash of which of the currently set attributes are invalid
   #################################################################################
   def _validate_attributes(fields = nil)
+    #This method calls set_current_index, but then doesn't reset the index 
+    #back to the original value.  It doesn't seem to cause a problem, but
+    #it should probably be investigated at some point. Note that you can
+    #call store the result of get_current_index in old_index, then
+    #set_current_index(old_index.to_i) at the end of this method and it
+    #also doesn't seem to cause a problem--but that to_i is necessary--
+    #otherwise fields values are all set to nil on formlet update.
     invalid_fields = {}
     @cache.each(:attributes => fields) do |f,value,index|
       @form.set_current_index(index)
@@ -991,6 +998,13 @@ end
 #  end
   
   def set_force_nil_attributes(fields=nil)
+    #This method calls set_current_index, but then doesn't reset the index 
+    #back to the original value.  It doesn't seem to cause a problem, but
+    #it should probably be investigated at some point. Note that you can
+    #call store the result of get_current_index in old_index, then
+    #set_current_index(old_index.to_i) at the end of this method and it
+    #also doesn't seem to cause a problem--but that to_i is necessary--
+    #otherwise fields values are all set to nil on formlet update.
     fields_forced = []
     @cache.each(:attributes => fields) do |attrib,value,index|
       @form.set_current_index(index)
