@@ -452,6 +452,7 @@ end
         (0..last_index).each{|i|result << c[:proc].call(form,i)}
         return result
       else
+        
         return c[:proc].call(form,index)
       end
     end
@@ -821,7 +822,12 @@ end
         field_list.each do |f|
           the_field = form.fields[f]
           value = the_field.calculated[:proc].call(form,index)
-          idx = the_field.calculated[:summary_calculation] ? 0 : index
+          if the_field.calculated[:summary_calculation]
+            idx = 0
+            FieldInstance.destroy_all([condition_string,@form_instance.id,[f],0])
+          else
+            idx = index
+          end
           fi = FieldInstance.new({:answer => value, :field_id=>f, :form_instance_id => @form_instance.id, :idx => idx, :state => 'calculated'})
           fi.save
         end

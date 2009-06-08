@@ -45,7 +45,7 @@ def setup
     }    
     f 'total_bobs', :label => 'total number of Bobs', :type => 'integer', :calculated => {
       :based_on_fields => ['name'],
-      :summary_calculate => true,
+      :summary_calculation => true,
       :proc => Proc.new { |form,index| answers = form.get_record.answers_hash('name');answers['name'].count("answer =~ /Bob/")}
     }    
     f 'people_num', :label => '', :type => 'string'
