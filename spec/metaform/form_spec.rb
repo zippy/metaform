@@ -1078,14 +1078,14 @@ describe SimpleForm do
       it "should add indexed presentation html to the body" do
         do_p
         @form.get_body.should == [
-          "<div id=\"presentation_name_only\" class=\"presentation_indexed\">",
-            "<ul id=\"presentation_name_only_items\">",
-              "<li class=\"presentation_indexed_item\">",
-                "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[_0_name]\">Name:</label><input id=\"record__0_name\" name=\"record[_0_name]\" type=\"text\" value=\"Bob Smith\" /></div>",
-                "<input type=\"button\" class=\"float_right\" value=\"Delete this name\" onclick=\"name_only.removeItem($(this).up())\"><div class=\"clear\"></div>",
-              "</li>",
-            "</ul>",
-            "<input type=\"button\" onclick=\"doAddname_only()\" value=\"Add a name\">",
+          "<div id=\"presentation_name_only\" class=\"presentation_indexed\">", 
+            "<ul id=\"presentation_name_only_items\">", 
+              "<li class=\"presentation_indexed_item\">", 
+                "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[_0_name]\">Name:</label><input id=\"record__0_name\" name=\"record[_0_name]\" type=\"text\" value=\"Bob Smith\" /></div>", 
+                "<input type=\"button\" class=\"float_right\" value=\"Delete this name\" onclick=\"doRemoveIndexedPresentationItem(this,0)\"><div class=\"clear\"></div>", 
+              "</li>", 
+            "</ul>", 
+            "<input type=\"button\" onclick=\"doAddIndexedPresentationItem()\" value=\"Add a name\">", 
           "</div>"]
       end
 
@@ -1093,27 +1093,26 @@ describe SimpleForm do
         @record[:name,1] = 'Herbert Fink'
         do_p
         @form.get_body.should == [
-          "<div id=\"presentation_name_only\" class=\"presentation_indexed\">",
-            "<ul id=\"presentation_name_only_items\">",
-              "<li class=\"presentation_indexed_item\">",
-                "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[_0_name]\">Name:</label><input id=\"record__0_name\" name=\"record[_0_name]\" type=\"text\" value=\"Bob Smith\" /></div>",
-                "<input type=\"button\" class=\"float_right\" value=\"Delete this name\" onclick=\"name_only.removeItem($(this).up())\"><div class=\"clear\"></div>",
-              "</li>",
-              "<li class=\"presentation_indexed_item\">",
-                "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[_1_name]\">Name:</label><input id=\"record__1_name\" name=\"record[_1_name]\" type=\"text\" value=\"Herbert Fink\" /></div>",
-                "<input type=\"button\" class=\"float_right\" value=\"Delete this name\" onclick=\"name_only.removeItem($(this).up())\"><div class=\"clear\"></div>",
-              "</li>",
-            "</ul>",
-            "<input type=\"button\" onclick=\"doAddname_only()\" value=\"Add a name\">",
-            "</div>"]
+          "<div id=\"presentation_name_only\" class=\"presentation_indexed\">", 
+            "<ul id=\"presentation_name_only_items\">", 
+              "<li class=\"presentation_indexed_item\">", 
+                "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[_0_name]\">Name:</label><input id=\"record__0_name\" name=\"record[_0_name]\" type=\"text\" value=\"Bob Smith\" /></div>", 
+                "<input type=\"button\" class=\"float_right\" value=\"Delete this name\" onclick=\"doRemoveIndexedPresentationItem(this,0)\"><div class=\"clear\"></div>", 
+              "</li>", 
+              "<li class=\"presentation_indexed_item\">", 
+                "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record[_1_name]\">Name:</label><input id=\"record__1_name\" name=\"record[_1_name]\" type=\"text\" value=\"Herbert Fink\" /></div>", 
+                "<input type=\"button\" class=\"float_right\" value=\"Delete this name\" onclick=\"doRemoveIndexedPresentationItem(this,1)\"><div class=\"clear\"></div>", 
+              "</li>", 
+            "</ul>", 
+            "<input type=\"button\" onclick=\"doAddIndexedPresentationItem()\" value=\"Add a name\">", 
+          "</div>"]
       end
 
       it "should add javascript initialization to the javascripts" do
         do_p
         @form.get_jscripts.should == [
-                "var name_only = new indexedItems;name_only.elem_id=\"presentation_name_only_items\";name_only.delete_text=\"Delete this name\";name_only.self_name=\"name_only\";",
-                "            function doAddname_only() {\n              var t = \"<div id=\\\"question_name\\\" class=\\\"question\\\"><label class=\\\"label\\\" for=\\\"record[_%X%_name]\\\">Name:<\\/label><input id=\\\"record__%X%_name\\\" name=\\\"record[_%X%_name]\\\" type=\\\"text\\\" \\/><\\/div>\";\n              var idx = parseInt($F('multi_index'));\n              t = t.replace(/%X%/g,idx);\n              $('multi_index').value = idx+1;\n              name_only.addItem(t);\n            }\n"
-                ]
+          "var name_only = new indexedItems;name_only.elem_id=\"presentation_name_only_items\";name_only.delete_text=\"Delete this name\";name_only.self_name=\"name_only\";", 
+          "            function doAddIndexedPresentationItem() {\n              var t = \"<div id=\\\"question_name\\\" class=\\\"question\\\"><label class=\\\"label\\\" for=\\\"record[_%X%_name]\\\">Name:<\\/label><input id=\\\"record__%X%_name\\\" name=\\\"record[_%X%_name]\\\" type=\\\"text\\\" \\/><\\/div>\";\n              var idx = parseInt($F('multi_index'));\n              t = t.replace(/%X%/g,idx);\n              $('multi_index').value = idx+1;\n              name_only.addItem(t,idx);\n              var js = \"EventObserveMarker\"\n              js = js.replace(/%X%/g,idx);\n              window.globalEval(js)\n            }\n            function doRemoveIndexedPresentationItem(item,idx) {\n              var js = \"RecalculateConditionsMarker\"\n              js = js.replace(/%X%/g,idx);\n              window.globalEval(js)\n              name_only.removeItem($(item).up())\n            }\n"]
       end
     end #p-indexed
 
