@@ -1389,9 +1389,9 @@ end
       #puts "eval_field 5:  expr=#{expr}"
       if /\.zip/.match(expr)
         expr = expr.gsub(/\.zip\(:([a-zA-Z0-9_-]+)/,'.zip(f["\1"]')
-      else
-        expr = expr.gsub(/:([a-zA-Z0-9_-]+)/,'(f["\1"] ? (f["\1"].is_indexed? ? f["\1"].value[0] : f["\1"].value) : nil)')
+        expr = expr.gsub(/:([a-zA-Z0-9_-]+)\.zip/,'f["\1"].zip')
       end
+      expr = expr.gsub(/:([a-zA-Z0-9_-]+)/,'(f["\1"] ? (f["\1"].is_indexed? ? f["\1"].value[0] : f["\1"].value) : nil)')
       #puts "eval_field 5:  expr=#{expr}"
       #puts "---------"
       expr
