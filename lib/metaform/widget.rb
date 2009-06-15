@@ -108,7 +108,12 @@ class Widget
       when options[:constraints]['enumeration_lookup']
         return "" if value.blank?
         spec = options[:constraints]['enumeration_lookup'] 
-        results = spec[:func].call
+        model = spec[:model].is_a?(String) ? spec[:model].constantize : spec[:model]
+        if spec[:find_args]
+          results = model.find(*spec[:find_args])
+        elsif spec[:func]
+          results = spec[:func].call
+        end        
         return results.each do |r| 
           val = spec.has_key?(:proc) ? spec[:proc].call(r) : [r.name,r.id]
           return val[0] if val[1] == value.to_i
