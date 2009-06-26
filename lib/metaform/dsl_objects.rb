@@ -522,7 +522,7 @@ class Listing < Bin
     { :form => nil, :name => nil, :kind => nil, :workflow_state_filter => nil, :search_rules => nil, :fields => nil,
       :return_answers_hash => nil, :records => nil, :per_page => 20, :sort_rules => nil, :sql_prefilters => nil, 
       :order => nil, :order_second => nil, :index => nil, :meta_fields => nil, :search_form => nil, :use_session => false,
-      :model => nil, :included_model => nil, :paginate => nil}
+      :model => nil, :included_model => nil, :paginate => nil, :meta_condition => nil}
   end
   
   def required_bins
@@ -530,7 +530,7 @@ class Listing < Bin
   end
   
   def option_bins
-    [:workflow_state_filter, :fields, :return_answers_hash, :records, :per_page, :sql_prefilters, :index, :meta_fields]
+    [:workflow_state_filter, :fields, :return_answers_hash, :records, :per_page, :sql_prefilters, :index, :meta_fields, :meta_condition]
   end
   
   def default_bins 
