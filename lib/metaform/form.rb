@@ -644,8 +644,12 @@ class Form
         conds = the_q.field.followup_conditions
         cond = conds[followup_field_name]
         opts = {:css_class => 'followup',:condition=>cond}
-        javascript_show_hide_if(opts) do
+        if @force_show_followups
           q followup_field_name,followup_question_options
+        else
+          javascript_show_hide_if(opts) do
+            q followup_field_name,followup_question_options
+          end
         end
       end    
     end
@@ -1484,6 +1488,9 @@ EOJS
     workflow_state.blank? ? '' : workflows[workflow].label(workflow_state)
   end
   
+  def set_force_show_followups(show)
+    @force_show_followups = show
+  end
   #################################################################################
   #################################################################################
   # loads all the files in the "forms" directory that end Form.rb as forms
