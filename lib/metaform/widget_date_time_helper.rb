@@ -145,3 +145,29 @@ EOHTML
     end
   end
 end
+
+module MonthYearHelper
+  ################################################################################
+  def month_year_html(field_instance_id,value,options)
+    date = parse_value(value)
+    hide_label = options[:params]
+  	label = hide_label ? "" : " (month/year)" 
+    id = build_html_id(field_instance_id)
+    fn = 'mark_invalid_month_year'
+    js = %Q|onblur="if (#{id}_first_pass) {#{fn}('#{id}')}"|
+    jsy = %Q|onblur="#{fn}('#{id}');#{id}_first_pass = true;"|
+    if date
+      result = <<-EOHTML
+<input #{js} type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'month')}" id="#{build_html_multi_id(field_instance_id,'month')}" value="#{date.month}" /> /
+<input #{jsy} type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'year')}" id="#{build_html_multi_id(field_instance_id,'year')}" value="#{date.year}" />#{label}
+EOHTML
+    else
+     result = <<-EOHTML
+<input #{js} type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'month')}" id="#{build_html_multi_id(field_instance_id,'month')}"/> /
+<input #{jsy} type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'year')}" id="#{build_html_multi_id(field_instance_id,'year')}"  />#{label}
+EOHTML
+    end
+    result
+  end
+end
+
