@@ -1150,7 +1150,7 @@ describe Record do
       @record.save('new_entry')      
       @form.fields['name'].add_force_nil_case(@form.c('name=Joe'),['education'])
     end
-    it "should set the field instance state to 'explained' for fields with an explanation" do
+    it "should clear the explanation field after a update_attributes in which a field was forced to nil" do
       @record.update_attributes({:education => '99'},'new_entry',{:explanations => {'education' => {"0" => 'has studied forever'}}})
       @record.education.should == '99'
       @record.explanation('education').should == 'has studied forever'
