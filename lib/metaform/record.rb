@@ -623,6 +623,7 @@ end
     p.confirm_legal_state!(workflow_state)
     invalid_fields = nil
     validation_exclude_states = nil
+    forced_to_nil = []
     
     if fields
       field_list = fields.collect { |f| f.to_s }
@@ -631,7 +632,8 @@ end
     end
     @form.with_record(self) do
       # force any attributes to nil that need forcing
-      field_list.concat set_force_nil_attributes(field_list)
+      forced_to_nil = set_force_nil_attributes(field_list)
+      field_list.concat(forced_to_nil).uniq!
 
       # evaluate the validity of the attributes to be saved
       invalid_fields = _validate_attributes(field_list)
@@ -694,7 +696,7 @@ end
       approval_value = approvals[field_instance_id][index.to_s] if is_approval
       if f != nil
         if f.answer != (value.nil? ? nil : value.to_s) || (has_explanation && f.explanation != explanation_value) ||
-            (is_approval && approval_value)
+            (is_approval && approval_value) || forced_to_nil.include?(field_instance_id)
           # if we are checking last_updated dates don't do the update if the fields updated_at
           # is greater than the last_updated date passed in, and store this to report later
           if last_updated && f.updated_at.to_i > last_updated
@@ -740,7 +742,7 @@ end
             deps = @form.dependent_fields(i.field_id)
             dependents.concat(deps) if deps
             saved_attributes[i.field_id] = i.answer
-            if (i.answer == nil || i.answer == '') && i.state== 'answered' && i.explanation.blank? && i.idx == 0
+            if (i.answer == nil || i.answer == '') && ((i.state== 'answered' && i.explanation.blank?) || forced_to_nil.include?(i.field_id))  && i.idx == 0
               puts "<br>about to delete #{i.attributes.inspect}" if DEBUG1
               i.delete unless i.new_record?
             else

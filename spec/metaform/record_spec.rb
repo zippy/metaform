@@ -1144,6 +1144,23 @@ describe Record do
       end
     end
   end
+  describe "forcing nil should also clear any explanations" do
+    before(:each) do
+      setup_record
+      @record.save('new_entry')      
+      @form.fields['name'].add_force_nil_case(@form.c('name=Joe'),['education'])
+    end
+    it "should set the field instance state to 'explained' for fields with an explanation" do
+      @record.update_attributes({:education => '99'},'new_entry',{:explanations => {'education' => {"0" => 'has studied forever'}}})
+      @record.education.should == '99'
+      @record.explanation('education').should == 'has studied forever'
+      @record.any_explanations?.should == true
+      @record.update_attributes({:name => 'Joe'},'new_entry')
+      @record.education.should == nil
+      @record.explanation('education').should == nil
+      @record.any_explanations?.should == false
+    end
+  end
   describe "force nil procs based on conditions" do
     before(:each) do
       setup_record
