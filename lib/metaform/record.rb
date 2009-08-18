@@ -1388,7 +1388,7 @@ end
       sql = sql_fieldname_convert(c)
       if conditions.is_a?(Array)
         idx = 0
-        sql.gsub!(/\?/) {|match| idx +=1;"'#{conditions[idx]}'"}
+        sql.gsub!(/\?/) {|match| idx +=1;val = conditions[idx]; val.gsub!(/'/,"''");"'#{val}'"}
       end
       where_conditions.push('('+sql+')')
 
