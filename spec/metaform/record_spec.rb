@@ -1208,6 +1208,23 @@ describe Record do
       end
     end
   end
+  describe "forcing nil should also clear any explanations" do
+    before(:each) do
+      setup_record
+      @record.save('new_entry')      
+      @form.fields['name'].add_force_nil_case(@form.c('name=Joe'),['education'])
+    end
+    it "should clear the explanation field after a update_attributes in which a field was forced to nil" do
+      @record.update_attributes({:education => '99'},'new_entry',{:explanations => {'education' => {"0" => 'has studied forever'}}})
+      @record.education.should == '99'
+      @record.explanation('education').should == 'has studied forever'
+      @record.any_explanations?.should == true
+      @record.update_attributes({:name => 'Joe'},'new_entry')
+      @record.education.should == nil
+      @record.explanation('education').should == nil
+      @record.any_explanations?.should == false
+    end
+  end
   describe "force nil procs based on conditions" do
     before(:each) do
       setup_record
@@ -1309,6 +1326,11 @@ describe Record do
     it "should be able to search conditionally on fields using rails like array substitution syntax" do
       records = Record.search(:conditions => [":name  like ?","Bob%"])
       records.collect{|r| r.attributes}.should == [{"id"=>1}, {"id"=>3}]
+    end
+    it "should be able to search conditionally on fields using rails like array substitution syntax and escape quotes" do
+      make_record({:name =>"Bob 'the fat guy' Herman",:fruit => 'orange'})
+      records = Record.search(:conditions => [":name  like ?","%'%"])
+      records.collect{|r| r.attributes}.should == [{"id"=>5}]
     end
     it "should be able to search conditionally on fields with multiple fields in the condition" do
       records = Record.search(:conditions => ":name  like 'Bob%' or :fruit = 'orange'")

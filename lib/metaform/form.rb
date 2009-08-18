@@ -677,7 +677,9 @@ class Form
         cond = conds[followup_field_name]
         opts = {:css_class => 'followup',:condition=>cond}
         if @force_show_followups
-          q followup_field_name,followup_question_options
+          div(:class=>'followup') do
+            q followup_field_name,followup_question_options
+          end
         else
           javascript_show_hide_if(opts) do
             q followup_field_name,followup_question_options
