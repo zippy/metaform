@@ -676,7 +676,8 @@ class Form
         conds = the_q.field.followup_conditions
         cond = conds[followup_field_name]
         opts = {:css_class => 'followup',:condition=>cond}
-        if @force_show_followups
+        if @force_show_followups  #If we called javascript_show_hide_if, it would do a check on @force_show_followups 
+          #and would build all of the q's without hiding any of them, but if we do it here we get this nice css class of followup.
           div(:class=>'followup') do
             q followup_field_name,followup_question_options
           end
@@ -982,7 +983,9 @@ class Form
     }.update(opts)
     # if we are not actually building skip the generation of javascript
     # but yield so that any sub-questions and stuff can be processed.
-    if !@render
+    # If we are a force_show_followups situation, then we want to skip 
+    # processing the show/hide stuff and just render the code.
+    if !@render || @force_show_followups
       yield if block_given?
       return
     end
