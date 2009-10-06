@@ -35,6 +35,7 @@ class RecordsController < ApplicationController
         format.xml  { render :xml => @record.to_xml }
       end
     end
+    after_show_record(@record) if respond_to?(:after_show_record)
   end
 
   # GET /form/<form_id>/records/new[/<presentation_id>[/<tab>]]
