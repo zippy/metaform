@@ -1327,6 +1327,10 @@ describe Record do
       records = Record.search(:conditions => [":name  like ?","Bob%"])
       records.collect{|r| r.attributes}.should == [{"id"=>1}, {"id"=>3}]
     end
+    it "should be able to search conditionally on fields using rails like array substitution syntax and handle nil" do
+      records = Record.search(:conditions => [":name  like ?",nil])
+      records.collect{|r| r.attributes}.should == []
+    end
     it "should be able to search conditionally on fields using rails like array substitution syntax and escape quotes" do
       make_record({:name =>"Bob 'the fat guy' Herman",:fruit => 'orange'})
       records = Record.search(:conditions => [":name  like ?","%'%"])
