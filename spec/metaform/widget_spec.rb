@@ -40,6 +40,10 @@ describe Widget do
       TextFieldWidget.render_form_object(1,'value',{:params=>'3'}).should == 
         "<input class=\"textfield_3\" id=\"record_1\" name=\"record[1]\" size=\"3\" type=\"text\" value=\"value\" />"
     end
+    it "should render an html input text with a size and max parameter" do
+      TextFieldWidget.render_form_object(1,'value',{:params=>'3,2'}).should == 
+        "<input class=\"textfield_3\" id=\"record_1\" maxlength=\"2\" name=\"record[1]\" size=\"3\" type=\"text\" value=\"value\" />"
+    end
     it "should render value as text with a read_only parameter" do
       TextFieldWidget.render_form_object_read_only(1,'value',{}).should == 
         "<span id=\"record_1\">value</span>"
