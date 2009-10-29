@@ -1439,6 +1439,15 @@ end
     select += " limit #{options[:limit].to_i}" if options[:limit]
 #    puts select
     r = FormInstance.find_by_sql("select distinct "+select)
+    if options[:load_after]
+      r.each do |rec|
+        rr = Record.find(rec.id)
+        options[:load_after].each do |ff|
+          rec.class_eval("def #{ff}\n'#{rr[ff]}'\nend")
+        end
+      end
+    end
+    r
   end
   
   def Record.sql_fieldname_convert(str)
