@@ -30,6 +30,13 @@ describe ListingUtilities do
     generate_search_options(:sql).should == ['(name = ?) and (email like ?)',"bob",'%herb%']
   end
 
+  it 'should produce search parameters for a rails sql Find and not fail for items that do not have params' do
+    def_search_rule('n') {|search_for| ["name = ?", search_for]}
+    def_search_rule('e') {|search_for| ["email = 'joe@bob.com'"]}
+    @search_params = {'on_name'=>'n','for_name'=>'bob','on_email'=>'e','for_email'=>'herb'}
+    generate_search_options(:sql).should == ["(name = ?) and (email = 'joe@bob.com')","bob"]
+  end
+
   it 'should produce search parameters for Record.search' do
     def_search_rule('n') {|search_for| ":name = '#{search_for}'"}
     def_search_rule('e') {|search_for| ":email like '%#{search_for}%'"}
