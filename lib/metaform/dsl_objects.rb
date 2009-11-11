@@ -44,7 +44,9 @@ class Condition < Bin
   def required_bins
     [:form,:name]
   end
-
+  def ruby
+    @bins[:ruby]
+  end
   def initialize(b={})
     super(b)
     if javascript.nil? && ruby.nil?
