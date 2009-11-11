@@ -131,7 +131,7 @@ class Widget
 
   ################################################################################
   def self.render_label(label,field_instance_id,form_object)
-    %Q|<label class="label" for="#{build_html_name(field_instance_id)}">#{label}</label>#{form_object}|
+    %Q|<label class="label" for="#{build_html_id(field_instance_id)}">#{label}</label>#{form_object}|
   end
 
   ################################################################################
