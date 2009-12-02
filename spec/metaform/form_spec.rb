@@ -1066,7 +1066,10 @@ describe SimpleForm do
         end
       end
       it "should raise an error if @record has not be set" do
-        lambda {@form.field_value('name').should}.should raise_error("attempting to get field value of 'name' with no record")
+        lambda {@form.field_value('name')}.should raise_error("attempting to get field value of 'name' with no record")
+      end
+      it "should raise an error if trying to get the value of a non-existent field" do
+        lambda { @form.with_record(@record) {@form.field_value('fish')}}.should raise_error("undefined field 'fish'")
       end
       it "should return an array of values when used with :any" do
         @record = Record.make(SampleForm.new,'new_entry', {
