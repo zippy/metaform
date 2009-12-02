@@ -42,14 +42,12 @@ class Invalid < Property
               'exp'=>ex_val.to_s,
               'chk'=> %Q|<input tabindex=\"1\" name=\"approvals[#{fname}][#{index}]\" id=\"approvals_#{fname}_#{index}\" type="checkbox" value=\"Y\" #{achecked}>|
               }
-            txt = Form.config[:explanation_approval_message]
-            txt ||= %Q|Error was "?{err}"; the explanation was: "?{exp}" (Fix, or approve ?{chk})|
+            txt ||= Constraints.fill_error('explanation_approval',vals)
             errs = txt.gsub(/\?\{(.*?)\}/) {|key| vals[$1]} +
                     %Q|<input name=\"approvals[#{fname}][#{index}]\" id=\"approvals_#{fname}_#{index}\"  type="hidden" value=\"\" >|
           else
-            txt = Form.config[:explanation_error_message]
-            txt ||= "; please correct (or explain here: ?)"
-            errs += txt.gsub('?',"<input tabindex=\"1\" id=\"explanations_#{fname}_#{index}\" name=\"explanations[#{fname}][#{index}]\" type=\"text\" value=\"#{ex_val}\" />")
+            txt ||= Constraints.fill_error('explanation',{'exp'=>"<input tabindex=\"1\" id=\"explanations_#{fname}_#{index}\" name=\"explanations[#{fname}][#{index}]\" type=\"text\" value=\"#{ex_val}\" />"})
+            errs += txt
           end
 #        end
       else

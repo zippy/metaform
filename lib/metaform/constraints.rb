@@ -1,28 +1,34 @@
 ################################################################################
 module Constraints
-  ErrorMessages = {
+  RequiredErrMessage = "This information is required"
+  DefaultErrorMessages = {
     'regex' => "Answer must match regular expression ?{constraint}?{extra}",
     'max_length' => "Answer must not be more than ?{constraint} characters long",
     'range' => "Answer must be between ?{low} and ?{hi}?{extra}",
     'date' => {:in_past=>"Date cannot be in the future",:in_future=>"Date cannot be in the past"},
     'unique' => 'Answer must be unique',
-    'required' => 'This information is required',
+    'required' => RequiredErrMessage+'?{extra}',
     'set' => 'Answer must be one of ?{labels}',
     'enumeration' => 'Answer must be one of ?{labels}',
+    'explanation_approval' => %Q|Error was "?{err}"; the explanation was: "?{exp}" (Fix, or approve ?{chk})|,
+    'explanation' => "; please correct (or explain here: ?{exp})"
   }
-  RequiredErrMessage = "This information is required"
+  $metaform_error_messages = DefaultErrorMessages.clone
+  
   RequiredMultiErrMessage = "You must check at least one choice from this list"
   class << self 
     include Utilities
   end
   def Constraints.fill_error(type,values=nil)
+    errors=$metaform_error_messages
+    message = errors[type]
     case values
     when nil
-      ErrorMessages[type]
+      message
     when Hash
-      ErrorMessages[type].gsub(/\?\{(.*?)\}/) {|key| values[$1]}
+      message.gsub(/\?\{(.*?)\}/) {|key| values[$1]}
     else
-      ErrorMessages[type][values]
+      message[values]
     end
   end
   def Constraints.verify (constraints, value, form)
@@ -115,10 +121,10 @@ module Constraints
           if constraint && (value == nil || value == "")
             msg = err_override if err_override
             msg = RequiredMultiErrMessage if constraints.has_key?('set')
-            msg ||= fill_error('required')
+            msg ||= fill_error('required',{'extra'=>condition_extra_err})
             
 #            msg ||= Form.config[:required_error_message] ? Form.config[:required_error_message] : RequiredErrMessage
-            constraint_errors << "#{msg}#{condition_extra_err}"
+            constraint_errors << msg
           end
         end
       when "set"
