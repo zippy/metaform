@@ -37,11 +37,19 @@ class Invalid < Property
             else
               checked = 'checked'
             end
-            errs = %Q|Error was "#{errs}"; midwife's explanation: "#{ex_val}" (Fix, or approve 
-                    <input tabindex=\"1\" name=\"approvals[#{fname}][#{index}]\" id=\"approvals_#{fname}_#{index}\" type="checkbox" value=\"Y\" #{achecked}>)
-                    <input name=\"approvals[#{fname}][#{index}]\" id=\"approvals_#{fname}_#{index}\"  type="hidden" value=\"\" >|
+            vals = {
+              'err'=>errs.to_s,
+              'exp'=>ex_val.to_s,
+              'chk'=> %Q|<input tabindex=\"1\" name=\"approvals[#{fname}][#{index}]\" id=\"approvals_#{fname}_#{index}\" type="checkbox" value=\"Y\" #{achecked}>|
+              }
+            txt = Form.config[:explanation_approval_message]
+            txt ||= %Q|Error was "?{err}"; the explanation was: "?{exp}" (Fix, or approve ?{chk})|
+            errs = txt.gsub(/\?\{(.*?)\}/) {|key| vals[$1]} +
+                    %Q|<input name=\"approvals[#{fname}][#{index}]\" id=\"approvals_#{fname}_#{index}\"  type="hidden" value=\"\" >|
           else
-            errs += "; please correct (or explain here: <input tabindex=\"1\" id=\"explanations_#{fname}_#{index}\" name=\"explanations[#{fname}][#{index}]\" type=\"text\" value=\"#{ex_val}\" />)"
+            txt = Form.config[:explanation_error_message]
+            txt ||= "; please correct (or explain here: ?)"
+            errs += txt.gsub('?',"<input tabindex=\"1\" id=\"explanations_#{fname}_#{index}\" name=\"explanations[#{fname}][#{index}]\" type=\"text\" value=\"#{ex_val}\" />")
           end
 #        end
       else

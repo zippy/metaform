@@ -1,9 +1,29 @@
 ################################################################################
 module Constraints
+  ErrorMessages = {
+    'regex' => "Answer must match regular expression ?{constraint}?{extra}",
+    'max_length' => "Answer must not be more than ?{constraint} characters long",
+    'range' => "Answer must be between ?{low} and ?{hi}?{extra}",
+    'date' => {:in_past=>"Date cannot be in the future",:in_future=>"Date cannot be in the past"},
+    'unique' => 'Answer must be unique',
+    'required' => 'This information is required',
+    'set' => 'Answer must be one of ?{labels}',
+    'enumeration' => 'Answer must be one of ?{labels}',
+  }
   RequiredErrMessage = "This information is required"
   RequiredMultiErrMessage = "You must check at least one choice from this list"
   class << self 
     include Utilities
+  end
+  def Constraints.fill_error(type,values=nil)
+    case values
+    when nil
+      ErrorMessages[type]
+    when Hash
+      ErrorMessages[type].gsub(/\?\{(.*?)\}/) {|key| values[$1]}
+    else
+      ErrorMessages[type][values]
+    end
   end
   def Constraints.verify (constraints, value, form)
     constraint_errors = []
@@ -33,12 +53,12 @@ module Constraints
         if !value.blank?
           r = Regexp.new(constraint)
           if r !~ value
-            constraint_errors << (err_override || "Answer must match regular expression #{constraint}#{condition_extra_err}")
+            constraint_errors << (err_override || fill_error('regex',{'constraint'=>constraint,'extra'=>condition_extra_err}))
           end
         end
       when "max_length"
         if !value.blank? && value.length > constraint
-          constraint_errors << (err_override || "Answer must not be more than #{constraint} characters long")
+          constraint_errors << (err_override || fill_error('max_length',{'constraint'=>constraint,'extra'=>condition_extra_err}))
         end
       when "range"
         #for the range constraint the value must be a string "X:Y" where X<Y
@@ -48,7 +68,7 @@ module Constraints
           hi = h.to_i
           raise "range constraint #{constraint} is ilegal. Must be of form X:Y where X<Y" if low>hi || hi == nil
           if value.to_i < low || value.to_i > hi
-            constraint_errors << (err_override || "Answer must be between #{low} and #{hi}#{condition_extra_err}")
+            constraint_errors << (err_override || fill_error('range',{'low'=>low,'hi'=>hi,'extra'=>condition_extra_err}))
           end
         end
       when "date"
@@ -56,18 +76,18 @@ module Constraints
           date = parse_date(value)
           if constraint == :in_past
             if date > Time.now
-              constraint_errors << (err_override || "Date cannot be in the future")
+              constraint_errors << (err_override || fill_error('date',:in_past))
             end
           elsif constraint == :in_future
             if date < Time.now
-              constraint_errors << (err_override || "Date cannot be in the past")
+              constraint_errors << (err_override || fill_error('date',:in_future))
             end
           end
         end
       when "unique"
         current_record_id = form.get_record.id
         records = Record.locate(:all,{:filters => [":#{constraint} == '#{value}'"],:index => :any,:fields => ['constraint']})
-        constraint_errors << (err_override || 'Answer must be unique') if records.size > 0 && !records.find{|r| r.id == current_record_id}
+        constraint_errors << (err_override || fill_error('unique')) if records.size > 0 && !records.find{|r| r.id == current_record_id}
       when "required"
         # if the constraint is a string instead of (true | false) then build a condition on the fly
         #This is ugly as sin, but is the only way we could think of to get a global override for required.
@@ -95,7 +115,9 @@ module Constraints
           if constraint && (value == nil || value == "")
             msg = err_override if err_override
             msg = RequiredMultiErrMessage if constraints.has_key?('set')
-            msg ||= RequiredErrMessage
+            msg ||= fill_error('required')
+            
+#            msg ||= Form.config[:required_error_message] ? Form.config[:required_error_message] : RequiredErrMessage
             constraint_errors << "#{msg}#{condition_extra_err}"
           end
         end
@@ -119,7 +141,7 @@ module Constraints
         if not cur_values.all? {|v| ok_values.include?(v)}
           labels = constraint[0].is_a?(String) ? ok_values.join(', ') : constraint.collect{|h| h.is_a?(String) ? h.to_s : h.values[0]}
           labels = labels.join(', ')
-          constraint_errors << (err_override || ("Answer must be one of #{labels}"))
+          constraint_errors << (err_override || fill_error('set',{'labels'=>labels}))
         end
       when "enumeration"
         #for the enumeration constraint the value will be an array of strings or of hashes of the form:
@@ -131,7 +153,7 @@ module Constraints
         if !ok_values.include?(value)
           labels = constraint[0].is_a?(String) ? constraint : (constraint[0].is_a?(Array) ?  constraint.collect{|label,val| label} : constraint.collect{|h| h.is_a?(String) ? h.to_s : h.values[0]})
           labels = labels.join(', ')
-          constraint_errors << (err_override || ("Answer must be one of #{labels}"))
+          constraint_errors << (err_override || fill_error('enumeration',{'labels'=>labels}))
         end
       end
     end

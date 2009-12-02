@@ -579,11 +579,22 @@ describe SimpleForm do
       end
       describe "-- with validation" do
         it "should add the validation html if record is validation mode"  do
+          Form.config[:explanation_error_message] = Form.config[:required_error_message] = nil
           @record.name = ''
           @form.set_validating(true)
           @form.with_record(@record,:render) do
             @form.q('name')
             @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">This information is required; please correct (or explain here: <input tabindex=\"1\" id=\"explanations_name_0\" name=\"explanations[name][0]\" type=\"text\" value=\"\" />)</div></div>"]
+          end
+        end
+        it "should add the validation html if record is validation mode with custom error message"  do
+          Form.config[:required_error_message] = "This field is blank."
+          Form.config[:explanation_error_message] = " If this an oversight, please fill it in above. If you don't have this information, please explain why here: ?"
+          @record.name = ''
+          @form.set_validating(true)
+          @form.with_record(@record,:render) do
+            @form.q('name')
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">This field is blank. If this an oversight, please fill it in above. If you don't have this information, please explain why here: <input tabindex=\"1\" id=\"explanations_name_0\" name=\"explanations[name][0]\" type=\"text\" value=\"\" /></div></div>"]
           end
         end
 
@@ -593,17 +604,18 @@ describe SimpleForm do
           @form.with_record(@record,:render) do
             @record.update_attributes({:name => ''},'simple',{:explanations => {'name' => {"0" => 'unknown'}}})
             @form.q('name')
-            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">Error was \"This information is required\"; midwife's explanation: \"unknown\" (Fix, or approve \n                    <input tabindex=\"1\" name=\"approvals[name][0]\" id=\"approvals_name_0\" type=\"checkbox\" value=\"Y\" >)\n                    <input name=\"approvals[name][0]\" id=\"approvals_name_0\"  type=\"hidden\" value=\"\" ></div></div>"]
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">Error was \"This information is required\"; midwife's explanation: \"unknown\" (Fix, or approve <input tabindex=\"1\" name=\"approvals[name][0]\" id=\"approvals_name_0\" type=\"checkbox\" value=\"Y\" >)<input name=\"approvals[name][0]\" id=\"approvals_name_0\"  type=\"hidden\" value=\"\" ></div></div>"]
           end
         end
 
         it "should add the validation html with approved checked if record is validation approval mode and explanation has been approved"  do
+          Form.config[:required_error_message] = nil
           @record.save('create')
           @form.set_validating(:approval)
           @form.with_record(@record,:render) do
             @record.update_attributes({:name => ''},'simple',{:explanations => {'name' => {"0" => 'unknown'}},:approvals => {'name'=>{"0" => 'Y'}}})
             @form.q('name')
-            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">Error was \"This information is required\"; midwife's explanation: \"unknown\" (Fix, or approve \n                    <input tabindex=\"1\" name=\"approvals[name][0]\" id=\"approvals_name_0\" type=\"checkbox\" value=\"Y\" checked>)\n                    <input name=\"approvals[name][0]\" id=\"approvals_name_0\"  type=\"hidden\" value=\"\" ></div></div>"]
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">Error was \"This information is required\"; midwife's explanation: \"unknown\" (Fix, or approve <input tabindex=\"1\" name=\"approvals[name][0]\" id=\"approvals_name_0\" type=\"checkbox\" value=\"Y\" checked>)<input name=\"approvals[name][0]\" id=\"approvals_name_0\"  type=\"hidden\" value=\"\" ></div></div>"]
           end
         end
 
