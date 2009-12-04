@@ -518,8 +518,8 @@ end
       else
         value = form.fields[attribute].default
       end
-      #cache the value in the attributes hash
-      set_attribute(attribute,value,index)
+      #cache the value in the attributes hash, unless this record has not been saved yet, ie we are creating a new record
+      set_attribute(attribute,value,index) unless @form_instance.new_record?
       was_any ? [value] : value
     end
   end
