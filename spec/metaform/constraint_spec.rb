@@ -2,6 +2,7 @@ require File.dirname(__FILE__) + '/../spec_helper'
 include Utilities
 describe Constraints do
   before(:each) do
+    $metaform_error_messages = Constraints::DefaultErrorMessages.clone
     Form.config[:hide_required_extra_errors] = false
     @form = SampleForm.new
   end

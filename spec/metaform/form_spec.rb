@@ -590,9 +590,27 @@ describe SimpleForm do
           end
         end
         
-        it "should add the validation html if record is validation mode with custom error message"  do
-          $metaform_error_messages['required'] = "This field is blank."
-          $metaform_error_messages['explanation'] = " If this an oversight, please fill it in above. If you don't have this information, please explain why here: ?{exp}"
+        it "should add the validation html with custom error message per field" do
+          @record.name = ''
+          @form.set_validating(true)
+          @form.with_record(@record,:render) do
+            @form.q('senior')
+            @form.get_body.should == ["<div id=\"question_senior\" class=\"question\"><label class=\"label\" for=\"record_senior\">Senior:</label><input id=\"record_senior\" name=\"record[senior]\" type=\"text\" /> <div class=\"validation_item\">You must enter senior because it matters!; please correct (or explain here: <input tabindex=\"1\" id=\"explanations_senior_0\" name=\"explanations[senior][0]\" type=\"text\" value=\"\" />)</div></div>"]
+          end
+        end
+
+        it "should add the validation html with custom error message per field" do
+          @record.name = ''
+          @form.set_validating(true)
+          @form.with_record(@record,:render) do
+            @form.q('senior')
+            @form.get_body.should == ["<div id=\"question_senior\" class=\"question\"><label class=\"label\" for=\"record_senior\">Senior:</label><input id=\"record_senior\" name=\"record[senior]\" type=\"text\" /> <div class=\"validation_item\">You must enter senior because it matters!; please correct (or explain here: <input tabindex=\"1\" id=\"explanations_senior_0\" name=\"explanations[senior][0]\" type=\"text\" value=\"\" />)</div></div>"]
+          end
+        end
+        
+        it "should add the validation html if record is validation mode with custom default error and explanation message"  do
+          $metaform_error_messages['required'] = "This field is blank. If this an oversight, please fill it in above. If you don't have this information, please explain why here: "
+          $metaform_error_messages['_explanation'] = "?{exp}"
           @record.name = ''
           @form.set_validating(true)
           @form.with_record(@record,:render) do
@@ -601,13 +619,14 @@ describe SimpleForm do
           end
         end
 
-        it "should add the validation html if record is validation mode with custom error message per constraint type"  do
-          $metaform_error_messages['explanation'] = {'required' => "You left this field blank. If this an oversight, please fill it in above. If you don't have this information, please explain why here: ?{exp}"}
+        it "should add the validation html if record is validation mode with custom per-field explanation message"  do
+          $metaform_error_messages['required'] = "THIS SHOULD BE OVERRIDDEN "
+          $metaform_error_messages['_explanation'] = "THIS SHOULD BE OVERRIDDEN TOO! ?{exp}"
           @record.name = ''
           @form.set_validating(true)
           @form.with_record(@record,:render) do
-            @form.q('name')
-            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">You left this field blank. If this an oversight, please fill it in above. If you don't have this information, please explain why here: <input tabindex=\"1\" id=\"explanations_name_0\" name=\"explanations[name][0]\" type=\"text\" value=\"\" /></div></div>"]
+            @form.q('height')
+            @form.get_body.should == ["<div id=\"question_height\" class=\"question\"><label class=\"label\" for=\"record_height\">Height:</label><input id=\"record_height\" name=\"record[height]\" type=\"text\" /> <div class=\"validation_item\">Gotta get this right. Try again or explain here: <input tabindex=\"1\" id=\"explanations_height_0\" name=\"explanations[height][0]\" type=\"text\" value=\"\" /></div>g question!</div>"]
           end
         end
 
@@ -622,7 +641,7 @@ describe SimpleForm do
         end
 
         it "should add the validation html if record is validation approval mode and there is a custom approval message"  do
-          $metaform_error_messages['explanation_approval'] = %Q|Error was "?{err}"; midwive's explanation was: "?{exp}" (Fix, or approve ?{chk})|
+          $metaform_error_messages['_explanation_approval'] = %Q|Error was "?{err}"; midwive's explanation was: "?{exp}" (Fix, or approve ?{chk})|
           @record.save('create')
           @form.set_validating(:approval)
           @form.with_record(@record,:render) do

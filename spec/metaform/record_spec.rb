@@ -3,6 +3,7 @@ include UtilityFunctions
 
 describe Record do
   before(:each) do
+    $metaform_error_messages = Constraints::DefaultErrorMessages.clone
     Form.config[:hide_required_extra_errors] = true
   end
   def setup_record(index = nil)

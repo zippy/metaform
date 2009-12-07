@@ -2,7 +2,7 @@ class Shady < Property
   def self.evaluate(form,field,value,index)
     form.field_value('name') =~ /Capone/
   end
-  def self.render(question_html,property_value,question,form)
+  def self.render(question_html,property_value,question,form,field)
     if property_value
       %Q|<div class="shady">#{question_html}</div>|
     else
