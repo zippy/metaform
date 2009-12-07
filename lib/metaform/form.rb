@@ -1318,7 +1318,7 @@ EOJS
 
   def field_valid(field_name,value = :get_from_form)
     field = fields[field_name]
-    raise MetaformException, "couldn't find field #{field_name} in fields list" if field.nil?
+    raise MetaformUndefinedFieldError,field_name if field.nil?
     p = field.properties[0]
     value = field_value(field_name) if value == :get_from_form
     valid = p.evaluate(self,field,value).empty?
@@ -1328,6 +1328,7 @@ EOJS
   def field_value(field_name)
     raise MetaformException,"attempting to get field value of '#{field_name}' with no record" if @record.nil?
     field = fields[field_name]
+    raise MetaformUndefinedFieldError,field_name if field.nil?
     index = field[:indexed] ? @_index : 0
     #puts "field[:indexed] = #{field[:indexed].inspect}"
     #puts "field_name = #{field_name}, index = #{index.inspect}"
