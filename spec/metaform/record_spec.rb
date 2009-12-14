@@ -1241,19 +1241,23 @@ describe Record do
     end
     it "should be able to search for fields" do
       records = Record.search(:fields => [:name])
-      records.collect{|r| r.attributes}.should == [{"name"=>"Bob Smith", "id"=>1}, {"name"=>"Fred Smith", "id"=>2}, {"name"=>"Bob Feldspar", "id"=>3}, {"name"=>"Jane Feldspar", "id"=>4}]
+      results = {}
+      records.each{|r| results[r.id] = r.attributes}
+      results.should == {4=>{"name"=>"Jane Feldspar", "id"=>4}, 1=>{"name"=>"Bob Smith", "id"=>1}, 2=>{"name"=>"Fred Smith", "id"=>2}, 3=>{"name"=>"Bob Feldspar", "id"=>3}}
     end
     it "should be able to search for fields and limit results" do
-      records = Record.search(:fields => [:name],:limit => 2)
-      records.collect{|r| r.attributes}.should == [{"name"=>"Bob Smith", "id"=>1}, {"name"=>"Fred Smith", "id"=>2}]
+      records = Record.search(:fields => [:name],:limit => 2,:order => [:name])
+      results = {}
+      records.each{|r| results[r.id] = r.attributes}
+      results.should == {1 => {"name"=>"Bob Smith", "id"=>1}, 3=>{"name"=>"Bob Feldspar", "id"=>3}}
     end
     it "should be able to order fields on search" do
       records = Record.search(:fields => [:name],:order => [:name])
       records.collect{|r| r.attributes}.collect {|h| h["name"]}.should == ["Bob Feldspar", "Bob Smith", "Fred Smith", "Jane Feldspar"] 
     end
     it "should be able to order fields on search selecting the table name too" do
-      records = Record.search(:fields => [:name],:order => 'form_instances.created_at')
-      records.collect{|r| r.attributes}.collect {|h| h["name"]}.should == ["Bob Smith", "Fred Smith", "Bob Feldspar", "Jane Feldspar"]      
+      records = Record.search(:fields => [:name],:order => 'form_instances.id')
+      records.collect{|r| r.id}.should == [1,2,3,4]      
     end
     it "should be able to search conditionally on fields" do
       records = Record.search(:conditions => ":name  like 'Bob%'")
@@ -1282,11 +1286,15 @@ describe Record do
     end
     it "should be able to add other fields when searching conditionally" do
       records = Record.search(:fields => [:name,:fruit],:conditions => ":name like 'Bob%'")
-      records.collect{|r| r.attributes}.should == [{"name"=>"Bob Smith", "id"=>1, "fruit"=>'banana'}, {"name"=>"Bob Feldspar", "id"=>3, "fruit"=>'orange'}]
+      results = {}
+      records.each{|r| results[r.id] = r.attributes}
+      results.should == { 1=>{"name"=>"Bob Smith", "id"=>1, "fruit"=>'banana'}, 3=> {"name"=>"Bob Feldspar", "id"=>3, "fruit"=>'orange'}}
     end
     it "should be able to add meta_fields to results" do
       records = Record.search(:meta_fields => [:workflow_state])
-      records.collect{|r| r.attributes}.should == [{"id"=>1,"workflow_state"=>nil},{"id"=>2,"workflow_state"=>nil},{"id"=>3,"workflow_state"=>nil},{"id"=>4,"workflow_state"=>nil}]
+      results = {}
+      records.each{|r| results[r.id] = r.attributes}
+      results.should == { 1=> {"id"=>1,"workflow_state"=>nil}, 2=>{"id"=>2,"workflow_state"=>nil},3=>{"id"=>3,"workflow_state"=>nil},4=>{"id"=>4,"workflow_state"=>nil}}
     end
     it "should be able to add raw_fields to results" do
       records = Record.search(:fields => [:name,:fruit],:raw_fields => %Q|CASE
@@ -1294,12 +1302,28 @@ describe Record do
         WHEN workflow_state = 'y' THEN "fruit".answer
         END as conditional|
       )
-      records.collect{|r| r.attributes}.should == [{"name"=>"Bob Smith", "id"=>1, "conditional"=>nil, "fruit"=>"banana"}, {"name"=>"Fred Smith", "id"=>2, "conditional"=>nil, "fruit"=>"apple"}, {"name"=>"Bob Feldspar", "id"=>3, "conditional"=>nil, "fruit"=>"orange"}, {"name"=>"Jane Feldspar", "id"=>4, "conditional"=>nil, "fruit"=>"orange"}]
+      results = {}
+      records.each{|r| results[r.id] = r.attributes}
+      results.should == {1=>{"name"=>"Bob Smith", "id"=>1, "conditional"=>nil, "fruit"=>"banana"}, 2=>{"name"=>"Fred Smith", "id"=>2, "conditional"=>nil, "fruit"=>"apple"},3=> {"name"=>"Bob Feldspar", "id"=>3, "conditional"=>nil, "fruit"=>"orange"}, 4=>{"name"=>"Jane Feldspar", "id"=>4, "conditional"=>nil, "fruit"=>"orange"}}
     end
     it "should be able to search on a meta condition" do
       records = Record.search(:meta_condition => "id > 2")
       records.collect{|r| r.attributes}.should == [{"id"=>3}, {"id"=>4}]
     end
+    it "should be able to specify some fields as :load_after for speed enhancement" do
+      records = Record.search(:fields => [:name])
+      lambda {records[0].name}.should_not raise_error
+      lambda {records[0].fruit}.should raise_error(NoMethodError)
+      records = Record.search(:fields => [:name],:load_after =>[:fruit])
+      lambda {records[0].fruit}.should_not raise_error(NoMethodError)
+    end
+    it "should be able to handle fields with special characters in them when using load_after" do
+      fruit =  "blood|ora'nge \"fruit\""
+      make_record({:name =>'Wilma Feldspar',:fruit =>fruit})
+      records = Record.search(:fields => [:name],:load_after =>[:fruit],:conditions => ":name = 'Wilma Feldspar'")
+      records[0].fruit.should == fruit
+    end
+    
   end
   
   #The following two specs were written when we were trying to implement the use of force_nil on fields in indexed presentations.

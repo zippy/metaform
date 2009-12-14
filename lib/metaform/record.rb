@@ -1443,7 +1443,10 @@ end
       r.each do |rec|
         rr = Record.find(rec.id)
         options[:load_after].each do |ff|
-          rec.class_eval("def #{ff}\n'#{rr[ff]}'\nend")
+          value = rr[ff]
+          value = value.gsub('|',"\\|")
+          eval_string = "def #{ff}\n%q|#{value}|\nend"
+          rec.class_eval(eval_string)
         end
       end
     end
