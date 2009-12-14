@@ -1444,11 +1444,16 @@ end
         rr = Record.find(rec.id)
         options[:load_after].each do |ff|
           value = rr[ff]
-          if value.nil?
+          case value
+          when nil
             eval_string = "def #{ff}\nnil\nend"
-          else
+          when String
             value = value.gsub('|',"\\|")
             eval_string = "def #{ff}\n%q|#{value}|\nend"
+          when Fixnum
+            eval_string = "def #{ff}\n#{value}\nend"
+          else
+            raise "unknow type!"
           end
           rec.class_eval(eval_string)
         end

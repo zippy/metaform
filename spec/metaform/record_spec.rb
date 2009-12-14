@@ -1328,6 +1328,10 @@ describe Record do
         records = Record.search(:fields => [:name],:load_after =>[:hobby])
         records[0].hobby.should == nil
       end
+      it "should be able to handle fields with values that return non-string using load_after" do
+        records = Record.search(:fields => [:name],:load_after =>[:total_bobs])
+        records[0].total_bobs.should == 1
+      end
     end
     
   end
