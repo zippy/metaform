@@ -1310,18 +1310,24 @@ describe Record do
       records = Record.search(:meta_condition => "id > 2")
       records.collect{|r| r.attributes}.should == [{"id"=>3}, {"id"=>4}]
     end
-    it "should be able to specify some fields as :load_after for speed enhancement" do
-      records = Record.search(:fields => [:name])
-      lambda {records[0].name}.should_not raise_error
-      lambda {records[0].fruit}.should raise_error(NoMethodError)
-      records = Record.search(:fields => [:name],:load_after =>[:fruit])
-      lambda {records[0].fruit}.should_not raise_error(NoMethodError)
-    end
-    it "should be able to handle fields with special characters in them when using load_after" do
-      fruit =  "blood|ora'nge \"fruit\""
-      make_record({:name =>'Wilma Feldspar',:fruit =>fruit})
-      records = Record.search(:fields => [:name],:load_after =>[:fruit],:conditions => ":name = 'Wilma Feldspar'")
-      records[0].fruit.should == fruit
+    describe "load_after" do
+      it "should be able to specify some fields as :load_after for speed enhancement" do
+        records = Record.search(:fields => [:name])
+        lambda {records[0].name}.should_not raise_error
+        lambda {records[0].fruit}.should raise_error(NoMethodError)
+        records = Record.search(:fields => [:name],:load_after =>[:fruit])
+        lambda {records[0].fruit}.should_not raise_error(NoMethodError)
+      end
+      it "should be able to handle fields with special characters in them when using load_after" do
+        fruit =  "blood|ora'nge \"fruit\""
+        make_record({:name =>'Wilma Feldspar',:fruit =>fruit})
+        records = Record.search(:fields => [:name],:load_after =>[:fruit],:conditions => ":name = 'Wilma Feldspar'")
+        records[0].fruit.should == fruit
+      end
+      it "should be able to handle fields with nil values when using load_after" do
+        records = Record.search(:fields => [:name],:load_after =>[:hobby])
+        records[0].hobby.should == nil
+      end
     end
     
   end

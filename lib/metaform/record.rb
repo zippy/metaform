@@ -1444,8 +1444,12 @@ end
         rr = Record.find(rec.id)
         options[:load_after].each do |ff|
           value = rr[ff]
-          value = value.gsub('|',"\\|")
-          eval_string = "def #{ff}\n%q|#{value}|\nend"
+          if value.nil?
+            eval_string = "def #{ff}\nnil\nend"
+          else
+            value = value.gsub('|',"\\|")
+            eval_string = "def #{ff}\n%q|#{value}|\nend"
+          end
           rec.class_eval(eval_string)
         end
       end
