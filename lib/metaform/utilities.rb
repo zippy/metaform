@@ -54,4 +54,13 @@ module Utilities
       Time.parse(value)
     end
   end
+  
+  def is_numeric?(i)
+    !(i.size == 1 ? i =~ /^\d$/ : i =~ /^(\d|-)?(\d|,)*\.?\d*$/).nil?
+  end
+  def is_integer?(i)
+    i = i.gsub(/,/,'')
+    !(i.size == 1 ? i =~ /^\d$/ : i =~ /^[-+]?[1-9]\d*$/).nil?
+  end
+  
 end
