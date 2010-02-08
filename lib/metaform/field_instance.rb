@@ -11,7 +11,17 @@ class FieldInstance < ActiveRecord::Base
   def field
     form_instance.form.field_exists?(field_id)
   end
-    
+  
+  def self.rename_fields(fields)
+    FieldInstance.find(:all,:conditions => "field_id in ('#{fields.keys.join("','")}')").each do |fi|
+      f = fi.form_instance
+      f.validation_data = f.validation_data.gsub(fi.field_id,fields[fi.field_id])
+      f.save
+      fi.field_id = fields[fi.field_id]
+      fi.save
+    end
+  end
+  
   #TODO figure out if we want to do rails level validation of field instances...
   def validatex
     logger.info "fish"
