@@ -1176,7 +1176,11 @@ end
     end
 
     if pf = locate_options[:sql_prefilters]
-      pfr = Record.search(:conditions => pf)
+      if pf[0] =~ /^select/i
+        pfr = FormInstance.find_by_sql(pf[0])
+      else
+        pfr = Record.search(:conditions => pf)
+      end
       if !pfr.empty?
         condition_strings << 'form_instances.id in ('+pfr.collect {|r| r.id}.join(',')+')'
       else
