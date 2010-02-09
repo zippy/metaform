@@ -66,6 +66,7 @@ module Utilities
     end
   end
   def is_integer?(i)
+    return false if i.nil?
     return true if i.is_a?(Fixnum)
     i = i.gsub(/,/,'')
     !(i.size == 1 ? i =~ /^\d$/ : i =~ /^[-+]?[1-9]\d*$/).nil?

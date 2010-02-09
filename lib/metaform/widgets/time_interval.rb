@@ -1,5 +1,6 @@
 ################################################################################
 class TimeIntervalWidget < Widget
+  self.extend Utilities
   ################################################################################
   def self.render_form_object(field_instance_id,value,options)
     if !value.blank?
@@ -41,11 +42,11 @@ class TimeIntervalWidget < Widget
 
   ################################################################################
   def self.convert_html_value(value,params={})
-    begin
-      result = !value['hours'].blank? || !value['minutes'].blank? ? (value['hours'].to_i * 60 + value['minutes'].to_i).to_s : '' #Store as grams
-    rescue
-      nil
-    end
+    hours = value['hours']
+    minutes = value['minutes']
+    return '' if hours.blank? && minutes.blank?
+    return nil if !is_numeric?(hours) || !is_numeric?(minutes)
+    return (hours.to_f*60+minutes.to_i).to_i.to_s
   end
 
 end

@@ -130,6 +130,22 @@ describe Widget do
       TimeIntervalWidget.render_form_object_read_only(1,"500",{}).should == 
         "<span id=\"record_1\">8 hours, 20 minutes</span>"
     end
+    it "should convert html values to minutes" do
+      TimeIntervalWidget.convert_html_value({'hours'=>'','minutes'=>''}).should == ""
+      TimeIntervalWidget.convert_html_value({'hours'=>'0','minutes'=>''}).should == "0"
+      TimeIntervalWidget.convert_html_value({'hours'=>'','minutes'=>'0'}).should == "0"
+      TimeIntervalWidget.convert_html_value({'hours'=>'0','minutes'=>'0'}).should == "0"
+      TimeIntervalWidget.convert_html_value({'hours'=>'1','minutes'=>'30'}).should == "90"
+      TimeIntervalWidget.convert_html_value({'hours'=>'0','minutes'=>'30'}).should == "30"
+      TimeIntervalWidget.convert_html_value({'hours'=>'','minutes'=>'30'}).should == "30"
+      TimeIntervalWidget.convert_html_value({'hours'=>'1','minutes'=>''}).should == "60"
+      TimeIntervalWidget.convert_html_value({'hours'=>'1.5','minutes'=>''}).should == "90"
+      TimeIntervalWidget.convert_html_value({'hours'=>'1.5','minutes'=>'4'}).should == "94"
+    end
+    it "should convert bad html values to nil" do
+      TimeIntervalWidget.convert_html_value({'hours'=>'x','minutes'=>'30'}).should == nil
+      TimeIntervalWidget.convert_html_value({'hours'=>'1','minutes'=>'x'}).should == nil
+    end
   end
   
   describe FactorTextFieldsWidget do
@@ -140,6 +156,27 @@ describe Widget do
     it "should render factor value as text if read_only" do
       FactorTextFieldsWidget.render_form_object_read_only(1,"500",{:params=>"5,FirstLabel,SecondLabel"}).should == 
         "<span id=\"record_1\">100 FirstLabel 0 SecondLabel</span>"
+    end
+    it "should convert html values based on the factor" do
+      d = {'first_box'=>"100",'second_box'=>'0'}
+      FactorTextFieldsWidget.convert_html_value(d,"5,FirstLabel,SecondLabel").should == "500"
+      d = {'first_box'=>"100",'second_box'=>'3'}
+      FactorTextFieldsWidget.convert_html_value(d,"5,FirstLabel,SecondLabel").should == "503"
+      d = {'first_box'=>"0",'second_box'=>'0'}
+      FactorTextFieldsWidget.convert_html_value(d,"5,FirstLabel,SecondLabel").should == "0"
+      d = {'first_box'=>"",'second_box'=>''}
+      FactorTextFieldsWidget.convert_html_value(d,"5,FirstLabel,SecondLabel").should == ""
+    end
+    it "should convert bad html values to nil" do
+      d = {'first_box'=>"",'second_box'=>'x'}
+      FactorTextFieldsWidget.convert_html_value(d,"5,FirstLabel,SecondLabel").should == nil
+
+      d = {'first_box'=>"x",'second_box'=>''}
+      FactorTextFieldsWidget.convert_html_value(d,"5,FirstLabel,SecondLabel").should == nil
+      d = {'first_box'=>"x",'second_box'=>'100'}
+      FactorTextFieldsWidget.convert_html_value(d,"5,FirstLabel,SecondLabel").should == nil
+      d = {'first_box'=>"100",'second_box'=>'x'}
+      FactorTextFieldsWidget.convert_html_value(d,"5,FirstLabel,SecondLabel").should == nil
     end
   end
 
@@ -192,7 +229,7 @@ describe Widget do
      
     it "should render html checkboxes with a custom label" do
       CheckBoxGroupFollowupWidget.render(1,"val1",'the label',@options).should == 
-      "<span class=\"label\">the label</span><br />      <input name=\"record[1][__none__]\" id=\"record_1___none__\" type=\"hidden\"}>\n      <span class=\"check_box_followup_input\"><input name=\"record[1][val1]\" id=\"record_1_val1\" class=\"1\" type=\"checkbox\" value=\"val1\" checked\n        onClick=\"do_click_1_regular(this,'val1','1_val1');try{values_for_1[cur_idx] = $CBFG('1');condition_actions_for_1();}catch(err){};\">\n        Value 1</span>\n                  <span id=\"1_val1\" class=\"checkbox_followups\" style=\"display:inline\">\n          &nbsp;&nbsp; param_label           <input name=\"record[1][_val1-param1]\" id=\"record_1__val145param1\" class=\"1_val1_followup\" type=\"checkbox\" value=\"param1\"  > Param1\n\n          <input name=\"record[1][_val1-param2]\" id=\"record_1__val145param2\" class=\"1_val1_followup\" type=\"checkbox\" value=\"param2\"  > Param2\n\n          </span>\n\n<br />      <input name=\"record[1][__none__]\" id=\"record_1___none__\" type=\"hidden\"}>\n      <span class=\"check_box_followup_input\"><input name=\"record[1][val2]\" id=\"record_1_val2\" class=\"1\" type=\"checkbox\" value=\"val2\" \n        onClick=\"do_click_1_regular(this,'val2','1_val2');try{values_for_1[cur_idx] = $CBFG('1');condition_actions_for_1();}catch(err){};\">\n        Value 2</span>\n                  <span id=\"1_val2\" class=\"checkbox_followups\" style=\"display:none\">\n          &nbsp;&nbsp; param_label           <input name=\"record[1][_val2-param1]\" id=\"record_1__val245param1\" class=\"1_val2_followup\" type=\"checkbox\" value=\"param1\"  > Param1\n\n          <input name=\"record[1][_val2-param2]\" id=\"record_1__val245param2\" class=\"1_val2_followup\" type=\"checkbox\" value=\"param2\"  > Param2\n\n          </span>\n\n<div class=\"clear\"></div><script type=\"text/javascript\">\n//<![CDATA[\n    \t\tfunction do_click_1_regular(theCheckbox,theValue,theFollowupID) {\n          var e = $(theFollowupID); \n          if (theCheckbox.checked) {\n            Effect.BlindDown(e, {duration:.5});\n            \n          } else {\n            Effect.BlindUp(e, {duration:.5});\n            $$('.1_'+theValue+'_followup').each(function(cb){cb.checked=false});\n          }           \n   \t\t  }        \n\n//]]>\n</script>"
+      "<span class=\"label\">the label</span><br />      <input name=\"record[1][__none__]\" id=\"record_1___none__\" type=\"hidden\"}>\n      <span class=\"check_box_followup_input\"><input name=\"record[1][val1]\" id=\"record_1_val1\" class=\"1\" type=\"checkbox\" value=\"val1\" checked\n        onClick=\"do_click_1_regular(this,'val1','1_val1');try{values_for_1[cur_idx] = $CBFG('1');condition_actions_for_1();}catch(err){};\">\n        <label for=\"record_1_val1\">Value 1</label></span>\n                  <span id=\"1_val1\" class=\"checkbox_followups\" style=\"display:inline\">\n          &nbsp;&nbsp; param_label           <input name=\"record[1][_val1-param1]\" id=\"record_1__val145param1\" class=\"1_val1_followup\" type=\"checkbox\" value=\"param1\"  ><label for=\"record_1__val145param1\">Param1</label>\n\n          <input name=\"record[1][_val1-param2]\" id=\"record_1__val145param2\" class=\"1_val1_followup\" type=\"checkbox\" value=\"param2\"  ><label for=\"record_1__val145param2\">Param2</label>\n\n          </span>\n\n<br />      <input name=\"record[1][__none__]\" id=\"record_1___none__\" type=\"hidden\"}>\n      <span class=\"check_box_followup_input\"><input name=\"record[1][val2]\" id=\"record_1_val2\" class=\"1\" type=\"checkbox\" value=\"val2\" \n        onClick=\"do_click_1_regular(this,'val2','1_val2');try{values_for_1[cur_idx] = $CBFG('1');condition_actions_for_1();}catch(err){};\">\n        <label for=\"record_1_val2\">Value 2</label></span>\n                  <span id=\"1_val2\" class=\"checkbox_followups\" style=\"display:none\">\n          &nbsp;&nbsp; param_label           <input name=\"record[1][_val2-param1]\" id=\"record_1__val245param1\" class=\"1_val2_followup\" type=\"checkbox\" value=\"param1\"  ><label for=\"record_1__val245param1\">Param1</label>\n\n          <input name=\"record[1][_val2-param2]\" id=\"record_1__val245param2\" class=\"1_val2_followup\" type=\"checkbox\" value=\"param2\"  ><label for=\"record_1__val245param2\">Param2</label>\n\n          </span>\n\n<div class=\"clear\"></div><script type=\"text/javascript\">\n//<![CDATA[\n    \t\tfunction do_click_1_regular(theCheckbox,theValue,theFollowupID) {\n          var e = $(theFollowupID); \n          if (theCheckbox.checked) {\n            Effect.BlindDown(e, {duration:.5});\n            \n          } else {\n            Effect.BlindUp(e, {duration:.5});\n            $$('.1_'+theValue+'_followup').each(function(cb){cb.checked=false});\n          }           \n   \t\t  }        \n\n//]]>\n</script>"
     end
     it "should render the list of human enumerations values if read_only, including followups" do
       CheckBoxGroupFollowupWidget.render_form_object_read_only(1,"val1: \n- param2\nval2: \n- param1\n- param2\n",@options).should == 
@@ -234,6 +271,20 @@ describe Widget do
         "<span id=\"record_1\">Value 2</span>"
     end
   end
+  
+  describe VolumeWidget do
+    it "should render an html input text with a label" do
+      VolumeWidget.render_form_object(1,'2000',{}).should == 
+      "      <input type=\"text\" size=4 class=\"textfield_4\" name=\"record[1][cups_box]\" id=\"record_1_cups_box\" value=\"8.45\" onchange=\"record_1_update_volume(true)\" /> cups or\n      <input type=\"text\" size=4 class=\"textfield_4\" name=\"record[1][ml_box]\" id=\"record_1_ml_box\" value=\"2000\" onchange=\"record_1_update_volume(false)\" /> cc (milliliters)\n      <script type=\"text/javascript\">\n//<![CDATA[\n      function record_1_update_volume(change_ml) {\n          if (change_ml) {\n            var cups = parseFloat($F('record_1_cups_box')); \n            if (isNaN(cups)) {\n              $('record_1_ml_box').value = '';\n            } else {\n              $('record_1_ml_box').value = Math.round(cups * 236.588237); \n            }            \n          } else {\n            var ml = parseFloat($F('record_1_ml_box')); \n            if (isNaN(ml)) {\n              $('record_1_pounds_box').value='';\n            } else {\n              $('record_1_cups_box').value = Math.round(ml * 0.422675283) / 100; \n            }\n          }\n      }\n\n//]]>\n</script>\n"
+    end
+    it "should convert html values based on the ml value rounded " do
+      VolumeWidget.convert_html_value({'ml_box'=>'10.1'}).should == 10
+      VolumeWidget.convert_html_value({'ml_box'=>''}).should == ''
+    end
+    it "should convert bad html values to nil" do
+      VolumeWidget.convert_html_value({'ml_box'=>'x'}).should == nil
+    end
+  end
 
   describe WeightWidget do
     it "should render an html input text with a label" do
@@ -245,4 +296,26 @@ describe Widget do
         "<span id=\"record_1\">2000 grams</span>"
     end
   end
+
+  describe WeightLbkgWidget do
+    it "should render an html input text with a label" do
+      WeightLbkgWidget.render_form_object(1,'1100',{}).should ==
+      "      <input type=\"text\" size=2 class=\"textfield_4\" name=\"record[1][pounds_box]\" id=\"record_1_pounds_box\" value=\"2\" onchange=\"record_1_update_weight(true)\" /> lb or\n      <input type=\"text\" size=4 class=\"textfield_5\" name=\"record[1][kilograms_box]\" id=\"record_1_kilograms_box\" value=\"1.1\" onchange=\"record_1_update_weight(false)\" /> kg\n      <script type=\"text/javascript\">\n//<![CDATA[\nfunction record_1_update_weight(change_kilograms) {\n if (change_kilograms) {\n  var pounds = parseFloat($F('record_1_pounds_box')); \n  if (isNaN(pounds)) {\n    $('record_1_kilograms_box').value='';\n  } else {\n    $('record_1_kilograms_box').value = Math.round(pounds *  4.5359237)/10;\n   }\n } else {\n  var kilograms = parseFloat($F('record_1_kilograms_box')); \n  if (isNaN(kilograms)) {\n    $('record_1_pounds_box').value='';\n  }else {\n    $('record_1_pounds_box').value = Math.round(kilograms * 2.20462262);\n  }\n }\n}\n\n//]]>\n</script>\n"
+    end
+    it "should convert html values to grams based on the kiogram value" do
+      d = {'kilograms_box'=>'1.2'}
+      WeightLbkgWidget.convert_html_value(d).should == 1200
+      d = {'kilograms_box'=>'-3.2'}
+      WeightLbkgWidget.convert_html_value(d).should == -3200
+      d = {'kilograms_box'=>'0'}
+      WeightLbkgWidget.convert_html_value(d).should == 0.0
+    end
+    it "should convert bad html values to nil" do
+      d = {'kilograms_box'=>'x'}
+      WeightLbkgWidget.convert_html_value(d).should == nil
+      d = {'kilograms_box'=>''}
+      WeightLbkgWidget.convert_html_value(d).should == ''
+    end
+  end
+
 end
