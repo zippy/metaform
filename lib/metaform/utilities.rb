@@ -56,9 +56,17 @@ module Utilities
   end
   
   def is_numeric?(i)
-    !(i.size == 1 ? i =~ /^\d$/ : i =~ /^(\d|-)?(\d|,)*\.?\d*$/).nil?
+    case i
+    when Fixnum,Float
+      true
+    when String
+      !(i.size == 1 ? i =~ /^\d$/ : i =~ /^(\d|-)?(\d|,)*\.?\d*$/).nil?
+    else
+      false
+    end
   end
   def is_integer?(i)
+    return true if i.is_a?(Fixnum)
     i = i.gsub(/,/,'')
     !(i.size == 1 ? i =~ /^\d$/ : i =~ /^[-+]?[1-9]\d*$/).nil?
   end
