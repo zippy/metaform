@@ -66,6 +66,8 @@ describe Constraints do
   describe 'range' do
     it "should raise an error if a range can't be extracted" do
       lambda{Constraints.verify({'range' => '5-1'}, 1, @form)}.should raise_error("range constraint 5-1 is ilegal. Must be of form X:Y where X<Y")
+      lambda{Constraints.verify({'range' => '0-5'}, 1, @form)}.should raise_error("range constraint 0-5 is ilegal. Must be of form X:Y where X<Y")
+      lambda{Constraints.verify({'range' => '5'}, 1, @form)}.should raise_error("range constraint 5 is ilegal. Must be of form X:Y where X<Y")
     end
     it "should raise an error if a range is illegal" do
       lambda{Constraints.verify({'range' => '5:1'}, 1, @form)}.should raise_error("range constraint 5:1 is ilegal. Must be of form X:Y where X<Y")

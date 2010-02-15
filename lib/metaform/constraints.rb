@@ -58,7 +58,7 @@ module Constraints
           (l,h) = constraint.split(":")
           low = l.to_i
           hi = h.to_i
-          raise "range constraint #{constraint} is ilegal. Must be of form X:Y where X<Y" if low>hi || hi == nil
+          raise "range constraint #{constraint} is ilegal. Must be of form X:Y where X<Y" if h.nil? || low>hi || hi == nil
           val = value.to_i
           if !is_numeric?(value)
             constraint_errors << (err_override || "Answer must be numeric")
