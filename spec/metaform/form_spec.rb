@@ -138,6 +138,15 @@ describe SimpleForm do
         @records.map{|r| r.id}.should == [1, 3, 2, 4]
       end
       
+      it "should sort based on a date sort rule even if one date in the group is nil" do
+        rec = Record.locate(1)
+        rec.update_attributes({:favorite_date => nil},'simple')
+        the_list = Form.listings['locate_sort_rules']
+        @params[:search] = {:order => "favorite_date", 'on_main' => 'all', 'for_main' => ''}
+        (@records,@search_params) = the_list.fill_records(@params)
+        @records.map{|r| r.id}.should == [3, 2, 4, 1]
+      end
+
       it "should sort based on a sort rule and a constant secondary sort rule" do
         the_list = Form.listings['locate_sort_rules']
         @params[:search] = {:order => "married_first", 'on_main' => 'all', 'for_main' => '' }
