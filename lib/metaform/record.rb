@@ -1176,7 +1176,11 @@ end
     end
 
     if pf = locate_options[:sql_prefilters]
-      pfr = Record.search(:conditions => pf)
+      if pf[0] =~ /^select/i
+        pfr = FormInstance.find_by_sql(pf[0])
+      else
+        pfr = Record.search(:conditions => pf)
+      end
       if !pfr.empty?
         condition_strings << 'form_instances.id in ('+pfr.collect {|r| r.id}.join(',')+')'
       else
@@ -1439,6 +1443,27 @@ end
     select += " limit #{options[:limit].to_i}" if options[:limit]
 #    puts select
     r = FormInstance.find_by_sql("select distinct "+select)
+    if options[:load_after]
+      r.each do |rec|
+        rr = Record.find(rec.id)
+        options[:load_after].each do |ff|
+          value = rr[ff]
+          case value
+          when nil
+            eval_string = "def #{ff}\nnil\nend"
+          when String
+            value = value.gsub('|',"\\|")
+            eval_string = "def #{ff}\n%q|#{value}|\nend"
+          when Fixnum
+            eval_string = "def #{ff}\n#{value}\nend"
+          else
+            raise "unknow type!"
+          end
+          rec.class_eval(eval_string)
+        end
+      end
+    end
+    r
   end
   
   def Record.sql_fieldname_convert(str)

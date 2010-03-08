@@ -207,7 +207,7 @@ module MetaformHelper
     options
   end
   
-  def get_search_form_html(order_choices,form_pair_info,select_options = nil,allow_manual_filters = false)
+  def get_search_form_html(order_choices,form_pair_info,select_options = nil,allow_manual_filters = false,insert_block_at = -1, &block)
     form_pairs_html = []
     form_pair_info.each do |pair|
       first_focus = pair[:first_focus] ? {:class => 'first_focus'} : {}
@@ -239,18 +239,26 @@ module MetaformHelper
       this_html << text_field_tag("search[sql]", @search_params[:sql]) if pair[:sql]
       form_pairs_html << this_html
     end
-  	order_select = "Order by:  " + select_tag('search[order_current]', options_for_select(order_choices,@search_params[:order_current]))
-  	mf = %Q|<p>Manual filters: #{ text_field_tag('search[manual_filters]', @search_params[:manual_filters], :size=>60)}</p>| if allow_manual_filters
-    
+
+    items = form_pairs_html
+    items << "Order by:  " + select_tag('search[order_current]', options_for_select(order_choices,@search_params[:order_current]))
+    items << %Q|Manual filters: #{ text_field_tag('search[manual_filters]', @search_params[:manual_filters], :size=>60)}| if allow_manual_filters
+    items << %Q|#{check_box_tag('search[paginate]','yes',@search_params[:paginate]=='yes')} Paginate results <input id='search[paginate]' name='search[paginate]' type='hidden' value='no' />|
+    items << submit_tag("Search", :disable_with => "Search", :id=>'search_submit')
+    if block_given?
+      items.insert(insert_block_at,capture(items,&block))
+    end
+      
     html =<<-EOHTML
-    <fieldset class='search_box'><legend>Search</legend><p>#{form_pairs_html.join("</p><p>")}</p>
-      <p>#{order_select}</p>#{mf}
-      <p>#{check_box_tag('search[paginate]','yes',@search_params[:paginate]=='yes')} Paginate results
-        <input id='search[paginate]' name='search[paginate]' type='hidden' value='no' />
-      </p>
-      <p><input type='submit' name='Submit' value='Search'></p>
+    <fieldset class='search_box'><legend>Search</legend>
+      <p>#{items.join("</p><p>")}</p>
     </fieldset>
     EOHTML
+    if block_given?
+      concat html
+    else
+      html
+    end
   end
 
 

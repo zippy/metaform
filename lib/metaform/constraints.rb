@@ -65,16 +65,32 @@ module Constraints
         if !value.blank? && value.length > constraint
           constraint_errors << fill_error(err_message_template,{'constraint'=>constraint,'extra'=>condition_extra_err})
         end
+      when "numeric"
+        if !value.blank? && !is_numeric?(value)
+          constraint_errors << (err_override || "Answer must be numeric")
+        end
+      when "integer"
+        if !value.blank?
+          if !is_integer?(value)
+            constraint_errors << (err_override || "Answer must be an integer")
+          elsif constraint == 'positive' && value.to_i < 0
+            constraint_errors << (err_override || "Answer must be a positive integer")
+          end
+        end
       when "range"
         #for the range constraint the value must be a string "X:Y" where X<Y
         if !value.blank?
           (l,h) = constraint.split(":")
           low = l.to_i
           hi = h.to_i
-          raise "range constraint #{constraint} is ilegal. Must be of form X:Y where X<Y" if low>hi || hi == nil
-          if value.to_i < low || value.to_i > hi
+          raise "range constraint #{constraint} is ilegal. Must be of form X:Y where X<Y" if h.nil? || low>hi || hi == nil
+          val = value.to_i
+          if !is_numeric?(value)
+            constraint_errors << (err_override || "Answer must be numeric")
+          elsif val < low || val > hi
             constraint_errors <<  fill_error(err_message_template,{'low'=>low,'hi'=>hi,'extra'=>condition_extra_err})
           end
+          constraint_errors
         end
       when "date"
         if !value.blank?
