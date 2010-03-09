@@ -312,4 +312,14 @@ describe Constraints do
       Constraints.verify({'set' => [{'apple' => 'Apple'},{'banana' => 'Banana'}]}, {'banana'=>:stuff,'apple'=>:more_stuff}.to_yaml, @form).should == []
     end
   end
+  describe 'overriding error messages' do
+    it 'should use a simple replacement string' do
+      $metaform_error_messages['range'] = "Please double-check this value"
+      Constraints.verify({'range' => '1:5'}, "X", @form).should == ["Please double-check this value"]
+    end
+    it 'should be able to override the multi-required error message' do
+      $metaform_error_messages['_required_multi'] = "No way dude!"
+      Constraints.verify({'required' =>true,'set' => [{'apple' => 'Apple'},{'banana' => 'Banana'}]}, '', @form).should == ["No way dude!"]
+    end
+  end
 end
