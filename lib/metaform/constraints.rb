@@ -102,7 +102,16 @@ module Constraints
       when "set"
         #for the set constraint the value will be an array of strings or of hashes of the form:
         # [{value => 'description'},{value2 => 'description'}, ...]
-        ok_values = constraint[0].is_a?(String) ? constraint : constraint.collect{|h| (h.is_a?(String) ? h.to_s : h.keys[0]).chomp('*')}
+        none_val = nil
+        none_label = nil
+        ok_values = constraint[0].is_a?(String) ? constraint : constraint.collect do |h|
+          val = h.is_a?(String) ? h.to_s : h.keys[0]
+          if val =~ /(.*)\*$/ || val=~ /^(none)$/
+            val = none_val = $1
+            none_label = h.is_a?(String) ? h.to_s : h[h.keys[0]]
+          end
+          val
+        end
         ok_values << nil if !ok_values.include?(nil)
         ok_values << '' if !ok_values.include?('')
         cur_values = if value.blank?
@@ -120,6 +129,9 @@ module Constraints
           labels = constraint[0].is_a?(String) ? ok_values.join(', ') : constraint.collect{|h| h.is_a?(String) ? h.to_s : h.values[0]}
           labels = labels.join(', ')
           constraint_errors << (err_override || ("Answer must be one of #{labels}"))
+        end
+        if none_val && cur_values.include?(none_val) && cur_values.size > 1
+          constraint_errors << (err_override || ("Answer connot include #{none_label} and other items"))
         end
       when "enumeration"
         #for the enumeration constraint the value will be an array of strings or of hashes of the form:
