@@ -45,7 +45,19 @@ describe Record do
       @record.workflow_state = 'verifying'
       @record.workflow_state_label.should == 'Form in validation'
     end
-  end    
+  end
+  
+  describe "-- updating attributes" do
+    before(:each) do
+      setup_record
+    end
+    it "update_attributes should return a list of the attributes that were actually updated" do
+      @record.save('new_entry')
+      nr = Record.locate(:first)
+      results = nr.update_attributes({:name => 'John Doe',:fruit => 'banana'},'new_entry')
+      results.should == {"name"=>"John Doe"}
+    end
+  end
     
   describe "-- indexed fields" do
     before(:each) do
@@ -106,7 +118,7 @@ describe Record do
       nr.update_attributes({:name => 'John Doe'},'new_entry',nil,:clear_indexes =>['name'])
       nr[:name,:any].should == ['John Doe']
     end
-
+    
     it "should not clear values on update" do
        @record = Record.make(SampleForm.new,'condition_test')
        @record.yale_class = 'music'

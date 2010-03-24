@@ -708,7 +708,7 @@ end
           end
         end
       else
-        puts "<br>Creating new fi for #{field_instance_id}" if DEBUG1
+        puts "<br>Creating new ruby fi object for #{field_instance_id}" if DEBUG1
         f = FieldInstance.new({:answer => value, :field_id=>field_instance_id, :form_instance_id => id, :idx => index})
         @ficache.set_attribute(field_instance_id,f,index) if CACHE
         f.explanation = explanation_value if has_explanation
@@ -741,11 +741,14 @@ end
           field_instances_to_save.each do |i|
             deps = @form.dependent_fields(i.field_id)
             dependents.concat(deps) if deps
-            saved_attributes[i.field_id] = i.answer
             if (i.answer == nil || i.answer == '') && ((i.state== 'answered' && i.explanation.blank?) || forced_to_nil.include?(i.field_id))  && i.idx == 0
-              puts "<br>about to delete #{i.attributes.inspect}" if DEBUG1
-              i.delete unless i.new_record?
+              unless i.new_record?
+                puts "<br>about to delete #{i.attributes.inspect}" if DEBUG1
+                i.delete
+                saved_attributes[i.field_id] = i.answer
+              end
             else
+              saved_attributes[i.field_id] = i.answer
               puts "<br>about to save #{i.attributes.inspect}" if DEBUG1
               if !i.save
                 raise "ActiveRecord error:'#{i.errors.full_messages.join(',')}' encountered when saving #{i.field_id}"
