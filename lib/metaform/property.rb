@@ -24,18 +24,12 @@ class Invalid < Property
         error_class = "validation_item"
         fname = question.field.name
         index = form.index
-        ex_val = form.get_record.explanation(fname,index)
-        index = index.to_i.to_s
-#        if read_only
-#          errs += ex_val.blank? ? ";(no explanation given)" : "; (explained with: #{ex_val})"
-#        else
+        if index != Form::MultiIndexMarker  # if this is template render we don't include explanation or approval html
+          ex_val = form.get_record.explanation(fname,index)
           if v == :approval
             achecked = ''
-            checked = ''
             if form.field_state(fname) == 'approved'
               achecked =  'checked'
-            else
-              checked = 'checked'
             end
             errs = %Q|Error was "#{errs}"; midwife's explanation: "#{ex_val}" (Fix, or approve 
                     <input tabindex=\"1\" name=\"approvals[#{fname}][#{index}]\" id=\"approvals_#{fname}_#{index}\" type="checkbox" value=\"Y\" #{achecked}>)
@@ -43,7 +37,7 @@ class Invalid < Property
           else
             errs += "; please correct (or explain here: <input tabindex=\"1\" id=\"explanations_#{fname}_#{index}\" name=\"explanations[#{fname}][#{index}]\" type=\"text\" value=\"#{ex_val}\" />)"
           end
-#        end
+        end
       else
         error_class = "validation_error"
       end
