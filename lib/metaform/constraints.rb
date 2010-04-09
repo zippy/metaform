@@ -12,6 +12,7 @@ module Constraints
     'unique' => 'Answer must be unique',
     'required' => RequiredErrMessage+'?{extra}',
     'set' => 'Answer must be one of ?{labels}',
+    'set.none' => 'Answer connot include ?{none_label} and other items',
     'enumeration' => 'Answer must be one of ?{labels}',
     '_explanation_approval' => %Q|Error was "?{err}"; the explanation was: "?{exp}" (Fix, or approve ?{chk})|,
     '_explanation' => "; please correct (or explain here: ?{exp})",
@@ -190,7 +191,7 @@ module Constraints
           constraint_errors << fill_error(err_message_template,{'labels'=>labels})
         end
         if none_val && cur_values.include?(none_val) && cur_values.size > 1
-          constraint_errors << (err_override || ("Answer connot include #{none_label} and other items"))
+          constraint_errors << fill_error($metaform_error_messages['set.none'],{'none_label'=>none_label})
         end
       when "enumeration"
         #for the enumeration constraint the value will be an array of strings or of hashes of the form:
