@@ -300,8 +300,8 @@ describe Constraints do
       Constraints.verify({'set' => [{'apple' => 'Apple'},{'banana' => 'Banana'}]}, 'kiwi,apple', @form).should == ["Answer must be one of Apple, Banana"]
     end
     it "should trigger when more than one value and one is the 'none' starred value" do
-      Constraints.verify({'set' => [{'no_fruit*' => 'None'},{'apple' => 'Apple'},{'banana' => 'Banana'}]}, 'no_fruit,apple', @form).should == ["Answer connot include None and other items"]
-      Constraints.verify({'set' => [{'none' => 'None'},{'apple' => 'Apple'},{'banana' => 'Banana'}]}, 'none,apple', @form).should == ["Answer connot include None and other items"]
+      Constraints.verify({'set' => [{'no_fruit*' => 'None'},{'apple' => 'Apple'},{'banana' => 'Banana'}]}, 'no_fruit,apple', @form).should == ["Answer cannot include None and other items"]
+      Constraints.verify({'set' => [{'none' => 'None'},{'apple' => 'Apple'},{'banana' => 'Banana'}]}, 'none,apple', @form).should == ["Answer cannot include None and other items"]
     end
 
     it "should not trigger when value is in set" do
