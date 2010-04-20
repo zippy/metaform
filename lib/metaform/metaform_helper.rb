@@ -187,7 +187,7 @@ module MetaformHelper
     @search_params[:order_last] = session[listing_type][:order_current] if session[listing_type] && session[listing_type].key?(:order_current)  
     #grab order param from session for secondary sort, if it's nontrivial and not the current order
     defaults.each do |param,default|
-      if (!use_session || param = :order_current) && (!@search_params.key?(param) || @search_params[param] == '')
+      if (!use_session || param == :order_current) && (!@search_params.key?(param) || @search_params[param] == '')
         @search_params[param] = default
       end
     end
