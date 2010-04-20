@@ -4,17 +4,18 @@ class WeightLbkgWidget < Widget
   ################################################################################
   def self.render_form_object(field_instance_id,value,options)
     params = options[:params]
+    allow_negatives = (params == "allow_negatives") ? "true" : "null"
     js_update_weight = <<-EOJS
 function #{build_html_multi_id(field_instance_id,'update_weight')}(change_kilograms) {
  if (change_kilograms) {
-  var pounds = check_float($F('#{build_html_multi_id(field_instance_id,'pounds_box')}'));
+  var pounds = check_float($F('#{build_html_multi_id(field_instance_id,'pounds_box')}'),#{allow_negatives});
   if (pounds == null) {
     $('#{build_html_multi_id(field_instance_id,'kilograms_box')}').value='';
   } else {
     $('#{build_html_multi_id(field_instance_id,'kilograms_box')}').value = Math.round(pounds *  4.5359237)/10;
    }
  } else {
-  var kilograms = check_float($F('#{build_html_multi_id(field_instance_id,'kilograms_box')}'));
+  var kilograms = check_float($F('#{build_html_multi_id(field_instance_id,'kilograms_box')}'),#{allow_negatives});
   if (kilograms == null) {
     $('#{build_html_multi_id(field_instance_id,'pounds_box')}').value='';
   }else {
@@ -66,8 +67,13 @@ EOJS
   def self.convert_html_value(value,params={})
     val = value['kilograms_box']
     return '' if val.blank?
-    return val.to_f * 1000 if is_numeric?(val)
-    nil
+    if is_numeric?(val)
+      val = val.to_f * 1000 
+      return nil if !(params == "allow_negatives") && val < 0
+      val
+    else
+      nil
+    end
   end
 
 end

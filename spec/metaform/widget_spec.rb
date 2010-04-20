@@ -433,17 +433,19 @@ describe Widget do
   describe WeightLbkgWidget do
     it "should render an html input text with a label" do
       WeightLbkgWidget.render_form_object(1,'1100',{}).should ==
-      "      <input type=\"text\" size=2 class=\"textfield_4\" name=\"record[1][pounds_box]\" id=\"record_1_pounds_box\" value=\"2\" onchange=\"record_1_update_weight(true)\" /> lb or\n      <input type=\"text\" size=4 class=\"textfield_5\" name=\"record[1][kilograms_box]\" id=\"record_1_kilograms_box\" value=\"1.1\" onchange=\"record_1_update_weight(false)\" /> kg\n      <script type=\"text/javascript\">\n//<![CDATA[\nfunction record_1_update_weight(change_kilograms) {\n if (change_kilograms) {\n  var pounds = check_float($F('record_1_pounds_box'));\n  if (pounds == null) {\n    $('record_1_kilograms_box').value='';\n  } else {\n    $('record_1_kilograms_box').value = Math.round(pounds *  4.5359237)/10;\n   }\n } else {\n  var kilograms = check_float($F('record_1_kilograms_box'));\n  if (kilograms == null) {\n    $('record_1_pounds_box').value='';\n  }else {\n    $('record_1_pounds_box').value = Math.round(kilograms * 2.20462262);\n  }\n }\n}\n\n//]]>\n</script>\n"
+      "      <input type=\"text\" size=2 class=\"textfield_4\" name=\"record[1][pounds_box]\" id=\"record_1_pounds_box\" value=\"2\" onchange=\"record_1_update_weight(true)\" /> lb or\n      <input type=\"text\" size=4 class=\"textfield_5\" name=\"record[1][kilograms_box]\" id=\"record_1_kilograms_box\" value=\"1.1\" onchange=\"record_1_update_weight(false)\" /> kg\n      <script type=\"text/javascript\">\n//<![CDATA[\nfunction record_1_update_weight(change_kilograms) {\n if (change_kilograms) {\n  var pounds = check_float($F('record_1_pounds_box'),null);\n  if (pounds == null) {\n    $('record_1_kilograms_box').value='';\n  } else {\n    $('record_1_kilograms_box').value = Math.round(pounds *  4.5359237)/10;\n   }\n } else {\n  var kilograms = check_float($F('record_1_kilograms_box'),null);\n  if (kilograms == null) {\n    $('record_1_pounds_box').value='';\n  }else {\n    $('record_1_pounds_box').value = Math.round(kilograms * 2.20462262);\n  }\n }\n}\n\n//]]>\n</script>\n"
     end
     it "should convert html values to grams based on the kiogram value" do
       d = {'kilograms_box'=>'1.2'}
       WeightLbkgWidget.convert_html_value(d).should == 1200
       d = {'kilograms_box'=>'-3.2'}
-      WeightLbkgWidget.convert_html_value(d).should == -3200
+      WeightLbkgWidget.convert_html_value(d,"allow_negatives").should == -3200
       d = {'kilograms_box'=>'0'}
       WeightLbkgWidget.convert_html_value(d).should == 0.0
     end
     it "should convert bad html values to nil" do
+      d = {'kilograms_box'=>'-3.2'}
+      WeightLbkgWidget.convert_html_value(d).should == nil
       d = {'kilograms_box'=>'x'}
       WeightLbkgWidget.convert_html_value(d).should == nil
       d = {'kilograms_box'=>''}
