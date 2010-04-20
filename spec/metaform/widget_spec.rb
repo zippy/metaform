@@ -79,9 +79,43 @@ describe Widget do
       TextFieldIntegerWidget.convert_html_value("0x").should == nil
       TextFieldIntegerWidget.convert_html_value("0x0").should == nil
     end
-    
   end
 
+
+  describe TextFieldFloatWidget do
+    it "should render an html input text with a label" do
+      TextFieldFloatWidget.render_form_object(1,'100',{}).should == 
+      "    <span id=\"record_1_wrapper\"><input id=\"record_1\" name=\"record[1]\" onchange=\"mark_invalid_float('record_1')\" onkeyup=\"mark_invalid_float('record_1')\" type=\"text\" value=\"100\" /></span>\n"
+    end
+    it "should render an html input text with a size parameter" do
+      TextFieldFloatWidget.render_form_object(1,'100',{:params=>'3'}).should == 
+      "    <span id=\"record_1_wrapper\"><input class=\"textfield_3\" id=\"record_1\" name=\"record[1]\" onchange=\"mark_invalid_float('record_1')\" onkeyup=\"mark_invalid_float('record_1')\" size=\"3\" type=\"text\" value=\"100\" /></span>\n"
+    end
+    it "should render an html input text with a size and max parameter" do
+      TextFieldFloatWidget.render_form_object(1,'100',{:params=>'3,2'}).should == 
+      "    <span id=\"record_1_wrapper\"><input class=\"textfield_3\" id=\"record_1\" maxlength=\"2\" name=\"record[1]\" onchange=\"mark_invalid_float('record_1')\" onkeyup=\"mark_invalid_float('record_1')\" size=\"3\" type=\"text\" value=\"100\" /></span>\n"
+    end
+    it "should render value as text with a read_only parameter" do
+      TextFieldFloatWidget.render_form_object_read_only(1,'100',{}).should == 
+        "<span id=\"record_1\">100</span>"
+    end
+    it "should convert html values to a number" do
+      TextFieldFloatWidget.convert_html_value("100").should == 100
+      TextFieldFloatWidget.convert_html_value("0").should == 0
+      TextFieldFloatWidget.convert_html_value("10.0").should == 10
+      TextFieldFloatWidget.convert_html_value("10.1").should == 10.1
+      TextFieldFloatWidget.convert_html_value("0.1").should == 0.1
+      TextFieldFloatWidget.convert_html_value(".1").should == 0.1
+    end
+    it "should convert bad html values to nil" do
+      TextFieldFloatWidget.convert_html_value("x").should == nil
+      TextFieldFloatWidget.convert_html_value("-1").should == nil
+      TextFieldFloatWidget.convert_html_value("x0").should == nil
+      TextFieldFloatWidget.convert_html_value("0x").should == nil
+      TextFieldFloatWidget.convert_html_value("0x0").should == nil
+    end
+    
+  end
   describe TextAreaWidget do
     it "should render an html text area with a label" do
       TextAreaWidget.render_form_object(1,'value',{}).should == 
