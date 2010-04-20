@@ -32,20 +32,20 @@ function check_year(year) {
 	return null;
 }
 
-function check_num(num) {
-	if (/[^\d]/.exec(num)) {return null;}
+function check_num(num,allow_negatives) {
+	if (/[^\d-]/.exec(num)) {return null;}
 	var n = parseInt(num);
 	if (isNaN(n)) {return null}
+	if (!allow_negatives && n < 0) {return null}
 	return n;
 }
 
-function check_float(num) {
-	if (/^[\d]+$/.exec(num) || /^\.[\d]+$/.exec(num) || /^[\d]+\.[\d]+$/.exec(num)) {
-		var n = parseFloat(num);
-		if (isNaN(n)) {return null}
-		return n;
-	}
-	else {return null;}
+function check_float(num,allow_negatives) {
+	if (/[^\d.-]/.exec(num)) {return null}
+	var n = parseFloat(num);
+	if (isNaN(n)) {return null}
+	if (!allow_negatives && n < 0) {return null}
+	return n
 }
 
 function make_date(year,month,date) {
@@ -67,6 +67,10 @@ function make_date(year,month,date) {
 //Get value of integer widgets
 function $IF(name){
 	return check_num($F(name));
+}
+//Get value of float widgets
+function $FF(name){
+	return check_float($F(name));
 }
 
 //Get value of radiobutton widgets
@@ -342,6 +346,11 @@ function integer_invalid(field_id) {
 	return $IF(field_id) == null;
 }
 
+function float_invalid(field_id) {
+	if ($F(field_id) == '') {return false;}
+	return $FF(field_id) == null;
+}
+
 function mark_field_validity(field_id,is_invalid,invalid_text) {
 	var the_style;
 	var wrapper = $(field_id+'_wrapper');
@@ -364,6 +373,10 @@ function mark_field_validity(field_id,is_invalid,invalid_text) {
 
 function mark_invalid_integer(field_id) {
 	mark_field_validity(field_id,integer_invalid(field_id),"Invalid integer")
+}
+
+function mark_invalid_float(field_id) {
+	mark_field_validity(field_id,float_invalid(field_id),"Invalid number")
 }
 
 function mark_invalid_date_time(field_id) {
