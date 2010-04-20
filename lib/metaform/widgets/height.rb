@@ -7,19 +7,19 @@ class HeightWidget < Widget
     js_update_height = <<-EOJS
       function #{build_html_multi_id(field_instance_id,'update_height')}(change_meters) {
         if (change_meters) {
-          var feet = parseFloat($F('#{build_html_multi_id(field_instance_id,'feet_box')}')); 
-          var inches = parseFloat($F('#{build_html_multi_id(field_instance_id,'inches_box')}')); 
-          if (isNaN(feet) && isNaN(inches)){
-              $('#{build_html_multi_id(field_instance_id,'meters_box')}').value='' 
+          var feet = check_float($F('#{build_html_multi_id(field_instance_id,'feet_box')}'));
+          var inches = check_float($F('#{build_html_multi_id(field_instance_id,'inches_box')}'));
+          if (feet == null && inches == null){
+              $('#{build_html_multi_id(field_instance_id,'meters_box')}').value=''
             }else{
-              if (isNaN(feet)) { $('#{build_html_multi_id(field_instance_id,'feet_box')}').value=''; feet = 0};
-              if (isNaN(inches)) { $('#{build_html_multi_id(field_instance_id,'inches_box')}').value=''; inches = 0}; 
-               var meters = Math.round((feet * 12 + inches) *  2.54)/100; 
+              if (feet == null) { $('#{build_html_multi_id(field_instance_id,'feet_box')}').value=''; feet = 0};
+              if (inches == null) { $('#{build_html_multi_id(field_instance_id,'inches_box')}').value=''; inches = 0};
+               var meters = Math.round((feet * 12 + inches) *  2.54)/100;
               $('#{build_html_multi_id(field_instance_id,'meters_box')}').value = meters;
             }
           } else {
-            var meters = parseFloat($F('#{build_html_multi_id(field_instance_id,'meters_box')}')); 
-            if (isNaN(meters)){
+            var meters = check_float($F('#{build_html_multi_id(field_instance_id,'meters_box')}'));
+            if (meters == null){
               $('#{build_html_multi_id(field_instance_id,'feet_box')}').value='';
               $('#{build_html_multi_id(field_instance_id,'inches_box')}').value='';
             }else{
@@ -36,11 +36,11 @@ class HeightWidget < Widget
           }
       }
       EOJS
-    if !value.blank? 
-      meters = value.to_f.round.to_f / 100 # We store the value as centimeters  
+    if !value.blank?
+      meters = value.to_f.round.to_f / 100 # We store the value as centimeters
       total_inches = (meters * 39.370079).round
       feet = total_inches / 12
-      inches = total_inches % 12        
+      inches = total_inches % 12
       if (inches == 12)
         feet++
         inches = 0
@@ -60,14 +60,14 @@ class HeightWidget < Widget
       EOHTML
     end
   end
-  
+
   ################################################################################
   def self.humanize_value(value,options=nil)
     return '' if value.nil?
-    meters = value.to_f / 100 # We store the value as centimeters  
+    meters = value.to_f / 100 # We store the value as centimeters
     total_inches = (meters * 39.370079).round
     feet = total_inches / 12
-    inches = total_inches % 12        
+    inches = total_inches % 12
     %Q|#{feet}' #{inches}" (#{value} cm)|
   end
 

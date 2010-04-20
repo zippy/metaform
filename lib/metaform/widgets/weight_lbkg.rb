@@ -7,15 +7,15 @@ class WeightLbkgWidget < Widget
     js_update_weight = <<-EOJS
 function #{build_html_multi_id(field_instance_id,'update_weight')}(change_kilograms) {
  if (change_kilograms) {
-  var pounds = parseFloat($F('#{build_html_multi_id(field_instance_id,'pounds_box')}')); 
-  if (isNaN(pounds)) {
+  var pounds = check_float($F('#{build_html_multi_id(field_instance_id,'pounds_box')}'));
+  if (pounds == null) {
     $('#{build_html_multi_id(field_instance_id,'kilograms_box')}').value='';
   } else {
     $('#{build_html_multi_id(field_instance_id,'kilograms_box')}').value = Math.round(pounds *  4.5359237)/10;
    }
  } else {
-  var kilograms = parseFloat($F('#{build_html_multi_id(field_instance_id,'kilograms_box')}')); 
-  if (isNaN(kilograms)) {
+  var kilograms = check_float($F('#{build_html_multi_id(field_instance_id,'kilograms_box')}'));
+  if (kilograms == null) {
     $('#{build_html_multi_id(field_instance_id,'pounds_box')}').value='';
   }else {
     $('#{build_html_multi_id(field_instance_id,'pounds_box')}').value = Math.round(kilograms * 2.20462262);
@@ -39,7 +39,7 @@ EOJS
       EOHTML
     end
   end
-  
+
   ################################################################################
   def self.humanize_value(value,options=nil)
     return '' if value.nil?

@@ -7,24 +7,24 @@ class VolumeWidget < Widget
   js_update_volume = <<-EOJS
       function #{build_html_multi_id(field_instance_id,'update_volume')}(change_ml) {
           if (change_ml) {
-            var cups = parseFloat($F('#{build_html_multi_id(field_instance_id,'cups_box')}')); 
-            if (isNaN(cups)) {
+            var cups = check_float($F('#{build_html_multi_id(field_instance_id,'cups_box')}'));
+            if (cups==null) {
               $('#{build_html_multi_id(field_instance_id,'ml_box')}').value = '';
             } else {
-              $('#{build_html_multi_id(field_instance_id,'ml_box')}').value = Math.round(cups * 236.588237); 
-            }            
+              $('#{build_html_multi_id(field_instance_id,'ml_box')}').value = Math.round(cups * 236.588237);
+            }
           } else {
-            var ml = parseFloat($F('#{build_html_multi_id(field_instance_id,'ml_box')}')); 
-            if (isNaN(ml)) {
+            var ml = check_float($F('#{build_html_multi_id(field_instance_id,'ml_box')}'));
+            if (ml==null) {
               $('#{build_html_multi_id(field_instance_id,'pounds_box')}').value='';
             } else {
-              $('#{build_html_multi_id(field_instance_id,'cups_box')}').value = Math.round(ml * 0.422675283) / 100; 
+              $('#{build_html_multi_id(field_instance_id,'cups_box')}').value = Math.round(ml * 0.422675283) / 100;
             }
           }
       }
       EOJS
     if value && value != ''
-      ml = value  
+      ml = value
       cups = ((ml.to_f * 0.422675283).round.to_f) / 100
       <<-EOHTML
       <input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'cups_box')}" id="#{build_html_multi_id(field_instance_id,'cups_box')}" value="#{cups}" onchange="#{build_html_multi_id(field_instance_id,'update_volume')}(true)" /> cups or
@@ -39,7 +39,7 @@ class VolumeWidget < Widget
       EOHTML
     end
   end
-  
+
   ################################################################################
   def self.humanize_value(value,options=nil)
     return '' if value.nil?

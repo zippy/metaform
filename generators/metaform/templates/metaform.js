@@ -39,6 +39,15 @@ function check_num(num) {
 	return n;
 }
 
+function check_float(num) {
+	if (/^[\d]+$/.exec(num) || /^\.[\d]+$/.exec(num) || /^[\d]+\.[\d]+$/.exec(num)) {
+		var n = parseFloat(num);
+		if (isNaN(n)) {return null}
+		return n;
+	}
+	else {return null;}
+}
+
 function make_date(year,month,date) {
 	year = check_year(year);
 	if (year == null || year == 0)  {return null};
