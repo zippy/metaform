@@ -493,22 +493,22 @@ describe SimpleForm do
       end
       it "should render a property" do
         @form.with_record(@record,:render) do
-          (@form.questions['age'].render(@form) =~ /g question!/).should_not == nil
+          (@form.questions['age1609331767'].render(@form) =~ /g question!/).should_not == nil
           (@form.questions['higher_ed_years'].render(@form) =~ /g question!/).should_not == nil
           (@form.questions['name'].render(@form) =~ /g question!$/).should == nil
         end
       end
       it "should render a property differently for a read only question" do
         @form.with_record(@record,:render) do
-          (@form.questions['age'].render(@form,'10',true) =~ /g question read only!/).should_not == nil
+          (@form.questions['age1609331767'].render(@form,'10',true) =~ /g question read only!/).should_not == nil
           (@form.questions['name'].render(@form,'Joe',true) =~ /g question$/).should == nil
         end
       end
       it "should render multiple properties" do
         @form.set_validating(true)
         @form.with_record(@record) do
-          (@form.questions['age'].render(@form,'99') =~ /g question!/).should_not == nil
-          (@form.questions['age'].render(@form,'99') =~ /<div class="validation_item">/).should == nil
+          (@form.questions['age1609331767'].render(@form,'99') =~ /g question!/).should_not == nil
+          (@form.questions['age1609331767'].render(@form,'99') =~ /<div class="validation_item">/).should == nil
           (@form.questions['higher_ed_years'].render(@form,'99') =~ /g question!/).should_not == nil
           (@form.questions['higher_ed_years'].render(@form,'99') =~ /<div class="validation_item">/).should_not == nil
         end
@@ -944,7 +944,7 @@ describe SimpleForm do
         @form.prepare(nil)
         @form.with_record(@record,:render) do
           @form.p('married_questions')
-          @form.get_body.should == ["<div id=\"presentation_married_questions\" class=\"presentation\">", "<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record_married\">Married?</label><select name=\"record[married]\" id=\"record_married\">\n   <option value=\"y\">Yes</option>\n<option value=\"n\">No</option>\n</select>\n</div>", "<div id=\"uid_1\" class=\"hideable_box_with_border\" style=\"display:none\">", "<div id=\"question_children\" class=\"question\"><label class=\"label\" for=\"record_children\">Children:</label><input id=\"record_children\" name=\"record[children]\" type=\"text\" /></div>", "</div>", "</div>"]
+          @form.get_body.should == ["<div id=\"presentation_married_questions\" class=\"presentation\">", "<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record_married\">Married?</label><select name=\"record[married]\" id=\"record_married\">\n   <option value=\"y\">Yes</option>\n<option value=\"n\">No</option>\n</select>\n</div>", "<div id=\"uid_1\" class=\"hideable_box_with_border\" style=\"display:none\">", "<div id=\"question_children\" class=\"question\"><label class=\"label\" for=\"record_children\">Children:</label>    <span id=\"record_children_wrapper\"><input id=\"record_children\" name=\"record[children]\" onchange=\"mark_invalid_integer('record_children')\" onkeyup=\"mark_invalid_integer('record_children')\" type=\"text\" /></span>\n</div>", "</div>", "</div>"]
         end
       end
     end #javascript_show_hide_if
@@ -1095,10 +1095,7 @@ describe SimpleForm do
       end
       it "should generate all the html and javascript for a complex presentation" do
         r = @form.build('simple',@record)
-        r.should == [
-          "<script>var cur_idx=find_current_idx();var values_for_eye_color = new Array();</script><div id=\"presentation_simple\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>\n<div id=\"question_age\" class=\"question\"><label class=\"label\" for=\"record_age\">Age:</label><input id=\"record_age\" name=\"record[age]\" type=\"text\" />g question!</div>\n<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record_higher_ed_years\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>\n<div id=\"question_eye_color\" class=\"question\"><label class=\"label\" for=\"record_eye_color\">Eye color:</label><input id=\"record_eye_color\" name=\"record[eye_color]\" type=\"text\" /></div>\n<div id=\"uid_1\" class=\"followup\" style=\"display:none\">\n<div id=\"question_other_eye_color\" class=\"question\"><label class=\"label\" for=\"record_other_eye_color\">Other eye color:</label><textarea id=\"record_other_eye_color\" name=\"record[other_eye_color]\"></textarea></div>\n</div>\n<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record_married\">Married?</label><input id=\"record_married\" name=\"record[married]\" type=\"text\" /></div>\n</div>\n<input type=\"hidden\" name=\"meta[last_updated]\" id=\"meta_last_updated\" value=0>", 
-          "function actions_for_eye_color_is_x() {\n  if (eye_color_is_x()) {Element.show('uid_1')}\n  else {Element.hide('uid_1')}\n}\n\nfunction eye_color_is_x() {return values_for_eye_color[0] == \"x\"}\nEvent.observe('record_eye_color', 'change', function(e){ values_for_eye_color[cur_idx] = $F('record_eye_color');actions_for_eye_color_is_x(); });"
-          ]
+        r.should == ["<script>var cur_idx=find_current_idx();var values_for_eye_color = new Array();</script><div id=\"presentation_simple\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>\n<div id=\"question_age\" class=\"question\"><label class=\"label\" for=\"record_age\">Age:</label>    <span id=\"record_age_wrapper\"><input id=\"record_age\" name=\"record[age]\" onchange=\"mark_invalid_integer('record_age')\" onkeyup=\"mark_invalid_integer('record_age')\" type=\"text\" /></span>\ng question!</div>\n<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record_higher_ed_years\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>\n<div id=\"question_eye_color\" class=\"question\"><label class=\"label\" for=\"record_eye_color\">Eye color:</label><input id=\"record_eye_color\" name=\"record[eye_color]\" type=\"text\" /></div>\n<div id=\"uid_1\" class=\"followup\" style=\"display:none\">\n<div id=\"question_other_eye_color\" class=\"question\"><label class=\"label\" for=\"record_other_eye_color\">Other eye color:</label><textarea id=\"record_other_eye_color\" name=\"record[other_eye_color]\"></textarea></div>\n</div>\n<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record_married\">Married?</label><input id=\"record_married\" name=\"record[married]\" type=\"text\" /></div>\n</div>\n<input type=\"hidden\" name=\"meta[last_updated]\" id=\"meta_last_updated\" value=0>", "function actions_for_eye_color_is_x() {\n  if (eye_color_is_x()) {Element.show('uid_1')}\n  else {Element.hide('uid_1')}\n}\n\nfunction eye_color_is_x() {return values_for_eye_color[0] == \"x\"}\nEvent.observe('record_eye_color', 'change', function(e){ values_for_eye_color[cur_idx] = $F('record_eye_color');actions_for_eye_color_is_x(); });"]
       end
       it "should build html with :workflow_action javascript buttons" do
         r = @form.build('js_button_not_forced',@record)
@@ -1275,7 +1272,7 @@ describe SimpleForm do
     describe "field widget map" do
       it "should create a field widget map" do
         @form.setup_presentation('simple',@record)
-        @form.current_questions_field_widget_map.should == {"name"=>[TextFieldWidget, {:params=>nil, :constraints=>{"required"=>true}}], "eye_color"=>[TextFieldWidget, {:params=>nil, :constraints=>{"enumeration"=>[{"ffffff"=>"black"}, {"00ff00"=>"green"}, {"0000ff"=>"blue"}, {"x"=>"other"}]}}], "married"=>[TextFieldWidget, {:params=>nil, :constraints=>{"enumeration"=>[{"y"=>"Yes"}, {"n"=>"No"}]}}], "higher_ed_years"=>[TextFieldWidget, {:params=>nil, :constraints=>{"required"=>true, "range"=>"0:10"}}], "other_eye_color"=>[TextAreaWidget, {:params=>nil, :constraints=>{"required"=>"eye_color=x"}}], "age"=>[TextFieldWidget, {:params=>nil, :constraints=>{"required"=>true, "range"=>"1:100"}}]}
+        @form.current_questions_field_widget_map.should == {"name"=>[TextFieldWidget, {:params=>nil, :constraints=>{"required"=>true}}], "eye_color"=>[TextFieldWidget, {:params=>nil, :constraints=>{"enumeration"=>[{"ffffff"=>"black"}, {"00ff00"=>"green"}, {"0000ff"=>"blue"}, {"x"=>"other"}]}}], "married"=>[TextFieldWidget, {:params=>nil, :constraints=>{"enumeration"=>[{"y"=>"Yes"}, {"n"=>"No"}]}}], "higher_ed_years"=>[TextFieldWidget, {:params=>nil, :constraints=>{"required"=>true, "range"=>"0:10"}}], "other_eye_color"=>[TextAreaWidget, {:params=>nil, :constraints=>{"required"=>"eye_color=x"}}], "age"=>[TextFieldIntegerWidget, {:params=>nil, :constraints=>{"required"=>true, "range"=>"1:100"}}]}
       end
     end
   end
