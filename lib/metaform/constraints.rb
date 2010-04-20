@@ -12,7 +12,7 @@ module Constraints
     'unique' => 'Answer must be unique',
     'required' => RequiredErrMessage+'?{extra}',
     'set' => 'Answer must be one of ?{labels}',
-    'set.none' => 'Answer connot include ?{none_label} and other items',
+    'set.none' => 'Answer cannot include ?{none_label} and other items',
     'enumeration' => 'Answer must be one of ?{labels}',
     '_explanation_approval' => %Q|Error was "?{err}"; the explanation was: "?{exp}" (Fix, or approve ?{chk})|,
     '_explanation' => "; please correct (or explain here: ?{exp})",
