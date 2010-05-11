@@ -557,13 +557,16 @@ describe Record do
       @records.indexed_field_no_default__1.should == nil
       @records.indexed_field_no_default = 'dog'
       @records.indexed_field_no_default__2.should == 'dog'
-      @records.indexed_field_no_default__1.should == nil  #should still be nil because it was already set
+      @records.indexed_field_no_default__1.should == 'dog'
 
       @records.indexed_field_with_default.should == 'cow'
       @records.indexed_field_with_default__1.should == 'cow'
       @records.indexed_field_with_default = 'cat'
       @records.indexed_field_with_default__2.should == 'cat'
-      @records.indexed_field_with_default__1.should == 'cow' #should still be 'cow' because it was already set
+      @records.indexed_field_with_default__1.should == 'cat'
+
+      @records.indexed_field_with_default__1 = 'fish'
+      @records.indexed_field_with_default__1.should == 'fish'
     end
   end
   
@@ -921,13 +924,14 @@ describe Record do
     before(:each) do
       @form = SampleForm.new
       @record = Record.make(@form,'new_entry',{:name =>'Bob Smith'})
+      @now = Time.new
       @record.save('new_entry')
     end
     it "should set the created date on creation" do
-      @record.created_at.to_s.should == Time.now.to_s
+      ("%.0f" % @record.created_at.to_f).should == ("%.0f" % @now.to_f)
     end
     it "should set the updated date on creation" do
-      @record.updated_at.to_s.should == Time.now.to_s
+      ("%.0f" % @record.updated_at.to_f).should == ("%.0f" % @now.to_f)
     end
     it "should set the updated date on save" do
       now_seconds = Time.now.to_i
@@ -1305,18 +1309,20 @@ describe Record do
     end
     it "should be able to search for fields" do
       records = Record.search(:fields => [:name])
-      records.collect{|r| r.attributes}.should == [{"name"=>"Bob Smith", "id"=>1}, {"name"=>"Fred Smith", "id"=>2}, {"name"=>"Bob Feldspar", "id"=>3}, {"name"=>"Jane Feldspar", "id"=>4}]
+      records.size.should == 4
+      answer = [{"name"=>"Bob Smith", "id"=>1}, {"name"=>"Fred Smith", "id"=>2}, {"name"=>"Bob Feldspar", "id"=>3}, {"name"=>"Jane Feldspar", "id"=>4}]
+      records.each{|r| answer.include?(r.attributes).should be_true} 
     end
     it "should be able to search for fields and limit results" do
       records = Record.search(:fields => [:name],:limit => 2)
-      records.collect{|r| r.attributes}.should == [{"name"=>"Bob Smith", "id"=>1}, {"name"=>"Fred Smith", "id"=>2}]
+      records.size.should == 2
     end
     it "should be able to order fields on search" do
       records = Record.search(:fields => [:name],:order => [:name])
       records.collect{|r| r.attributes}.collect {|h| h["name"]}.should == ["Bob Feldspar", "Bob Smith", "Fred Smith", "Jane Feldspar"] 
     end
     it "should be able to order fields on search selecting the table name too" do
-      records = Record.search(:fields => [:name],:order => 'form_instances.created_at')
+      records = Record.search(:fields => [:name],:order => 'form_instances.id')
       records.collect{|r| r.attributes}.collect {|h| h["name"]}.should == ["Bob Smith", "Fred Smith", "Bob Feldspar", "Jane Feldspar"]      
     end
     it "should be able to search conditionally on fields" do
@@ -1346,7 +1352,9 @@ describe Record do
     end
     it "should be able to add other fields when searching conditionally" do
       records = Record.search(:fields => [:name,:fruit],:conditions => ":name like 'Bob%'")
-      records.collect{|r| r.attributes}.should == [{"name"=>"Bob Smith", "id"=>1, "fruit"=>'banana'}, {"name"=>"Bob Feldspar", "id"=>3, "fruit"=>'orange'}]
+      records.size.should == 2
+      answer =  [{"name"=>"Bob Smith", "id"=>1, "fruit"=>'banana'}, {"name"=>"Bob Feldspar", "id"=>3, "fruit"=>'orange'}]
+      records.each{|r| answer.include?(r.attributes).should be_true} 
     end
     it "should be able to add meta_fields to results" do
       records = Record.search(:meta_fields => [:workflow_state])
@@ -1358,7 +1366,9 @@ describe Record do
         WHEN workflow_state = 'y' THEN "fruit".answer
         END as conditional|
       )
-      records.collect{|r| r.attributes}.should == [{"name"=>"Bob Smith", "id"=>1, "conditional"=>nil, "fruit"=>"banana"}, {"name"=>"Fred Smith", "id"=>2, "conditional"=>nil, "fruit"=>"apple"}, {"name"=>"Bob Feldspar", "id"=>3, "conditional"=>nil, "fruit"=>"orange"}, {"name"=>"Jane Feldspar", "id"=>4, "conditional"=>nil, "fruit"=>"orange"}]
+      records.size.should == 4
+      answer =  [{"name"=>"Bob Smith", "id"=>1, "conditional"=>nil, "fruit"=>"banana"}, {"name"=>"Fred Smith", "id"=>2, "conditional"=>nil, "fruit"=>"apple"}, {"name"=>"Bob Feldspar", "id"=>3, "conditional"=>nil, "fruit"=>"orange"}, {"name"=>"Jane Feldspar", "id"=>4, "conditional"=>nil, "fruit"=>"orange"}]
+      records.each{|r| answer.include?(r.attributes).should be_true} 
     end
     it "should be able to search on a meta condition" do
       records = Record.search(:meta_condition => "id > 2")
