@@ -189,6 +189,11 @@ class SimpleForm < Form
       q 'name'
     end
     
+    presentation 'forced_index_name' do
+      q 'name',:force_index=>0
+      q 'name'
+    end
+
     presentation 'name_only' do
       q 'name'
     end

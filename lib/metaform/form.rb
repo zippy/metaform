@@ -594,7 +594,8 @@ class Form
       :initially_hidden => false,
       :labeling => nil,
       :read_only => nil,
-      :name => nil
+      :name => nil,
+      :force_index => nil
     }.update(opts)
     raise MetaformException,"attempting to process question for #{field_name} with no record" if @record.nil?
     widget = options[:widget]
@@ -646,12 +647,15 @@ class Form
           raise "The question #{field_name} is set as flow_through, but was not given a proc" if !options[:flow_through].is_a?(Proc)
           index_to_use = options[:flow_through].call(@_index,@record)  #This will return either an index to use, or nil if we should use the default
         end
+        if options[:force_index]
+          index_to_use = options[:force_index]
+        end
         index_to_use ||= @_index 
         value =  @record[field.name,index_to_use]
       else
         value = nil
       end
-      body the_q.render(self,value,read_only)
+      body the_q.render(self,value,read_only,options[:force_index])
     end
     
     if followups = options[:followups]

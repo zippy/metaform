@@ -1052,6 +1052,31 @@ describe SimpleForm do
       end
     end #p
 
+    describe "p (display a presentation at a given index)" do
+      before(:each) do
+        @form.set_record(@record)
+        @form.set_render(:render)
+        @record[:name,0]='Name at 0'
+        @record[:name,2]='Name at 2'
+        @record.save('create')
+      end
+
+      it "should fill values according to index given" do
+        @form.prepare(2)
+        @form.p 'name_only'
+        @form.get_body.should == ["<div id=\"presentation_name_only\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Name at 2\" /></div>", "</div>"]
+        @form.prepare(0)
+        @form.p 'name_only'
+        @form.get_body.should == ["<div id=\"presentation_name_only\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Name at 0\" /></div>", "</div>"]
+      end
+      it "should fill values according to index given and forced index question" do
+        @form.prepare(2)
+        @form.p 'forced_index_name'
+        @form.get_body.should == ["<div id=\"presentation_forced_index_name\" class=\"presentation\">", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record__0_name\">Name:</label><input id=\"record__0_name\" name=\"record[_0_name]\" type=\"text\" value=\"Name at 0\" /></div>", "<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Name at 2\" /></div>", "</div>"]
+      end
+    end
+
+
     describe "p (display an indexed presentation)" do
       before(:each) do
         @form.set_record(@record)

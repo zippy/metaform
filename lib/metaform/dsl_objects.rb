@@ -417,7 +417,7 @@ class Question < Bin
     Widget.fetch(widget)
   end
 
-  def render(form,value = nil,force_read_only = nil)
+  def render(form,value = nil,force_read_only = nil,force_index = nil)
     require 'erb'
     widget_options = {:constraints => field.constraints, :params => params}
 
@@ -434,7 +434,7 @@ class Question < Bin
     end
 
     field_id = field_name
-    if form.use_multi_index? && idx = form.index
+    if (form.use_multi_index? && idx = form.index) || (idx = force_index)
       field_id = "_#{idx}_#{field_name}"
     end
 

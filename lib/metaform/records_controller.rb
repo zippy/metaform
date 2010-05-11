@@ -90,7 +90,22 @@ class RecordsController < ApplicationController
         else
           opts[:convert_from_html] = true
           if @index
-            attribs = params[:record]
+            if params[:record].keys.any? {|k| k =~ /^_[0-9]+_/ }
+              opts[:multi_index] = true
+              attribs = {@index=>{}}
+              params[:record].each do |k,v|
+                if k =~ /_([0-9]+)_(.*)/
+                  idx = $1.to_i
+                  fn = $2
+                  attribs[idx] ||= {}
+                  attribs[idx][fn] = v
+                else
+                  attribs[@index][k] = v
+                end
+              end
+            else
+              attribs = params[:record]
+            end
             opts[:index] = @index
           elsif params[:multi_index]
             opts[:multi_index] = true
