@@ -912,7 +912,8 @@ class Form
   #Options:
   # :tab - name of presentation displayed by this tab
   # :anchor_css - used to find tab which this tab will go immediately before
-  # :multi - used when a tab is controlled by a numbered field, ie when the number of this flavor of tab is variable
+  # :multi - used when a tab is controlled by a numbered field, ie when the number of this flavor of tab is variable.  We require that
+  #  the relevant value of this field be at the 0th index.
   # :tabs_name - group the tab is a part of
   # :current_tab - whether or not the page is currently on this tab
   # :label - label for the tab 
@@ -929,7 +930,7 @@ class Form
     raise MetaformException "condition must be defined" if !condition.instance_of?(Condition)
     if options[:multi]
       tab_html_options = {:label => "#{options[:label]} NUM", :index => "INDEX"}  
-      tab_num_string = "values_for_#{options[:multi]}[cur_idx]-1"
+      tab_num_string = "values_for_#{options[:multi]}[0]-1"  #The value of the multi-field which controls the tab number is stored at the 0th index.
       multi_string = "true"
     else
       tab_html_options = {:label => options[:label], :index => options[:index]}
