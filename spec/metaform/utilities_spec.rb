@@ -9,7 +9,7 @@ describe Utilities do
     it "should parse dates taking into account a timezone in Form.store" do
       Form.set_store(:time_zone,'UTC')
       d1 = parse_date("1/1/2009 05:00:00")
-      Form.set_store(:time_zone,'EST')
+      Form.set_store(:time_zone,'Eastern Time (US & Canada)')
       d2 = parse_date("1/1/2009")
       d2.should == d1
     end
