@@ -244,7 +244,7 @@ module MetaformHelper
     items << "Order by:  " + select_tag('search[order_current]', options_for_select(order_choices,@search_params[:order_current]))
     items << %Q|Manual filters: #{ text_field_tag('search[manual_filters]', @search_params[:manual_filters], :size=>60)}| if allow_manual_filters
     items << %Q|#{check_box_tag('search[paginate]','yes',@search_params[:paginate]=='yes')} Paginate results <input id='search[paginate]' name='search[paginate]' type='hidden' value='no' />|
-    items << submit_tag("Search", :disable_with => "Search", :id=>'search_submit')
+    items << submit_tag("Search", :disable_with => "Search", :id=>'search_submit', :onclick=>"$('search_form_loading').show()")+ image_tag('loading.gif', :id=>"search_form_loading", :style=>"display:none;")
     if block_given?
       items.insert(insert_block_at,capture(items,&block))
     end
@@ -260,7 +260,6 @@ module MetaformHelper
       html
     end
   end
-
 
   ############################################################################
   # fill_recs uses Record.search which is much faster than Record.locate but it
