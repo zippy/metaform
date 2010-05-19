@@ -52,7 +52,7 @@ class TimeIntervalWithDaysWidget < Widget
     hours = value['hours']
     minutes = value['minutes']
     return '' if days.blank? && hours.blank? && minutes.blank?
-    return nil if !is_numeric?(hours) || !is_numeric?(minutes) || !is_numeric?(days)
+    return nil if (!is_numeric?(hours) && hours != '') || (!is_numeric?(minutes) && minutes != '') || (!is_numeric?(days) && days != '')
     ((days.to_f * 1440) + (hours.to_f * 60) + minutes.to_i).round.to_s
   end
 

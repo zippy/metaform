@@ -56,6 +56,7 @@ module Utilities
   end
   
   def is_numeric?(i)
+    return false if i == ''
     case i
     when Fixnum,Float
       true

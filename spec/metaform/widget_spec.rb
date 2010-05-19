@@ -72,6 +72,7 @@ describe Widget do
       TextFieldIntegerWidget.convert_html_value("0").should == 0
     end
     it "should convert bad html values to nil" do
+      TextFieldIntegerWidget.convert_html_value("").should == nil
       TextFieldIntegerWidget.convert_html_value("x").should == nil
       TextFieldIntegerWidget.convert_html_value("-1").should == nil
       TextFieldIntegerWidget.convert_html_value("10.0").should == nil
@@ -80,7 +81,6 @@ describe Widget do
       TextFieldIntegerWidget.convert_html_value("0x0").should == nil
     end
   end
-
 
   describe TextFieldFloatWidget do
     it "should render an html input text with a label" do
@@ -108,6 +108,7 @@ describe Widget do
       TextFieldFloatWidget.convert_html_value(".1").should == 0.1
     end
     it "should convert bad html values to nil" do
+      TextFieldFloatWidget.convert_html_value("").should == nil
       TextFieldFloatWidget.convert_html_value("x").should == nil
       TextFieldFloatWidget.convert_html_value("-1").should == nil
       TextFieldFloatWidget.convert_html_value("x0").should == nil

@@ -45,7 +45,7 @@ class TimeIntervalWidget < Widget
     hours = value['hours']
     minutes = value['minutes']
     return '' if hours.blank? && minutes.blank?
-    return nil if !is_numeric?(hours) || !is_numeric?(minutes)
+    return nil if (!is_numeric?(hours) && hours != '') || (!is_numeric?(minutes) && minutes != '')
     return (hours.to_f*60+minutes.to_i).to_i.to_s
   end
 

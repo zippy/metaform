@@ -16,6 +16,7 @@ describe Utilities do
   end
   describe "numerics" do
     it "should test return false for non-numbers" do
+      is_numeric?("").should == false
       is_numeric?("x").should == false
       is_numeric?("1x").should == false
       is_numeric?("x3").should == false
@@ -37,6 +38,7 @@ describe Utilities do
   end
   describe "integers" do
     it "should test return false for non-integers" do
+      is_integer?("").should == false
       is_integer?("x").should == false
       is_integer?("1x").should == false
       is_integer?("x3").should == false
