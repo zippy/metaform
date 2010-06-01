@@ -1030,6 +1030,7 @@ describe SimpleForm do
     end #def_tabs
     describe "tab (render a tab)" do
       before(:each) do
+        $extra = ''
         @form.setup_presentation('view',@record)
         @form.set_record(@record)
         @form.set_render(:render)
