@@ -105,7 +105,7 @@ class CheckBoxGroupFollowupWidget < Widget
             EOJS
           end
           followups << <<-EOHTML
-          <input name="#{build_html_multi_name(field_instance_id,idx)}" id="#{id}" class="#{field_instance_id}_#{val}_followup" type="checkbox" value="#{param}" #{checked_string} #{on_click_string}> #{param.humanize}
+          <input name="#{build_html_multi_name(field_instance_id,idx)}" id="#{id}" class="#{field_instance_id}_#{val}_followup" type="checkbox" value="#{param}" #{checked_string} #{on_click_string}><label for="#{id}">#{param.humanize}</label>
           EOHTML
         end  
         followup_span = <<-EOHTML 
@@ -120,7 +120,7 @@ class CheckBoxGroupFollowupWidget < Widget
       <input name="#{build_html_multi_name(field_instance_id,'__none__')}" id="#{build_html_multi_id(field_instance_id,'__none__')}" type="hidden"}>
       <span class="check_box_followup_input"><input name="#{build_html_multi_name(field_instance_id,val)}" id="#{build_html_multi_id(field_instance_id,val)}" class="#{field_instance_id}" type="checkbox" value="#{val}" #{checked ? 'checked' : ''}
         onClick="#{javascript};try{values_for_#{field_instance_id}[cur_idx] = $CBFG('#{field_instance_id}');condition_actions_for_#{field_instance_id}();}catch(err){};">
-        #{value_label}</span>
+        <label for="#{build_html_multi_id(field_instance_id,val)}">#{value_label}</label></span>
         #{followup_span}
       EOHTML
     end

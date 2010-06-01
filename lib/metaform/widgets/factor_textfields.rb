@@ -3,7 +3,7 @@
 # (factor, first_label, second_label) where factor is the ratio between the units 
 # of the first textfield and the second textfield.  
 class FactorTextFieldsWidget < Widget
-  
+  self.extend Utilities
   ################################################################################
   def self.render_form_object(field_instance_id,value,options)
    params = options[:params]
@@ -60,12 +60,12 @@ EOHTML
 
   ################################################################################
   def self.convert_html_value(value,params={})
-    begin
-    	factor = params.split(/,/)[0];
-    	result = !value['first_box'].blank? || !value['second_box'].blank? ? (value['first_box'].to_i * factor.to_i + value['second_box'].to_i).to_s : ''
- 	rescue
- 		nil
-    end
+    factor = params.split(/,/)[0];
+    first_box = value['first_box']
+    second_box = value['second_box']
+    return '' if first_box.blank? && second_box.blank?
+    return nil if !is_integer?(first_box) || !is_integer?(second_box)
+    (first_box.to_i * factor.to_i + second_box.to_i).to_s
   end
 
 end

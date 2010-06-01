@@ -762,7 +762,7 @@ end
           end
         end
       else
-        puts "<br>Creating new fi for #{field_instance_id}" if DEBUG1
+        puts "<br>Creating new ruby fi object for #{field_instance_id}" if DEBUG1
         f = FieldInstance.new({:answer => value, :field_id=>field_instance_id, :form_instance_id => id, :idx => index})
         @ficache.set_attribute(field_instance_id,f,index) if CACHE
         f.explanation = explanation_value if has_explanation
@@ -795,11 +795,14 @@ end
           field_instances_to_save.each do |i|
             deps = @form.dependent_fields(i.field_id)
             dependents.concat(deps) if deps
-            saved_attributes[i.field_id] = i.answer
             if (i.answer == nil || i.answer == '') && ((i.state== 'answered' && i.explanation.blank?) || forced_to_nil.include?(i.field_id))  && i.idx == 0
-              puts "<br>about to delete #{i.attributes.inspect}" if DEBUG1
-              i.delete unless i.new_record?
+              unless i.new_record?
+                puts "<br>about to delete #{i.attributes.inspect}" if DEBUG1
+                i.delete
+                saved_attributes[i.field_id] = i.answer
+              end
             else
+              saved_attributes[i.field_id] = i.answer
               puts "<br>about to save #{i.attributes.inspect}" if DEBUG1
               if !i.save
                 raise "ActiveRecord error:'#{i.errors.full_messages.join(',')}' encountered when saving #{i.field_id}"
@@ -1257,7 +1260,11 @@ end
     end
 
     if pf = locate_options[:sql_prefilters]
-      pfr = Record.search(:conditions => pf)
+      if pf[0] =~ /^select/i
+        pfr = FormInstance.find_by_sql(pf[0])
+      else
+        pfr = Record.search(:conditions => pf)
+      end
       if !pfr.empty?
         condition_strings << 'form_instances.id in ('+pfr.collect {|r| r.id}.join(',')+')'
       else
@@ -1530,6 +1537,27 @@ end
     select += " limit #{options[:limit].to_i}" if options[:limit]
 #    puts select
     r = FormInstance.find_by_sql("select distinct "+select)
+    if options[:load_after]
+      r.each do |rec|
+        rr = Record.find(rec.id)
+        options[:load_after].each do |ff|
+          value = rr[ff]
+          case value
+          when nil
+            eval_string = "def #{ff}\nnil\nend"
+          when String
+            value = value.gsub('|',"\\|")
+            eval_string = "def #{ff}\n%q|#{value}|\nend"
+          when Fixnum
+            eval_string = "def #{ff}\n#{value}\nend"
+          else
+            raise "unknow type!"
+          end
+          rec.class_eval(eval_string)
+        end
+      end
+    end
+    r
   end
   
   def Record.sql_fieldname_convert(str)

@@ -2,8 +2,50 @@
 module Constraints
   RequiredErrMessage = "This information is required"
   RequiredMultiErrMessage = "You must check at least one choice from this list"
+  DefaultErrorMessages = {
+    'regex' => "Answer must match regular expression ?{constraint}?{extra}",
+    'max_length' => "Answer must not be more than ?{constraint} characters long",
+    'numeric' => 'Answer must be numeric',
+    'range' => {:numeric => 'Answer must be numeric', :range=> "Answer must be between ?{low} and ?{hi}?{extra}"},
+    'date' => {:in_past=>"Date cannot be in the future",:in_future=>"Date cannot be in the past"},
+    'integer' => {:integer=>"Answer must be an integer",:positive=>"Answer must be a positive integer"},
+    'unique' => 'Answer must be unique',
+    'required' => RequiredErrMessage+'?{extra}',
+    'set' => 'Answer must be one of ?{labels}',
+    'set.none' => 'Answer cannot include ?{none_label} and other items',
+    'enumeration' => 'Answer must be one of ?{labels}',
+    '_explanation_approval' => %Q|Error was "?{err}"; the explanation was: "?{exp}" (Fix, or approve ?{chk})|,
+    '_explanation' => "; please correct (or explain here: ?{exp})",
+    '_required_multi' => RequiredMultiErrMessage
+  }
+  $metaform_error_messages = DefaultErrorMessages.clone
+  
   class << self 
     include Utilities
+  end
+  def Constraints.fill_error(message,values=nil)
+    
+    case message
+    when Hash
+      case values
+      when Symbol
+        message[values]
+      when Hash
+        key,vals = values.first
+        message[key].gsub(/\?\{(.*?)\}/) {|key| vals[$1]}
+      else
+        raise "expecting a symbol or a hash as the error message value"
+      end
+    when String
+      case values
+      when Hash
+        message.gsub(/\?\{(.*?)\}/) {|key| values[$1]}
+      else
+        message
+      end
+    else
+      raise "error message must be a string (with replacement variables, or a hash of strings)"
+    end
   end
   def Constraints.verify (constraints, value, form)
     constraint_errors = []
@@ -22,7 +64,8 @@ module Constraints
 #      end
       condition_extra_err = ''
       
-      err_override = constraints["err_#{type}"]
+      err_message_template = constraints["err_#{type}"]
+      err_message_template ||= $metaform_error_messages[type]
       case type
       when "proc"
         raise MetaformException,"value of proc constraint must be a Proc!" if !constraint.instance_of?(Proc)
@@ -33,12 +76,24 @@ module Constraints
         if !value.blank?
           r = Regexp.new(constraint)
           if r !~ value
-            constraint_errors << (err_override || "Answer must match regular expression #{constraint}#{condition_extra_err}")
+            constraint_errors << fill_error(err_message_template,{'constraint'=>constraint,'extra'=>condition_extra_err})
           end
         end
       when "max_length"
         if !value.blank? && value.length > constraint
-          constraint_errors << (err_override || "Answer must not be more than #{constraint} characters long")
+          constraint_errors << fill_error(err_message_template,{'constraint'=>constraint,'extra'=>condition_extra_err})
+        end
+      when "numeric"
+        if !value.blank? && !is_numeric?(value)
+          constraint_errors << fill_error(err_message_template)
+        end
+      when "integer"
+        if !value.blank?
+          if !is_integer?(value)
+            constraint_errors << fill_error(err_message_template,:integer)
+          elsif constraint == 'positive' && value.to_i < 0
+            constraint_errors << fill_error(err_message_template,:positive)
+          end
         end
       when "range"
         #for the range constraint the value must be a string "X:Y" where X<Y
@@ -46,28 +101,32 @@ module Constraints
           (l,h) = constraint.split(":")
           low = l.to_i
           hi = h.to_i
-          raise "range constraint #{constraint} is ilegal. Must be of form X:Y where X<Y" if low>hi || hi == nil
-          if value.to_i < low || value.to_i > hi
-            constraint_errors << (err_override || "Answer must be between #{low} and #{hi}#{condition_extra_err}")
+          raise "range constraint #{constraint} is ilegal. Must be of form X:Y where X<Y" if h.nil? || low>hi || hi == nil
+          val = value.to_i
+          if !is_numeric?(value)
+            constraint_errors << fill_error(err_message_template,:numeric)
+          elsif val < low || val > hi
+            constraint_errors <<  fill_error(err_message_template,{:range => {'low'=>low,'hi'=>hi,'extra'=>condition_extra_err}})
           end
+          constraint_errors
         end
       when "date"
         if !value.blank?
           date = parse_date(value)
           if constraint == :in_past
             if date > Time.now
-              constraint_errors << (err_override || "Date cannot be in the future")
+              constraint_errors << fill_error(err_message_template,:in_past)
             end
           elsif constraint == :in_future
             if date < Time.now
-              constraint_errors << (err_override || "Date cannot be in the past")
+              constraint_errors << fill_error(err_message_template,:in_future)
             end
           end
         end
       when "unique"
         current_record_id = form.get_record.id
         records = Record.locate(:all,{:filters => [":#{constraint} == '#{value}'"],:index => :any,:fields => ['constraint']})
-        constraint_errors << (err_override || 'Answer must be unique') if records.size > 0 && !records.find{|r| r.id == current_record_id}
+        constraint_errors << fill_error(err_message_template) if records.size > 0 && !records.find{|r| r.id == current_record_id}
       when "required"
         # if the constraint is a string instead of (true | false) then build a condition on the fly
         #This is ugly as sin, but is the only way we could think of to get a global override for required.
@@ -93,10 +152,11 @@ module Constraints
             raise MetaformException,"value of required constraint must be a true, false or a condition string!"
           end
           if constraint && (value == nil || value == "")
-            msg = err_override if err_override
-            msg = RequiredMultiErrMessage if constraints.has_key?('set')
-            msg ||= RequiredErrMessage
-            constraint_errors << "#{msg}#{condition_extra_err}"
+            msg = $metaform_error_messages['_required_multi'] if constraints.has_key?('set')
+            msg ||= fill_error(err_message_template,{'extra'=>condition_extra_err})
+            
+#            msg ||= Form.config[:required_error_message] ? Form.config[:required_error_message] : RequiredErrMessage
+            constraint_errors << msg
           end
         end
       when "set"
@@ -128,10 +188,10 @@ module Constraints
         if not cur_values.all? {|v| ok_values.include?(v)}
           labels = constraint[0].is_a?(String) ? ok_values.join(', ') : constraint.collect{|h| h.is_a?(String) ? h.to_s : h.values[0]}
           labels = labels.join(', ')
-          constraint_errors << (err_override || ("Answer must be one of #{labels}"))
+          constraint_errors << fill_error(err_message_template,{'labels'=>labels})
         end
         if none_val && cur_values.include?(none_val) && cur_values.size > 1
-          constraint_errors << (err_override || ("Answer connot include #{none_label} and other items"))
+          constraint_errors << fill_error($metaform_error_messages['set.none'],{'none_label'=>none_label})
         end
       when "enumeration"
         #for the enumeration constraint the value will be an array of strings or of hashes of the form:
@@ -143,7 +203,7 @@ module Constraints
         if !ok_values.include?(value)
           labels = constraint[0].is_a?(String) ? constraint : (constraint[0].is_a?(Array) ?  constraint.collect{|label,val| label} : constraint.collect{|h| h.is_a?(String) ? h.to_s : h.values[0]})
           labels = labels.join(', ')
-          constraint_errors << (err_override || ("Answer must be one of #{labels}"))
+          constraint_errors << fill_error(err_message_template,{'labels'=>labels})
         end
       end
     end

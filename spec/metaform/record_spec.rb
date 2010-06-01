@@ -3,6 +3,7 @@ include UtilityFunctions
 
 describe Record do
   before(:each) do
+    $metaform_error_messages = Constraints::DefaultErrorMessages.clone
     Form.config[:hide_required_extra_errors] = true
   end
   def setup_record(index = nil)
@@ -45,7 +46,19 @@ describe Record do
       @record.workflow_state = 'verifying'
       @record.workflow_state_label.should == 'Form in validation'
     end
-  end    
+  end
+  
+  describe "-- updating attributes" do
+    before(:each) do
+      setup_record
+    end
+    it "update_attributes should return a list of the attributes that were actually updated" do
+      @record.save('new_entry')
+      nr = Record.locate(:first)
+      results = nr.update_attributes({:name => 'John Doe',:fruit => 'banana'},'new_entry')
+      results.should == {"name"=>"John Doe"}
+    end
+  end
     
   describe "-- indexed fields" do
     before(:each) do
@@ -106,7 +119,7 @@ describe Record do
       nr.update_attributes({:name => 'John Doe'},'new_entry',nil,:clear_indexes =>['name'])
       nr[:name,:any].should == ['John Doe']
     end
-
+    
     it "should not clear values on update" do
        @record = Record.make(SampleForm.new,'condition_test')
        @record.yale_class = 'music'
@@ -1323,7 +1336,7 @@ describe Record do
     end
     it "should be able to order fields on search selecting the table name too" do
       records = Record.search(:fields => [:name],:order => 'form_instances.id')
-      records.collect{|r| r.attributes}.collect {|h| h["name"]}.should == ["Bob Smith", "Fred Smith", "Bob Feldspar", "Jane Feldspar"]      
+      records.collect{|r| r.id}.should == [1,2,3,4]      
     end
     it "should be able to search conditionally on fields" do
       records = Record.search(:conditions => ":name  like 'Bob%'")
@@ -1358,7 +1371,9 @@ describe Record do
     end
     it "should be able to add meta_fields to results" do
       records = Record.search(:meta_fields => [:workflow_state])
-      records.collect{|r| r.attributes}.should == [{"id"=>1,"workflow_state"=>nil},{"id"=>2,"workflow_state"=>nil},{"id"=>3,"workflow_state"=>nil},{"id"=>4,"workflow_state"=>nil}]
+      results = {}
+      records.each{|r| results[r.id] = r.attributes}
+      results.should == { 1=> {"id"=>1,"workflow_state"=>nil}, 2=>{"id"=>2,"workflow_state"=>nil},3=>{"id"=>3,"workflow_state"=>nil},4=>{"id"=>4,"workflow_state"=>nil}}
     end
     it "should be able to add raw_fields to results" do
       records = Record.search(:fields => [:name,:fruit],:raw_fields => %Q|CASE
@@ -1374,6 +1389,30 @@ describe Record do
       records = Record.search(:meta_condition => "id > 2")
       records.collect{|r| r.attributes}.should == [{"id"=>3}, {"id"=>4}]
     end
+    describe "load_after" do
+      it "should be able to specify some fields as :load_after for speed enhancement" do
+        records = Record.search(:fields => [:name])
+        lambda {records[0].name}.should_not raise_error
+        lambda {records[0].fruit}.should raise_error(NoMethodError)
+        records = Record.search(:fields => [:name],:load_after =>[:fruit])
+        lambda {records[0].fruit}.should_not raise_error(NoMethodError)
+      end
+      it "should be able to handle fields with special characters in them when using load_after" do
+        fruit =  "blood|ora'nge \"fruit\""
+        make_record({:name =>'Wilma Feldspar',:fruit =>fruit})
+        records = Record.search(:fields => [:name],:load_after =>[:fruit],:conditions => ":name = 'Wilma Feldspar'")
+        records[0].fruit.should == fruit
+      end
+      it "should be able to handle fields with nil values when using load_after" do
+        records = Record.search(:fields => [:name],:load_after =>[:hobby])
+        records[0].hobby.should == nil
+      end
+      it "should be able to handle fields with values that return non-string using load_after" do
+        records = Record.search(:fields => [:name],:load_after =>[:total_bobs])
+        records[0].total_bobs.should == 1
+      end
+    end
+    
   end
   
   #The following two specs were written when we were trying to implement the use of force_nil on fields in indexed presentations.

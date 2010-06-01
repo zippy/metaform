@@ -68,7 +68,7 @@ class RecordsController < ApplicationController
         format.xml  { head :created, :location => @record.url(@presentation) }
       else
         format.html { (@form_html,@form_javascript) = @record.build_html(@presentation,@index); render :action => "new" }
-        format.xml  { render :xml => @updated.errors.to_xml }
+        format.xml  { render :xml => @record.errors.to_xml }
       end
     end
   end
@@ -153,7 +153,7 @@ class RecordsController < ApplicationController
             format.xml  { head :ok }
           else
             format.html { render_show }
-            format.xml  { render :xml => @updated.errors.to_xml }
+            format.xml  { render :xml => @record.errors.to_xml }
           end
         end
       end

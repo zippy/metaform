@@ -32,11 +32,20 @@ function check_year(year) {
 	return null;
 }
 
-function check_num(num) {
-	if (/[^\d]/.exec(num)) {return null;}
+function check_num(num,allow_negatives) {
+	if (/[^\d-]/.exec(num)) {return null;}
 	var n = parseInt(num);
 	if (isNaN(n)) {return null}
+	if (!allow_negatives && n < 0) {return null}
 	return n;
+}
+
+function check_float(num,allow_negatives) {
+	if (/[^\d.-]/.exec(num)) {return null}
+	var n = parseFloat(num);
+	if (isNaN(n)) {return null}
+	if (!allow_negatives && n < 0) {return null}
+	return n
 }
 
 function make_date(year,month,date) {
@@ -53,6 +62,15 @@ function make_date(year,month,date) {
 		return null
 	}
 	return d
+}
+
+//Get value of integer widgets
+function $IF(name){
+	return check_num($F(name));
+}
+//Get value of float widgets
+function $FF(name){
+	return check_float($F(name));
 }
 
 //Get value of radiobutton widgets
@@ -173,6 +191,7 @@ indexedItems.prototype = {
 		var items = $(this.elem_id).childElements();
 		var element = new Element('li', {'class':'presentation_indexed_item',style:'display:none'});
 		var presentation = this;
+		var scripts = item.extractScripts();
 		element.innerHTML = item;
 		var other_element = new Element('input',{type:'button',value:this.delete_text,'class':'float_right'});
 		other_element.onclick = function (evt) {
@@ -182,12 +201,33 @@ indexedItems.prototype = {
 		$(element).appendChild(Element('div', {'class':'clear'}));
 		$(this.elem_id).appendChild(element);
 		Effect.toggle(element,'blind',{duration: .3});
+		scripts.each(function(script) {
+			window.globalEval(script)
+		});
 	},
 	removeItem: function(item) {
 		Effect.toggle(item,'blind',{duration: .5, afterFinish: myCallBackOnFinish});
 	}
 
 };
+window.globalEval = (function() {
+    if (typeof window.execScript != 'undefined') {
+        return function(str) { window.execScript(str); };
+    }
+    if (!Prototype.Browser.Opera && !Prototype.Browser.WebKit && typeof window.eval != 'undefined') {
+        return function(str) { window.eval(str); };
+    }
+    return function(str) {
+        var head, script;
+
+        head = $$('head')[0];
+        if (head) {
+            script = new Element('script', {'type': 'text/javascript'});
+            script.appendChild(document.createTextNode(str));
+            head.appendChild(script);
+        }
+    };
+})();
 
 function myCallBackOnFinish(obj){
 	var item = obj.element.remove();
@@ -301,6 +341,16 @@ function time_invalid(field_id) {
 	return $TF(field_id) == null;
 }
 
+function integer_invalid(field_id) {
+	if ($F(field_id) == '') {return false;}
+	return $IF(field_id) == null;
+}
+
+function float_invalid(field_id) {
+	if ($F(field_id) == '') {return false;}
+	return $FF(field_id) == null;
+}
+
 function mark_field_validity(field_id,is_invalid,invalid_text) {
 	var the_style;
 	var wrapper = $(field_id+'_wrapper');
@@ -308,7 +358,7 @@ function mark_field_validity(field_id,is_invalid,invalid_text) {
 	if (title == 'undefined') {title = ""};
 	title = title.gsub(invalid_text,"");
 	if (is_invalid) {
-		the_style = "background-color: #FFCCFF;padding: 3px; border-style: solid;border-width: 2px 2px 2px 2px; border-color: #CC0033;";
+		the_style = "background-color: #FFCCFF;padding: 3px 3px 5px 3px; border-style: solid;border-width: 2px 2px 2px 2px; border-color: #CC0033;";
 		if (title.length > 0) {
 			title = title + "; "
 		}
@@ -319,6 +369,14 @@ function mark_field_validity(field_id,is_invalid,invalid_text) {
 		wrapper.title = title;
 	}
 	wrapper.setStyle(the_style);
+}
+
+function mark_invalid_integer(field_id) {
+	mark_field_validity(field_id,integer_invalid(field_id),"Invalid integer")
+}
+
+function mark_invalid_float(field_id) {
+	mark_field_validity(field_id,float_invalid(field_id),"Invalid number")
 }
 
 function mark_invalid_date_time(field_id) {

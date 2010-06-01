@@ -870,22 +870,22 @@ describe SimpleForm do
       end
       it "should render a property" do
         @form.with_record(@record,:render) do
-          (@form.questions['age'].render(@form) =~ /g question!/).should_not == nil
+          (@form.questions['age1609331767'].render(@form) =~ /g question!/).should_not == nil
           (@form.questions['higher_ed_years'].render(@form) =~ /g question!/).should_not == nil
           (@form.questions['name'].render(@form) =~ /g question!$/).should == nil
         end
       end
       it "should render a property differently for a read only question" do
         @form.with_record(@record,:render) do
-          (@form.questions['age'].render(@form,'10',true) =~ /g question read only!/).should_not == nil
+          (@form.questions['age1609331767'].render(@form,'10',true) =~ /g question read only!/).should_not == nil
           (@form.questions['name'].render(@form,'Joe',true) =~ /g question$/).should == nil
         end
       end
       it "should render multiple properties" do
         @form.set_validating(true)
         @form.with_record(@record) do
-          (@form.questions['age'].render(@form,'99') =~ /g question!/).should_not == nil
-          (@form.questions['age'].render(@form,'99') =~ /<div class="validation_item">/).should == nil
+          (@form.questions['age1609331767'].render(@form,'99') =~ /g question!/).should_not == nil
+          (@form.questions['age1609331767'].render(@form,'99') =~ /<div class="validation_item">/).should == nil
           (@form.questions['higher_ed_years'].render(@form,'99') =~ /g question!/).should_not == nil
           (@form.questions['higher_ed_years'].render(@form,'99') =~ /<div class="validation_item">/).should_not == nil
         end
@@ -955,12 +955,55 @@ describe SimpleForm do
         end
       end
       describe "-- with validation" do
+        before(:each) do
+          $metaform_error_messages = Constraints::DefaultErrorMessages.clone
+        end
         it "should add the validation html if record is validation mode"  do
           @record.name = ''
           @form.set_validating(true)
           @form.with_record(@record,:render) do
             @form.q('name')
             @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">This information is required; please correct (or explain here: <input tabindex=\"1\" id=\"explanations_name_0\" name=\"explanations[name][0]\" type=\"text\" value=\"\" />)</div></div>"]
+          end
+        end
+        
+        it "should add the validation html with custom error message per field" do
+          @record.name = ''
+          @form.set_validating(true)
+          @form.with_record(@record,:render) do
+            @form.q('senior')
+            @form.get_body.should == ["<div id=\"question_senior\" class=\"question\"><label class=\"label\" for=\"record_senior\">Senior:</label><input id=\"record_senior\" name=\"record[senior]\" type=\"text\" /> <div class=\"validation_item\">You must enter senior because it matters!; please correct (or explain here: <input tabindex=\"1\" id=\"explanations_senior_0\" name=\"explanations[senior][0]\" type=\"text\" value=\"\" />)</div></div>"]
+          end
+        end
+
+        it "should add the validation html with custom error message per field" do
+          @record.name = ''
+          @form.set_validating(true)
+          @form.with_record(@record,:render) do
+            @form.q('senior')
+            @form.get_body.should == ["<div id=\"question_senior\" class=\"question\"><label class=\"label\" for=\"record_senior\">Senior:</label><input id=\"record_senior\" name=\"record[senior]\" type=\"text\" /> <div class=\"validation_item\">You must enter senior because it matters!; please correct (or explain here: <input tabindex=\"1\" id=\"explanations_senior_0\" name=\"explanations[senior][0]\" type=\"text\" value=\"\" />)</div></div>"]
+          end
+        end
+        
+        it "should add the validation html if record is validation mode with custom default error and explanation message"  do
+          $metaform_error_messages['required'] = "This field is blank. If this an oversight, please fill it in above. If you don't have this information, please explain why here: "
+          $metaform_error_messages['_explanation'] = "?{exp}"
+          @record.name = ''
+          @form.set_validating(true)
+          @form.with_record(@record,:render) do
+            @form.q('name')
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">This field is blank. If this an oversight, please fill it in above. If you don't have this information, please explain why here: <input tabindex=\"1\" id=\"explanations_name_0\" name=\"explanations[name][0]\" type=\"text\" value=\"\" /></div></div>"]
+          end
+        end
+
+        it "should add the validation html if record is validation mode with custom per-field explanation message"  do
+          $metaform_error_messages['required'] = "THIS SHOULD BE OVERRIDDEN "
+          $metaform_error_messages['_explanation'] = "THIS SHOULD BE OVERRIDDEN TOO! ?{exp}"
+          @record.name = ''
+          @form.set_validating(true)
+          @form.with_record(@record,:render) do
+            @form.q('height')
+            @form.get_body.should == ["<div id=\"question_height\" class=\"question\"><label class=\"label\" for=\"record_height\">Height:</label><input id=\"record_height\" name=\"record[height]\" type=\"text\" /> <div class=\"validation_item\">Gotta get this right. Try again or explain here: <input tabindex=\"1\" id=\"explanations_height_0\" name=\"explanations[height][0]\" type=\"text\" value=\"\" /></div>g question!</div>"]
           end
         end
 
@@ -970,7 +1013,18 @@ describe SimpleForm do
           @form.with_record(@record,:render) do
             @record.update_attributes({:name => ''},'simple',{:explanations => {'name' => {"0" => 'unknown'}}})
             @form.q('name')
-            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">Error was \"This information is required\"; midwife's explanation: \"unknown\" (Fix, or approve \n                    <input tabindex=\"1\" name=\"approvals[name][0]\" id=\"approvals_name_0\" type=\"checkbox\" value=\"Y\" >)\n                    <input name=\"approvals[name][0]\" id=\"approvals_name_0\"  type=\"hidden\" value=\"\" ></div></div>"]
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">Error was \"This information is required\"; the explanation was: \"unknown\" (Fix, or approve <input tabindex=\"1\" name=\"approvals[name][0]\" id=\"approvals_name_0\" type=\"checkbox\" value=\"Y\" >)<input name=\"approvals[name][0]\" id=\"approvals_name_0\"  type=\"hidden\" value=\"\" ></div></div>"]
+          end
+        end
+
+        it "should add the validation html if record is validation approval mode and there is a custom approval message"  do
+          $metaform_error_messages['_explanation_approval'] = %Q|Error was "?{err}"; midwive's explanation was: "?{exp}" (Fix, or approve ?{chk})|
+          @record.save('create')
+          @form.set_validating(:approval)
+          @form.with_record(@record,:render) do
+            @record.update_attributes({:name => ''},'simple',{:explanations => {'name' => {"0" => 'unknown'}}})
+            @form.q('name')
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">Error was \"This information is required\"; midwive's explanation was: \"unknown\" (Fix, or approve <input tabindex=\"1\" name=\"approvals[name][0]\" id=\"approvals_name_0\" type=\"checkbox\" value=\"Y\" >)<input name=\"approvals[name][0]\" id=\"approvals_name_0\"  type=\"hidden\" value=\"\" ></div></div>"]
           end
         end
 
@@ -980,7 +1034,7 @@ describe SimpleForm do
           @form.with_record(@record,:render) do
             @record.update_attributes({:name => ''},'simple',{:explanations => {'name' => {"0" => 'unknown'}},:approvals => {'name'=>{"0" => 'Y'}}})
             @form.q('name')
-            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">Error was \"This information is required\"; midwife's explanation: \"unknown\" (Fix, or approve \n                    <input tabindex=\"1\" name=\"approvals[name][0]\" id=\"approvals_name_0\" type=\"checkbox\" value=\"Y\" checked>)\n                    <input name=\"approvals[name][0]\" id=\"approvals_name_0\"  type=\"hidden\" value=\"\" ></div></div>"]
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">Error was \"This information is required\"; the explanation was: \"unknown\" (Fix, or approve <input tabindex=\"1\" name=\"approvals[name][0]\" id=\"approvals_name_0\" type=\"checkbox\" value=\"Y\" checked>)<input name=\"approvals[name][0]\" id=\"approvals_name_0\"  type=\"hidden\" value=\"\" ></div></div>"]
           end
         end
 
@@ -1284,7 +1338,7 @@ describe SimpleForm do
         @form.prepare(nil)
         @form.with_record(@record,:render) do
           @form.p('married_questions')
-          @form.get_body.should == ["<div id=\"presentation_married_questions\" class=\"presentation\">", "<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record_married\">Married?</label><select name=\"record[married]\" id=\"record_married\">\n   <option value=\"y\">Yes</option>\n<option value=\"n\">No</option>\n</select>\n</div>", "<div id=\"uid_1\" class=\"hideable_box_with_border\" style=\"display:none\">", "<div id=\"question_children\" class=\"question\"><label class=\"label\" for=\"record_children\">Children:</label><input id=\"record_children\" name=\"record[children]\" type=\"text\" /></div>", "</div>", "</div>"]
+          @form.get_body.should == ["<div id=\"presentation_married_questions\" class=\"presentation\">", "<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record_married\">Married?</label><select name=\"record[married]\" id=\"record_married\">\n   <option value=\"y\">Yes</option>\n<option value=\"n\">No</option>\n</select>\n</div>", "<div id=\"uid_1\" class=\"hideable_box_with_border\" style=\"display:none\">", "<div id=\"question_children\" class=\"question\"><label class=\"label\" for=\"record_children\">Children:</label>    <span id=\"record_children_wrapper\"><input id=\"record_children\" name=\"record[children]\" onchange=\"mark_invalid_integer('record_children')\" onkeyup=\"mark_invalid_integer('record_children')\" type=\"text\" /></span>\n</div>", "</div>", "</div>"]
         end
       end
     end #javascript_show_hide_if
@@ -1370,6 +1424,7 @@ describe SimpleForm do
     end #def_tabs
     describe "tab (render a tab)" do
       before(:each) do
+        $extra = ''
         @form.setup_presentation('view',@record)
         @form.set_record(@record)
         @form.set_render(:render)
@@ -1442,9 +1497,8 @@ describe SimpleForm do
       it "should generate all the html and javascript for a complex presentation" do
         r = @form.build('simple',@record)
         r.should == [
-          "<script>var cur_idx=find_current_idx();var values_for_eye_color = new Array();</script><div id=\"presentation_simple\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>\n<div id=\"question_age\" class=\"question\"><label class=\"label\" for=\"record_age\">Age:</label><input id=\"record_age\" name=\"record[age]\" type=\"text\" />g question!</div>\n<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record_higher_ed_years\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>\n<div id=\"question_eye_color\" class=\"question\"><label class=\"label\" for=\"record_eye_color\">Eye color:</label><input id=\"record_eye_color\" name=\"record[eye_color]\" type=\"text\" /></div>\n<div id=\"uid_1\" class=\"followup\" style=\"display:none\">\n<div id=\"question_other_eye_color\" class=\"question\"><label class=\"label\" for=\"record_other_eye_color\">Other eye color:</label><textarea id=\"record_other_eye_color\" name=\"record[other_eye_color]\"></textarea></div>\n</div>\n<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record_married\">Married?</label><input id=\"record_married\" name=\"record[married]\" type=\"text\" /></div>\n</div>\n<input type=\"hidden\" name=\"meta[last_updated]\" id=\"meta_last_updated\" value=0>", 
-          "function actions_for_eye_color_is_x() {\n  if (eye_color_is_x()) {Element.show('uid_1')}\n  else {Element.hide('uid_1')}\n}\n\nfunction eye_color_is_x() {return values_for_eye_color[0] == \"x\"}\nEvent.observe('record_eye_color', 'change', function(e){ values_for_eye_color[cur_idx] = $F('record_eye_color');actions_for_eye_color_is_x(); });"
-          ]
+          "<script>var cur_idx=find_current_idx();var values_for_eye_color = new Array();</script><div id=\"presentation_simple\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>\n<div id=\"question_age\" class=\"question\"><label class=\"label\" for=\"record_age\">Age:</label>    <span id=\"record_age_wrapper\"><input id=\"record_age\" name=\"record[age]\" onchange=\"mark_invalid_integer('record_age')\" onkeyup=\"mark_invalid_integer('record_age')\" type=\"text\" /></span>\ng question!</div>\n<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record_higher_ed_years\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" />g question!</div>\n<div id=\"question_eye_color\" class=\"question\"><label class=\"label\" for=\"record_eye_color\">Eye color:</label><input id=\"record_eye_color\" name=\"record[eye_color]\" type=\"text\" /></div>\n<div id=\"uid_1\" class=\"followup\" style=\"display:none\">\n<div id=\"question_other_eye_color\" class=\"question\"><label class=\"label\" for=\"record_other_eye_color\">Other eye color:</label><textarea id=\"record_other_eye_color\" name=\"record[other_eye_color]\"></textarea></div>\n</div>\n<div id=\"question_married\" class=\"question\"><label class=\"label\" for=\"record_married\">Married?</label><input id=\"record_married\" name=\"record[married]\" type=\"text\" /></div>\n</div>\n<input type=\"hidden\" name=\"meta[last_updated]\" id=\"meta_last_updated\" value=0>",
+          "function actions_for_eye_color_is_x() {\n  if (eye_color_is_x()) {Element.show('uid_1')}\n  else {Element.hide('uid_1')}\n}\n\nfunction eye_color_is_x() {return values_for_eye_color[0] == \"x\"}\nEvent.observe('record_eye_color', 'change', function(e){ values_for_eye_color[cur_idx] = $F('record_eye_color');actions_for_eye_color_is_x(); });"]
       end
       it "should build html with :workflow_action javascript buttons" do
         r = @form.build('js_button_not_forced',@record)
@@ -1473,7 +1527,10 @@ describe SimpleForm do
         end
       end
       it "should raise an error if @record has not be set" do
-        lambda {@form.field_value('name').should}.should raise_error("attempting to get field value of 'name' with no record")
+        lambda {@form.field_value('name')}.should raise_error("attempting to get field value of 'name' with no record")
+      end
+      it "should raise an error if trying to get the value of a non-existent field" do
+        lambda { @form.with_record(@record) {@form.field_value('fish')}}.should raise_error(MetaformUndefinedFieldError)
       end
       it "should return an array of values when used with :any" do
         @record = Record.make(SampleForm.new,'new_entry', {
@@ -1618,7 +1675,7 @@ describe SimpleForm do
     describe "field widget map" do
       it "should create a field widget map" do
         @form.setup_presentation('simple',@record)
-        @form.current_questions_field_widget_map.should == {"name"=>[TextFieldWidget, {:params=>nil, :constraints=>{"required"=>true}}], "eye_color"=>[TextFieldWidget, {:params=>nil, :constraints=>{"enumeration"=>[{"ffffff"=>"black"}, {"00ff00"=>"green"}, {"0000ff"=>"blue"}, {"x"=>"other"}]}}], "married"=>[TextFieldWidget, {:params=>nil, :constraints=>{"enumeration"=>[{"y"=>"Yes"}, {"n"=>"No"}]}}], "higher_ed_years"=>[TextFieldWidget, {:params=>nil, :constraints=>{"required"=>true, "range"=>"0:10"}}], "other_eye_color"=>[TextAreaWidget, {:params=>nil, :constraints=>{"required"=>"eye_color=x"}}], "age"=>[TextFieldWidget, {:params=>nil, :constraints=>{"required"=>true, "range"=>"1:100"}}]}
+        @form.current_questions_field_widget_map.should == {"name"=>[TextFieldWidget, {:params=>nil, :constraints=>{"required"=>true}}], "eye_color"=>[TextFieldWidget, {:params=>nil, :constraints=>{"enumeration"=>[{"ffffff"=>"black"}, {"00ff00"=>"green"}, {"0000ff"=>"blue"}, {"x"=>"other"}]}}], "married"=>[TextFieldWidget, {:params=>nil, :constraints=>{"enumeration"=>[{"y"=>"Yes"}, {"n"=>"No"}]}}], "higher_ed_years"=>[TextFieldWidget, {:params=>nil, :constraints=>{"required"=>true, "range"=>"0:10"}}], "other_eye_color"=>[TextAreaWidget, {:params=>nil, :constraints=>{"required"=>"eye_color=x"}}], "age"=>[TextFieldIntegerWidget, {:params=>nil, :constraints=>{"required"=>true, "range"=>"1:100"}}]}
       end
     end
   end

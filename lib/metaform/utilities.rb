@@ -54,4 +54,23 @@ module Utilities
       Time.parse(value)
     end
   end
+  
+  def is_numeric?(i)
+    return false if i == ''
+    case i
+    when Fixnum,Float
+      true
+    when String
+      !(i.size == 1 ? i =~ /^\d$/ : i =~ /^(\d|-)?(\d|,)*\.?\d*$/).nil?
+    else
+      false
+    end
+  end
+  def is_integer?(i)
+    return false if i.nil?
+    return true if i.is_a?(Fixnum)
+    i = i.gsub(/,/,'')
+    !(i.size == 1 ? i =~ /^\d$/ : i =~ /^[-+]?[1-9]\d*$/).nil?
+  end
+  
 end

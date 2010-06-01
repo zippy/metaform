@@ -2,6 +2,7 @@ require File.dirname(__FILE__) + '/../spec_helper'
 include Utilities
 describe Constraints do
   before(:each) do
+    $metaform_error_messages = Constraints::DefaultErrorMessages.clone
     Form.config[:hide_required_extra_errors] = false
     @form = SampleForm.new
   end
@@ -20,9 +21,54 @@ describe Constraints do
     end
   end
 
+  describe 'integer' do
+    it "should trigger if value isn't an integer" do
+      Constraints.verify({'integer' => true}, 'x', @form).should == ["Answer must be an integer"]
+      Constraints.verify({'integer' => true}, '-0', @form).should == ["Answer must be an integer"]
+      Constraints.verify({'integer' => true}, '10.0', @form).should == ["Answer must be an integer"]
+      Constraints.verify({'integer' => true}, '10xx0', @form).should == ["Answer must be an integer"]
+    end
+    it "should not trigger if value an integer" do
+      Constraints.verify({'integer' => true}, '1', @form).should == []
+      Constraints.verify({'integer' => true}, '-1', @form).should == []
+      Constraints.verify({'integer' => true}, '-1,000', @form).should == []
+      Constraints.verify({'integer' => true}, '1,000', @form).should == []
+    end
+    it "should for negative values is limitd to postitive integers" do
+      Constraints.verify({'integer' => 'positive'}, '-1', @form).should == ["Answer must be a positive integer"]
+      Constraints.verify({'integer' => 'positive'}, '-100', @form).should == ["Answer must be a positive integer"]
+    end
+    it "should trigger if value isn't an integer when value is limmited to positive integer" do
+      Constraints.verify({'integer' => 'positive'}, 'x', @form).should == ["Answer must be an integer"]
+      Constraints.verify({'integer' => 'positive'}, '-0', @form).should == ["Answer must be an integer"]
+      Constraints.verify({'integer' => 'positive'}, '10.0', @form).should == ["Answer must be an integer"]
+      Constraints.verify({'integer' => 'positive'}, '10xx0', @form).should == ["Answer must be an integer"]
+    end
+  end
+  
+  describe 'numeric' do
+    it "should trigger if value isn't a number" do
+      Constraints.verify({'numeric' => true}, 'x', @form).should == ["Answer must be numeric"]
+      Constraints.verify({'numeric' => true}, '10..0', @form).should == ["Answer must be numeric"]
+      Constraints.verify({'numeric' => true}, '10xx0', @form).should == ["Answer must be numeric"]
+      Constraints.verify({'numeric' => true}, 'x1', @form).should == ["Answer must be numeric"]
+      Constraints.verify({'numeric' => true}, '1x', @form).should == ["Answer must be numeric"]
+    end
+    it "should not trigger if value an integer" do
+      Constraints.verify({'numeric' => true}, '1', @form).should == []
+      Constraints.verify({'numeric' => true}, '10.234', @form).should == []
+      Constraints.verify({'numeric' => true}, '-10.234', @form).should == []
+      Constraints.verify({'numeric' => true}, '-1', @form).should == []
+      Constraints.verify({'numeric' => true}, '-1,000', @form).should == []
+      Constraints.verify({'numeric' => true}, '1,000', @form).should == []
+    end
+  end
+
   describe 'range' do
     it "should raise an error if a range can't be extracted" do
       lambda{Constraints.verify({'range' => '5-1'}, 1, @form)}.should raise_error("range constraint 5-1 is ilegal. Must be of form X:Y where X<Y")
+      lambda{Constraints.verify({'range' => '0-5'}, 1, @form)}.should raise_error("range constraint 0-5 is ilegal. Must be of form X:Y where X<Y")
+      lambda{Constraints.verify({'range' => '5'}, 1, @form)}.should raise_error("range constraint 5 is ilegal. Must be of form X:Y where X<Y")
     end
     it "should raise an error if a range is illegal" do
       lambda{Constraints.verify({'range' => '5:1'}, 1, @form)}.should raise_error("range constraint 5:1 is ilegal. Must be of form X:Y where X<Y")
@@ -32,6 +78,11 @@ describe Constraints do
     end
     it "should not trigger when value is empty string" do
       Constraints.verify({'range' => '1:5'}, '', @form).should == []
+    end
+    it "should trigger if value isn't an integer" do
+      Constraints.verify({'range' => '1:5'}, "X", @form).should == ["Answer must be numeric"]
+      Constraints.verify({'range' => '1:5'}, "1X", @form).should == ["Answer must be numeric"]
+      Constraints.verify({'range' => '1:5'}, "1..0", @form).should == ["Answer must be numeric"]
     end
     it "should trigger when value is out of range" do
       Constraints.verify({'range' => '1:5'}, '9', @form).should == ["Answer must be between 1 and 5"]
@@ -249,8 +300,8 @@ describe Constraints do
       Constraints.verify({'set' => [{'apple' => 'Apple'},{'banana' => 'Banana'}]}, 'kiwi,apple', @form).should == ["Answer must be one of Apple, Banana"]
     end
     it "should trigger when more than one value and one is the 'none' starred value" do
-      Constraints.verify({'set' => [{'no_fruit*' => 'None'},{'apple' => 'Apple'},{'banana' => 'Banana'}]}, 'no_fruit,apple', @form).should == ["Answer connot include None and other items"]
-      Constraints.verify({'set' => [{'none' => 'None'},{'apple' => 'Apple'},{'banana' => 'Banana'}]}, 'none,apple', @form).should == ["Answer connot include None and other items"]
+      Constraints.verify({'set' => [{'no_fruit*' => 'None'},{'apple' => 'Apple'},{'banana' => 'Banana'}]}, 'no_fruit,apple', @form).should == ["Answer cannot include None and other items"]
+      Constraints.verify({'set' => [{'none' => 'None'},{'apple' => 'Apple'},{'banana' => 'Banana'}]}, 'none,apple', @form).should == ["Answer cannot include None and other items"]
     end
 
     it "should not trigger when value is in set" do
@@ -263,6 +314,16 @@ describe Constraints do
 
     it "should not trigger when value YAML encoded and is in set" do
       Constraints.verify({'set' => [{'apple' => 'Apple'},{'banana' => 'Banana'}]}, {'banana'=>:stuff,'apple'=>:more_stuff}.to_yaml, @form).should == []
+    end
+  end
+  describe 'overriding error messages' do
+    it 'should use a simple replacement string' do
+      $metaform_error_messages['range'] = "Please double-check this value"
+      Constraints.verify({'range' => '1:5'}, "X", @form).should == ["Please double-check this value"]
+    end
+    it 'should be able to override the multi-required error message' do
+      $metaform_error_messages['_required_multi'] = "No way dude!"
+      Constraints.verify({'required' =>true,'set' => [{'apple' => 'Apple'},{'banana' => 'Banana'}]}, '', @form).should == ["No way dude!"]
     end
   end
 end

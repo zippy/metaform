@@ -1,5 +1,6 @@
 ################################################################################
 class TimeIntervalWithDaysWidget < Widget
+  self.extend Utilities
   ################################################################################
   def self.render_form_object(field_instance_id,value,options)
     if !value.blank?
@@ -47,11 +48,12 @@ class TimeIntervalWithDaysWidget < Widget
 
   ################################################################################
   def self.convert_html_value(value,params={})
-    begin
-      result = (!value['days'].blank? || !value['hours'].blank? || !value['minutes'].blank?) ? ((value['days'].to_i * 1440) + (value['hours'].to_i * 60) + value['minutes'].to_i).to_s : '' #Store as minutes
-    rescue
-      nil
-    end
+    days = value['days']
+    hours = value['hours']
+    minutes = value['minutes']
+    return '' if days.blank? && hours.blank? && minutes.blank?
+    return nil if (!is_numeric?(hours) && hours != '') || (!is_numeric?(minutes) && minutes != '') || (!is_numeric?(days) && days != '')
+    ((days.to_f * 1440) + (hours.to_f * 60) + minutes.to_i).round.to_s
   end
 
 end

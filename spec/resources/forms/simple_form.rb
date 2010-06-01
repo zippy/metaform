@@ -2,7 +2,7 @@ class FieldNameHasG < Property
   def self.evaluate(form,field,value)
     field.name =~ /g/ ? true : false
   end
-  def self.render(question_html,property_value,question,form,read_only)
+  def self.render(question_html,property_value,question,form,field,read_only)
     if property_value
       if read_only
         question_html + 'g question read only!'
@@ -37,10 +37,10 @@ class SimpleForm < Form
         f 'name'
         def_fields :constraints=>{"range"=>"1:100"} do
           f 'age'
-          f 'height'
+          f 'height',:constraints=>{'required' => true,'err_required' => 'Gotta get this right.','err__explanation'=>' Try again or explain here: ?{exp}'}
           f 'higher_ed_years',:constraints=>{'range'=>'0:10'},:followups=>{'/../' => f('degree'),'!0'=>f('no_ed_reason')},:label => 'years of higher education'
         end
-        f 'senior'
+        f 'senior',:constraints=>{'required' => true,'err_required' => 'You must enter senior because it matters!'}
       end
       	
       f 'eye_color',
@@ -222,7 +222,7 @@ class SimpleForm < Form
 
     presentation 'simple' do
       q 'name'
-      q 'age'
+      q 'age',:widget=> 'TextFieldInteger'
       q 'higher_ed_years'
       q 'eye_color', :followups => {'other_eye_color' => 'TextArea'}
       q 'married',:labeling => {:postfix => '?'}
@@ -231,7 +231,7 @@ class SimpleForm < Form
     presentation 'married_questions' do
       q 'married',:widget=>'PopUp',:labeling => {:postfix => '?'}
       javascript_show_hide_if(:condition => 'married=y') do
-        q 'children'
+        q 'children',:widget=> 'TextFieldInteger'
       end
     end
     
@@ -268,8 +268,8 @@ class SimpleForm < Form
 
     presentation 'family_info' do
       q 'married', :widget => 'PopUp'
-      q 'children'
-      q 'oldest_child_age'
+      q 'children',:widget=> 'TextFieldInteger'
+      q 'oldest_child_age',:widget=> 'TextFieldInteger'
     end
 
     presentation 'js_button_forced' do

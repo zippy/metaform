@@ -461,9 +461,9 @@ class Question < Bin
         next if i == 0 && !form.validating?
         property_value = p.evaluate(form,field,value)
         if erb
-          field_element = p.render(field_element,property_value,self,form,ro)
+          field_element = p.render(field_element,property_value,self,form,field,ro)
         end
-        field_html=p.render(field_html,property_value,self,form,ro)
+        field_html=p.render(field_html,property_value,self,form,field,ro)
       end
     end
 

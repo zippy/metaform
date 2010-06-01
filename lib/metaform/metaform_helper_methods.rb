@@ -67,7 +67,7 @@ module MetaformHelperMethods
       <p>#{check_box_tag('search[paginate]','yes',@search_params[:paginate]=='yes')} Paginate results
         <input id='search[paginate]' name='search[paginate]' type='hidden' value='no' />
       </p>
-      <p><input type='submit' name='Submit' value='Search'></p>
+      <p>#{submit_tag("Search", :disable_with => "Search", :id=>'search_submit', :onclick=>"$('search_form_loading').show()")+ image_tag('loading.gif', :id=>"search_form_loading", :style=>"display:none;")}</p>
     </fieldset>
     EOHTML
   end
