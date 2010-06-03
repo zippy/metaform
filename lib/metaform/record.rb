@@ -1450,7 +1450,7 @@ end
       ids = r.collect {|f| f.id}.join(",")
       fields = options[:load_after].collect {|f| "'#{f.to_s}'"}.join(",")
       fi = FieldInstance.find(:all,:conditions => "form_instance_id in (#{ids}) and field_id in (#{fields}) and idx=0")
-      field_list = options[:load_after]
+      field_list = [:id] + options[:load_after]
       field_list += options[:meta_fields] if options[:meta_fields]
       rec_struct = Struct.new(*field_list)
       recs = {}
@@ -1461,6 +1461,7 @@ end
       results = []
       r.each do |rec|
         recs[rec.id] ||= rec_struct.new
+        recs[rec.id]["id"] = rec.id
         if options[:meta_fields]
           attrs = rec.attributes
           options[:meta_fields].each {|mf| recs[rec.id][mf.to_s] = attrs[mf.to_s]}
