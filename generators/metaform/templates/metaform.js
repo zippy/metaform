@@ -82,6 +82,11 @@ function $RF(rb_class){
 function $DF(name){
 	return make_date($F(name+'_year'),$F(name+'_month'),$F(name+'_day'));
 }
+//Get value of month_year widgets
+function $MYF(name){
+	return make_date($F(name+'_year'),$F(name+'_month'),1);
+}
+
 //Get value of time widgets
 function $TF(name){
 	var hours = check_num($F(name+'_hours'));
@@ -187,7 +192,7 @@ indexedItems.prototype = {
 	delete_text: 'Delete an item',
 	initialize: function () {
 		},
-	addItem: function(item) {
+	addItem: function(item,idx) {
 		var items = $(this.elem_id).childElements();
 		var element = new Element('li', {'class':'presentation_indexed_item',style:'display:none'});
 		var presentation = this;
@@ -195,7 +200,7 @@ indexedItems.prototype = {
 		element.innerHTML = item;
 		var other_element = new Element('input',{type:'button',value:this.delete_text,'class':'float_right'});
 		other_element.onclick = function (evt) {
-				presentation.removeItem($(this).up());
+				doRemoveIndexedPresentationItem(this,idx)
 			};
 		$(element).appendChild(other_element);
 		$(element).appendChild(Element('div', {'class':'clear'}));
@@ -206,9 +211,9 @@ indexedItems.prototype = {
 		});
 	},
 	removeItem: function(item) {
+		//item.getElementsBySelector('input').invoke('remove')  //This makes the blind jerky and doesn't seem to be necessary.
 		Effect.toggle(item,'blind',{duration: .5, afterFinish: myCallBackOnFinish});
 	}
-
 };
 window.globalEval = (function() {
     if (typeof window.execScript != 'undefined') {
@@ -296,7 +301,7 @@ function insert_tabs(tab_html,anchor_css,before_anchor,default_anchor_css,desire
 		current_tab_num = current_tab_num + 1;
 		if (multi) {
 			display_num = current_tab_num + 1;
-			this_tab_html = this_tab_html.gsub(/NUM/,' '+display_num).gsub(/INDEX/,display_num-1);
+			this_tab_html = this_tab_html.gsub(/NUM/,' '+display_num).gsub(/INDEX/,display_num);
 		}
 		before_anchor ? next_tabs.invoke('insert',{before:  this_tab_html}) : next_tabs.invoke('insert',{after:  this_tab_html});
 		
@@ -332,6 +337,12 @@ function date_invalid(field_id) {
 		return false;
 	}
 	return $DF(field_id) == null;
+}
+function month_year_invalid(field_id) {
+	if ($F(field_id+'_year') == '' && $F(field_id+'_month') == '') {
+		return false;
+	}
+	return $MYF(field_id) == null;
 }
 
 function time_invalid(field_id) {
@@ -389,6 +400,9 @@ function mark_invalid_date(field_id) {
 
 function mark_invalid_time(field_id) {
 	mark_field_validity(field_id,time_invalid(field_id),"Invalid time")
+}
+function mark_invalid_month_year(field_id) {
+	mark_field_validity(field_id,month_year_invalid(field_id),"Invalid date")
 }
 
 function confirmReset() {
