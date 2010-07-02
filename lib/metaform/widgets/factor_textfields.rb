@@ -59,12 +59,22 @@ EOHTML
   end
 
   ################################################################################
+  ## NOTE: this code assumes that a single box left blank should be set to 0
   def self.convert_html_value(value,params={})
     factor = params.split(/,/)[0];
     first_box = value['first_box']
     second_box = value['second_box']
     return '' if first_box.blank? && second_box.blank?
-    return nil if !is_integer?(first_box) || !is_integer?(second_box)
+    first_valid = is_integer?(first_box)
+    second_valid = is_integer?(second_box)
+    if first_valid && second_box.blank?
+      second_box = 0
+      second_valid = true
+    elsif second_valid && first_box.blank?
+      first_box = 0
+      first_valid = true
+    end
+    return nil if !first_valid || !second_valid
     (first_box.to_i * factor.to_i + second_box.to_i).to_s
   end
 

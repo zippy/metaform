@@ -266,6 +266,11 @@ describe Widget do
       FactorTextFieldsWidget.convert_html_value(d,"5,FirstLabel,SecondLabel").should == "0"
       d = {'first_box'=>"",'second_box'=>''}
       FactorTextFieldsWidget.convert_html_value(d,"5,FirstLabel,SecondLabel").should == ""
+      d = {'first_box'=>"6",'second_box'=>''}
+      ## NOTE: this tests that a single box left blank should be set to 0.  There are some uses of Metform that might not want that to be the case.
+      FactorTextFieldsWidget.convert_html_value(d,"5,FirstLabel,SecondLabel").should == "30"
+      d = {'first_box'=>"",'second_box'=>'3'}
+      FactorTextFieldsWidget.convert_html_value(d,"5,FirstLabel,SecondLabel").should == "3"
     end
     it "should convert bad html values to nil" do
       d = {'first_box'=>"",'second_box'=>'x'}
