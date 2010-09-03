@@ -70,6 +70,7 @@ module MetaformHelper
         def_search_rule(key+'_c') {|search_for| ["#{field} #{ILIKE} ?",'%'+search_for+'%']}
         def_search_rule(key+'_is') {|search_for| ["#{field} = ?", search_for]}
         def_search_rule(key+'_not') {|search_for| ["#{field} != ?", search_for]}
+        def_search_rule(key+'_gt') {|search_for| ["#{field} > ?", search_for.to_i]}
       end
     when :locate #The search rules generated here will be used for a call to Record.locate, via fill_and_locate_records
       pairs.each do |key,field|
