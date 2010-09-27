@@ -33,6 +33,7 @@ function check_year(year) {
 }
 
 function check_num(num,allow_negatives) {
+	num = num.replace(/^0+([1-9])/,'$1')
 	if (/[^\d-]/.exec(num)) {return null;}
 	var n = parseInt(num);
 	if (isNaN(n)) {return null}

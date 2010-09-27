@@ -1537,25 +1537,28 @@ end
     select += " limit #{options[:limit].to_i}" if options[:limit]
 #    puts select
     r = FormInstance.find_by_sql("select distinct "+select)
-    if options[:load_after]
+    if options[:load_after] && r.size > 0
+      ids = r.collect {|f| f.id}.join(",")
+      fields = options[:load_after].collect {|f| "'#{f.to_s}'"}.join(",")
+      fi = FieldInstance.find(:all,:conditions => "form_instance_id in (#{ids}) and field_id in (#{fields}) and idx=0")
+      field_list = [:id] + options[:load_after]
+      field_list += options[:meta_fields] if options[:meta_fields]
+      rec_struct = Struct.new(*field_list)
+      recs = {}
+      fi.each do |i|
+        recs[i.form_instance_id] ||= rec_struct.new
+        recs[i.form_instance_id][i.field_id]=i.answer
+      end
+      results = []
       r.each do |rec|
-        rr = Record.find(rec.id)
-        options[:load_after].each do |ff|
-          value = rr[ff]
-          case value
-          when nil
-            eval_string = "def #{ff}\nnil\nend"
-          when String
-            value = value.gsub('|',"\\|")
-            eval_string = "def #{ff}\n%q|#{value}|\nend"
-          when Fixnum
-            eval_string = "def #{ff}\n#{value}\nend"
-          else
-            raise "unknow type!"
-          end
-          rec.class_eval(eval_string)
+        recs[rec.id] ||= rec_struct.new
+        recs[rec.id]["id"] = rec.id
+        if options[:meta_fields]
+          attrs = rec.attributes
+          options[:meta_fields].each {|mf| recs[rec.id][mf.to_s] = attrs[mf.to_s]}
         end
       end
+      return recs.values
     end
     r
   end
