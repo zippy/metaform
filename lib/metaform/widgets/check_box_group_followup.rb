@@ -117,7 +117,7 @@ class CheckBoxGroupFollowupWidget < Widget
         javascript = "do_click_#{field_instance_id}_regular(this,'#{val}','#{followup_id}')"
       end  
       result << <<-EOHTML 
-      <input name="#{build_html_multi_name(field_instance_id,'__none__')}" id="#{build_html_multi_id(field_instance_id,'__none__')}" type="hidden"}>
+      <input name="#{build_html_multi_name(field_instance_id,'__none__')}" id="#{build_html_multi_id(field_instance_id,'__none__')}" type="hidden">
       <span class="check_box_followup_input"><input name="#{build_html_multi_name(field_instance_id,val)}" id="#{build_html_multi_id(field_instance_id,val)}" class="#{field_instance_id}" type="checkbox" value="#{val}" #{checked ? 'checked' : ''}
         onClick="#{javascript};try{values_for_#{field_instance_id}[cur_idx] = $CBFG('#{field_instance_id}');condition_actions_for_#{field_instance_id}();}catch(err){};">
         <label for="#{build_html_multi_id(field_instance_id,val)}">#{value_label}</label></span>

@@ -72,7 +72,7 @@ class CheckBoxGroupWidget < Widget
     else
       result = result.join("\n")
     end
-    result + %Q|<input name="#{build_html_multi_name(field_instance_id,'__none__')}" id="#{build_html_multi_id(field_instance_id,'__none__')}" type="hidden"}>| +  js 
+    result + %Q|<input name="#{build_html_multi_name(field_instance_id,'__none__')}" id="#{build_html_multi_id(field_instance_id,'__none__')}" type="hidden">| +  js 
   end
 
   ################################################################################
