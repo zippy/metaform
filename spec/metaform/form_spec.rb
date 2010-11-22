@@ -231,8 +231,9 @@ describe SimpleForm do
         lambda {@form.f('xx',:constraints=>{"enumeration"=>[{nil=>"-"}]})}.should_not raise_error
         lambda {@form.f('xxx',:constraints=>{"enumeration"=>[{''=>"-"}]})}.should_not raise_error
         lambda {@form.f('xxxx',:constraints=>{"enumeration"=>[{'/'=>"-"}]})}.should_not raise_error
-        lambda {@form.f('y',:constraints=>{"enumeration"=>[{"dog&"=>'DOG'}]})}.should raise_error("illegal set/enumeration option value, must be alpha-numeric plus _ and - (field: y, option: dog&)")
-        lambda {@form.f('z',:constraints=>{"set"=>[{"dog&"=>'DOG'}]})}.should raise_error("illegal set/enumeration option value, must be alpha-numeric plus _ and - (field: z, option: dog&)")
+        lambda {@form.f('xxxxx',:constraints=>{"enumeration"=>[{'.'=>"-"}]})}.should_not raise_error
+        lambda {@form.f('y',:constraints=>{"enumeration"=>[{"dog&"=>'DOG'}]})}.should raise_error("illegal set/enumeration option value, must be alpha-numeric plus ._-/ (field: y, option: dog&)")
+        lambda {@form.f('z',:constraints=>{"set"=>[{"dog&"=>'DOG'}]})}.should raise_error("illegal set/enumeration option value, must be alpha-numeric plus ._-/ (field: z, option: dog&)")
       end
       it "should set hash options given to def_fields to all fields defined in the block" do
         @form.fields['name'].constraints.has_key?('required').should == true

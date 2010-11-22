@@ -217,7 +217,7 @@ class Form
         o = {}
         l = {}
         x.each do |label,option|
-          raise "illegal set/enumeration option value, must be alpha-numeric plus _ and - (field: #{name}, option: #{option})" unless (option =~ /^[\/A-Za-z0-9_-]+\**$/ || option == '' || option.nil?)
+          raise "illegal set/enumeration option value, must be alpha-numeric plus ._-/ (field: #{name}, option: #{option})" unless (option =~ /^[\/A-Za-z0-9_.-]+\**$/ || option == '' || option.nil?)
           raise "Duplicate set/enumeration option: #{option.inspect}" if o.has_key?(option)
           raise "Duplicate set/enumeration label: #{label.inspect}" if l.has_key?(label)
           o[option] = 1
