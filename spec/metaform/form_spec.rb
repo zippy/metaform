@@ -226,6 +226,14 @@ describe SimpleForm do
         lambda {@form.f('x',:constraints=>{"enumeration"=>[{nil=>"nil"}, {"nil"=>"nil"}]})}.should raise_error("Duplicate set/enumeration label: \"nil\"")
         lambda {@form.f('x',:constraints=>{"set"=>[{'1'=>"one"}, {'one'=>"one"}]})}.should raise_error("Duplicate set/enumeration label: \"one\"")
       end
+      it "should check the values of set and enums for illegal characters" do
+        lambda {@form.f('x',:constraints=>{"enumeration"=>[{"dog-catcher"=>'DOG'}]})}.should_not raise_error
+        lambda {@form.f('xx',:constraints=>{"enumeration"=>[{nil=>"-"}]})}.should_not raise_error
+        lambda {@form.f('xxx',:constraints=>{"enumeration"=>[{''=>"-"}]})}.should_not raise_error
+        lambda {@form.f('xxxx',:constraints=>{"enumeration"=>[{'/'=>"-"}]})}.should_not raise_error
+        lambda {@form.f('y',:constraints=>{"enumeration"=>[{"dog&"=>'DOG'}]})}.should raise_error("illegal set/enumeration option value, must be alpha-numeric plus _ and - (field: y, option: dog&)")
+        lambda {@form.f('z',:constraints=>{"set"=>[{"dog&"=>'DOG'}]})}.should raise_error("illegal set/enumeration option value, must be alpha-numeric plus _ and - (field: z, option: dog&)")
+      end
       it "should set hash options given to def_fields to all fields defined in the block" do
         @form.fields['name'].constraints.has_key?('required').should == true
         @form.fields['age'].constraints.has_key?('required').should == true
