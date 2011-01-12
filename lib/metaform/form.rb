@@ -9,9 +9,9 @@ class Form
   @@forms_dir = 'forms'
   @@cache = {}
   @@store = {}
-  @@config = {}
+  @@configuration = {}
   @@_loaded_helpers = {}
-  cattr_accessor :forms_dir,:cache,:config
+  cattr_accessor :forms_dir,:cache,:configuration
 
   FieldTypes = ['string','integer','float','decimal','boolean','date','datetime','time','text','hash','array']
 
@@ -45,7 +45,7 @@ class Form
     the_form = nil
     # in development mode we reload the forms if there have been any changes
     # in the forms directory
-    if RAILS_ENV == 'development'
+    if Rails.env.development?
       require 'find'
       forms_date = Time.at(0)
       Find.find(Form.forms_dir) do |f|
@@ -1096,7 +1096,7 @@ class Form
         tabs_html = get_body.join("\n")
       end
     end
-    tabs_html
+    tabs_html.html_safe
   end
   
   def prepare_for_tabs(tabs_name,current_tab = nil)
@@ -1170,7 +1170,7 @@ class Form
       p(presentation_name)
       body %Q|<input type="hidden" name="meta[last_updated]" id="meta_last_updated" value=#{record.updated_at.to_i}>|
       if @_stuff[:need_workflow_action]
-        body %Q|<input type="hidden" name="meta[workflow_action]" id="meta_workflow_action"#{@_stuff[:need_workflow_action].is_a?(String) ? %Q*value="#{@_stuff[:need_workflow_action]}"* : ''}>|
+        body %Q|<input type="hidden" name="meta[workflow_action]" id="meta_workflow_action"#{@_stuff[:need_workflow_action].is_a?(String) ? %Q* value="#{@_stuff[:need_workflow_action]}"* : ''}>|
       end
       if any_multi_index?
         body %Q|<input type="hidden" name="multi_index" id="multi_index" value="#{@_any_multi_index}">|
@@ -1239,17 +1239,16 @@ EOJS
       end
 
       b = get_body.join("\n")
-      
       b.gsub!(/<info(.*?)>(.*?)<\/info>/) {|match| tip($2,$1)}
 
       if @_tip_id
-        b = javascript_include_tag("prototip-min") + stylesheet_link_tag('prototip',:media => "screen")+b
+        b = "#{javascript_include_tag("prototip-min")} #{stylesheet_link_tag('prototip',:media => "screen")} #{b}"
       end
 
       js = get_jscripts
       jscripts << js if js
       b = '<script>var cur_idx=find_current_idx();' + stored_value_string + '</script>' + b if stored_value_string != '' && !presentations[presentation_name].force_read_only
-      [b,jscripts.join("\n")]
+      [b.html_safe,jscripts.join("\n").html_safe]
     end
   end
     
@@ -1676,6 +1675,14 @@ EOJS
   ###########################################################
   def quote_for_html_attribute(text)
     text.gsub(/"/,'&quot;')
+  end
+  
+  # this is here to so that inclusion of include ActionView::Helpers::AssetTagHelper will work in rails 3
+  def config
+    ActionController::Base.config
+  end
+  def controller
+    nil
   end
       
 end

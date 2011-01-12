@@ -141,11 +141,11 @@ module Constraints
                 constraint = false
                 break
               end
-              err_str << "#{cond.humanize}" unless Form.config[:hide_required_extra_errors]
+              err_str << "#{cond.humanize}" unless Form.configuration[:hide_required_extra_errors]
             end
             next unless constraint
             constraint = true
-            condition_extra_err = " when " + err_str.join(' and ') unless Form.config[:hide_required_extra_errors]
+            condition_extra_err = " when " + err_str.join(' and ') unless Form.configuration[:hide_required_extra_errors]
           when TrueClass
           when FalseClass
           else
@@ -155,7 +155,7 @@ module Constraints
             msg = $metaform_error_messages['_required_multi'] if constraints.has_key?('set')
             msg ||= fill_error(err_message_template,{'extra'=>condition_extra_err})
             
-#            msg ||= Form.config[:required_error_message] ? Form.config[:required_error_message] : RequiredErrMessage
+#            msg ||= Form.configuration[:required_error_message] ? Form.configuration[:required_error_message] : RequiredErrMessage
             constraint_errors << msg
           end
         end

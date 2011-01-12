@@ -1113,7 +1113,7 @@ describe SimpleForm do
       end
       it "should build html with :workflow_action_force javascript buttons" do
         r = @form.build('js_button_forced',@record)
-        r.should == ["<div id=\"presentation_js_button_forced\" class=\"presentation\">\n<input type=\"button\" value=\"Continue\" onclick=\"$('metaForm').submit();\">\n</div>\n<input type=\"hidden\" name=\"meta[last_updated]\" id=\"meta_last_updated\" value=0>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\"value=\"continue\">", ""]
+        r.should == ["<div id=\"presentation_js_button_forced\" class=\"presentation\">\n<input type=\"button\" value=\"Continue\" onclick=\"$('metaForm').submit();\">\n</div>\n<input type=\"hidden\" name=\"meta[last_updated]\" id=\"meta_last_updated\" value=0>\n<input type=\"hidden\" name=\"meta[workflow_action]\" id=\"meta_workflow_action\" value=\"continue\">", ""]
       end
     end # build
   end # generators
@@ -1236,7 +1236,7 @@ describe SimpleForm do
       it "should return datetime it was created" do
         @record.save('create')
         @form.with_record(@record) do
-          @form.created_at.to_s.should == Time.now().to_s
+          @form.created_at.to_s(:db).should == Time.now.utc.to_s(:db)
         end
       end
       it "should raise an error when a record isn't specified" do

@@ -1,4 +1,11 @@
-require_dependency("#{RAILS_ROOT}/app/controllers/application")
+#if Rails::VERSION::STRING =~ /^2.2/
+#  require_dependency("#{RAILS_ROOT}/app/controllers/application_controller")
+#elsif Rails::VERSION::STRING =~ /^2.3/
+#  require_dependency("#{RAILS_ROOT}/app/controllers/application")
+#elsif Rails::VERSION::STRING =~ /^3./
+#  require_dependency("#{Rails.root}/app/controllers/application_controller")
+#end
+  
 
 class RecordsController < ApplicationController
   include ApplicationHelper
@@ -158,11 +165,11 @@ class RecordsController < ApplicationController
     options = {:template => 'records/show'}
     if params[:template]
       tmpl = params[:template]
-    elsif FileTest.exists?("#{RAILS_ROOT}/app/views/records/#{@presentation}.html.erb")
+    elsif FileTest.exists?("#{Rails.root}/app/views/records/#{@presentation}.html.erb")
       tmpl = @presentation
     end
     options[:template] = 'records/'<< tmpl if tmpl
-    options[:layout] = params[:template] if FileTest.exists?("#{RAILS_ROOT}/app/views/layouts/#{tmpl}.html.erb")
+    options[:layout] = params[:template] if FileTest.exists?("#{Rails.root}/app/views/layouts/#{tmpl}.html.erb")
     options[:layout] = params[:layout] if params[:layout]
     options
   end

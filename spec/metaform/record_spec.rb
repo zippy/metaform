@@ -4,7 +4,7 @@ include UtilityFunctions
 describe Record do
   before(:each) do
     $metaform_error_messages = Constraints::DefaultErrorMessages.clone
-    Form.config[:hide_required_extra_errors] = true
+    Form.configuration[:hide_required_extra_errors] = true
   end
   def setup_record(index = nil)
     @initial_values = {:name =>'Bob Smith',:fruit => 'banana'}
@@ -873,10 +873,10 @@ describe Record do
       @record.save('new_entry')
     end
     it "should set the created date on creation" do
-      @record.created_at.to_s.should == Time.now.to_s
+      @record.created_at.to_s(:db).should == Time.now.utc.to_s(:db)
     end
     it "should set the updated date on creation" do
-      @record.updated_at.to_s.should == Time.now.to_s
+      @record.updated_at.to_s(:db).should == Time.now.utc.to_s(:db)
     end
     it "should set the updated date on save" do
       now_seconds = Time.now.to_i
@@ -1220,7 +1220,7 @@ describe Record do
       ).should == ['SampleForm,,0,,,,Bob Smith,banana']
     end
     it "should be able to export a record and specify date format" do
-      i = Time.now
+      i = Time.now.utc
       @record[:due_date] = "1/1/2000"
       @record[:some_time] = "Fri Jan 09 01:10:12 -0500 2009"
       @record.save('new_entry')

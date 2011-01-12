@@ -506,9 +506,9 @@ end
   end
   
   ######################################################################################
-  # return and or create ActiveRecord errors object
+  # return and or create ActiveModel errors object
   def errors
-    @errors ||= ActiveRecord::Errors.new(self)
+    @errors ||= ActiveModel::Errors.new(self)
   end
   
   def build_tabs(tabs,current)
@@ -694,6 +694,7 @@ end
       explanation_value = explanations[field_instance_id][index.to_s] if has_explanation
       is_approval = approvals && approvals[field_instance_id]
       approval_value = approvals[field_instance_id][index.to_s] if is_approval
+      value = value.to_yaml if [Hash,Array].include?(value.class)
       if f != nil
         if f.answer != (value.nil? ? nil : value.to_s) || (has_explanation && f.explanation != explanation_value) ||
             (is_approval && approval_value) || forced_to_nil.include?(field_instance_id)
@@ -738,6 +739,7 @@ end
       if !field_instances_to_save.empty?
     		dependents = []
         FieldInstance.transaction do
+          
           field_instances_to_save.each do |i|
             deps = @form.dependent_fields(i.field_id)
             dependents.concat(deps) if deps
@@ -782,7 +784,7 @@ end
             update_calculated_fields(calculated_fields_to_update)
           end
         end
-        ok = form_instance.update_attributes({:updated_at => Time.now, :validation_data => vd})
+        ok = form_instance.update_attributes({:updated_at => Time.now, :validation_data => vd.to_yaml})
         raise MetaformException, "error updating form_instance: #{form_instance.errors.full_messages}" if !ok
       end
       if field_instances_protected && !field_instances_protected.empty?

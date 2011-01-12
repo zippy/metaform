@@ -255,11 +255,7 @@ module MetaformHelper
       <p>#{items.join("</p><p>")}</p>
     </fieldset>
     EOHTML
-    if block_given?
-      concat html
-    else
-      html
-    end
+    html.html_safe
   end
 
   ############################################################################
@@ -276,7 +272,7 @@ module MetaformHelper
     options = generate_search_options(:search)
     
     #if there's a manual filter then we have to and it to any conditions that allready exist
-    if current_user.can?(:sqlSearchBoxes) && !@search_params[:manual_filters].blank?
+    if current_user_can?(:sqlSearchBoxes) && !@search_params[:manual_filters].blank?
       options ||= {}
       if options[:conditions].blank?
         options[:conditions] = @search_params[:manual_filters]
@@ -312,7 +308,7 @@ module MetaformHelper
     options = {:per_page => 20}.update(opts)
     #This method uses Record.gather, which pulls un-filtered records out of the database and then filters them via ruby.
     search_rules = generate_search_options(:locate)
-    if current_user.can?(:sqlSearchBoxes) && !@search_params[:manual_filters].blank?
+    if current_user_can?(:sqlSearchBoxes) && !@search_params[:manual_filters].blank?
       search_rules = search_rules.nil? ? @search_params[:manual_filters] : "(#{search_rules}) and (#{@search_params[:manual_filters]})"
     end
     if search_rules || @display_all

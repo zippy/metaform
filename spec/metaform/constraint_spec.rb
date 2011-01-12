@@ -3,7 +3,7 @@ include Utilities
 describe Constraints do
   before(:each) do
     $metaform_error_messages = Constraints::DefaultErrorMessages.clone
-    Form.config[:hide_required_extra_errors] = false
+    Form.configuration[:hide_required_extra_errors] = false
     @form = SampleForm.new
   end
   describe 'regex' do
@@ -237,7 +237,7 @@ describe Constraints do
       end
       it "should not show the when part of the error message if options switched off" do
         @form.with_record(@record) do
-          Form.config[:hide_required_extra_errors] = true
+          Form.configuration[:hide_required_extra_errors] = true
           Constraints.verify({'required' =>'name=Bob Smith'}, nil, @form).should == ["#{Constraints::RequiredErrMessage}"]
         end
       end
