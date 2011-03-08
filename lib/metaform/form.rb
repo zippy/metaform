@@ -11,6 +11,7 @@ class Form
   @@store = {}
   @@config = {}
   @@_loaded_helpers = {}
+  @@_loaded_definitions = {}
   cattr_accessor :forms_dir,:cache,:config
 
   FieldTypes = ['string','integer','float','decimal','boolean','date','datetime','time','text','hash','array']
@@ -1516,20 +1517,23 @@ EOJS
   #################################################################################
   # helper function to allow separating the DSL commands into multiple files
   def include_definitions(file)
+    return if @@_loaded_definitions[self.class.to_s+file] == self.class
+    @@_loaded_definitions[self.class.to_s+file] = self.class
     fn = Form.forms_dir+'/'+file
     file_contents = IO.read(fn)
-    eval(file_contents,nil,fn)
+    eval(file_contents,getBinding,fn)
   end
   
   #################################################################################
   # helper function to allow separating the DSL commands into multiple files
   def include_helpers(file)
-    return if @@_loaded_helpers[file] == self.class
-    @@_loaded_helpers[file] = self.class
+    return if @@_loaded_helpers[self.class.to_s+file] == self.class
+    @@_loaded_helpers[self.class.to_s+file] = self.class
     fn = Form.forms_dir+'/'+file
     file_contents = IO.read(fn)
-    Form.class_eval(file_contents,fn)
+    self.class.class_eval(file_contents,fn)
   end
+
   
   def if_c(condition,condition_value=true)
     condition = make_condition(condition)
