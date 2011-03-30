@@ -174,6 +174,9 @@ class Record
       @value.compact.delete_if{|v| v == ""}.blank?
     end
         
+    def last
+      @value.last
+    end
   end
   
 class AnswersHash < Hash
@@ -1307,7 +1310,7 @@ end
       #puts "eval_Field 0:  expression=#{expression}"
       expr = expression.gsub(/\!:(\S+)/,'!(:\1)')
       #puts "eval_Field 1:  expr=#{expr}"
-      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|each_with_index|to_i|zip|map|include|any|other\?|blank\?)/,'f["\1"].\2')
+      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|each_with_index|to_i|zip|map|include|any|other\?|blank\?|last)/,'f["\1"].\2')
       #puts "eval_field 2:  expr=#{expr}"
       expr = expr.gsub(/:([a-zA-Z0-9_-]+)\./,'f["\1"].value.')
       #puts "eval_field 4:  expr=#{expr}"
