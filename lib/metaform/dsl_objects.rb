@@ -39,7 +39,7 @@ class Condition < Bin
   Expression = Struct.new("Expression",:field_name,:field_value,:operator,:index)
   OperatorMatch = /([a-zA-Z_\[\]0-9\*]*)\s*((<>=)|(>=)|(<=)|(<>)|(<)|(>)|(!=)|(=!)|(=~)|(!~)|(~!)|(=+)|(includes)|(!includes)|(answered)|(!answered))\s*(.*)/
   def bins
-    { :form => nil,:name => nil, :description => nil, :ruby => nil,:javascript => nil,:booleanjoins=>nil,:expressions=>nil,:fields_to_use => nil}
+    { :form => nil,:name => nil, :description => nil, :ruby => nil,:javascript => nil,:booleanjoins=>nil,:expressions=>nil,:fields_to_use => nil,:zero_index_force_nil_only => nil}
   end
   def required_bins
     [:form,:name]

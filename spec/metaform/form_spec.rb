@@ -134,7 +134,7 @@ describe SimpleForm do
           c4.evaluate.should == true
         end
       end
-       it "should evaluate the condition at index which has been set in the form" do
+      it "should evaluate the condition at index which has been set in the form" do
         cond = @form.c 'is_mansion'
         @record[:house_value,0] = '125'
         @record[:house_value,1] = '75'
@@ -145,6 +145,19 @@ describe SimpleForm do
           @form.set_current_index(1)
           cond.evaluate.should == false
         end
+      end
+      it "should not evaluate not evaluate for forcing nil when zero_index_force_nil_only set" do
+        cond = @form.c 'has_mansion'
+        @record.save('create')
+        @form.with_record(@record) do
+          @record.update_attributes({0=>{"house_value"=>"100","mansion_info"=>"zap","luxury_info"=>"zap"},1=>{"house_value"=>"100","mansion_info"=>'zap'}},'house_data',{},:multi_index => true)
+          f = @record.form_instance.field_instances.find_by_field_id('mansion_info')
+          f.idx.should == 1
+          f.answer.should == nil
+          @record.form_instance.field_instances.find_by_field_id('luxury_info').should == nil
+          @record.update_attributes({0=>{"house_value"=>"200","mansion_info"=>nil,"luxury_info"=>nil},1=>{"house_value"=>"200","mansion_info"=>nil}},'house_data',{},:multi_index => true)
+        end
+        @record.form_instance.get_validation_data.should == {"house_data"=>[2, 1], "create"=>[0], "_"=>{"luxury_info"=>[["You did not answer this question"]], "mansion_info"=>[["You did not answer this question"], ["You did not answer this question"]]}}
       end
     end
 

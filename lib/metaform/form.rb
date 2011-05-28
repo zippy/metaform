@@ -1566,6 +1566,7 @@ EOJS
     return nil unless field.force_nil
     field.force_nil.each do |condition,force_nil_fields,negate|
       condition = make_condition(condition)
+      next if condition.zero_index_force_nil_only && index != 0
       condition_value = condition.evaluate
       if negate ? !condition_value : condition_value
 #        puts "FORCE NIL: condition #{condition.name} with negate: #{negate.to_s}"

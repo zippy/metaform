@@ -76,6 +76,11 @@ class SimpleForm < Form
       c 'is_mansion', :javascript => ':house_value > 100' do
         field_value("house_value").to_i > 100
       end
+      c 'has_mansion', :fields_to_use => ['house_value'], :zero_index_force_nil_only =>true do
+        answers = field_value_at('house_value',:any)
+        answers.delete_if {|answer| answer.to_i <= 100 }.size > 0   
+      end
+      
       c 'age=44'
       c 'age<44'
       c 'age<15 or age>75'
@@ -103,7 +108,15 @@ class SimpleForm < Form
     f 'test'
     f 'dog_type'
     f 'owner'
-        
+
+    def_dependent_fields('is_mansion') do
+      f 'mansion_info', :label => "Extra info about each mansions"
+    end
+
+    def_dependent_fields('has_mansion') do
+      f 'luxury_info', :label => "Extra info about all mansions"
+    end
+
  #  def_constraints do
  #    cs :fields=> ['senior'],:constraints => {'must_be' => if_c('Flg!=Y',nil)}, :force_on_save => true
 ##     cs :group => 'intrapartum',:condition => mom_died_AP || pregnancy_ended_before13,:constraints => {'must_be' => nil, :force_on_save => true}
@@ -119,7 +132,18 @@ class SimpleForm < Form
     
     presentation 'houses' do
       q 'house_value'
+  	  q 'mansion_info'
     end
+
+    presentation 'house_data' do
+  	  p 'houses',:indexed => {
+      	  :add_button_text => 'Add another house',
+      	  :add_button_position=>'bottom',
+      	  :delete_button_text => 'Delete this house',
+      	  :reference_field => 'house_ref',
+      	}
+  	  q 'luxury_info'
+	  end
 
     presentation 'lambda_widget' do
       q 'name', :widget => lambda{|value| "#{value} is a the name!"}
