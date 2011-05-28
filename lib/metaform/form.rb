@@ -208,10 +208,13 @@ class Form
       :type => 'string',
     }.update(opts)
     raise "Duplicate field name: '#{name}'" if fields.has_key?(name)
+# xx = "#{name}•#{options[:label]}•#{$file}•#{options[:type]}"  #UNCOMMENT FOR MANUAL FORM DUMP
 
     #TODO we should really make enums and constraints an first class object and this check should happen there
     if c = options[:constraints]
       required_constraint_given = c.has_key?('required')
+# xx += "•#{c['required'].inspect}" #UNCOMMENT FOR MANUAL FORM DUMP
+
       x = Widget.enumeration(c) if c['enumeration']
       x ||= Widget.set(c) if c['set']
       if x
@@ -224,8 +227,12 @@ class Form
           o[option] = 1
           l[label] = 1
         end
+# xx += "•#{c['enumeration'] ? 'ENUM' : 'SET'}•"+x.collect {|label,option| "#{option.nil? ? '<nil>' : option}: #{label}"}.join(';   ') #UNCOMMENT FOR MANUAL FORM DUMP
       end
+    else
+# xx += "•false"      #UNCOMMENT FOR MANUAL FORM DUMP
     end
+# puts xx #UNCOMMENT FOR MANUAL FORM DUMP
     @fields_defined << name if @fields_defined
     if options.has_key?(:calculated)
       if options[:calculated].has_key?(:from_condition) 
@@ -1517,6 +1524,7 @@ EOJS
   #################################################################################
   # helper function to allow separating the DSL commands into multiple files
   def include_definitions(file)
+# $file = file #UNCOMMENT FOR MANUAL FORM DUMP
     return if @@_loaded_definitions[self.class.to_s+file] == self.class
     @@_loaded_definitions[self.class.to_s+file] = self.class
     fn = Form.forms_dir+'/'+file
