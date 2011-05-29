@@ -76,7 +76,7 @@ class SimpleForm < Form
       c 'is_mansion', :javascript => ':house_value > 100' do
         field_value("house_value").to_i > 100
       end
-      c 'has_mansion', :fields_to_use => ['house_value'], :zero_index_force_nil_only =>true do
+      c 'has_mansion', :javascript => 'placeholder',:fields_to_use => ['house_value'], :zero_index_force_nil_only =>true do
         answers = field_value_at('house_value',:any)
         answers.delete_if {|answer| answer.to_i <= 100 }.size > 0   
       end

@@ -147,6 +147,7 @@ describe SimpleForm do
         end
       end
       it "should not evaluate not evaluate for forcing nil when zero_index_force_nil_only set" do
+        $metaform_error_messages = Constraints::DefaultErrorMessages.clone
         cond = @form.c 'has_mansion'
         @record.save('create')
         @form.with_record(@record) do
@@ -157,7 +158,7 @@ describe SimpleForm do
           @record.form_instance.field_instances.find_by_field_id('luxury_info').should == nil
           @record.update_attributes({0=>{"house_value"=>"200","mansion_info"=>nil,"luxury_info"=>nil},1=>{"house_value"=>"200","mansion_info"=>nil}},'house_data',{},:multi_index => true)
         end
-        @record.form_instance.get_validation_data.should == {"house_data"=>[2, 1], "create"=>[0], "_"=>{"luxury_info"=>[["You did not answer this question"]], "mansion_info"=>[["You did not answer this question"], ["You did not answer this question"]]}}
+        @record.form_instance.get_validation_data.should == {"house_data"=>[2, 1], "create"=>[0], "_"=>{"luxury_info"=>[["This information is required"]], "mansion_info"=>[["This information is required"], ["This information is required"]]}}
       end
     end
 
@@ -467,11 +468,11 @@ describe SimpleForm do
         @form.get_body.should == ["<div id=\"question_house_value\" class=\"question\"><label class=\"label\" for=\"record_house_value\">House value:</label><input id=\"record_house_value\" name=\"record[house_value]\" type=\"text\" /></div>"]
       end
       it "should render with value for previous highest index answer, if set as flow-through" do
-        @form.set_current_index(2)
         @form.with_record(@record,:render) do
           @record[:house_value,0] = '100'
           @record[:house_value,1] = '200'
           @record.save('create')
+          @form.set_current_index(2)
           @form.q 'house_value', :flow_through => true
         end
         @form.get_body.should == ["<div id=\"question_house_value\" class=\"question\"><label class=\"label\" for=\"record_house_value\">House value:</label><input id=\"record_house_value\" name=\"record[house_value]\" type=\"text\" value=\"200\" /></div>"]
@@ -824,6 +825,7 @@ describe SimpleForm do
                 ]
       end
       it "when validation is approval javascript should not add approval checkbox to generated new presentation" do
+        $metaform_error_messages = Constraints::DefaultErrorMessages.clone
         @form.set_validating(:approval)
         do_p
         @form.get_jscripts.should == [
