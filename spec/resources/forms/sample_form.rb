@@ -50,7 +50,8 @@ def setup
     }    
     f 'people_num', :label => '', :type => 'string'
     f 'prev_preg_REF', :type => 'integer'
-  	f 'prev_preg_outcome', :label => 'Name', :type => 'string', :constraints => {"required" => 'prev_preg_flag[0]=Y'}, :indexed => true
+  	f 'prev_preg_outcome', :label => 'Outcome', :type => 'string', :constraints => {"required" => 'prev_preg_flag[0]=Y'}, :indexed => true
+  	f 'prev_preg_value', :label => 'Value', :type => 'string', :constraints => {"required" => 'prev_preg_flag[0]=Y'}, :indexed => true
     f 'prev_preg_flag', :constraints => {'enumeration' => [{nil => '-'},{'Y' => 'Yes'},{'N' => 'No'}]},
       :force_nil => [[c('prev_preg_flag=Y'),['prev_preg_outcome'],:unless]]
   end
@@ -229,6 +230,14 @@ class Stats < Reports
       :apples => "count.increment if :fruit =~ /apple*/",
       :bobs => "count.increment if :name =~ /^Bob/",
       :joes => "count.increment if :name =~ /^Joe/",
+    }) { |q,forms|
+      Struct.new(*(q.keys))[*q.values]
+    }
+    
+  def_report('pregnancies',
+    :forms => ['SampleForm'],
+    :count_queries => {
+      :happy_no_val_pregs => %Q@:prev_preg_outcome.zip(:prev_preg_value) {|o,v| count.increment if o == 'happy' && v.blank? }@,
     }) { |q,forms|
       Struct.new(*(q.keys))[*q.values]
     }

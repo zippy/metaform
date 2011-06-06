@@ -129,7 +129,7 @@ class Record
     end
     
     def zip(other_answer,&block)
-      if !@value.nil? && !other_answer.value.nil?
+      if !@value.nil? && other_answer.exists?
         my_value = @value.instance_of?(Array) ? @value : [@value]
         other_value = other_answer.value.instance_of?(Array) ? other_answer.value : [other_answer.value]
         if block
