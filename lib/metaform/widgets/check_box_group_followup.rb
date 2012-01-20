@@ -145,7 +145,7 @@ class CheckBoxGroupFollowupWidget < Widget
     set_values.each {|key,value|
       result << e[key] + ':  ' + value.collect!{|v| v.humanize}.join(', ')
     }
-    result.join('\n')
+    result.join('; ')
   end
   
   ################################################################################
