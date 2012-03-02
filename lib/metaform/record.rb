@@ -626,7 +626,7 @@ end
     p.confirm_legal_state!(workflow_state)
     invalid_fields = nil
     validation_exclude_states = nil
-    forced_to_nil = []
+    forced_to_nil = {}
     
     if fields
       field_list = fields.collect { |f| f.to_s }
@@ -636,7 +636,7 @@ end
     @form.with_record(self) do
       # force any attributes to nil that need forcing
       forced_to_nil = set_force_nil_attributes(field_list)
-      field_list.concat(forced_to_nil).uniq!
+      field_list.concat(forced_to_nil.keys).uniq!
 
       # evaluate the validity of the attributes to be saved
       invalid_fields = _validate_attributes(field_list)
@@ -699,7 +699,7 @@ end
       approval_value = approvals[field_instance_id][index.to_s] if is_approval
       if f != nil
         if f.answer != (value.nil? ? nil : value.to_s) || (has_explanation && f.explanation != explanation_value) ||
-            (is_approval && approval_value) || forced_to_nil.include?(field_instance_id)
+            (is_approval && approval_value) || forced_to_nil.keys.include?(field_instance_id)
           # if we are checking last_updated dates don't do the update if the fields updated_at
           # is greater than the last_updated date passed in, and store this to report later
           if last_updated && f.updated_at.to_i > last_updated
@@ -744,7 +744,7 @@ end
           field_instances_to_save.each do |i|
             deps = @form.dependent_fields(i.field_id)
             dependents.concat(deps) if deps
-            if (i.answer == nil || i.answer == '') && ((i.state== 'answered' && i.explanation.blank?) || forced_to_nil.include?(i.field_id))  && i.idx == 0
+            if (i.answer == nil || i.answer == '') && ((i.state== 'answered' && i.explanation.blank?) || (forced_to_nil[i.field_id] && forced_to_nil[i.field_id].include?(i.idx) ))  && i.idx == 0
               unless i.new_record?
                 puts "<br>about to delete #{i.attributes.inspect}" if DEBUG1
                 i.delete
@@ -959,12 +959,14 @@ end
 #  end
   
   def set_force_nil_attributes(fields=nil)
-    fields_forced = []
+    fields_forced = {}
     @cache.each(:attributes => fields) do |attrib,value,index|
       @form.set_current_index(index)
       form.evaluate_force_nil(attrib,index) do |f|
         set_attribute(f,nil,index)
-        fields_forced << f
+        fields_forced[f] ||= []
+        fields_forced[f] << index
+        fields_forced[f].uniq!
       end
     end
     fields_forced
