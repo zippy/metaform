@@ -338,7 +338,7 @@ describe Widget do
     end
     it "should render the list of human enumerations values if read_only, including followups" do
       CheckBoxGroupFollowupWidget.render_form_object_read_only(1,"val1: \n- param2\nval2: \n- param1\n- param2\n",@options).should == 
-        "<span id=\"record_1\">Value 1:  Param2\\nValue 2:  Param1, Param2</span>"
+        "<span id=\"record_1\">Value 1:  Param2; Value 2:  Param1, Param2</span>"
     end
   end
 
