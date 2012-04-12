@@ -1055,10 +1055,15 @@ end
   # currently 
   #################################################################################
   require 'csv.rb'
+  SPSS_NIL = '.'
+  SPSS_TRUE = 1
+  SPSS_FALSE = 2
   def export(opts = {})
     options = {
-      :format => :csv
+      :format => :csv,
+      :options => {}
     }.update(opts)
+    spss_clean = options[:options][:spss]
     case options[:format]
     when :csv
       result = []
@@ -1095,7 +1100,26 @@ end
               elsif date_time_format && field_type == 'datetime' && !d.blank?
                 row << Time.local(*ParseDate.parsedate(d)[0..4]).strftime(date_time_format)
               else
-                row << d
+                if spss_clean && (s = field_def.get_set_values)
+                  s = s.compact
+                  if d.nil?
+                    row.concat((0...s.size).collect {|x| SPSS_NIL})
+                  else
+                    x = []
+                    y = d.split(/,/)
+                    row.concat s.collect {|v| y.include?(v) ? SPSS_TRUE : SPSS_FALSE}
+                  end
+                elsif spss_clean && (e = field_def.get_enumeration_values)
+                  if d.nil?
+                    row << SPSS_NIL
+                  else
+                    e = e.compact
+                    x = []
+                    row << e.index(d)+1
+                  end
+                else
+                  row << d
+                end
               end
             rescue
               row << d
@@ -1110,7 +1134,24 @@ end
     end
   end
   
-  def self.export_csv_header(field_list)
+  def self.export_csv_header(field_list,spss_clean_form = false)
+    if spss_clean_form 
+      fl = []
+      fields = Form.make_form(spss_clean_form).fields
+      field_list.each do |f|
+        field_def = fields[f]
+        if field_def.nil?
+          raise "expeced a field definition for #{f_name} in #{spss_clean_form}"
+        else
+          if (s = field_def.get_set_values)
+            fl.concat s.compact.collect {|v| "#{f}__#{v}"}
+          else
+            fl << f
+          end
+          field_list = fl
+        end
+      end
+    end
     CSV.generate_line(['form','id','index','created_at','updated_at','workflow_state'].concat(field_list))
   end
  
