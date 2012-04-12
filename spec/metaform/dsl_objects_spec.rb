@@ -6,6 +6,14 @@ describe Field do
     lambda {Field.new(:name=>'bob')}.should raise_error("Field reqires 'type' to be defined")
     lambda {Field.new(:name=>'bob',:type=>'string')}.should_not raise_error
   end
+  it "should be able to return enum field value list" do    
+    f = Field.new(:name=>'fruit',:type=>'array', :constraints => {"enumeration"=>[{"pear"=>"Pear"}, {"banana"=>"Banana"}, {nil=>"none"}]})
+    f.get_enumeration_values.should == ["pear",'banana',nil]
+  end
+  it "should be able to return set field value list" do    
+    f = Field.new(:name=>'fruit',:type=>'array', :constraints => {"set"=>[{"pear"=>"Pear"}, {"banana"=>"Banana"}, {nil=>"none"}]})
+    f.get_set_values.should == ["pear",'banana',nil]
+  end
 end
 
 describe Workflow do

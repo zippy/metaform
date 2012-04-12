@@ -32,6 +32,25 @@ class Field < Bin
     self.dependent_fields ||= []
     self.dependent_fields = self.dependent_fields.concat(field_list).uniq
   end
+  
+  def get_constraint_value_list(t)
+    raise "constraints not defined for field #{self.name}" if self.constraints.nil?
+    e = self.constraints[t]
+    if e.nil?
+      nil
+    else
+      e.collect {|h| h.keys.first}
+    end
+  end
+  
+  def get_enumeration_values
+    get_constraint_value_list("enumeration")
+  end
+
+  def get_set_values
+    get_constraint_value_list("set")
+  end
+  
 end
 
 
