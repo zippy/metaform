@@ -1143,7 +1143,7 @@ end
         if field_def.nil?
           raise "expeced a field definition for #{f_name} in #{spss_clean_form}"
         else
-          if (s = field_def.get_set_values)
+          if !field_def.constraints.nil? && (s = field_def.get_set_values)
             fl.concat s.compact.collect {|v| "#{f}__#{v}"}
           else
             fl << f
