@@ -1244,7 +1244,7 @@ describe Record do
       @record.export(
         :fields => ['name', 'fruit','colors'],
         :options => {:spss => true}
-      ).should == ['SampleForm,,0,,,,Bob Smith,4,1,2,1']
+      ).should == ['SampleForm,,0,,,,Bob Smith,4,1,2,1,2']
     end
     it "should have an option to clean enums and sets for spss and handle nil values" do
       @record[:colors] = nil
@@ -1252,13 +1252,13 @@ describe Record do
       @record.export(
         :fields => ['name', 'fruit','colors'],
         :options => {:spss => true}
-      ).should == ['SampleForm,,0,,,,Bob Smith,.,.,.,.']
+      ).should == ['SampleForm,,0,,,,Bob Smith,.,.,.,.,.']
     end
     it "should be able to create a csv header" do
       Record.export_csv_header(['name','fruit','colors']).should == "form,id,index,created_at,updated_at,workflow_state,name,fruit,colors"
     end
     it "should be able to create a csv header with spss cleaned values for set" do
-      Record.export_csv_header(['name','fruit','colors'],'SampleForm').should == "form,id,index,created_at,updated_at,workflow_state,name,fruit,colors__r,colors__g,colors__b"
+      Record.export_csv_header(['name','fruit','colors'],'SampleForm').should == "form,id,index,created_at,updated_at,workflow_state,name,fruit,colors__r,colors__g,colors__b,colors__none"
     end
   end
   describe "Record.search" do

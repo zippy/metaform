@@ -1144,7 +1144,7 @@ end
           raise "expeced a field definition for #{f_name} in #{spss_clean_form}"
         else
           if !field_def.constraints.nil? && (s = field_def.get_set_values)
-            fl.concat s.compact.collect {|v| "#{f}__#{v}"}
+            fl.concat s.compact.collect {|v| "#{f}__#{v =~ /\*$/ ? v.chop : v}"}
           else
             fl << f
           end
