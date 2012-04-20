@@ -1246,6 +1246,23 @@ describe Record do
         :options => {:spss => true}
       ).should == ['SampleForm,,0,,,,Bob Smith,4,1,2,1,2']
     end
+    it "should have an option to clean booleans for spss" do
+      setup_record
+      @record.save('new_entry')      
+      
+      @record.export(
+        :fields => ['sue_is_a_plumber'],
+        :options => {:spss => true}
+      ).last.split(/,/).last.should == '2'
+      @record.sue_is_a_plumber.should == 'false'
+      @record.update_attributes({:education => 'college', :name => 'Sue', :occupation => 'plumber'},'new_entry')
+      @record.save('new_entry')      
+      @record.sue_is_a_plumber.should == 'true'
+      @record.export(
+        :fields => ['sue_is_a_plumber'],
+        :options => {:spss => true}
+      ).last.split(/,/).last.should == '1'
+    end
     it "should have an option to clean enums and sets for spss and handle nil values" do
       @record[:colors] = nil
       @record[:fruit] = nil

@@ -1090,7 +1090,11 @@ end
           if field_def.nil?
             row << nil
           else
-            d = @cache.attributes(index)[f]
+            if field_def.calculated
+              d = self[f,index]
+            else 
+              d = @cache.attributes(index)[f]
+            end
             field_type = field_def.type
             begin
               if field_type == 'time' && !d.blank?
@@ -1117,6 +1121,8 @@ end
                     x = []
                     row << e.index(d)+1
                   end
+                elsif spss_clean && (field_type == 'boolean')
+                  row << (d.nil? ? SPSS_NIL : ((d == 'true') ? SPSS_TRUE : SPSS_FALSE))
                 else
                   row << d
                 end
