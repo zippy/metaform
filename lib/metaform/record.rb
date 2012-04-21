@@ -1074,6 +1074,7 @@ end
       puts "<br>CACHE on entrance to export: #{@cache.dump.inspect}" if DEBUG1
       @cache.indexes.each do |index|
         row = []
+        errs = {}
         row << self.form.class.to_s
         row << self.id
         row << index
@@ -1112,6 +1113,13 @@ end
                     x = []
                     y = d.split(/,/)
                     row.concat s.collect {|v| y.include?(v) ? SPSS_TRUE : SPSS_FALSE}
+                    e = []
+                    y.each do |v|
+                      if !s.include?(v)
+                        e << v
+                      end
+                    end
+                    errs[f] = e if !e.empty?
                   end
                 elsif spss_clean && (e = field_def.get_enumeration_values)
                   if d.nil?
@@ -1119,7 +1127,13 @@ end
                   else
                     e = e.compact
                     x = []
-                    row << e.index(d)+1
+                    idx = e.index(d)
+                    if idx.nil?
+                      errs[f] = d
+                      row << -1
+                    else
+                      row << idx+1
+                    end
                   end
                 elsif spss_clean && (field_type == 'boolean')
                   row << (d.nil? ? SPSS_NIL : ((d == 'true') ? SPSS_TRUE : SPSS_FALSE))
@@ -1132,6 +1146,7 @@ end
             end
           end
         end
+        row << "invalid values: #{errs.inspect.gsub(/"/,'')}" if !errs.empty?
         result << CSV.generate_line(row)
       end
       result

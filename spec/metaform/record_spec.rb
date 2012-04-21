@@ -1271,6 +1271,14 @@ describe Record do
         :options => {:spss => true}
       ).should == ['SampleForm,,0,,,,Bob Smith,.,.,.,.,.']
     end
+    it "should mark illegal values when cleaning enums and sets for spss" do
+      @record[:fruit] = 'squid'
+      @record[:colors] = "r,c"
+      @record.export(
+        :fields => ['name', 'fruit','colors'],
+        :options => {:spss => true}
+      ).should == ["SampleForm,,0,,,,Bob Smith,-1,1,2,2,2,\"invalid values: {colors=>[c], fruit=>squid}\""]
+    end
     it "should be able to create a csv header" do
       Record.export_csv_header(['name','fruit','colors']).should == "form,id,index,created_at,updated_at,workflow_state,name,fruit,colors"
     end
