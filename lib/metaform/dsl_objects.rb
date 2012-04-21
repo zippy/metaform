@@ -39,7 +39,7 @@ class Field < Bin
     if e.nil?
       nil
     else
-      e.collect {|h| h.keys.first}
+      e.collect {|i| i.is_a?(Array) ? i.last : i.keys.first}
     end
   end
   

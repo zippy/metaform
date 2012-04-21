@@ -10,6 +10,10 @@ describe Field do
     f = Field.new(:name=>'fruit',:type=>'array', :constraints => {"enumeration"=>[{"pear"=>"Pear"}, {"banana"=>"Banana"}, {nil=>"none"}]})
     f.get_enumeration_values.should == ["pear",'banana',nil]
   end
+  it "should be able to return an enum field value list when the list is defined as an array" do
+    f = Field.new(:name=>'fruit',:type=>'array', :constraints => {"enumeration"=>[["Pear","pear"], ["Banana","banana"], ["none",nil]]})
+    f.get_enumeration_values.should == ["pear",'banana',nil]
+  end
   it "should be able to return set field value list" do    
     f = Field.new(:name=>'fruit',:type=>'array', :constraints => {"set"=>[{"pear"=>"Pear"}, {"banana"=>"Banana"}, {nil=>"none"}]})
     f.get_set_values.should == ["pear",'banana',nil]
