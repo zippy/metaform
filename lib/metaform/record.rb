@@ -1111,6 +1111,8 @@ end
                     row.concat((0...s.size).collect {|x| SPSS_NIL})
                   else
                     x = []
+                    sm = field_def[:spss_map]
+                    s = s.sort_by {|x| sm[x]} if sm
                     y = d.split(/,/)
                     row.concat s.collect {|v| y.include?(v) ? SPSS_TRUE : SPSS_FALSE}
                     e = []
@@ -1126,6 +1128,8 @@ end
                     row << SPSS_NIL
                   else
                     e = e.compact
+                    sm = field_def[:spss_map]
+                    e = e.sort_by {|x| sm[x]} if sm
                     x = []
                     idx = e.index(d)
                     if idx.nil?

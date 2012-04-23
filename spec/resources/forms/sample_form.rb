@@ -38,7 +38,12 @@ def setup
     f 'indexed_field_with_default', :label => 'AFWD', :type => 'string', :default=> 'cow',:indexed_default_from_null_index => true
     fo = f('fruit_other', :label => 'Other fruit', :type => 'string', :constraints => {"required"=>"fruit=other"})
     f 'fruit', :label => '', :type => 'string', :constraints => {"enumeration"=>[{"apple_mac"=>"Macintosh Apple"}, {"apple_mutsu"=>"Mutsu"}, {"pear"=>"Pear"}, {"banana"=>"Banana"}, {"other"=>"Other...*"}, {"x"=>"XOther...*"}], "required"=>true}, :followups => {'/other|x/' => fo}
+    f 'fruitx', :label => '', :type => 'string', :constraints => {"enumeration"=>[{"apple_mac"=>"Macintosh Apple"}, {"apple_mutsu"=>"Mutsu"}, {"pear"=>"Pear"}, {"banana"=>"Banana"}, {"other"=>"Other...*"}, {"x"=>"XOther...*"}], "required"=>true}, :followups => {'/other|x/' => fo},
+      :spss_map => {'apple_mac'=>4,'apple_mutsu'=>3,'pear'=>2,'banana'=>1,'other'=>6,'x'=>5}
     f 'colors', :label => '', :type => 'array', :constraints => {"set"=>[{"r"=>"Red"}, {nil=>'NA'}, {"g"=>"Green"}, {"b"=>"Blue"}, {'none*' => "None"}]}
+    f 'colorsx', :label => '', :type => 'array', :constraints => {"set"=>[{"r"=>"Red"}, {nil=>'NA'}, {"g"=>"Green"}, {"b"=>"Blue"}, {'none*' => "None"}]},
+      :spss_map => {'r'=>3,'g'=>1,'b'=>4,'none*'=>2,nil=>5}
+    
     f 'breastfeeding', :label => 'BF', :type => 'string', :indexed_default_from_null_index => true
     f 'reverse_name_and_job', :label => 'reversed name and occupation', :type => 'string', :calculated => {
       :based_on_fields => ['name','occupation'],

@@ -1279,6 +1279,14 @@ describe Record do
         :options => {:spss => true}
       ).should == ["SampleForm,,0,,,,Bob Smith,-1,1,2,2,2,\"invalid values: {colors=>[c], fruit=>squid}\""]
     end
+    it "should have an option to manually set the order of enums and sets for spss" do
+      @record[:colorsx] = "r,b"
+      @record[:fruitx] = "banana"
+      @record.export(
+        :fields => ['name', 'fruitx','colorsx'],
+        :options => {:spss => true}
+      ).should == ['SampleForm,,0,,,,Bob Smith,1,2,2,1,1']
+    end
     it "should be able to create a csv header" do
       Record.export_csv_header(['name','fruit','colors']).should == "form,id,index,created_at,updated_at,workflow_state,name,fruit,colors"
     end
