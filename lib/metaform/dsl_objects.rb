@@ -33,22 +33,24 @@ class Field < Bin
     self.dependent_fields = self.dependent_fields.concat(field_list).uniq
   end
   
-  def get_constraint_value_list(t)
+  def get_constraint_value_list(t,order_map = nil)
     return nil if self.constraints.nil?
     e = self.constraints[t]
     if e.nil?
       nil
     else
-      e.collect {|i| i.is_a?(Array) ? i.last : i.keys.first}
+      vl = e.collect {|i| i.is_a?(Array) ? i.last : i.keys.first}
+      vl = vl.sort_by {|x| order_map[x]} if order_map
+      vl
     end
   end
   
-  def get_enumeration_values
-    get_constraint_value_list("enumeration")
+  def get_enumeration_values(order_map = nil)
+    get_constraint_value_list("enumeration",order_map)
   end
 
-  def get_set_values
-    get_constraint_value_list("set")
+  def get_set_values(order_map = nil)
+    get_constraint_value_list("set",order_map)
   end
   
 end

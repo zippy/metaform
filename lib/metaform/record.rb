@@ -1105,14 +1105,12 @@ end
               elsif date_time_format && field_type == 'datetime' && !d.blank?
                 row << Time.local(*ParseDate.parsedate(d)[0..4]).strftime(date_time_format)
               else
-                if spss_clean && (s = field_def.get_set_values)
+                if spss_clean && (s = field_def.get_set_values(field_def[:spss_map]))
                   s = s.compact
                   if d.nil?
                     row.concat((0...s.size).collect {|x| SPSS_NIL})
                   else
                     x = []
-                    sm = field_def[:spss_map]
-                    s = s.sort_by {|x| sm[x]} if sm
                     y = d.split(/,/)
                     row.concat s.collect {|v| y.include?(v) ? SPSS_TRUE : SPSS_FALSE}
                     e = []
@@ -1123,13 +1121,11 @@ end
                     end
                     errs[f] = e if !e.empty?
                   end
-                elsif spss_clean && (e = field_def.get_enumeration_values)
+                elsif spss_clean && (e = field_def.get_enumeration_values(field_def[:spss_map]))
                   if d.nil?
                     row << SPSS_NIL
                   else
                     e = e.compact
-                    sm = field_def[:spss_map]
-                    e = e.sort_by {|x| sm[x]} if sm
                     x = []
                     idx = e.index(d)
                     if idx.nil?
