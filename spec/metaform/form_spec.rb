@@ -229,6 +229,12 @@ describe SimpleForm do
       it "should create a form with a name field" do
         @form.fields['name'].class.should == Field
       end
+      it "should record the definition order" do
+        @form.definition_order.should == ["name", "age", "height", "degree", "no_ed_reason", "higher_ed_years", "senior", "other_eye_color", "eye_color", "age_plus_education", "hash_field", "house_value", "married", "children", "oldest_child_age", "years_married", "dietary_restrictions", "dr_type", "dr_other", "test", "dog_type", "owner", "mansion_info", "luxury_info"]
+      end
+      it "should save the src file name for the definition" do
+        @form.fields['name'].file.should == nil
+      end
       it "should raise an error if defining a duplicate field" do
         lambda {@form.f('age')}.should raise_error("Duplicate field name: 'age'")
       end
@@ -1320,6 +1326,15 @@ describe SimpleForm do
         "<script>var cur_idx=find_current_idx();var values_for_age = new Array();var values_for_name = new Array();values_for_name = [\"Bob Smith\"];</script><div id=\"presentation_tab_changer\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>\n</div>\n<input type=\"hidden\" name=\"meta[last_updated]\" id=\"meta_last_updated\" value=0>",
         "function actions_for_multi_tab_changer() {\n  if (multi_tab_changer()) {$$(\".tab_multi_tab\").invoke('remove');insert_tabs('<li class=\"tab_multi_tab\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//multi_tab/INDEX\\')\" title=\"Click here to go to  NUM\"><span> NUM</span></a></li>','.tab_finish',true,'.tab_finish',values_for_age[cur_idx]-1,true);}\n  else {$$(\".tab_multi_tab\").invoke('remove');}\n}\n\nfunction multi_tab_changer() {return values_for_age[0] > 0}\nfunction actions_for_view_changer() {\n  if (view_changer()) {$$(\".tab_view\").invoke('remove');insert_tabs('<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//view\\')\" title=\"Click here to go to View\"><span>View</span></a></li>','.tab_finish',true,'.tab_finish',1,false);}\n  else {$$(\".tab_view\").invoke('remove');}\n}\n\nfunction view_changer() {return values_for_age[0] > 0}\nfunction actions_for_simple_changer() {\n  if (simple_changer()) {$$(\".tab_simple\").invoke('remove');insert_tabs('<li class=\"current tab_simple\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//simple\\')\" title=\"Click here to go to Simple\"><span>Simple</span></a></li>','.tab_finish',true,'.tab_finish',1,false);}\n  else {$$(\".tab_simple\").invoke('remove');}\n}\n\nfunction simple_changer() {return values_for_name[0] == Sue}\nEvent.observe('record_name', 'change', function(e){ values_for_name[cur_idx] = $F('record_name');actions_for_simple_changer(); });"
       ]
+    end
+  end
+
+  describe "dump form key" do
+    it "should be able to export a the form definiton" do
+      @form.defintion_dump.should == "field_name,file,type,label,required,constraints\nname,,string,,true,none\nage,,string,,true,none\nheight,,string,,true,none\ndegree,,string,,\"\"\"higher_ed_years=~/../\"\"\",none\nno_ed_reason,,string,,\"\"\"higher_ed_years=!0\"\"\",none\nhigher_ed_years,,string,years of higher education,true,none\nsenior,,string,,true,none\nother_eye_color,,string,,\"\"\"eye_color=x\"\"\",none\neye_color,,string,,nil,ENUM-- ffffff: black;   00ff00: green;   0000ff: blue;   x: other\nage_plus_education,,string,,false\nhash_field,,hash,,false\nhouse_value,,integer,,false\nmarried,,string,,nil,ENUM-- y: Yes;   n: No\nchildren,,integer,,false\noldest_child_age,,integer,,false\nyears_married,,integer,,\"\"\"married=y\"\"\",none\ndietary_restrictions,,string,Dietary restrictions,nil,ENUM-- y: Yes;   n: No\ndr_type,,string,type,\"\"\"dietary_restrictions=y\"\"\",ENUM-- <nil>: -;   choice: By choice;   medical: for medical reasons\ndr_other,,string,more info,\"\"\"dietary_restrictions=y\"\"\",none\ntest,,string,,false\ndog_type,,string,,false\nowner,,string,,false\nmansion_info,,string,Extra info about each mansions,\"\"\"is_mansion\"\"\",none\nluxury_info,,string,Extra info about all mansions,\"\"\"has_mansion\"\"\",none"
+    end
+    it "should be able to export a the form definiton with spss codes" do
+      @form.defintion_dump(true).should == "field_name,file,type,label,required,constraints\nname,,string,,true,none\nage,,string,,true,none\nheight,,string,,true,none\ndegree,,string,,\"\"\"higher_ed_years=~/../\"\"\",none\nno_ed_reason,,string,,\"\"\"higher_ed_years=!0\"\"\",none\nhigher_ed_years,,string,years of higher education,true,none\nsenior,,string,,true,none\nother_eye_color,,string,,\"\"\"eye_color=x\"\"\",none\neye_color,,string,,nil,ENUM-- 1 (ffffff): black;   2 (00ff00): green;   3 (0000ff): blue;   4 (x): other\nage_plus_education,,string,,false\nhash_field,,hash,,false\nhouse_value,,integer,,false\nmarried,,string,,nil,ENUM-- 1 (y): Yes;   2 (n): No\nchildren,,integer,,false\noldest_child_age,,integer,,false\nyears_married,,integer,,\"\"\"married=y\"\"\",none\ndietary_restrictions,,string,Dietary restrictions,nil,ENUM-- 1 (y): Yes;   2 (n): No\ndr_type,,string,type,\"\"\"dietary_restrictions=y\"\"\",ENUM-- 1 (<nil>): -;   2 (choice): By choice;   3 (medical): for medical reasons\ndr_other,,string,more info,\"\"\"dietary_restrictions=y\"\"\",none\ntest,,string,,false\ndog_type,,string,,false\nowner,,string,,false\nmansion_info,,string,Extra info about each mansions,\"\"\"is_mansion\"\"\",none\nluxury_info,,string,Extra info about all mansions,\"\"\"has_mansion\"\"\",none"
     end
   end
   

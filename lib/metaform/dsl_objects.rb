@@ -16,7 +16,8 @@ class Field < Bin
       :groups => nil,
       :force_nil => nil,
       :dependent_fields => nil,
-      :indexed => false
+      :indexed => false,
+      :file => nil
     }
   end
   def required_bins
@@ -33,24 +34,41 @@ class Field < Bin
     self.dependent_fields = self.dependent_fields.concat(field_list).uniq
   end
   
-  def get_constraint_value_list(t,order_map = nil)
+  def get_constraint_value_list(t,use_spss_order = false)
     return nil if self.constraints.nil?
     e = self.constraints[t]
     if e.nil?
       nil
     else
       vl = e.collect {|i| i.is_a?(Array) ? i.last : i.keys.first}
-      vl = vl.sort_by {|x| order_map[x]} if order_map
+      if use_spss_order && self[:spss_map]
+        vl = vl.sort_by {|x| self[:spss_map][x]}
+      end
       vl
     end
   end
   
-  def get_enumeration_values(order_map = nil)
-    get_constraint_value_list("enumeration",order_map)
+  def get_constraint_value_labels(use_spss_order = false)
+    c = self.constraints
+    return nil if c.nil?
+    x = nil
+    if x = c['enumeration']
+      v = get_constraint_value_list("enumeration",use_spss_order)
+    elsif x = c['set']
+      v = get_constraint_value_list("set",use_spss_order)
+    end
+    return nil if x.nil?
+    labels = {}
+    x.each {|i| i.is_a?(Array) ? (labels[i.last] = i.first) : labels.update(i)}
+    v.collect {|v| [labels[v],v]}
+  end
+  
+  def get_enumeration_values(use_spss_order = false)
+    get_constraint_value_list("enumeration",use_spss_order)
   end
 
-  def get_set_values(order_map = nil)
-    get_constraint_value_list("set",order_map)
+  def get_set_values(use_spss_order = false)
+    get_constraint_value_list("set",use_spss_order)
   end
   
 end
