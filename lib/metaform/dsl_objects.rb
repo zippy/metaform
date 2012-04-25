@@ -40,7 +40,16 @@ class Field < Bin
     if e.nil?
       nil
     else
-      vl = e.collect {|i| i.is_a?(Array) ? i.last : i.keys.first}
+      vl = e.collect do |i|
+        case i
+        when Array
+          i.last
+        when Hash
+          i.keys.first
+        when String
+          i
+        end
+      end
       if use_spss_order && self[:spss_map]
         vl = vl.sort_by {|x| self[:spss_map][x]}
       end
@@ -59,7 +68,16 @@ class Field < Bin
     end
     return nil if x.nil?
     labels = {}
-    x.each {|i| i.is_a?(Array) ? (labels[i.last] = i.first) : labels.update(i)}
+    x.each do |i|
+      case i
+      when Array
+        labels[i.last] = i.first
+      when Hash
+        labels.update(i)
+      when String
+        labels[i] = i
+      end
+    end
     v.collect {|v| [labels[v],v]}
   end
   
