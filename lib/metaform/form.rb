@@ -1616,11 +1616,15 @@ EOJS
         vl = f.get_constraint_value_labels(include_spss_codes)
         l = "#{c['enumeration'] ? 'ENUM' : 'SET'}-- "
         if vl
-          if include_spss_codes
+          if include_spss_codes && c['enumeration']
             i = 0
             row << l+vl.collect do |label,option|
-              i+=1
-              "#{i} (#{option.nil? ? '<nil>' : option}): #{label}"
+              if option.nil?
+                "(empty) (<nil>): #{label}"
+              else
+                i+=1
+                "#{i} (#{option.nil? ? '<nil>' : option}): #{label}"
+              end
             end.join(';   ')
           else
             row << l+vl.collect {|label,option| "#{option.nil? ? '<nil>' : option}: #{label}"}.join(';   ')
