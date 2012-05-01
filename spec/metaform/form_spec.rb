@@ -134,7 +134,7 @@ describe SimpleForm do
           c4.evaluate.should == true
         end
       end
-       it "should evaluate the condition at index which has been set in the form" do
+      it "should evaluate the condition at index which has been set in the form" do
         cond = @form.c 'is_mansion'
         @record[:house_value,0] = '125'
         @record[:house_value,1] = '75'
@@ -145,6 +145,20 @@ describe SimpleForm do
           @form.set_current_index(1)
           cond.evaluate.should == false
         end
+      end
+      it "should not evaluate not evaluate for forcing nil when zero_index_force_nil_only set" do
+        $metaform_error_messages = Constraints::DefaultErrorMessages.clone
+        cond = @form.c 'has_mansion'
+        @record.save('create')
+        @form.with_record(@record) do
+          @record.update_attributes({0=>{"house_value"=>"100","mansion_info"=>"zap","luxury_info"=>"zap"},1=>{"house_value"=>"100","mansion_info"=>'zap'}},'house_data',{},:multi_index => true)
+          f = @record.form_instance.field_instances.find_by_field_id('mansion_info')
+          f.idx.should == 1
+          f.answer.should == nil
+          @record.form_instance.field_instances.find_by_field_id('luxury_info').should == nil
+          @record.update_attributes({0=>{"house_value"=>"200","mansion_info"=>nil,"luxury_info"=>nil},1=>{"house_value"=>"200","mansion_info"=>nil}},'house_data',{},:multi_index => true)
+        end
+        @record.form_instance.get_validation_data.should == {"house_data"=>[2, 1], "create"=>[0], "_"=>{"luxury_info"=>[["This information is required"]], "mansion_info"=>[["This information is required"], ["This information is required"]]}}
       end
     end
 
@@ -214,6 +228,12 @@ describe SimpleForm do
     describe "f (define a field)" do
       it "should create a form with a name field" do
         @form.fields['name'].class.should == Field
+      end
+      it "should record the definition order" do
+        @form.definition_order.should == ["name", "age", "height", "degree", "no_ed_reason", "higher_ed_years", "senior", "other_eye_color", "eye_color", "age_plus_education", "hash_field", "house_value", "married", "children", "oldest_child_age", "years_married", "dietary_restrictions", "dr_type", "dr_other", "test", "dog_type", "owner", "mansion_info", "luxury_info"]
+      end
+      it "should save the src file name for the definition" do
+        @form.fields['name'].file.should == nil
       end
       it "should raise an error if defining a duplicate field" do
         lambda {@form.f('age')}.should raise_error("Duplicate field name: 'age'")
@@ -454,11 +474,11 @@ describe SimpleForm do
         @form.get_body.should == ["<div id=\"question_house_value\" class=\"question\"><label class=\"label\" for=\"record_house_value\">House value:</label><input id=\"record_house_value\" name=\"record[house_value]\" type=\"text\" /></div>"]
       end
       it "should render with value for previous highest index answer, if set as flow-through" do
-        @form.set_current_index(2)
         @form.with_record(@record,:render) do
           @record[:house_value,0] = '100'
           @record[:house_value,1] = '200'
           @record.save('create')
+          @form.set_current_index(2)
           @form.q 'house_value', :flow_through => true
         end
         @form.get_body.should == ["<div id=\"question_house_value\" class=\"question\"><label class=\"label\" for=\"record_house_value\">House value:</label><input id=\"record_house_value\" name=\"record[house_value]\" type=\"text\" value=\"200\" /></div>"]
@@ -811,6 +831,7 @@ describe SimpleForm do
                 ]
       end
       it "when validation is approval javascript should not add approval checkbox to generated new presentation" do
+        $metaform_error_messages = Constraints::DefaultErrorMessages.clone
         @form.set_validating(:approval)
         do_p
         @form.get_jscripts.should == [
@@ -1305,6 +1326,15 @@ describe SimpleForm do
         "<script>var cur_idx=find_current_idx();var values_for_age = new Array();var values_for_name = new Array();values_for_name = [\"Bob Smith\"];</script><div id=\"presentation_tab_changer\" class=\"presentation\">\n<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"Bob Smith\" /></div>\n</div>\n<input type=\"hidden\" name=\"meta[last_updated]\" id=\"meta_last_updated\" value=0>",
         "function actions_for_multi_tab_changer() {\n  if (multi_tab_changer()) {$$(\".tab_multi_tab\").invoke('remove');insert_tabs('<li class=\"tab_multi_tab\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//multi_tab/INDEX\\')\" title=\"Click here to go to  NUM\"><span> NUM</span></a></li>','.tab_finish',true,'.tab_finish',values_for_age[cur_idx]-1,true);}\n  else {$$(\".tab_multi_tab\").invoke('remove');}\n}\n\nfunction multi_tab_changer() {return values_for_age[0] > 0}\nfunction actions_for_view_changer() {\n  if (view_changer()) {$$(\".tab_view\").invoke('remove');insert_tabs('<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//view\\')\" title=\"Click here to go to View\"><span>View</span></a></li>','.tab_finish',true,'.tab_finish',1,false);}\n  else {$$(\".tab_view\").invoke('remove');}\n}\n\nfunction view_changer() {return values_for_age[0] > 0}\nfunction actions_for_simple_changer() {\n  if (simple_changer()) {$$(\".tab_simple\").invoke('remove');insert_tabs('<li class=\"current tab_simple\"> <a href=\"#\" onClick=\"return submitAndRedirect(\\'/records//simple\\')\" title=\"Click here to go to Simple\"><span>Simple</span></a></li>','.tab_finish',true,'.tab_finish',1,false);}\n  else {$$(\".tab_simple\").invoke('remove');}\n}\n\nfunction simple_changer() {return values_for_name[0] == Sue}\nEvent.observe('record_name', 'change', function(e){ values_for_name[cur_idx] = $F('record_name');actions_for_simple_changer(); });"
       ]
+    end
+  end
+
+  describe "dump form key" do
+    it "should be able to export a the form definiton" do
+      @form.defintion_dump.should == "field_name,file,type,label,required,constraints\nname,,string,,true,none\nage,,string,,true,none\nheight,,string,,true,none\ndegree,,string,,\"\"\"higher_ed_years=~/../\"\"\",none\nno_ed_reason,,string,,\"\"\"higher_ed_years=!0\"\"\",none\nhigher_ed_years,,string,years of higher education,true,none\nsenior,,string,,true,none\nother_eye_color,,string,,\"\"\"eye_color=x\"\"\",none\neye_color,,string,,nil,ENUM-- ffffff: black;   00ff00: green;   0000ff: blue;   x: other\nage_plus_education,,string,,false\nhash_field,,hash,,false\nhouse_value,,integer,,false\nmarried,,string,,nil,ENUM-- y: Yes;   n: No\nchildren,,integer,,false\noldest_child_age,,integer,,false\nyears_married,,integer,,\"\"\"married=y\"\"\",none\ndietary_restrictions,,string,Dietary restrictions,nil,ENUM-- y: Yes;   n: No\ndr_type,,string,type,\"\"\"dietary_restrictions=y\"\"\",ENUM-- <nil>: -;   choice: By choice;   medical: for medical reasons\ndr_other,,string,more info,\"\"\"dietary_restrictions=y\"\"\",none\ntest,,string,,false\ndog_type,,string,,false\nowner,,string,,false\nmansion_info,,string,Extra info about each mansions,\"\"\"is_mansion\"\"\",none\nluxury_info,,string,Extra info about all mansions,\"\"\"has_mansion\"\"\",none"
+    end
+    it "should be able to export a the form definiton with spss codes" do
+      @form.defintion_dump(true).should == "field_name,file,type,label,required,constraints\nname,,string,,true,none\nage,,string,,true,none\nheight,,string,,true,none\ndegree,,string,,\"\"\"higher_ed_years=~/../\"\"\",none\nno_ed_reason,,string,,\"\"\"higher_ed_years=!0\"\"\",none\nhigher_ed_years,,string,years of higher education,true,none\nsenior,,string,,true,none\nother_eye_color,,string,,\"\"\"eye_color=x\"\"\",none\neye_color,,string,,nil,ENUM-- 1 (ffffff): black;   2 (00ff00): green;   3 (0000ff): blue;   4 (x): other\nage_plus_education,,string,,false\nhash_field,,hash,,false\nhouse_value,,integer,,false\nmarried,,string,,nil,ENUM-- 1 (y): Yes;   2 (n): No\nchildren,,integer,,false\noldest_child_age,,integer,,false\nyears_married,,integer,,\"\"\"married=y\"\"\",none\ndietary_restrictions,,string,Dietary restrictions,nil,ENUM-- 1 (y): Yes;   2 (n): No\ndr_type,,string,type,\"\"\"dietary_restrictions=y\"\"\",ENUM-- (empty) (<nil>): -;   1 (choice): By choice;   2 (medical): for medical reasons\ndr_other,,string,more info,\"\"\"dietary_restrictions=y\"\"\",none\ntest,,string,,false\ndog_type,,string,,false\nowner,,string,,false\nmansion_info,,string,Extra info about each mansions,\"\"\"is_mansion\"\"\",none\nluxury_info,,string,Extra info about all mansions,\"\"\"has_mansion\"\"\",none"
     end
   end
   

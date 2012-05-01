@@ -114,5 +114,23 @@ describe Reports do
       #puts "@report_workflow = #{@report_workflow.inspect}"
       @report_workflow.bobs.should == 2
     end
+
+    it "should be abele to count items with indexed values with nils" do
+      @records = []
+      @records << r = Record.make(SampleForm.new,'new_entry',{:name =>'Bob Smith',:fruit => 'banana'})
+      @records << Record.make(SampleForm.new,'new_entry',{:name =>'Herb Smith',:fruit => 'apple',:prev_preg_outcome=> 'happy',:prev_preg_value=> 'some_val'})
+      @records.each { |recs| recs.save('new_entry') }
+      r.update_attributes({
+          0 => {:prev_preg_flag => 'Y',:prev_preg_REF => 1, :prev_preg_outcome => 'happy'},
+          1 => {:prev_preg_REF => 1, :prev_preg_outcome => 'happy',:prev_preg_value=> 'some_val'},
+          2 => {:prev_preg_REF => 1, :prev_preg_outcome => 'sad'},
+          3 => {:prev_preg_REF => 1, :prev_preg_outcome => 'sad',:prev_preg_value=> 'some_val'},
+          4 => {:prev_preg_REF => 1, :prev_preg_outcome => 'happy'}
+          },
+            'indexed_presentation_by_flag',nil,:multi_index => true)
+      @report = Stats.get_report('pregnancies')
+      @report.happy_no_val_pregs.should == 2
+    end
+
   end
 end

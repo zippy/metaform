@@ -38,6 +38,12 @@ def setup
     f 'indexed_field_with_default', :label => 'AFWD', :type => 'string', :default=> 'cow',:indexed_default_from_null_index => true
     fo = f('fruit_other', :label => 'Other fruit', :type => 'string', :constraints => {"required"=>"fruit=other"})
     f 'fruit', :label => '', :type => 'string', :constraints => {"enumeration"=>[{"apple_mac"=>"Macintosh Apple"}, {"apple_mutsu"=>"Mutsu"}, {"pear"=>"Pear"}, {"banana"=>"Banana"}, {"other"=>"Other...*"}, {"x"=>"XOther...*"}], "required"=>true}, :followups => {'/other|x/' => fo}
+    f 'fruitx', :label => '', :type => 'string', :constraints => {"enumeration"=>[{"apple_mac"=>"Macintosh Apple"}, {"apple_mutsu"=>"Mutsu"}, {"pear"=>"Pear"}, {"banana"=>"Banana"}, {"other"=>"Other...*"}, {"x"=>"XOther...*"}], "required"=>true}, :followups => {'/other|x/' => fo},
+      :spss_map => {'apple_mac'=>4,'apple_mutsu'=>3,'pear'=>2,'banana'=>1,'other'=>6,'x'=>5}
+    f 'colors', :label => '', :type => 'array', :constraints => {"set"=>[{"r"=>"Red"}, {nil=>'NA'}, {"g"=>"Green"}, {"b"=>"Blue"}, {'none*' => "None"}]}
+    f 'colorsx', :label => '', :type => 'array', :constraints => {"set"=>[{"r"=>"Red"}, {nil=>'NA'}, {"g"=>"Green"}, {"b"=>"Blue"}, {'none*' => "None"}]},
+      :spss_map => {'r'=>3,'g'=>1,'b'=>4,'none*'=>2,nil=>5}
+    
     f 'breastfeeding', :label => 'BF', :type => 'string', :indexed_default_from_null_index => true
     f 'reverse_name_and_job', :label => 'reversed name and occupation', :type => 'string', :calculated => {
       :based_on_fields => ['name','occupation'],
@@ -50,7 +56,8 @@ def setup
     }    
     f 'people_num', :label => '', :type => 'string'
     f 'prev_preg_REF', :type => 'integer'
-  	f 'prev_preg_outcome', :label => 'Name', :type => 'string', :constraints => {"required" => 'prev_preg_flag[0]=Y'}, :indexed => true
+  	f 'prev_preg_outcome', :label => 'Outcome', :type => 'string', :constraints => {"required" => 'prev_preg_flag[0]=Y'}, :indexed => true
+  	f 'prev_preg_value', :label => 'Value', :type => 'string', :constraints => {"required" => 'prev_preg_flag[0]=Y'}, :indexed => true
     f 'prev_preg_flag', :constraints => {'enumeration' => [{nil => '-'},{'Y' => 'Yes'},{'N' => 'No'}]},
       :force_nil => [[c('prev_preg_flag=Y'),['prev_preg_outcome'],:unless]]
   end
@@ -139,6 +146,11 @@ def setup
   presentation 'education_info' do
     q 'education'
     q 'degree'
+  end
+
+  presentation 'fruit_colors' do
+    q 'fruit', :widget => 'RadioButtons', :followups => [{'fruit_other' => {:widget=>'TextField'}}]
+    q 'colors', :widget => 'CheckBoxGroup'
   end
   
   presentation 'prev_preg' do
@@ -229,6 +241,14 @@ class Stats < Reports
       :apples => "count.increment if :fruit =~ /apple*/",
       :bobs => "count.increment if :name =~ /^Bob/",
       :joes => "count.increment if :name =~ /^Joe/",
+    }) { |q,forms|
+      Struct.new(*(q.keys))[*q.values]
+    }
+    
+  def_report('pregnancies',
+    :forms => ['SampleForm'],
+    :count_queries => {
+      :happy_no_val_pregs => %Q@:prev_preg_outcome.zip(:prev_preg_value) {|o,v| count.increment if o == 'happy' && v.blank? }@,
     }) { |q,forms|
       Struct.new(*(q.keys))[*q.values]
     }

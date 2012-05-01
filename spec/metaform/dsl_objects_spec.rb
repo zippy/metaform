@@ -6,6 +6,40 @@ describe Field do
     lambda {Field.new(:name=>'bob')}.should raise_error("Field reqires 'type' to be defined")
     lambda {Field.new(:name=>'bob',:type=>'string')}.should_not raise_error
   end
+  it "should be able to return enum field value list" do    
+    f = Field.new(:name=>'fruit',:type=>'array', :constraints => {"enumeration"=>[{"pear"=>"Pear"}, {"banana"=>"Banana"}, {nil=>"none"}]})
+    f.get_enumeration_values.should == ["pear",'banana',nil]
+  end
+  it "should be able to return an enum field value list when the list is defined as an array" do
+    f = Field.new(:name=>'fruit',:type=>'array', :constraints => {"enumeration"=>[["Pear","pear"], ["Banana","banana"], ["none",nil]]})
+    f.get_enumeration_values.should == ["pear",'banana',nil]
+  end
+  it "should be able to return an enum field value list when the list has no labels" do
+    f = Field.new(:name=>'fruit',:type=>'array', :constraints => {'enumeration'=>[{nil=>'-'}, 'breech', 'transverse/shoulder']})
+    f.get_enumeration_values.should == [nil,'breech','transverse/shoulder']
+  end
+  it "should be able to return set field value list" do
+    f = Field.new(:name=>'fruit',:type=>'array', :constraints => {"set"=>[{"pear"=>"Pear"}, {"banana"=>"Banana"}, {nil=>"none"}]})
+    f.get_set_values.should == ["pear",'banana',nil]
+  end
+  it "should be able to return set field value map" do
+    f = Field.new(:name=>'fruit',:type=>'array', :constraints => {"set"=>[{"pear"=>"Pear"}, {"banana"=>"Banana"}, {nil=>"none"}]})
+    f.get_constraint_value_labels.should == [["Pear","pear"], ["Banana","banana"], ["none",nil]]
+  end
+  it "should be able to return an enum field value map when the list is defined as an array" do
+    f = Field.new(:name=>'fruit',:type=>'array', :constraints => {"enumeration"=>[["Pear","pear"], ["Banana","banana"], ["none",nil]]})
+    f.get_constraint_value_labels.should == [["Pear","pear"], ["Banana","banana"], ["none",nil]]
+  end
+  it "should be able to return enum field value map" do    
+    f = Field.new(:name=>'fruit',:type=>'array', :constraints => {"enumeration"=>[{"pear"=>"Pear"}, {"banana"=>"Banana"}, {nil=>"none"}]})
+    f.get_constraint_value_labels.should == [["Pear","pear"], ["Banana","banana"], ["none",nil]]
+  end
+  it "should be able to return enum field value map when spss_map defined" do    
+    f = Field.new(:name=>'fruit',:type=>'array', :constraints => {"enumeration"=>[{"pear"=>"Pear"}, {"banana"=>"Banana"}, {nil=>"none"}]})
+    f[:spss_map] = {'pear'=>2,'banana'=>3,nil=>1}
+    f.get_constraint_value_labels(true).should == [["none",nil],["Pear","pear"], ["Banana","banana"]]
+  end
+  
 end
 
 describe Workflow do

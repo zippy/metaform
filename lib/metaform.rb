@@ -81,6 +81,9 @@ unless defined? MetaformFormsDefined
         def setup
           #{file_contents}
         end
+        def getBinding
+          binding
+        end
       end
       EORUBY
       eval new_class,nil,file

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 class Form
   include Utilities
@@ -11,11 +12,14 @@ class Form
   @@store = {}
   @@configuration = {}
   @@_loaded_helpers = {}
+
   cattr_accessor :forms_dir,:cache,:configuration
+  @@_loaded_definitions = {}
+  @@_definition_file = nil
 
   FieldTypes = ['string','integer','float','decimal','boolean','date','datetime','time','text','hash','array']
 
-  attr_accessor :fields, :conditions, :questions, :presentations, :groups, :workflows, :tabs, :zapping_proc, :label_options, :calculated_field_dependencies, :current_tab_label
+  attr_accessor :fields, :conditions, :questions, :presentations, :groups, :workflows, :tabs, :zapping_proc, :label_options, :calculated_field_dependencies, :current_tab_label, :definition_order
 
   def initialize
     @fields = {}
@@ -28,6 +32,7 @@ class Form
     @zapping_proc = nil
     @label_options = {}
     @calculated_field_dependencies = {}
+    @definition_order = []
     
     @_commons = {}
     @_stuff = {}
@@ -207,10 +212,15 @@ class Form
       :type => 'string',
     }.update(opts)
     raise "Duplicate field name: '#{name}'" if fields.has_key?(name)
-
+    
+# xx = "#{name}•#{options[:label]}•#{$file}•#{options[:type]}"  #UNCOMMENT FOR MANUAL FORM DUMP
+    
+    definition_order << name
     #TODO we should really make enums and constraints an first class object and this check should happen there
     if c = options[:constraints]
       required_constraint_given = c.has_key?('required')
+# xx += "•#{c['required'].inspect}" #UNCOMMENT FOR MANUAL FORM DUMP
+
       x = Widget.enumeration(c) if c['enumeration']
       x ||= Widget.set(c) if c['set']
       if x
@@ -223,8 +233,12 @@ class Form
           o[option] = 1
           l[label] = 1
         end
+# xx += "•#{c['enumeration'] ? 'ENUM' : 'SET'}•"+x.collect {|label,option| "#{option.nil? ? '<nil>' : option}: #{label}"}.join(';   ') #UNCOMMENT FOR MANUAL FORM DUMP
       end
+    else
+# xx += "•false"      #UNCOMMENT FOR MANUAL FORM DUMP
     end
+# puts xx #UNCOMMENT FOR MANUAL FORM DUMP
     @fields_defined << name if @fields_defined
     if options.has_key?(:calculated)
       if options[:calculated].has_key?(:from_condition) 
@@ -256,6 +270,7 @@ class Form
     end
     
     the_field = Field.new(:name=>name,:type=>options[:type],:required_constraint_given => required_constraint_given)
+    the_field.file = @@_definition_file
     options.delete(:type)
     
     @_commons.each do |option_name,option_values|
@@ -1515,20 +1530,24 @@ EOJS
   #################################################################################
   # helper function to allow separating the DSL commands into multiple files
   def include_definitions(file)
+    @@_definition_file = file
+    return if @@_loaded_definitions[self.class.to_s+file] == self.class
+    @@_loaded_definitions[self.class.to_s+file] = self.class
     fn = Form.forms_dir+'/'+file
     file_contents = IO.read(fn)
-    eval(file_contents,nil,fn)
+    eval(file_contents,getBinding,fn)
   end
   
   #################################################################################
   # helper function to allow separating the DSL commands into multiple files
   def include_helpers(file)
-    return if @@_loaded_helpers[file] == self.class
-    @@_loaded_helpers[file] = self.class
+    return if @@_loaded_helpers[self.class.to_s+file] == self.class
+    @@_loaded_helpers[self.class.to_s+file] = self.class
     fn = Form.forms_dir+'/'+file
     file_contents = IO.read(fn)
-    Form.class_eval(file_contents,fn)
+    self.class.class_eval(file_contents,fn)
   end
+
   
   def if_c(condition,condition_value=true)
     condition = make_condition(condition)
@@ -1561,6 +1580,7 @@ EOJS
     return nil unless field.force_nil
     field.force_nil.each do |condition,force_nil_fields,negate|
       condition = make_condition(condition)
+      next if condition.zero_index_force_nil_only && index != 0
       condition_value = condition.evaluate
       if negate ? !condition_value : condition_value
 #        puts "FORCE NIL: condition #{condition.name} with negate: #{negate.to_s}"
@@ -1578,6 +1598,47 @@ EOJS
   # behaviors
   def validation_exclude_states
     'explained'
+  end
+  
+  ###########################################################
+  # Dump out a key for the form
+  require 'csv.rb'
+  def defintion_dump(include_spss_codes = false)
+    dump = []
+    dump << CSV.generate_line(%w(field_name file type label required constraints))
+    
+    definition_order.collect do |field_name|
+      f = fields[field_name]
+      row = [f.name,f.file,f.type,f.label]
+    
+      if c = f.constraints
+        row << c['required'].inspect
+
+        vl = f.get_constraint_value_labels(include_spss_codes)
+        l = "#{c['enumeration'] ? 'ENUM' : 'SET'}-- "
+        if vl
+          if include_spss_codes && c['enumeration']
+            i = 0
+            row << l+vl.collect do |label,option|
+              if option.nil?
+                "(empty) (<nil>): #{label}"
+              else
+                i+=1
+                "#{i} (#{option.nil? ? '<nil>' : option}): #{label}"
+              end
+            end.join(';   ')
+          else
+            row << l+vl.collect {|label,option| "#{option.nil? ? '<nil>' : option}: #{label}"}.join(';   ')
+          end
+        else
+          row << "none"
+        end
+      else
+        row << "false"
+      end
+      dump << CSV.generate_line(row)
+    end
+    dump.join("\n")
   end
  
   #################################################################################
@@ -1676,6 +1737,7 @@ EOJS
   def quote_for_html_attribute(text)
     text.gsub(/"/,'&quot;')
   end
+<<<<<<< HEAD
   
   # this is here to so that inclusion of include ActionView::Helpers::AssetTagHelper will work in rails 3
   def config
@@ -1685,4 +1747,7 @@ EOJS
     nil
   end
       
+=======
+
+>>>>>>> master
 end

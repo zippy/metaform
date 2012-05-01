@@ -129,7 +129,7 @@ class Record
     end
     
     def zip(other_answer,&block)
-      if !@value.nil? && !other_answer.value.nil?
+      if !@value.nil? && other_answer.exists?
         my_value = @value.instance_of?(Array) ? @value : [@value]
         other_value = other_answer.value.instance_of?(Array) ? other_answer.value : [other_answer.value]
         if block
@@ -174,6 +174,9 @@ class Record
       @value.compact.delete_if{|v| v == ""}.blank?
     end
         
+    def last
+      @value.last
+    end
   end
   
 class AnswersHash < Hash
@@ -623,7 +626,7 @@ end
     p.confirm_legal_state!(workflow_state)
     invalid_fields = nil
     validation_exclude_states = nil
-    forced_to_nil = []
+    forced_to_nil = {}
     
     if fields
       field_list = fields.collect { |f| f.to_s }
@@ -633,7 +636,7 @@ end
     @form.with_record(self) do
       # force any attributes to nil that need forcing
       forced_to_nil = set_force_nil_attributes(field_list)
-      field_list.concat(forced_to_nil).uniq!
+      field_list.concat(forced_to_nil.keys).uniq!
 
       # evaluate the validity of the attributes to be saved
       invalid_fields = _validate_attributes(field_list)
@@ -697,7 +700,7 @@ end
       value = value.to_yaml if [Hash,Array].include?(value.class)
       if f != nil
         if f.answer != (value.nil? ? nil : value.to_s) || (has_explanation && f.explanation != explanation_value) ||
-            (is_approval && approval_value) || forced_to_nil.include?(field_instance_id)
+            (is_approval && approval_value) || forced_to_nil.keys.include?(field_instance_id)
           # if we are checking last_updated dates don't do the update if the fields updated_at
           # is greater than the last_updated date passed in, and store this to report later
           if last_updated && f.updated_at.to_i > last_updated
@@ -743,7 +746,7 @@ end
           field_instances_to_save.each do |i|
             deps = @form.dependent_fields(i.field_id)
             dependents.concat(deps) if deps
-            if (i.answer == nil || i.answer == '') && ((i.state== 'answered' && i.explanation.blank?) || forced_to_nil.include?(i.field_id))  && i.idx == 0
+            if (i.answer == nil || i.answer == '') && ((i.state== 'answered' && i.explanation.blank?) || (forced_to_nil[i.field_id] && forced_to_nil[i.field_id].include?(i.idx) ))  && i.idx == 0
               unless i.new_record?
                 puts "<br>about to delete #{i.attributes.inspect}" if DEBUG1
                 i.delete
@@ -958,12 +961,14 @@ end
 #  end
   
   def set_force_nil_attributes(fields=nil)
-    fields_forced = []
+    fields_forced = {}
     @cache.each(:attributes => fields) do |attrib,value,index|
       @form.set_current_index(index)
       form.evaluate_force_nil(attrib,index) do |f|
         set_attribute(f,nil,index)
-        fields_forced << f
+        fields_forced[f] ||= []
+        fields_forced[f] << index
+        fields_forced[f].uniq!
       end
     end
     fields_forced
@@ -1052,10 +1057,15 @@ end
   # currently 
   #################################################################################
   require 'csv.rb'
+  SPSS_NIL = '.'
+  SPSS_TRUE = 1
+  SPSS_FALSE = 2
   def export(opts = {})
     options = {
-      :format => :csv
+      :format => :csv,
+      :options => {}
     }.update(opts)
+    spss_clean = options[:options][:spss]
     case options[:format]
     when :csv
       result = []
@@ -1066,6 +1076,7 @@ end
       puts "<br>CACHE on entrance to export: #{@cache.dump.inspect}" if DEBUG1
       @cache.indexes.each do |index|
         row = []
+        errs = {}
         row << self.form.class.to_s
         row << self.id
         row << index
@@ -1082,7 +1093,11 @@ end
           if field_def.nil?
             row << nil
           else
-            d = @cache.attributes(index)[f]
+            if field_def.calculated
+              d = self[f,index]
+            else 
+              d = @cache.attributes(index)[f]
+            end
             field_type = field_def.type
             begin
               if field_type == 'time' && !d.blank?
@@ -1092,13 +1107,48 @@ end
               elsif date_time_format && field_type == 'datetime' && !d.blank?
                 row << Time.local(*ParseDate.parsedate(d)[0..4]).strftime(date_time_format)
               else
-                row << d
+                if spss_clean && (s = field_def.get_set_values(:use_spss_order))
+                  s = s.compact
+                  if d.nil?
+                    row.concat((0...s.size).collect {|x| SPSS_NIL})
+                  else
+                    x = []
+                    y = d.split(/,/)
+                    row.concat s.collect {|v| y.include?(v) ? SPSS_TRUE : SPSS_FALSE}
+                    e = []
+                    y.each do |v|
+                      if !s.include?(v)
+                        e << v
+                      end
+                    end
+                    errs[f] = e if !e.empty?
+                  end
+                elsif spss_clean && (e = field_def.get_enumeration_values(:use_spss_order))
+                  if d.nil?
+                    row << SPSS_NIL
+                  else
+                    e = e.compact
+                    x = []
+                    idx = e.index(d)
+                    if idx.nil?
+                      errs[f] = d
+                      row << -1
+                    else
+                      row << idx+1
+                    end
+                  end
+                elsif spss_clean && (field_type == 'boolean')
+                  row << (d.nil? ? SPSS_NIL : ((d == 'true') ? SPSS_TRUE : SPSS_FALSE))
+                else
+                  row << d
+                end
               end
             rescue
               row << d
             end
           end
         end
+        row << "invalid values: #{errs.inspect.gsub(/"/,'')}" if !errs.empty?
         result << CSV.generate_line(row)
       end
       result
@@ -1107,7 +1157,24 @@ end
     end
   end
   
-  def self.export_csv_header(field_list)
+  def self.export_csv_header(field_list,spss_clean_form = false)
+    if spss_clean_form 
+      fl = []
+      fields = Form.make_form(spss_clean_form).fields
+      field_list.each do |f|
+        field_def = fields[f]
+        if field_def.nil?
+          raise "expeced a field definition for #{f_name} in #{spss_clean_form}"
+        else
+          if !field_def.constraints.nil? && (s = field_def.get_set_values)
+            fl.concat s.compact.collect {|v| "#{f}__#{v =~ /\*$/ ? v.chop : v}"}
+          else
+            fl << f
+          end
+          field_list = fl
+        end
+      end
+    end
     CSV.generate_line(['form','id','index','created_at','updated_at','workflow_state'].concat(field_list))
   end
  
@@ -1309,7 +1376,7 @@ end
       #puts "eval_Field 0:  expression=#{expression}"
       expr = expression.gsub(/\!:(\S+)/,'!(:\1)')
       #puts "eval_Field 1:  expr=#{expr}"
-      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|each_with_index|to_i|zip|map|include|any|other\?|blank\?)/,'f["\1"].\2')
+      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|each_with_index|to_i|zip|map|include|any|other\?|blank\?|last)/,'f["\1"].\2')
       #puts "eval_field 2:  expr=#{expr}"
       expr = expr.gsub(/:([a-zA-Z0-9_-]+)\./,'f["\1"].value.')
       #puts "eval_field 4:  expr=#{expr}"
