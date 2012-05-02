@@ -1737,7 +1737,6 @@ EOJS
   def quote_for_html_attribute(text)
     text.gsub(/"/,'&quot;')
   end
-<<<<<<< HEAD
   
   # this is here to so that inclusion of include ActionView::Helpers::AssetTagHelper will work in rails 3
   def config
@@ -1746,8 +1745,5 @@ EOJS
   def controller
     nil
   end
-      
-=======
 
->>>>>>> master
 end
