@@ -259,7 +259,7 @@ class Form
       raise MetaformException,"calculated fields need a :based_on_fields option that defines a list of fields used by the calculation proc" unless based_on_fields.class == Array
       based_on_fields.each do |f|
         @calculated_field_dependencies[f] ||= []
-        @calculated_field_dependencies[f]<<name
+        @calculated_field_dependencies[f] << name
         @calculated_field_dependencies[f].uniq!
       end
     end
