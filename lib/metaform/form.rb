@@ -1454,7 +1454,7 @@ EOJS
 
   def get_current_questions
     raise MetaformException,"attempting to get current questions without a setup presentation." if @_stuff[:current_questions].nil?
-   @_stuff[:current_questions].values
+    @_stuff[:current_questions].values
   end
   
   def get_current_field_names

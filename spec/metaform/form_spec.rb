@@ -1080,7 +1080,10 @@ describe SimpleForm do
   describe "setup_presentation (running through a presentation without building html)" do
     it "should collect up a list of all the questions encountered during the run" do
       @form.setup_presentation('container',@record)
-      @form.get_current_questions.should == [@form.questions['name'],@form.questions['higher_ed_years']]
+      cq = @form.get_current_questions
+      cq.include?(@form.questions['name']).should == true
+      cq.include?(@form.questions['higher_ed_years']).should == true
+      cq.size.should == 2
     end
     it "should collect up a list of all the field names encountered during the run" do
       @form.setup_presentation('container',@record)
@@ -1231,7 +1234,8 @@ describe SimpleForm do
     describe "#dependent_fields" do
       it "for a given field it should return a list of dependent fields" do
         @form.dependent_fields('married').should == ['years_married']
-        @form.dependent_fields('higher_ed_years').should == ['degree','no_ed_reason']
+        @form.dependent_fields('higher_ed_years').include?('degree').should == true
+        @form.dependent_fields('higher_ed_years').include?('no_ed_reason').should == true
       end
     end
     describe "#record_workflow" do
