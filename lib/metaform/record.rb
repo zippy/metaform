@@ -1148,7 +1148,7 @@ end
             end
           end
         end
-        row << "invalid values: #{errs.inspect.gsub(/"/,'')}" if !errs.empty?
+        row << "invalid values: "+ errs.keys.sort.collect {|k| "#{k}=>#{errs[k].is_a?(Array) ? "[#{errs[k].join(',')}]" : errs[k]}"}.join(', ') if !errs.empty?
         result << CSV.generate_line(row)
       end
       result
