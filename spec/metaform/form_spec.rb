@@ -148,6 +148,7 @@ describe SimpleForm do
       end
       it "should not evaluate not evaluate for forcing nil when zero_index_force_nil_only set" do
         $metaform_error_messages = Constraints::DefaultErrorMessages.clone
+        Form.configuration[:hide_required_extra_errors] = true
         cond = @form.c 'has_mansion'
         @record.save('create')
         @form.with_record(@record) do
