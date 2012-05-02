@@ -523,22 +523,22 @@ describe SimpleForm do
       end
       it "should render a property" do
         @form.with_record(@record,:render) do
-          (@form.questions['age1609331767'].render(@form) =~ /g question!/).should_not == nil
+          (@form.questions[@form.questions.keys.find{|k|k=~/age/}].render(@form) =~ /g question!/).should_not == nil
           (@form.questions['higher_ed_years'].render(@form) =~ /g question!/).should_not == nil
           (@form.questions['name'].render(@form) =~ /g question!$/).should == nil
         end
       end
       it "should render a property differently for a read only question" do
         @form.with_record(@record,:render) do
-          (@form.questions['age1609331767'].render(@form,'10',true) =~ /g question read only!/).should_not == nil
+          (@form.questions[@form.questions.keys.find{|k|k=~/age/}].render(@form,'10',true) =~ /g question read only!/).should_not == nil
           (@form.questions['name'].render(@form,'Joe',true) =~ /g question$/).should == nil
         end
       end
       it "should render multiple properties" do
         @form.set_validating(true)
         @form.with_record(@record) do
-          (@form.questions['age1609331767'].render(@form,'99') =~ /g question!/).should_not == nil
-          (@form.questions['age1609331767'].render(@form,'99') =~ /<div class="validation_item">/).should == nil
+          (@form.questions[@form.questions.keys.find{|k|k=~/age/}].render(@form,'99') =~ /g question!/).should_not == nil
+          (@form.questions[@form.questions.keys.find{|k|k=~/age/}].render(@form,'99') =~ /<div class="validation_item">/).should == nil
           (@form.questions['higher_ed_years'].render(@form,'99') =~ /g question!/).should_not == nil
           (@form.questions['higher_ed_years'].render(@form,'99') =~ /<div class="validation_item">/).should_not == nil
         end
