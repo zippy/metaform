@@ -1200,7 +1200,8 @@ class Form
       ojs = get_observer_jscripts
        if ojs
         field_name_action_hash = {}
-        ojs.collect do |condition_name,actions|
+        ojs.keys.sort.collect do |condition_name|
+          actions = ojs[condition_name]
           cond = conditions[condition_name]
           raise condition_name if cond.nil?
           fnname = 'actions_for_'+cond.js_function_name

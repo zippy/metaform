@@ -118,7 +118,8 @@ module MetaformHelper
   end
   
   def generate_options
-    @search_params.each_pair do |k,v|
+    @search_params.keys.sort.each do |k|
+      v = @search_params[k]
       if v == 'all'
         @display_all = true
       elsif k =~ /^on(.*)/ && v && v != ''
@@ -159,7 +160,7 @@ module MetaformHelper
     if sql #Combine filters in format sql likes
       conditions = []
       sql_terms = []
-      @filters.each do |f|
+      @filters.sort.each do |f|
         sql_terms << f[0]
         conditions = conditions + f[1]
       end
