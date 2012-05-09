@@ -118,7 +118,7 @@ module MetaformHelper
   end
   
   def generate_options
-    @search_params.keys.sort.each do |k|
+    @search_params.keys.sort_by{|k| k.to_s}.each do |k|
       v = @search_params[k]
       if v == 'all'
         @display_all = true
