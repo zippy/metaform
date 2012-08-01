@@ -104,6 +104,23 @@ function $DTF(name){
 	d = new Date((d.getMonth()+1) + "/" + d.getDate() + "/" + d.getFullYear() + " "+ hours + ':' + minutes);
 	return ((d == "Invalid Date")||isNaN(d)) ? null : d;
 }
+//Get value of date_time_optional widgets
+function $DTOF(name){
+	d = make_date($F(name+'_year'),$F(name+'_month'),$F(name+'_day'));
+	if (d == null) {return null};
+	var hours = check_num($F(name+'_hours'));
+	if (hours > 24) {return null};
+	if ($F(name+'_am_pm') == 'pm') {hours = hours + 12};
+	var minutes = check_num($F(name+'_minutes'));
+	if (minutes > 59 || minutes < 0) {return null};
+        if (hours == null || minutes == null) {
+	    d = new Date((d.getMonth()+1) + "/" + d.getDate() + "/" + d.getFullYear());
+        }
+        else {
+	    d = new Date((d.getMonth()+1) + "/" + d.getDate() + "/" + d.getFullYear() + " "+ hours + ':' + minutes);
+        }
+	return ((d == "Invalid Date")||isNaN(d)) ? null : d;
+}
 //Get value of factor_textfield widgets
 function $FTF(name){
     var first_box = parseFloat($F(name+'_first_box'));
@@ -328,6 +345,14 @@ function date_time_invalid(field_id) {
 	return $DTF(field_id) == null;
 }
 
+function date_time_optional_invalid(field_id) {
+	if ($F(field_id+'_year') == '' && $F(field_id+'_month') == '' && $F(field_id+'_day') == '' && $F(field_id+'_hours') == '' && $F(field_id+'_minutes') == '') {
+		return false;
+	}
+        if (($F(field_id+'_hours') == '' && $F(field_id+'_minutes') != '') ||  ($F(field_id+'_hours') != '' && $F(field_id+'_minutes') == '')) {return true;}
+	return $DTOF(field_id) == null;
+}
+
 function date_invalid(field_id) {
 	if ($F(field_id+'_year') == '' && $F(field_id+'_month') == '' && $F(field_id+'_day') == '') {
 		return false;
@@ -382,6 +407,10 @@ function mark_invalid_float(field_id) {
 
 function mark_invalid_date_time(field_id) {
 	mark_field_validity(field_id,date_time_invalid(field_id),"Invalid date-time")
+}
+
+function mark_invalid_date_time_optional(field_id) {
+	mark_field_validity(field_id,date_time_optional_invalid(field_id),"Invalid date-time")
 }
 
 function mark_invalid_date(field_id) {

@@ -1,6 +1,6 @@
 require "metaform/widget_date_time_helper"
 ################################################################################
-class DateTimeWidget < Widget
+class DateTimeOptionalWidget < Widget
   class << self
     include DateHelper
     include TimeHelper
@@ -15,8 +15,8 @@ class DateTimeWidget < Widget
     </script> 
     EOHTML
     html + multi_field_wrapper_html(field_instance_id,
-      time_html(field_instance_id,value,options,:date_time) +
-      date_html(field_instance_id,value,options,:date_time)
+      time_html(field_instance_id,value,options,:date_time_optional) +
+      date_html(field_instance_id,value,options,:date_time_optional)
       )
   end
 
@@ -25,13 +25,16 @@ class DateTimeWidget < Widget
     date = humanize_date_value(value,options)
     date ||= '--'
     time = humanize_time_value(value,options)
-    time ||= '--'
-    date  + ' ' + time
+    if time
+      date + ' ' + time
+    else
+      date
+    end
   end
 
   ################################################################################
   def self.javascript_get_value_function(field_instance_id) 
-    %Q|$DTF('#{build_html_id(field_instance_id)}')|
+    %Q|$DTOF('#{build_html_id(field_instance_id)}')|
   end
 
   ################################################################################
@@ -44,8 +47,12 @@ class DateTimeWidget < Widget
   def self.convert_html_value(value,params={})
     date = convert_date_html_value(value,params)
     time = convert_time_html_value(value,params)
-    return nil if date.nil? || time.nil?
-    Time.mktime(date.year,date.month,date.day,time.hour,time.min).strftime('%Y-%m-%d %H:%M')
+    return nil if date.nil?
+    if time.nil?
+      Time.mktime(date.year,date.month,date.day).strftime('%Y-%m-%d')
+    else
+      Time.mktime(date.year,date.month,date.day,time.hour,time.min).strftime('%Y-%m-%d %H:%M')
+    end
   end
 
 end

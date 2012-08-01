@@ -29,6 +29,17 @@ describe DateHelper do
 end
 
 describe TimeHelper do
+  describe 'has_time?' do
+    it 'should be true for 2001-01-01 12:00' do
+      has_time?("2001-01-01 12:00").should == true
+    end
+    it 'should be false for 2001-01-01' do
+      has_time?("2001-01-01").should == false
+    end
+    it 'should be true for 12:00' do
+      has_time?("12:00").should == true
+    end
+  end
   describe 'parse_time_value' do
     it 'should convert 0:0 to 12:00 am' do
       parse_time_value("0:0").should == ['12','00','am']
@@ -53,6 +64,9 @@ describe TimeHelper do
     end
     it 'should convert empty string to nil' do
       parse_time_value('').should == nil
+    end
+    it 'should covert dates without time to nil' do
+      parse_time_value('2012-10-01').should == nil
     end
   end
   describe 'convert_time_html_value' do
