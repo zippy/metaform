@@ -1,10 +1,10 @@
 module TimeHelper
-  def time_html(field_instance_id,value,options,date_time=false)
+  def time_html(field_instance_id,value,options,time_type=:time)
     meridian_options = [ ["AM","am"] , ["PM","pm"] ]
     id = build_html_id(field_instance_id)
-    fn = date_time ? 'mark_invalid_date_time' : 'mark_invalid_time'
+    fn = "mark_invalid_#{time_type.to_s}"
     js = %Q|onblur="if (#{id}_first_pass) {#{fn}('#{id}')}"|
-    jsh = !date_time ?  %Q|onblur="#{fn}('#{id}');#{id}_first_pass = true;"| : js
+    jsh = (time_type == :time) ?  %Q|onblur="#{fn}('#{id}');#{id}_first_pass = true;"| : js
     if value
       (hours,minutes,meridian) = parse_time_value(value)
       <<-EOHTML
@@ -24,9 +24,16 @@ module TimeHelper
       EOHTML
     end
   end
+
+  ################################################################################
+  def has_time?(value)
+    value =~ /:/ ? true : false
+  end
+
   ################################################################################
   def parse_time_value(value)
     return nil if value.blank?
+    return nil if !has_time?(value)
     date = Time.parse(value)
     hours = date.hour
     meridian = "am"
@@ -77,10 +84,10 @@ end
 
 module DateHelper
   ################################################################################
-  def date_html(field_instance_id,value,options,date_time=false)
+  def date_html(field_instance_id,value,options,date_type=:date)
     date = parse_date_value(value)
     id = build_html_id(field_instance_id)
-    fn = date_time ? 'mark_invalid_date_time' : 'mark_invalid_date'
+    fn = "mark_invalid_#{date_type.to_s}"
     js = %Q|onblur="if (#{id}_first_pass) {#{fn}('#{id}')}"|
     jsy = %Q|onblur="#{fn}('#{id}');#{id}_first_pass = true;"|
     if date

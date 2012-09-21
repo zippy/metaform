@@ -184,9 +184,23 @@ describe Widget do
     it "should convert bad html values to nil" do
       d = {'month'=>'','day'=>'','year'=>'', 'hours'=>'','minutes'=>'','am_pm'=>'am'}
       DateTimeWidget.convert_html_value(d).should == nil
+      d = {'month'=>'12','day'=>'01','year'=>'2012', 'hours'=>'','minutes'=>'','am_pm'=>'am'}
+      DateTimeWidget.convert_html_value(d).should == nil
     end
   end
-  
+
+  describe DateTimeOptionalWidget do
+    it "should convert html values to a date-time string" do
+      d = {'month'=>'12','day'=>'01','year'=>'2001', 'hours'=>'12','minutes'=>'00','am_pm'=>'am'}
+      DateTimeOptionalWidget.convert_html_value(d).should == '2001-12-01 00:00'
+    end
+    it "should convert bad html values to nil" do
+      d = {'month'=>'','day'=>'','year'=>'', 'hours'=>'','minutes'=>'','am_pm'=>'am'}
+      DateTimeOptionalWidget.convert_html_value(d).should == nil
+      d = {'month'=>'12','day'=>'01','year'=>'2012', 'hours'=>'','minutes'=>'','am_pm'=>'am'}
+      DateTimeOptionalWidget.convert_html_value(d).should == '2012-12-01'
+    end
+  end  
 
   describe TimeIntervalWidget do
     it "should render two html input texts plus a select for am/pm" do

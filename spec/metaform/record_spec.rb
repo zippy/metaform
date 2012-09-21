@@ -1277,7 +1277,7 @@ describe Record do
       @record.export(
         :fields => ['name', 'fruit','colors'],
         :options => {:spss => true}
-      ).should == ["SampleForm,,0,,,,Bob Smith,-1,1,2,2,2,\"invalid values: colors=>[c], fruit=>squid\""]
+        ).should == ["SampleForm,,0,,,,Bob Smith,-1,1,2,2,2,\"invalid values: colors=>[c], fruit=>squid\""]
     end
     it "should have an option to manually set the order of enums and sets for spss" do
       @record[:colorsx] = "r,b"
