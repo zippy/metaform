@@ -2,7 +2,7 @@ class FormInstance < ActiveRecord::Base
 #  belongs_to :form
   has_many :field_instances, {:dependent => :destroy}
   validates_presence_of :form_id
-  serialize :validation_data, Hash
+  serialize :validation_data
   
   def form
     form_id.constantize

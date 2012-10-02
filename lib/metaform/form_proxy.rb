@@ -17,9 +17,9 @@ class FormProxy
 #    include ActionView::Helpers::JavaScriptMacrosHelper
   #  include ActionView::Helpers::NumberHelper
   #  include ActionView::Helpers::PaginationHelper
-    include ActionView::Helpers::PrototypeHelper
-    include ActionView::Helpers::PrototypeHelper::JavaScriptGenerator::GeneratorMethods
-    include ActionView::Helpers::ScriptaculousHelper
+#    include ActionView::Helpers::PrototypeHelper
+#    include ActionView::Helpers::PrototypeHelper::JavaScriptGenerator::GeneratorMethods
+#    include ActionView::Helpers::ScriptaculousHelper
     include ActionView::Helpers::TagHelper
     include ActionView::Helpers::TextHelper
 
