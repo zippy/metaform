@@ -309,7 +309,7 @@ describe Record do
       @nr.name.should == 'Joe'
       @nr.occupation.should == 'Bum'
       @nr.education.should == nil
-      @nr.degree .should == nil
+      @nr.degree.should == nil
       @record.form_instance.get_validation_data['_'].should == {"fruit"=>[["This information is required"]]}
     end
   end

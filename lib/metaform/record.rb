@@ -316,6 +316,7 @@ end
     end
     vd['_'] = error_messages
     form_instance.update_validation_data(vd)
+    form_instance.reload
   end
   
   ######################################################################################

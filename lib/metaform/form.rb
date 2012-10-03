@@ -1257,9 +1257,9 @@ EOJS
       b = get_body.join("\n")
       b.gsub!(/<info(.*?)>(.*?)<\/info>/) {|match| tip($2,$1)}
 
-      if @_tip_id
-        b = "#{javascript_include_tag("prototip-min")} #{stylesheet_link_tag('prototip',:media => "screen")} #{b}"
-      end
+#      if @_tip_id
+#        b = "#{javascript_include_tag("prototip-min")} #{stylesheet_link_tag('prototip',:media => "screen")} #{b}"
+#      end
 
       js = get_jscripts
       jscripts << js if js
@@ -1315,7 +1315,7 @@ EOJS
     option_string = options.size > 0 ? ",{ #{options.join(' , ')} }" : ""
     javascript %Q|new Tip('#{tip_id}',"#{quote_for_javascript(text)}"#{option_string})|
     @_tip_id += 1
-    %Q|<img src="/images/info_circle.gif" alt="" id="#{tip_id}">|
+    image_tag "info_circle.gif", :id=>"#{tip_id}"
   end
 
   #################################################################################
