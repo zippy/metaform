@@ -71,7 +71,7 @@ unless defined? MetaformFormsDefined
       end
     end
     requires.each do |file|
-      require File.join(Form.forms_dir, file)
+      require File.expand_path(File.join(Rails.root, File.join(Form.forms_dir, file)))
     end
     forms.each do |klass|
       file = Form.forms_dir+'/'+klass+'form.rb'
