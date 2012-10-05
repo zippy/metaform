@@ -1107,6 +1107,9 @@ end
               else
                 if spss_clean && (s = field_def.get_set_values(:use_spss_order))
                   s = s.compact
+                  # take into account that some set values have the magic * at the end which has to be ignored because it's not
+                  # actually part of the value, but an indicator that it's unique
+                  s = s.collect {|v| v =~ /(.*)\*$/ ? $1 : v}
                   if d.nil?
                     row.concat((0...s.size).collect {|x| SPSS_NIL})
                   else
@@ -1164,7 +1167,7 @@ end
         if field_def.nil?
           raise "expeced a field definition for #{f_name} in #{spss_clean_form}"
         else
-          if !field_def.constraints.nil? && (s = field_def.get_set_values)
+          if !field_def.constraints.nil? && (s = field_def.get_set_values(:use_spss_order))
             fl.concat s.compact.collect {|v| "#{f}__#{v =~ /\*$/ ? v.chop : v}"}
           else
             fl << f
