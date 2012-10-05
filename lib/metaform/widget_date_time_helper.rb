@@ -111,10 +111,13 @@ EOHTML
 
   ################################################################################
   def parse_date_value(value)
-    require 'parsedate'
+    require 'date'
     date = nil
-    if value && (d = ParseDate.parsedate(value))[0]
-      date = Date.new(*d[0..2])
+    if value
+      begin
+        date = Utilities._parse_datetime(value).to_date
+      rescue
+      end
     end
     date
   end

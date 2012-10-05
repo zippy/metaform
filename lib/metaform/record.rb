@@ -158,7 +158,7 @@ class Record
     end
     
     def other?(*undesired_values)
-      !@value.to_s.blank? && !undesired_values.any?{|x| @value.any?{|y| y && y.include?(x)}}
+      !@value.join('').blank? && !undesired_values.any?{|x| @value.any?{|y| y && y.include?(x)}}
     end
     
     def is_indexed?
@@ -1102,11 +1102,11 @@ end
             field_type = field_def.type
             begin
               if field_type == 'time' && !d.blank?
-                row << Time.local(*ParseDate.parsedate(d)[0..6]).strftime("%H:%M:%S")
+                row << Time.local(*Utilities.parse_datetime(d)[0..6]).strftime("%H:%M:%S")
               elsif date_format && field_type == 'date' && !d.blank?
-                row << Time.local(*ParseDate.parsedate(d)[0..2]).strftime(date_format)
+                row << Time.local(*Utilities.parse_datetime(d)[0..2]).strftime(date_format)
               elsif date_time_format && field_type == 'datetime' && !d.blank?
-                row << Time.local(*ParseDate.parsedate(d)[0..4]).strftime(date_time_format)
+                row << Time.local(*Utilities.parse_datetime(d)[0..4]).strftime(date_time_format)
               else
                 if spss_clean && (s = field_def.get_set_values(:use_spss_order))
                   s = s.compact
@@ -1150,7 +1150,7 @@ end
           end
         end
         row << "invalid values: "+ errs.keys.sort.collect {|k| "#{k}=>#{errs[k].is_a?(Array) ? "[#{errs[k].join(',')}]" : errs[k]}"}.join(', ') if !errs.empty?
-        result << CSV.generate_line(row)
+        result << CSV.generate_line(row).chop
       end
       result
     else
@@ -1176,7 +1176,7 @@ end
         end
       end
     end
-    CSV.generate_line(['form','id','index','created_at','updated_at','workflow_state'].concat(field_list))
+    CSV.generate_line(['form','id','index','created_at','updated_at','workflow_state'].concat(field_list)).chop
   end
  
   def loaded?

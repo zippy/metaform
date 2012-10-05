@@ -114,11 +114,11 @@ module Constraints
         if !value.blank?
           date = parse_date(value)
           if constraint == :in_past
-            if date > Time.now
+            if date > Date.today
               constraint_errors << fill_error(err_message_template,:in_past)
             end
           elsif constraint == :in_future
-            if date < Time.now
+            if date <= Date.today
               constraint_errors << fill_error(err_message_template,:in_future)
             end
           end

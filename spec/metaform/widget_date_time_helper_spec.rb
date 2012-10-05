@@ -25,6 +25,11 @@ describe DateHelper do
     it 'should convert invalid html values to nil' do
       convert_date_html_value({'year'=>'xsy','month'=>'99','day'=>''}).should == nil
     end
+    it 'should convert 2 digit years less than 38 to 2000s and greater than 37 to 1900s' do
+      convert_date_html_value({'year'=>'12','month'=>'1','day'=>'2'}).should == Time.mktime(2012,1,2)
+      convert_date_html_value({'year'=>'37','month'=>'1','day'=>'2'}).should == Time.mktime(2037,1,2)
+      convert_date_html_value({'year'=>'38','month'=>'1','day'=>'2'}).should == Time.mktime(1938,1,2)
+    end
   end
 end
 

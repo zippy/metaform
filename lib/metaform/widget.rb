@@ -156,7 +156,7 @@ class Widget
     if multi_elem_widget_value
       value = multi_elem_widget_value.to_s.downcase
       if value =~ /[^a-z0-9_]/
-        value = value.split(//).collect {|c| c =~ /[^a-z0-9_]/ ? c[0].to_s : c}.join('')
+        value = value.split(//).collect {|c| c =~ /[^a-z0-9_]/ ? c.ord.to_s : c}.join('')
       end
       result << value
     end

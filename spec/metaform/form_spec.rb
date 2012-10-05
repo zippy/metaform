@@ -913,8 +913,8 @@ describe SimpleForm do
     describe "tip (add a tool-tip)" do
       it "should add an 'info' icon with a tool-tip" do
         @form.with_record(@record,:render) do
-          @form.tip('this is the text of the first tip').should == "<img alt=\"Info_circle\" id=\"tip_1\" src=\"/images/info_circle.gif\" />"
-          @form.tip('this is the text of the "second" tip').should == "<img alt=\"Info_circle\" id=\"tip_2\" src=\"/images/info_circle.gif\" />"
+          @form.tip('this is the text of the first tip').should == "<img alt=\"info\" id=\"tip_1\" src=\"/assets/info_circle.gif\" />"
+          @form.tip('this is the text of the "second" tip').should == "<img alt=\"info\" id=\"tip_2\" src=\"/assets/info_circle.gif\" />"
           @form.get_jscripts.should == [
             %q|new Tip('tip_1',"this is the text of the first tip")|,
             %q|new Tip('tip_2',"this is the text of the \"second\" tip")|

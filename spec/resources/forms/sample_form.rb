@@ -28,7 +28,7 @@ def setup
     f 'hobby', :label => 'Hobby', :constraints => {"required"=>true}
     f 'field_with_default', :label => 'FWD', :type => 'string', :default=> 'fish'
     f 'indexed_field_no_default', :label => 'AF', :type => 'string', :indexed_default_from_null_index => true
-    c 'condition_for_def_dependent_fields', :fields_to_use =>  'indexed_field_no_default',
+    c 'condition_for_def_dependent_fields', :fields_to_use =>  ['indexed_field_no_default'],
       :javascript => ':indexed_field_no_default.include("pig")' do
         field_value_at('indexed_field_no_default',:any).include?("pig")
       end

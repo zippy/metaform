@@ -18,9 +18,8 @@ EOHTML
 
   ################################################################################
   def self.parse_value(value)
-    require 'parsedate'
     date = nil
-    if !value.blank? && (d = ParseDate.parsedate(value))[0]
+    if !value.blank? && (d = Utilities.parse_datetime(value))[0]
       date = Date.new(*d[0..2])
     end
     date

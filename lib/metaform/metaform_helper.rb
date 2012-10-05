@@ -42,7 +42,7 @@ module MetaformHelper
   end
   def sort_rule_date(sort_key)
     @sort_rules[sort_key] = Proc.new do |r|
-      (r && r[sort_key] && r[sort_key] != '') ? Time.mktime(*ParseDate.parsedate(r[sort_key])[0..2]) : Time.new
+      (r && r[sort_key] && r[sort_key] != '') ? Time.mktime(*Utilities.parse_datetime(r[sort_key])[0..2]) : Time.new
     end
   end
   def apply_sort_rule(r = nil)
@@ -269,7 +269,6 @@ module MetaformHelper
     }.update(opts)
     per_page = opts[:per_page]
     opts.delete(:per_page)
-    
     options = generate_search_options(:search)
     
     #if there's a manual filter then we have to and it to any conditions that allready exist

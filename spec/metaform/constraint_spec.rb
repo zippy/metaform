@@ -102,8 +102,7 @@ describe Constraints do
 
   describe 'date' do
     before(:each) do
-      n = Time.now
-      @today = Time.mktime(n.year,n.month,n.day)
+      @today = Date.today
     end
     it "should not trigger when date is nil" do
       Constraints.verify({'date' => :in_past}, nil, @form).should == []

@@ -4,7 +4,8 @@ include Utilities
 describe Utilities do
   describe "parse_date" do
     it "should parse dates" do
-      parse_date("10/20/2009").should == Time.local(2009,10,20)
+      parse_date("10/20/2009").should == DateTime.new(2009,10,20)
+      parse_date("2012-10-04 00:00:00").should == DateTime.new(2012,10,04)
     end
     it "should parse dates taking into account a timezone in Form.store" do
       Form.set_store(:time_zone,'UTC')
@@ -12,6 +13,15 @@ describe Utilities do
       Form.set_store(:time_zone,"Eastern Time (US & Canada)")
       d2 = parse_date("1/1/2009")
       d2.should == d1
+    end
+    it "should parse datetimes into an array" do
+      parse_datetime("2012-12-20 1:2:3").should == [2012,12,20,1,2,3]
+      parse_datetime("2012-12-20 1:2").should == [2012,12,20,1,2,0]
+      parse_datetime("2012-12-20").should == [2012,12,20,0,0,0]
+      parse_datetime("12/20/2012 1:2:3").should == [2012,12,20,1,2,3]
+      parse_datetime("12/20/2012 1:2").should == [2012,12,20,1,2,0]
+      parse_datetime("12/20/2012").should == [2012,12,20,0,0,0]
+      parse_datetime("").should == [nil,nil,nil,nil,nil,nil]
     end
   end
   describe "numerics" do

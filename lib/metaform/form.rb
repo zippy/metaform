@@ -417,6 +417,7 @@ class Form
       yield
     end
     condition.fields_used.each {|f| fields[f].set_dependent_fields(@fields_defined)}
+
     force_nil_condition.fields_used.each do |fn|
       f = fields[fn]
       f.add_force_nil_case(force_nil_condition,@fields_defined.clone,negate)
@@ -872,6 +873,7 @@ class Form
       :css_class => nil
     }.update(opts)
     js = yield
+    js = js.join('') if js.is_a?(Array)
     css_class = options[:css_class]
     css_class = %Q| class="#{css_class}"| if css_class
     body %Q|<input type="button" value="#{name}"#{css_class} onclick="#{js}">|
@@ -1051,7 +1053,9 @@ class Form
   def javascript_if_field(field_name,expr,value)
     save_context(:js) do
       widget = get_current_question_by_field_name(field_name).get_widget
-      javascript %Q|if (#{widget.javascript_get_value_function(field_name)} #{expr} '#{value}') {#{yield}};|
+      js = yield
+      js = js.join('') if js.is_a?(Array)
+      javascript %Q|if (#{widget.javascript_get_value_function(field_name)} #{expr} '#{value}') {#{js}};|
     end
   end
 
@@ -1060,7 +1064,9 @@ class Form
   #################################################################################
   def javascript_confirm(text)
     save_context(:js) do
-      javascript %Q|if (confirm('#{quote_for_javascript(text)}')) {#{yield}};|
+      js = yield
+      js = js.join('') if js.is_a?(Array)
+      javascript %Q|if (confirm('#{quote_for_javascript(text)}')) {#{js}};|
     end
   end
   
@@ -1315,7 +1321,7 @@ EOJS
     option_string = options.size > 0 ? ",{ #{options.join(' , ')} }" : ""
     javascript %Q|new Tip('#{tip_id}',"#{quote_for_javascript(text)}"#{option_string})|
     @_tip_id += 1
-    image_tag "info_circle.gif", :id=>"#{tip_id}"
+    %Q|<img alt="info" id="#{tip_id}" src="/assets/info_circle.gif" />|
   end
 
   #################################################################################
@@ -1606,7 +1612,7 @@ EOJS
   require 'csv.rb'
   def defintion_dump(include_spss_codes = false)
     dump = []
-    dump << CSV.generate_line(%w(field_name file type label required constraints))
+    dump << CSV.generate_line(%w(field_name file type label required constraints)).chop
     
     definition_order.collect do |field_name|
       f = fields[field_name]
@@ -1637,7 +1643,7 @@ EOJS
       else
         row << "false"
       end
-      dump << CSV.generate_line(row)
+      dump << CSV.generate_line(row).chop
     end
     dump.join("\n")
   end
