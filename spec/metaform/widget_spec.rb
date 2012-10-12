@@ -343,7 +343,7 @@ describe Widget do
   
   describe CheckBoxGroupFollowupWidget do
     before(:each) do
-      @options = {:constraints => {'set'=>[{'val1'=>'Value 1'},{'val2'=>'Value 2'}]}, :params => "param_label,param1,param2"}
+      @options = {:constraints => {'set'=>[{'val1'=>'Value 1'},{'val2'=>'Value 2'},{'val3'=>'Value 3'},{'val4'=>'Value 4'}]}, :params => "param_label,param1,param2"}
     end
      
     it "should render html checkboxes with a custom label" do
