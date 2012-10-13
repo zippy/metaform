@@ -15,7 +15,7 @@ class TextFieldIntegerWidget < Widget
       opts[:maxlength] = max_length if max_length
     end
     id = build_html_id(field_instance_id)
-    opts.update({:id => id, :onkeyup => "mark_invalid_integer('#{id}')",:onchange => "mark_invalid_integer('#{id}')"})
+    opts.update({:id => id, :onkeyup => "mark_invalid_integer('#{id}')".html_safe,:onchange => "mark_invalid_integer('#{id}')".html_safe})
 	  field_html = form.text_field_tag(build_html_name(field_instance_id),value,opts)
     multi_field_wrapper_html(field_instance_id,field_html)
   end
