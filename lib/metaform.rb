@@ -1,3 +1,9 @@
+require "metaform/version"
+
+#module Metaform
+  # Your code goes here...
+#end
+
 class MetaformException < RuntimeError
 end
 class MetaformIllegalStateForPresentationError < MetaformException
