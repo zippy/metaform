@@ -1,6 +1,6 @@
 # Metaform
 
-This plugin provides a system for defining and generating forms for complex
+Metaform is a rails engine that provides a system for defining and generating forms for complex
 data-collection using a domain specific language (dsl) to create:
 
 * a data model and a specification of how that data is constrained
@@ -8,13 +8,14 @@ data-collection using a domain specific language (dsl) to create:
 * workflows that specify the states a form can go through and actions that move a form from one state to another
 * listings to retrieve groups of forms based on arbitrary criteria
 * reports to retrieve aggregate information across forms
+* complex validation which includes the ability to not reject "invalid entries" but store them and record them as invalid
+* conditional data relations for creating "branching forms"
 
 The system also includes a "widget" system that pre-defines a number of html widgets
 including radio-button and check-box groups, text-based date entry, etc.. which all
 include javascript handling for in browser use of widget values regardless of how they are
 displayed. For example, a date widget might be displayed as three text input boxes, but
 the widget generates javascript to get the true date value out of the widget directly.
-
 
 ## Installation
 
@@ -32,10 +33,9 @@ Or install it yourself as:
 
 Then:
 
-1. Add the code from example/routes.rb into your config/routes.rb file.
-2. Use the generator:
+1. Use the generator:
 
-    $ ./script/generate metaform
+    $ bundle exec rails g metaform
 
 This will add:
 
@@ -43,14 +43,18 @@ This will add:
 * the "forms" directory where you will define your forms using the metaform DSL (see below)
 * a javascript file to your public/javascripts
 * the default css stylesheet to public/stylesheets
-* records/show.rhtml and records/new.rhtml to app/views/ as sample views that use metaform to create forms
+* records/show.html.erb and records/new.html.erb to app/views/ as sample views that use metaform to create forms
 
-3. Include the following helper in the head of your application layout:
+2. Include the following helper in the head of your application layout:
     <%= include_metaform_assets %>
 This will load the javascripts and the stylesheets when needed.  To tell this function when to load the assets
 simply add: 
     <%@metaform_include_assets = true%>
 to the top of the view that shows a form.
+
+## Database dependencies
+
+Currently Metaform can use mysql, postgres or sqlite 3 and detects which is in use on initialization.  If you are using metaform to collect substantial amounts of data we recommend using postgres as it scales the best.  In the works is converting Metaform to work with no-SQL databases (probably couchDB to start with) which should make Metaform truly scalable.
 
 ## The Metaform Domain Specific Language (DSL)
 
@@ -132,3 +136,17 @@ Record.search always returns an array of FormInstances, where Record.gather/loca
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
+
+## Testing
+
+Metaform uses RSpec for testing.  The gem contains a dummy app with a couple of forms that exercise metaforms features and functionality.  To setup the gem to run the specs:
+
+1. cd into the gem root directory
+2. run the bundle command to set up the development dependencies
+3. cd spec/dummy
+4. rake db:migrate
+5. rake db:test:prepare
+
+Then from the gem root you can run the specs with:
+
+    bundle exec rspec spec

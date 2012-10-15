@@ -1484,9 +1484,9 @@ end
     end
     meta_fields = ['id']
     meta_fields += arrayify(options[:meta_fields]) if options[:meta_fields]
-    fields_sql = fields.collect {|f| fq = UsingPostgres ? "\"#{f}\"" : f;"#{fq}.answer as #{fq}"}.concat(meta_fields.collect {|f| "form_instances.#{f}"}).join(", ")
+    fields_sql = fields.collect {|f| fq = Metaform.usingPostgres ? "\"#{f}\"" : f;"#{fq}.answer as #{fq}"}.concat(meta_fields.collect {|f| "form_instances.#{f}"}).join(", ")
     fields_sql += "," + arrayify(options[:raw_fields]).join(',') if options[:raw_fields]
-    left_join_sql = left_join_fields.collect{|f| fq = UsingPostgres ? "\"#{f}\"" : f;"left outer join field_instances as #{fq} on #{fq}.form_instance_id = form_instances.id and #{fq}.field_id = '#{f}' "}.join(" ") if !left_join_fields.empty?
+    left_join_sql = left_join_fields.collect{|f| fq = Metaform.usingPostgres ? "\"#{f}\"" : f;"left outer join field_instances as #{fq} on #{fq}.form_instance_id = form_instances.id and #{fq}.field_id = '#{f}' "}.join(" ") if !left_join_fields.empty?
 
     select = "#{fields_sql} from form_instances"
     select += ' ' + left_join_sql if left_join_sql
@@ -1495,7 +1495,7 @@ end
     select += ' where ' + where_conditions.join(' and ') if !where_conditions.empty?
     if options[:order]
       order_fields = arrayify(options[:order])
-      if UsingPostgres
+      if Metaform.usingPostgres
         # got to add the order fields into the column list (if they aren't there)
         # because in Postgres distinct requires them to be in the column list too
         order_fields = order_fields.collect {|o| o.to_s}
@@ -1546,7 +1546,7 @@ end
   end
   
   def Record.sql_fieldname_convert(str)
-    str.gsub(/:([a-zA-Z0-9_-]+)/,UsingPostgres ? '"\1".answer' : '\1.answer')
+    str.gsub(/:([a-zA-Z0-9_-]+)/,Metaform.usingPostgres ? '"\1".answer' : '\1.answer')
   end
   
   private

@@ -4,6 +4,8 @@ class FormInstance < ActiveRecord::Base
   validates_presence_of :form_id
   serialize :validation_data
   
+  attr_accessible :updated_at, :validation_data, :workflow_state
+  
   def form
     form_id.constantize
   end

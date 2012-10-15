@@ -12,6 +12,8 @@ Gem::Specification.new do |gem|
   gem.summary       = %q{MetaForm provides a robust framework for creating large and complex dataforms.  It includes a DSL for declaring data types and relations and separately presentation of that data, as well as form workflows.  MetaForm renders forms based on the DSL and an a number of widget types for most of the standard interactions you might have on forms.}
   gem.homepage      = "https://github.com/zippy/metaform"
   gem.add_development_dependency "rspec"
+  gem.add_development_dependency "rspec-rails"
+  gem.add_dependency "rails"         , "~> 3.2"
 
   gem.files         = `git ls-files`.split($/)
   gem.executables   = gem.files.grep(%r{^bin/}).map{ |f| File.basename(f) }

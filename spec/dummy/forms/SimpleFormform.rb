@@ -1,22 +1,4 @@
-class FieldNameHasG < Property
-  def self.evaluate(form,field,value)
-    field.name =~ /g/ ? true : false
-  end
-  def self.render(question_html,property_value,question,form,field,read_only)
-    if property_value
-      if read_only
-        question_html + 'g question read only!'
-      else
-        question_html + 'g question!'
-      end
-    else
-      question_html
-    end
-  end
-end
-
-class SimpleForm < Form
-  def setup
+include_helpers('simpleform_extras.rb')
 
     def_tabs 'simple_tabs', :render_proc => Proc.new {|presentation_name,index| $extra == presentation_name ? 'extra_stuff' : ''} do
       tab 'simple', :label => 'Edit'
@@ -243,11 +225,9 @@ class SimpleForm < Form
     	end
   	end
     
-  end
   def after_workflow_action(action_result,meta)
     action_result[:after_workflow_action_meta] = meta if meta
   end
-end
 
 
 

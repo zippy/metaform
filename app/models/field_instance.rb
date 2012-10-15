@@ -2,6 +2,8 @@ class FieldInstance < ActiveRecord::Base
   belongs_to :form_instance
 #  belongs_to :field
   validates_presence_of :field_id,:form_instance_id
+  
+  attr_accessible :answer, :field_id, :form_instance_id, :idx, :state
 
   States = %w(unanswered answered invalid explained calculated approved)
   validates_inclusion_of :state, :in => States

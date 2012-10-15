@@ -1,0 +1,4 @@
+== Metaform Testing App
+
+This is dummy app included for purposes of testing the metaform gem.
+

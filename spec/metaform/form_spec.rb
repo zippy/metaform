@@ -1112,6 +1112,7 @@ describe SimpleForm do
         $extra = 'view'
         @form.build_tabs('simple_tabs','simple',@record).should ==
           "<div class=\"tabs\"><ul>\n<li class=\"current tab_simple\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//simple')\" title=\"Click here to go to Edit\"><span>Edit</span></a></li>\n<li class=\"tab_view\"> <a href=\"#\" onClick=\"return submitAndRedirect('/records//view')\" title=\"Click here to go to View\"><span>Viewextra_stuff</span></a></li>\n</ul></div><div class='clear'></div>"
+        $extra = ''
       end
       it "should raise an error for tab group that doesn't exist" do
         lambda {@form.build_tabs('sss','',@record)}.should raise_error("tab group 'sss' doesn't exist")

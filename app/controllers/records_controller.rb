@@ -5,7 +5,6 @@
 #elsif Rails::VERSION::STRING =~ /^3./
 #  require_dependency("#{Rails.root}/app/controllers/application_controller")
 #end
-  
 
 class RecordsController < ApplicationController
   include ApplicationHelper

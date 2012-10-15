@@ -1540,7 +1540,7 @@ EOJS
     @@_definition_file = file
     return if @@_loaded_definitions[self.class.to_s+file] == self.class
     @@_loaded_definitions[self.class.to_s+file] = self.class
-    fn = Form.forms_dir+'/'+file
+    fn = Rails.root.join(Form.forms_dir).join(file).to_s
     file_contents = IO.read(fn)
     eval(file_contents,getBinding,fn)
   end
@@ -1550,7 +1550,7 @@ EOJS
   def include_helpers(file)
     return if @@_loaded_helpers[self.class.to_s+file] == self.class
     @@_loaded_helpers[self.class.to_s+file] = self.class
-    fn = Form.forms_dir+'/'+file
+    fn = Rails.root.join(Form.forms_dir).join(file).to_s
     file_contents = IO.read(fn)
     self.class.class_eval(file_contents,fn)
   end

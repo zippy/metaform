@@ -78,8 +78,11 @@ describe MetaformHelper do
     @search_params = {'on_w'=>'birth_code_not','for_w'=>'ABCD'}
     generate_search_options(:search).should == {:conditions=>"not (:H_Ccode = 'ABCD')"}
     @search_params = {'on_w'=>'birth_code_b','for_w'=>'ABCD'}
-    generate_search_options(:search).should == {:conditions=>"(:H_Ccode ilike 'ABCD%')"}
+    generate_search_options(:search).should == {:conditions=>"(:H_Ccode like 'ABCD%')"}
     @search_params = {'on_w'=>'birth_code_c','for_w'=>'ABCD'}
+    generate_search_options(:search).should == {:conditions=>"(:H_Ccode like '%ABCD%')"}
+    Metaform.set_usingPostgres(true)
+    def_search_rules(:search,'birth_code' => 'H_Ccode')
     generate_search_options(:search).should == {:conditions=>"(:H_Ccode ilike '%ABCD%')"}
   end
 end

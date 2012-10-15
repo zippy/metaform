@@ -1,8 +1,6 @@
 # The metaform helpers are automatically added to all ActionViews
 # You can also use them in controllers with "include MetaformHelper"
 
-ILIKE = UsingPostgres ? 'ilike' : 'like'
-
 module MetaformHelper
 
   #####################################################################################
@@ -66,8 +64,8 @@ module MetaformHelper
     case kind
     when :sql #The search rules generated here will be used for a call to Rails find.
       pairs.each do |key,field|
-        def_search_rule(key+'_b') {|search_for| ["#{field} #{ILIKE} ?",search_for+'%']}
-        def_search_rule(key+'_c') {|search_for| ["#{field} #{ILIKE} ?",'%'+search_for+'%']}
+        def_search_rule(key+'_b') {|search_for| ["#{field} #{Metaform.ilike} ?",search_for+'%']}
+        def_search_rule(key+'_c') {|search_for| ["#{field} #{Metaform.ilike} ?",'%'+search_for+'%']}
         def_search_rule(key+'_is') {|search_for| ["#{field} = ?", search_for]}
         def_search_rule(key+'_not') {|search_for| ["#{field} != ?", search_for]}
         def_search_rule(key+'_gt') {|search_for| ["#{field} > ?", search_for.to_i]}
@@ -81,8 +79,8 @@ module MetaformHelper
       end
     when :search  #The search rules generated here will be used for a call to Record.search via fill_recs
       pairs.each do |key,field|
-        def_search_rule(key+'_b') {|search_for| ":#{field} #{ILIKE} '#{search_for}%'"}
-        def_search_rule(key+'_c') {|search_for| ":#{field} #{ILIKE} '%#{search_for}%'"}
+        def_search_rule(key+'_b') {|search_for| ":#{field} #{Metaform.ilike} '#{search_for}%'"}
+        def_search_rule(key+'_c') {|search_for| ":#{field} #{Metaform.ilike} '%#{search_for}%'"}
         def_search_rule(key+'_is') {|search_for| ":#{field} = '#{search_for}'"}
         def_search_rule(key+'_not',:negate=>true) {|search_for| ":#{field} = '#{search_for}'"}
       end
