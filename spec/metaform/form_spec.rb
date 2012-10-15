@@ -666,7 +666,7 @@ describe SimpleForm do
           @form.with_record(@record,:render) do
             @record.update_attributes({:name => ''},'simple',{:explanations => {'name' => {"0" => 'unknown'}}})
             @form.q('name')
-            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">Error was \"This information is required\"; the explanation was: \"unknown\" (Fix, or approve <input tabindex=\"1\" name=\"approvals[name][0]\" id=\"approvals_name_0\" type=\"checkbox\" value=\"Y\" >)<input name=\"approvals[name][0]\" id=\"approvals_name_0\"  type=\"hidden\" value=\"\" ></div></div>"]
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\"><input name=\"approvals[name][0]\" id=\"approvals_name_0\"  type=\"hidden\" value=\"\" >Error was \"This information is required\"; the explanation was: \"unknown\" (Fix, or approve <input tabindex=\"1\" name=\"approvals[name][0]\" id=\"approvals_name_0\" type=\"checkbox\" value=\"Y\" >)</div></div>"]
           end
         end
 
@@ -677,7 +677,7 @@ describe SimpleForm do
           @form.with_record(@record,:render) do
             @record.update_attributes({:name => ''},'simple',{:explanations => {'name' => {"0" => 'unknown'}}})
             @form.q('name')
-            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">Error was \"This information is required\"; midwive's explanation was: \"unknown\" (Fix, or approve <input tabindex=\"1\" name=\"approvals[name][0]\" id=\"approvals_name_0\" type=\"checkbox\" value=\"Y\" >)<input name=\"approvals[name][0]\" id=\"approvals_name_0\"  type=\"hidden\" value=\"\" ></div></div>"]
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\"><input name=\"approvals[name][0]\" id=\"approvals_name_0\"  type=\"hidden\" value=\"\" >Error was \"This information is required\"; midwive's explanation was: \"unknown\" (Fix, or approve <input tabindex=\"1\" name=\"approvals[name][0]\" id=\"approvals_name_0\" type=\"checkbox\" value=\"Y\" >)</div></div>"]
           end
         end
 
@@ -687,7 +687,7 @@ describe SimpleForm do
           @form.with_record(@record,:render) do
             @record.update_attributes({:name => ''},'simple',{:explanations => {'name' => {"0" => 'unknown'}},:approvals => {'name'=>{"0" => 'Y'}}})
             @form.q('name')
-            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\">Error was \"This information is required\"; the explanation was: \"unknown\" (Fix, or approve <input tabindex=\"1\" name=\"approvals[name][0]\" id=\"approvals_name_0\" type=\"checkbox\" value=\"Y\" checked>)<input name=\"approvals[name][0]\" id=\"approvals_name_0\"  type=\"hidden\" value=\"\" ></div></div>"]
+            @form.get_body.should == ["<div id=\"question_name\" class=\"question\"><label class=\"label\" for=\"record_name\">Name:</label><input id=\"record_name\" name=\"record[name]\" type=\"text\" value=\"\" /> <div class=\"validation_item\"><input name=\"approvals[name][0]\" id=\"approvals_name_0\"  type=\"hidden\" value=\"\" >Error was \"This information is required\"; the explanation was: \"unknown\" (Fix, or approve <input tabindex=\"1\" name=\"approvals[name][0]\" id=\"approvals_name_0\" type=\"checkbox\" value=\"Y\" checked>)</div></div>"]
           end
         end
 
