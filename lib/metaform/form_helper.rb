@@ -37,7 +37,7 @@ module FormHelper
         r << javascript_submit(:workflow_action => workflow_state)
         r
       end
-      html image_tag(options[:loading_img] || 'loading.gif', :id=>"#{options[:loading_img_id]}", :style=>"display:none;") if options[:loading_img_id]
+      html image_tag(options[:loading_img] || '/assets/loading.gif', :id=>"#{options[:loading_img_id]}", :style=>"display:none;") if options[:loading_img_id]
     end
   end
 end

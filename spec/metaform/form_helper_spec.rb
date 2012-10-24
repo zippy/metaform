@@ -28,7 +28,7 @@ describe FormHelper do
     end
     it 'should create workflow_action button with loading spinner' do
       @form.workflow_action_button("Mark Form Completed", 'finish',:loading_img_id => 'my-spinner-id')
-      @form.get_body.should == ["<div class='submit_form_button'>", "<input type=\"button\" value=\"Mark Form Completed\" onclick=\"this.disabled=true;$('my-spinner-id').show();$('meta_workflow_action').value = 'finish';$('metaForm').submit();\">", "<img alt=\"Loading\" id=\"my-spinner-id\" src=\"/images/loading.gif\" style=\"display:none;\" />", "</div>"]
+      @form.get_body.should == ["<div class='submit_form_button'>", "<input type=\"button\" value=\"Mark Form Completed\" onclick=\"this.disabled=true;$('my-spinner-id').show();$('meta_workflow_action').value = 'finish';$('metaForm').submit();\">", "<img alt=\"Loading\" id=\"my-spinner-id\" src=\"/assets/loading.gif\" style=\"display:none;\" />", "</div>"]
     end
   end
 end
