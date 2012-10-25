@@ -712,8 +712,8 @@ describe SimpleForm do
           @record.name = ''
           @form.set_validating(true)
           @form.with_record(@record,:render) do
-            @form.q('higher_ed_years')
-            @form.get_body.should == ["<div id=\"question_higher_ed_years\" class=\"question\"><label class=\"label\" for=\"record_higher_ed_years\">years of higher education:</label><input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" /> <div class=\"validation_item\">This information is required; please correct (or explain here: <input tabindex=\"1\" id=\"explanations_higher_ed_years_0\" name=\"explanations[higher_ed_years][0]\" type=\"text\" value=\"\" />)</div>g question!</div>"]
+            @form.q('higher_ed_years',:erb =>%Q|<div> MY TEXT <%=field_label%> <%=field_element%></div>|)
+            @form.get_body.should == ["<div> MY TEXT years of higher education: <input id=\"record_higher_ed_years\" name=\"record[higher_ed_years]\" type=\"text\" /> <div class=\"validation_item\">This information is required; please correct (or explain here: <input tabindex=\"1\" id=\"explanations_higher_ed_years_0\" name=\"explanations[higher_ed_years][0]\" type=\"text\" value=\"\" />)</div>g question!</div>"]
           end
         end
       end

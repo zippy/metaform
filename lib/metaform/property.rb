@@ -52,7 +52,7 @@ class Invalid < Property
       else
         error_class = "validation_error"
       end
-      question_html + %Q| <div class="#{error_class}">#{errs}</div>|
+      question_html + %Q| <div class="#{error_class}">#{errs}</div>|.html_safe
     else
       question_html
     end
