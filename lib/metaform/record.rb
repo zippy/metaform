@@ -180,6 +180,9 @@ class Record
   end
   
 class AnswersHash < Hash
+  def id
+    self['_id']
+  end
   def method_missing(method,*args)
     a = method.to_s
     if self.has_key?(a)
@@ -1348,7 +1351,7 @@ end
     
     forms = []
     form_instances.each do |r|
-      f = {'workflow_state' => Answer.new(r.workflow_state),'created_at' => Answer.new(r.created_at), 'updated_at' => Answer.new(r.updated_at), 'form_id' => Answer.new(r.form.to_s)}
+      f = {'_id' => r.id,'workflow_state' => Answer.new(r.workflow_state),'created_at' => Answer.new(r.created_at), 'updated_at' => Answer.new(r.updated_at), 'form_id' => Answer.new(r.form.to_s)}
       r.field_instances.each do |field_instance|
         if f.has_key?(field_instance.field_id)
           a = f[field_instance.field_id]

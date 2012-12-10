@@ -403,6 +403,14 @@ describe Record do
       r.instance_of?(Record::AnswersHash).should == true
       r['name'].instance_of?(Record::Answer).should == true
       r.name.instance_of?(String).should == true
+      recs[0].id.should == @records[0].id
+      recs[1].id.should == @records[1].id
+      recs[2].id.should == @records[2].id
+    end
+
+    it "should include form id in answers hash if the option is set for that" do
+      @records.each { |recs| recs.form.set_record(recs);recs.save('new_entry') }
+      recs = Record.locate(:all,{:return_answers_hash => true, :include_form_id => true})
     end
     
     it "should return indexed fields as arrays in the answers hash" do
