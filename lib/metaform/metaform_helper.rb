@@ -243,7 +243,8 @@ module MetaformHelper
     items = form_pairs_html
     items << "Order by:  " + select_tag('search[order_current]', options_for_select(order_choices,@search_params[:order_current]))
     items << %Q|Manual filters: #{ text_field_tag('search[manual_filters]', @search_params[:manual_filters], :size=>60)}| if allow_manual_filters
-    items << %Q|#{check_box_tag('search[paginate]','yes',@search_params[:paginate]=='yes')} Paginate results|
+    paginate_checked = @search_params[:paginate]=='yes'
+    items << %Q|#{check_box_tag('search_paginate_chk','yes',paginate_checked,:onclick => %Q|$('search_paginate').value = this.checked ? 'yes' : 'no'|)} <label for="search_paginate_chk">Paginate results</label> <input id='search_paginate' name='search[paginate]' type='hidden' value='#{paginate_checked ? 'yes' : 'no'}' />|
     items << submit_tag("Search", :disable_with => "Search", :id=>'search_submit', :onclick=>"$('search_form_loading').show()")+ image_tag('loading.gif', :id=>"search_form_loading", :style=>"display:none;")
     if block_given?
       items.insert(insert_block_at,capture(items,&block))
