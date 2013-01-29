@@ -1415,7 +1415,7 @@ end
   
   def Record.listing_url(listing,params = nil)
     url = "/records/listings/#{listing}"
-    url << ("?" + params.keys.map{|k| "search[#{k}]=#{params[k]}"}.join("&")) if params
+    url << ("?" + params.keys.map{|k| "search[#{k}]=#{params[k] ? params[k].gsub('%','%25') : ''}"}.join("&")) if params
     url
   end
   
