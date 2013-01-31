@@ -1171,7 +1171,7 @@ end
       field_list.each do |f|
         field_def = fields[f]
         if field_def.nil?
-          raise "expeced a field definition for #{f_name} in #{spss_clean_form}"
+          raise "expeced a field definition for #{f} in #{spss_clean_form}"
         else
           if !field_def.constraints.nil? && (s = field_def.get_set_values(:use_spss_order))
             fl.concat s.compact.collect {|v| "#{f}__#{v =~ /\*$/ ? v.chop : v}"}
