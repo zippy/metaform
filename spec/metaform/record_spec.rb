@@ -1275,9 +1275,16 @@ describe Record do
       @record[:colors] = nil
       @record[:fruit] = nil
       @record.export(
-        :fields => ['name', 'fruit','colors'],
+        :fields => ['name', 'fruit','colors_hash'],
         :options => {:spss => true}
       ).should == ['SampleForm,,0,,,,Bob Smith,.,.,.,.,.']
+    end
+    it "should have an option to clean enums and sets for spss and handle fields storing values in a hash" do
+      @record[:colors_hash] = {'r'=>'some_key','b'=>'some_key'}
+      @record.export(
+        :fields => ['name', 'fruit','colors_hash'],
+        :options => {:spss => true}
+      ).should == ['SampleForm,,0,,,,Bob Smith,4,1,2,1,2']
     end
     it "should mark illegal values when cleaning enums and sets for spss" do
       @record[:fruit] = 'squid'

@@ -1120,7 +1120,8 @@ end
                     row.concat((0...s.size).collect {|x| SPSS_NIL})
                   else
                     x = []
-                    y = d.split(/,/)
+                    y = Constraints::load_set_value(d)
+
                     row.concat s.collect {|v| y.include?(v) ? SPSS_TRUE : SPSS_FALSE}
                     e = []
                     y.each do |v|

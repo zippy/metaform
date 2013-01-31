@@ -30,6 +30,8 @@
     f 'colorsx', :label => '', :type => 'array', :constraints => {"set"=>[{"r"=>"Red"}, {nil=>'NA'}, {"g"=>"Green"}, {"b"=>"Blue"}, {'none*' => "None"}]},
       :spss_map => {'r'=>3,'g'=>1,'b'=>4,'none*'=>2,nil=>5}
     
+    f 'colors_hash', :label => '', :type => 'hash', :constraints => {"set"=>[{"r"=>"Red"}, {nil=>'NA'}, {"g"=>"Green"}, {"b"=>"Blue"}, {'none*' => "None"}]}
+    
     f 'breastfeeding', :label => 'BF', :type => 'string', :indexed_default_from_null_index => true
     f 'reverse_name_and_job', :label => 'reversed name and occupation', :type => 'string', :calculated => {
       :based_on_fields => ['name','occupation'],
