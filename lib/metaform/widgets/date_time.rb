@@ -1,7 +1,7 @@
 require "metaform/widget_date_time_helper"
 ################################################################################
 class DateTimeWidget < Widget
-  class <<self
+  class << self
     include DateHelper
     include TimeHelper
   end
@@ -15,8 +15,8 @@ class DateTimeWidget < Widget
     </script> 
     EOHTML
     html + multi_field_wrapper_html(field_instance_id,
-      time_html(field_instance_id,value,options,true) +
-      date_html(field_instance_id,value,options,true)
+      time_html(field_instance_id,value,options,:date_time) +
+      date_html(field_instance_id,value,options,:date_time)
       )
   end
 
@@ -30,7 +30,7 @@ class DateTimeWidget < Widget
   end
 
   ################################################################################
-  def self.javascript_get_value_function (field_instance_id) 
+  def self.javascript_get_value_function(field_instance_id) 
     %Q|$DTF('#{build_html_id(field_instance_id)}')|
   end
 

@@ -1,7 +1,7 @@
 <%@metaform_include_assets = true%>
 <h1>New Record in <%= h @form.name %></h1>
 
-<% form_tag(Record.create_url(@form.class.to_s,@presentation,@current), :method => :post, :id => 'metaForm') do -%>
+<%= form_tag(Record.create_url(@form.class.to_s,@presentation,@current), :method => :post, :id => 'metaForm') do -%>
 	<%= @form_html%>
 <% end -%>
 <%= javascript_tag @form_javascript%>

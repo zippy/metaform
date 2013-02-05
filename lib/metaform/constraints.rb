@@ -114,11 +114,11 @@ module Constraints
         if !value.blank?
           date = parse_date(value)
           if constraint == :in_past
-            if date > Time.now
+            if date > Date.today
               constraint_errors << fill_error(err_message_template,:in_past)
             end
           elsif constraint == :in_future
-            if date < Time.now
+            if date <= Date.today
               constraint_errors << fill_error(err_message_template,:in_future)
             end
           end
@@ -141,11 +141,11 @@ module Constraints
                 constraint = false
                 break
               end
-              err_str << "#{cond.humanize}" unless Form.config[:hide_required_extra_errors]
+              err_str << "#{cond.humanize}" unless Form.configuration[:hide_required_extra_errors]
             end
             next unless constraint
             constraint = true
-            condition_extra_err = " when " + err_str.join(' and ') unless Form.config[:hide_required_extra_errors]
+            condition_extra_err = " when " + err_str.join(' and ') unless Form.configuration[:hide_required_extra_errors]
           when TrueClass
           when FalseClass
           else
@@ -155,7 +155,7 @@ module Constraints
             msg = $metaform_error_messages['_required_multi'] if constraints.has_key?('set')
             msg ||= fill_error(err_message_template,{'extra'=>condition_extra_err})
             
-#            msg ||= Form.config[:required_error_message] ? Form.config[:required_error_message] : RequiredErrMessage
+#            msg ||= Form.configuration[:required_error_message] ? Form.configuration[:required_error_message] : RequiredErrMessage
             constraint_errors << msg
           end
         end
@@ -174,17 +174,7 @@ module Constraints
         end
         ok_values << nil if !ok_values.include?(nil)
         ok_values << '' if !ok_values.include?('')
-        cur_values = if value.blank?
-          [nil]
-        elsif value.is_a?(String)
-          if value =~ /^---/
-            YAML.load(value).keys
-          else 
-            value.split(',')
-          end
-        elsif value.is_a?(Hash)
-          value.keys
-        end
+        cur_values = load_set_value(value)
         if not cur_values.all? {|v| ok_values.include?(v)}
           labels = constraint[0].is_a?(String) ? ok_values.join(', ') : constraint.collect{|h| h.is_a?(String) ? h.to_s : h.values[0]}
           labels = labels.join(', ')
@@ -209,4 +199,19 @@ module Constraints
     end
     constraint_errors.flatten
   end
+  
+  def Constraints.load_set_value(value)
+    if value.blank?
+      [nil]
+    elsif value.is_a?(String)
+      if value =~ /^---/
+        YAML.load(value).keys
+      else 
+        value.split(',')
+      end
+    elsif value.is_a?(Hash)
+      value.keys
+    end
+  end
+  
 end

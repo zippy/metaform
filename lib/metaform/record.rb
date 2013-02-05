@@ -134,7 +134,7 @@ class Record
     end
     
     def zip(other_answer,&block)
-      if !@value.nil? && !other_answer.value.nil?
+      if !@value.nil? && other_answer.exists?
         my_value = @value.instance_of?(Array) ? @value : [@value]
         other_value = other_answer.value.instance_of?(Array) ? other_answer.value : [other_answer.value]
         if block
@@ -163,7 +163,7 @@ class Record
     end
     
     def other?(*undesired_values)
-      !@value.to_s.blank? && !undesired_values.any?{|x| @value.any?{|y| y && y.include?(x)}}
+      !@value.join('').blank? && !undesired_values.any?{|x| @value.any?{|y| y && y.include?(x)}}
     end
     
     def is_indexed?
@@ -205,6 +205,9 @@ class Record
     end
 
         
+    def last
+      @value.last
+    end
   end
   
 class AnswersHash < Hash
@@ -221,6 +224,10 @@ class AnswersHash < Hash
     end
   end
   
+  def id
+    self['_id']
+  end
+
   def method_missing(method,*args)
     a = method.to_s
     if self.has_key?(a)
@@ -367,6 +374,7 @@ end
     end
     vd['_'] = error_messages
     form_instance.update_validation_data(vd)
+    form_instance.reload
   end
   
   ######################################################################################
@@ -560,9 +568,9 @@ end
   end
   
   ######################################################################################
-  # return and or create ActiveRecord errors object
+  # return and or create ActiveModel errors object
   def errors
-    @errors ||= ActiveRecord::Errors.new(self)
+    @errors ||= ActiveModel::Errors.new(self)
   end
   
   def build_tabs(tabs,current)
@@ -677,7 +685,7 @@ end
     p.confirm_legal_state!(workflow_state)
     invalid_fields = nil
     validation_exclude_states = nil
-    forced_to_nil = []
+    forced_to_nil = {}
     
     if fields
       field_list = fields.collect { |f| f.to_s }
@@ -687,7 +695,7 @@ end
     @form.with_record(self) do
       # force any attributes to nil that need forcing
       forced_to_nil = set_force_nil_attributes(field_list)
-      field_list.concat(forced_to_nil).uniq!
+      field_list.concat(forced_to_nil.keys).uniq!
 
       # evaluate the validity of the attributes to be saved
       invalid_fields = _validate_attributes(field_list)
@@ -748,9 +756,10 @@ end
       explanation_value = explanations[field_instance_id][index.to_s] if has_explanation
       is_approval = approvals && approvals[field_instance_id]
       approval_value = approvals[field_instance_id][index.to_s] if is_approval
+      value = value.to_yaml if [Hash,Array].include?(value.class)
       if f != nil
         if f.answer != (value.nil? ? nil : value.to_s) || (has_explanation && f.explanation != explanation_value) ||
-            (is_approval && approval_value) || forced_to_nil.include?(field_instance_id)
+            (is_approval && approval_value) || forced_to_nil.keys.include?(field_instance_id)
           # if we are checking last_updated dates don't do the update if the fields updated_at
           # is greater than the last_updated date passed in, and store this to report later
           if last_updated && f.updated_at.to_i > last_updated
@@ -792,10 +801,11 @@ end
       if !field_instances_to_save.empty?
     		dependents = []
         FieldInstance.transaction do
+          
           field_instances_to_save.each do |i|
             deps = @form.dependent_fields(i.field_id)
             dependents.concat(deps) if deps
-            if (i.answer == nil || i.answer == '') && ((i.state== 'answered' && i.explanation.blank?) || forced_to_nil.include?(i.field_id))  && i.idx == 0
+            if (i.answer == nil || i.answer == '') && ((i.state== 'answered' && i.explanation.blank?) || (forced_to_nil[i.field_id] && forced_to_nil[i.field_id].include?(i.idx) ))  && i.idx == 0
               unless i.new_record?
                 puts "<br>about to delete #{i.attributes.inspect}" if DEBUG1
                 i.delete
@@ -836,7 +846,7 @@ end
             update_calculated_fields(calculated_fields_to_update)
           end
         end
-        ok = form_instance.update_attributes({:updated_at => Time.now, :validation_data => vd})
+        ok = form_instance.update_attributes({:updated_at => Time.now, :validation_data => vd.to_yaml})
         raise MetaformException, "error updating form_instance: #{form_instance.errors.full_messages}" if !ok
       end
       if field_instances_protected && !field_instances_protected.empty?
@@ -1017,19 +1027,21 @@ end
 #  end
   
   def set_force_nil_attributes(fields=nil)
-    #This method calls set_current_index, but then doesn't reset the index 
+    #This method calls set_current_index, but then doesn't reset the index
     #back to the original value.  It doesn't seem to cause a problem, but
     #it should probably be investigated at some point. Note that you can
     #call store the result of get_current_index in old_index, then
     #set_current_index(old_index.to_i) at the end of this method and it
     #also doesn't seem to cause a problem--but that to_i is necessary--
     #otherwise fields values are all set to nil on formlet update.
-    fields_forced = []
+    fields_forced = {}
     @cache.each(:attributes => fields) do |attrib,value,index|
       @form.set_current_index(index)
       form.evaluate_force_nil(attrib,index) do |f|
         set_attribute(f,nil,index)
-        fields_forced << f
+        fields_forced[f] ||= []
+        fields_forced[f] << index
+        fields_forced[f].uniq!
       end
     end
     fields_forced
@@ -1131,10 +1143,15 @@ end
   # currently 
   #################################################################################
   require 'csv.rb'
+  SPSS_NIL = '.'
+  SPSS_TRUE = 1
+  SPSS_FALSE = 2
   def export(opts = {})
     options = {
-      :format => :csv
+      :format => :csv,
+      :options => {}
     }.update(opts)
+    spss_clean = options[:options][:spss]
     case options[:format]
     when :csv
       result = []
@@ -1145,6 +1162,7 @@ end
       puts "<br>CACHE on entrance to export: #{@cache.dump.inspect}" if DEBUG1
       @cache.indexes.each do |index|
         row = []
+        errs = {}
         row << self.form.class.to_s
         row << self.id
         row << index
@@ -1161,24 +1179,67 @@ end
           if field_def.nil?
             row << nil
           else
-            d = @cache.attributes(index)[f]
+            if field_def.calculated
+              d = self[f,index]
+            else 
+              d = @cache.attributes(index)[f]
+            end
             field_type = field_def.type
             begin
               if field_type == 'time' && !d.blank?
-                row << Time.local(*ParseDate.parsedate(d)[0..6]).strftime("%H:%M:%S")
+                row << Time.local(*Utilities.parse_datetime(d)[0..6]).strftime("%H:%M:%S")
               elsif date_format && field_type == 'date' && !d.blank?
-                row << Time.local(*ParseDate.parsedate(d)[0..2]).strftime(date_format)
+                row << Time.local(*Utilities.parse_datetime(d)[0..2]).strftime(date_format)
               elsif date_time_format && field_type == 'datetime' && !d.blank?
-                row << Time.local(*ParseDate.parsedate(d)[0..4]).strftime(date_time_format)
+                row << Time.local(*Utilities.parse_datetime(d)[0..4]).strftime(date_time_format)
               else
-                row << d
+                if spss_clean && (s = field_def.get_set_values(:use_spss_order))
+                  s = s.compact
+                  # take into account that some set values have the magic * at the end which has to be ignored because it's not
+                  # actually part of the value, but an indicator that it's unique
+                  s = s.collect {|v| v =~ /(.*)\*$/ ? $1 : v}
+                  if d.nil?
+                    row.concat((0...s.size).collect {|x| SPSS_NIL})
+                  else
+                    x = []
+                    y = Constraints::load_set_value(d)
+
+                    row.concat s.collect {|v| y.include?(v) ? SPSS_TRUE : SPSS_FALSE}
+                    e = []
+                    y.each do |v|
+                      if !s.include?(v)
+                        e << v
+                      end
+                    end
+                    errs[f] = e if !e.empty?
+                  end
+                elsif spss_clean && (e = field_def.get_enumeration_values(:use_spss_order))
+                  if d.nil?
+                    row << SPSS_NIL
+                  else
+                    e = e.compact
+                    x = []
+                    idx = e.index(d)
+                    if idx.nil?
+                      errs[f] = d
+                      row << -1
+                    else
+                      row << idx+1
+                    end
+                  end
+                elsif spss_clean && (field_type == 'boolean')
+                  row << (d.nil? ? SPSS_NIL : ((d == 'true') ? SPSS_TRUE : SPSS_FALSE))
+                else
+                  row << d
+                end
               end
             rescue
               row << d
             end
           end
         end
-        result << CSV.generate_line(row)
+        row << "invalid values: "+ errs.keys.sort.collect {|k| "#{k}=>#{errs[k].is_a?(Array) ? "[#{errs[k].join(',')}]" : errs[k]}"}.join(', ') if !errs.empty?
+        result << CSV.generate_line(row).chop
       end
       result
     else
@@ -1186,8 +1247,25 @@ end
     end
   end
   
-  def self.export_csv_header(field_list)
-    CSV.generate_line(['form','id','index','created_at','updated_at','workflow_state'].concat(field_list))
+  def self.export_csv_header(field_list,spss_clean_form = false)
+    if spss_clean_form 
+      fl = []
+      fields = Form.make_form(spss_clean_form).fields
+      field_list.each do |f|
+        field_def = fields[f]
+        if field_def.nil?
+          raise "expeced a field definition for #{f} in #{spss_clean_form}"
+        else
+          if !field_def.constraints.nil? && (s = field_def.get_set_values(:use_spss_order))
+            fl.concat s.compact.collect {|v| "#{f}__#{v =~ /\*$/ ? v.chop : v}"}
+          else
+            fl << f
+          end
+          field_list = fl
+        end
+      end
+    end
+    CSV.generate_line(['form','id','index','created_at','updated_at','workflow_state'].concat(field_list)).chop
   end
  
   def loaded?
@@ -1361,8 +1439,7 @@ end
     
     forms = []
     form_instances.each do |r|
-      #puts "r.field_instances = #{r.field_instances.map{|fi| fi.field_id}.inspect}"
-      f = {'form_instance_id' => Answer.new(r.id), 'workflow_state' => Answer.new(r.workflow_state),'created_at' => Answer.new(r.created_at), 'updated_at' => Answer.new(r.updated_at), 'form_id' => Answer.new(r.form.to_s)}
+      f = {'form_instance_id' => Answer.new(r.id), '_id' => r.id, 'workflow_state' => Answer.new(r.workflow_state),'created_at' => Answer.new(r.created_at), 'updated_at' => Answer.new(r.updated_at), 'form_id' => Answer.new(r.form.to_s)}
       r.field_instances.each do |field_instance|
         if f.has_key?(field_instance.field_id)
           #puts "if:  #{field_instance.field_id}"
@@ -1398,7 +1475,7 @@ end
       #puts "eval_Field 0:  expression=#{expression}"
       expr = expression.gsub(/\!:(\S+)/,'!(:\1)')
       #puts "eval_Field 1:  expr=#{expr}"
-      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|each_with_index|to_i|to_date|zip|map|include|any|other\?|blank\?|compact)/,'f["\1"].\2')
+      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|each_with_index|to_i|to_date|zip|map|include|any|other\?|blank\?|last|compact)/,'f["\1"].\2')
       #puts "eval_field 2:  expr=#{expr}"
       expr = expr.gsub(/:([a-zA-Z0-9_-]+)\./,'f["\1"].value.')
       #puts "eval_field 4:  expr=#{expr}"
@@ -1430,7 +1507,7 @@ end
   
   def Record.listing_url(listing,params = nil)
     url = "/records/listings/#{listing}"
-    url << ("?" + params.keys.map{|k| "search[#{k}]=#{params[k]}"}.join("&")) if params
+    url << ("?" + params.keys.map{|k| "search[#{k}]=#{params[k] ? params[k].gsub('%','%25') : ''}"}.join("&")) if params
     url
   end
   
@@ -1502,9 +1579,9 @@ end
     end
     meta_fields = ['id']
     meta_fields += arrayify(options[:meta_fields]) if options[:meta_fields]
-    fields_sql = fields.collect {|f| fq = UsingPostgres ? "\"#{f}\"" : f;"#{fq}.answer as #{fq}"}.concat(meta_fields.collect {|f| "form_instances.#{f}"}).join(", ")
+    fields_sql = fields.collect {|f| fq = Metaform.usingPostgres ? "\"#{f}\"" : f;"#{fq}.answer as #{fq}"}.concat(meta_fields.collect {|f| "form_instances.#{f}"}).join(", ")
     fields_sql += "," + arrayify(options[:raw_fields]).join(',') if options[:raw_fields]
-    left_join_sql = left_join_fields.collect{|f| fq = UsingPostgres ? "\"#{f}\"" : f;"left outer join field_instances as #{fq} on #{fq}.form_instance_id = form_instances.id and #{fq}.field_id = '#{f}' "}.join(" ") if !left_join_fields.empty?
+    left_join_sql = left_join_fields.collect{|f| fq = Metaform.usingPostgres ? "\"#{f}\"" : f;"left outer join field_instances as #{fq} on #{fq}.form_instance_id = form_instances.id and #{fq}.field_id = '#{f}' "}.join(" ") if !left_join_fields.empty?
 
     select = "#{fields_sql} from form_instances"
     select += ' ' + left_join_sql if left_join_sql
@@ -1513,7 +1590,7 @@ end
     select += ' where ' + where_conditions.join(' and ') if !where_conditions.empty?
     if options[:order]
       order_fields = arrayify(options[:order])
-      if UsingPostgres
+      if Metaform.usingPostgres
         # got to add the order fields into the column list (if they aren't there)
         # because in Postgres distinct requires them to be in the column list too
         order_fields = order_fields.collect {|o| o.to_s}
@@ -1564,7 +1641,7 @@ end
   end
   
   def Record.sql_fieldname_convert(str)
-    str.gsub(/:([a-zA-Z0-9_-]+)/,UsingPostgres ? '"\1".answer' : '\1.answer')
+    str.gsub(/:([a-zA-Z0-9_-]+)/,Metaform.usingPostgres ? '"\1".answer' : '\1.answer')
   end
   
   private

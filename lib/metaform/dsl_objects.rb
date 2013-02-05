@@ -16,7 +16,8 @@ class Field < Bin
       :groups => nil,
       :force_nil => nil,
       :dependent_fields => nil,
-      :indexed => false
+      :indexed => false,
+      :file => nil
     }
   end
   def required_bins
@@ -32,6 +33,62 @@ class Field < Bin
     self.dependent_fields ||= []
     self.dependent_fields = self.dependent_fields.concat(field_list).uniq
   end
+  
+  def get_constraint_value_list(t,use_spss_order = false)
+    return nil if self.constraints.nil?
+    e = self.constraints[t]
+    if e.nil?
+      nil
+    else
+      vl = e.collect do |i|
+        case i
+        when Array
+          i.last
+        when Hash
+          i.keys.first
+        when String
+          i
+        end
+      end
+      if use_spss_order && self[:spss_map]
+        vl = vl.sort_by {|x| self[:spss_map][x]}
+      end
+      vl
+    end
+  end
+  
+  def get_constraint_value_labels(use_spss_order = false)
+    c = self.constraints
+    return nil if c.nil?
+    x = nil
+    if x = c['enumeration']
+      v = get_constraint_value_list("enumeration",use_spss_order)
+    elsif x = c['set']
+      v = get_constraint_value_list("set",use_spss_order)
+    end
+    return nil if x.nil?
+    labels = {}
+    x.each do |i|
+      case i
+      when Array
+        labels[i.last] = i.first
+      when Hash
+        labels.update(i)
+      when String
+        labels[i] = i
+      end
+    end
+    v.collect {|v| [labels[v],v]}
+  end
+  
+  def get_enumeration_values(use_spss_order = false)
+    get_constraint_value_list("enumeration",use_spss_order)
+  end
+
+  def get_set_values(use_spss_order = false)
+    get_constraint_value_list("set",use_spss_order)
+  end
+  
 end
 
 
@@ -39,7 +96,7 @@ class Condition < Bin
   Expression = Struct.new("Expression",:field_name,:field_value,:operator,:index)
   OperatorMatch = /([a-zA-Z_\[\]0-9\*]*)\s*((<>=)|(>=)|(<=)|(<>)|(<)|(>)|(!=)|(=!)|(=~)|(!~)|(~!)|(=+)|(includes)|(!includes)|(answered)|(!answered))\s*(.*)/
   def bins
-    { :form => nil,:name => nil, :description => nil, :ruby => nil,:javascript => nil,:booleanjoins=>nil,:expressions=>nil,:fields_to_use => nil}
+    { :form => nil,:name => nil, :description => nil, :ruby => nil,:javascript => nil,:booleanjoins=>nil,:expressions=>nil,:fields_to_use => nil,:zero_index_force_nil_only => nil}
   end
   def required_bins
     [:form,:name]

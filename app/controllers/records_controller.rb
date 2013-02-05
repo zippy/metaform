@@ -1,0 +1,218 @@
+#if Rails::VERSION::STRING =~ /^2.2/
+#  require_dependency("#{RAILS_ROOT}/app/controllers/application_controller")
+#elsif Rails::VERSION::STRING =~ /^2.3/
+#  require_dependency("#{RAILS_ROOT}/app/controllers/application")
+#elsif Rails::VERSION::STRING =~ /^3./
+#  require_dependency("#{Rails.root}/app/controllers/application_controller")
+#end
+
+class RecordsController < ApplicationController
+  include ApplicationHelper
+  
+  # GET /records/listings/[/<list_name>]
+  def index
+    @listing_name = params[:list_name]
+    redirected = false
+    redirected = before_list_records(@listing_name) if respond_to?(:before_list_records)
+    if !redirected
+      #Need to check that the application allows the use of manual filters.  If the application does not specifically allow,
+      #then we dis-allow its use for security reasons.
+      raise MetaformIllegalSearchParameterError if params[:search] &&  params[:search][:manual_filters] && (!respond_to?(:enable_manual_filters) || !enable_manual_filters)
+      the_listing = Form.listings[@listing_name]
+      raise "No listing found for #{@listing_name}" if !the_listing
+      (@records,@search_params) = the_listing.fill_records(params,session)
+      session[@listing_name] = @search_params  #Store in session in case needed later
+      @search_form_params = the_listing.get_search_form_params
+      render(:template => "records/#{@listing_name}")
+    end
+  end
+
+  # GET /records/1
+  # GET /records/1.xml
+  def show
+    setup_record
+    redirected = false
+    
+    render_options = prepare_render_show_options
+    redirected = before_show_record(@record,render_options[:template]) if respond_to?(:before_show_record)
+    if !redirected
+      respond_to do |format|
+        format.html {(@form_html,@form_javascript) = @record.build_html(@presentation,@index,@force_read_only); render render_options}
+        format.xml  { render :xml => @record.to_xml }
+      end
+    end
+    after_show_record(@record) if respond_to?(:after_show_record)
+  end
+
+  # GET /form/<form_id>/records/new[/<presentation_id>[/<tab>]]
+  def new
+    setup_new_record
+    redirected = false
+    redirected = before_new_record(@record) if respond_to?(:before_new_record)
+    if !redirected
+      (@form_html,@form_javascript) = @record.build_html(@presentation,@index)
+    end
+  end
+
+  # POST /form/<form_id>/records/new[/<presentation_id>[/<tab>]]
+  # POST /records.xml
+  def create
+    raise MetaformException,"record create requires a workflow action" if params[:meta]['workflow_action'].blank?
+    setup_new_record
+    before_create_record(@record) if respond_to?(:before_create_record)
+    before_save_record(@record) if respond_to?(:before_save_record)
+    respond_to do |format|
+      if saved_attributes = @record.save(@presentation,get_meta_data)
+        after_create_record(@record) if respond_to?(:after_create_record)
+        after_save_record(@record,saved_attributes) if respond_to?(:after_save_record)
+        f = @record.action_result[:flash]
+        if f
+          flash[f[:key]] = f[:value]
+        end
+        redirect_url = @record.action_result[:redirect_url]
+        format.html { redirect_to(redirect_url) }
+        format.xml  { head :created, :location => @record.url(@presentation) }
+      else
+        format.html { (@form_html,@form_javascript) = @record.build_html(@presentation,@index); render :action => "new" }
+        format.xml  { render :xml => @record.errors.to_xml }
+      end
+    end
+  end
+
+  # PUT /records/1
+  # PUT /records/1.xml
+  def update
+    setup_record
+    redirected = false
+    redirected = before_update_record(@record) if respond_to?(:before_update_record)
+    opts = {}
+    redirected = before_save_record(@record) if respond_to?(:before_save_record) && !redirected
+    if !redirected
+      respond_to do |format|
+        if !params[:record] && !params[:meta]
+          redirect_url = params[:_redirect_url] if params[:_redirect_url]
+          format.html { redirect_url ? redirect_to(redirect_url) : render(:action => "show") }
+          format.xml  { head :ok }
+        else
+          opts[:convert_from_html] = true
+          if @index
+            if params[:record] && params[:record].keys.any? {|k| k =~ /^_[0-9]+_/ }
+              opts[:multi_index] = true
+              attribs = {@index=>{}}
+              params[:record].each do |k,v|
+                if k =~ /_([0-9]+)_(.*)/
+                  idx = $1.to_i
+                  fn = $2
+                  attribs[idx] ||= {}
+                  attribs[idx][fn] = v
+                else
+                  attribs[@index][k] = v
+                end
+              end
+            else
+              attribs = params[:record]
+            end
+            opts[:index] = @index
+          elsif params[:multi_index]
+            opts[:multi_index] = true
+            attrs = []
+            zap_fields = params[:multi_index_fields].split(/,/)
+            attribs = {0=>{}}
+            params[:record].each do |k,v|
+              if k =~ /_([0-9]+)_(.*)/
+                idx = $1.to_i
+                fn = $2
+  #              zap_fields << fn
+                attrs[idx] ||= {}
+                attrs[idx][fn] = v
+              else
+                attribs[0][k] = v
+              end
+            end
+
+            # compact all the attributes into a hash ignoring the actual index given
+            # this handles all the issues of deleting indexes
+            attrs = attrs.compact
+            # first merge the 0th items into attribs (because there could have been other)
+            # non indexed items on the page at the 0th level
+            if attrs[0]
+              attribs[0].update(attrs[0])
+              attrs.shift
+            end
+            #then copy in any indexed items
+            x = 1
+            attrs.each {|a| attribs[x]=a;x+=1}
+            opts[:clear_indexes] = zap_fields
+          else
+            attribs = params[:record]
+          end
+          meta_data = get_meta_data
+          meta_data[:explanations] = params[:explanations] if params[:explanations]
+          meta_data[:approvals] = params[:approvals] if params[:approvals]
+          if saved_attributes = @record.update_attributes(attribs,@presentation,meta_data,opts)
+            after_update_record(@record) if respond_to?(:after_update_record)
+            after_save_record(@record,saved_attributes) if respond_to?(:after_save_record)
+            flash[:action_result] = @record.action_result[:return_data] if @record.action_result && @record.action_result[:return_data]
+            redirect_url = @record.action_result[:redirect_url] if @record.action_result
+            redirect_url = params[:_redirect_url] if !redirect_url  && params[:_redirect_url]
+            format.html { redirect_url ? redirect_to(redirect_url) : render_show }
+            format.xml  { head :ok }
+          else
+            format.html { render_show }
+            format.xml  { render :xml => @record.errors.to_xml }
+          end
+        end
+      end
+    end
+  end
+    
+  private
+  def setup_record
+    @record = Record.find(params[:id])
+    @presentation = params[:presentation]
+    setup_record_params
+  end
+  
+  def setup_record_params
+    @form = @record.form
+    @form.set_validating(false)
+    @index = params[:index]
+    Form.set_store('record',@record)
+  end
+  
+  def setup_new_record
+    @presentation = params[:presentation]
+    f = Form.make_form(params[:form_id])
+    @record = Record.make(f,@presentation,params[:record],:convert_from_html => true,:index => params[:index])
+    setup_record_params
+  end
+  
+  def prepare_render_show_options
+    options = {:template => 'records/show'}
+    if params[:template]
+      tmpl = params[:template]
+    elsif FileTest.exists?("#{Rails.root}/app/views/records/#{@presentation}.html.erb")
+      tmpl = @presentation
+    end
+    options[:template] = 'records/'<< tmpl if tmpl
+    options[:layout] = params[:template] if FileTest.exists?("#{Rails.root}/app/views/layouts/#{tmpl}.html.erb")
+    options[:layout] = params[:layout] if params[:layout]
+    options
+  end
+  
+  def render_show
+    (@form_html,@form_javascript) = @record.build_html(@presentation,@index)
+    options = prepare_render_show_options
+    render options
+  end
+  
+  def get_meta_data
+    meta = params[:meta]
+    meta ||= {}
+    meta[:request] = request
+    meta[:session] = session
+    meta[:params] = params
+    meta.update(meta_data_for_save) if respond_to?(:meta_data_for_save)
+    meta
+  end
+end

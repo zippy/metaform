@@ -1,8 +1,6 @@
 #These listing utility methods are used by Listings.  ActionController::Base subclasses
 #can also include them to take advantage of nice methods for organizing search and sort parameters.
 
-ILIKE = UsingPostgres ? 'ilike' : 'like'
-
 module ListingUtilities
  
   def def_sort_rules(*args)
@@ -32,7 +30,7 @@ module ListingUtilities
   end
   def def_sort_rule_date(sort_key) #This was previously just def sort_rule_date
     @sort_rules[sort_key] = Proc.new do |r|
-      (r && r[sort_key] && r[sort_key] != '') ? Time.mktime(*ParseDate.parsedate(r[sort_key])[0..2]) : Time.new
+      (r && r[sort_key] && r[sort_key] != '') ? Time.mktime(*Utilities.parse_datetime(r[sort_key])[0..2]) : Time.new
     end
   end
   def apply_sort_rule(r = nil)
@@ -58,8 +56,8 @@ module ListingUtilities
     case kind
     when :sql #The search rules generated here will be used for a call to Rails find.
       pairs.each do |key,field|
-        def_search_rule(key+'_b') {|search_for| ["#{field} #{ILIKE} ?",search_for+'%']}
-        def_search_rule(key+'_c') {|search_for| ["#{field} #{ILIKE} ?",'%'+search_for+'%']}
+        def_search_rule(key+'_b') {|search_for| ["#{field} #{Metaform.ilike} ?",search_for+'%']}
+        def_search_rule(key+'_c') {|search_for| ["#{field} #{Metaform.ilike} ?",'%'+search_for+'%']}
         def_search_rule(key+'_is') {|search_for| ["#{field} = ?", search_for]}
         def_search_rule(key+'_not') {|search_for| ["#{field} != ?", search_for]}
       end
@@ -72,8 +70,8 @@ module ListingUtilities
       end
     when :search  #The search rules generated here will be used for a call to Record.search
       pairs.each do |key,field|
-        def_search_rule(key+'_b') {|search_for| ":#{field} #{ILIKE} '#{search_for}%'"}
-        def_search_rule(key+'_c') {|search_for| ":#{field} #{ILIKE} '%#{search_for}%'"}
+        def_search_rule(key+'_b') {|search_for| ":#{field} #{Metaform.ilike} '#{search_for}%'"}
+        def_search_rule(key+'_c') {|search_for| ":#{field} #{Metaform.ilike} '%#{search_for}%'"}
         def_search_rule(key+'_is') {|search_for| ":#{field} = '#{search_for}'"}
         def_search_rule(key+'_not',:negate=>true) {|search_for| ":#{field} = '#{search_for}'"}
       end
@@ -115,7 +113,8 @@ module ListingUtilities
   end
   
   def generate_options
-    @search_params.each_pair do |k,v|
+    @search_params.keys.sort_by{|w| w.to_s}.each do |k|
+      v = @search_params[k]
       if v == 'all'
         @display_all = true
       elsif k =~ /^on(.*)/ && v && v != ''
@@ -193,7 +192,7 @@ module ListingUtilities
     #@search_params[:order_last] = @session[listing_type][:order] if @session[listing_type] && @session[listing_type].key?(:order)  
     #grab order param from session for secondary sort, if it's nontrivial and not the current order
     defaults.each do |param,default|
-      if (!use_session || param = :order) && (!@search_params.key?(param) || @search_params[param] == '')
+      if (!use_session || param == :order) && (!@search_params.key?(param) || @search_params[param] == '')
         @search_params[param] = default
       end
     end

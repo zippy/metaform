@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 class Form
   include Utilities
@@ -11,14 +12,16 @@ class Form
   @@forms_dir = 'forms'
   @@cache = {}
   @@store = {}
-  @@config = {}
+  @@configuration = {}
   @@_loaded_helpers = {}
   @@listings = {}
-  cattr_accessor :forms_dir,:cache,:config, :listings
+  cattr_accessor :forms_dir,:cache,:configuration, :listings
+  @@_loaded_definitions = {}
+  @@_definition_file = nil
 
   FieldTypes = ['string','integer','float','decimal','boolean','date','datetime','time','text','hash','array']
 
-  attr_accessor :fields, :conditions, :questions, :presentations, :groups, :workflows, :tabs, :zapping_proc, :label_options, :calculated_field_dependencies, :current_tab_label
+  attr_accessor :fields, :conditions, :questions, :presentations, :groups, :workflows, :tabs, :zapping_proc, :label_options, :calculated_field_dependencies, :current_tab_label, :definition_order
 
   def initialize
     @fields = {}
@@ -31,6 +34,7 @@ class Form
     @zapping_proc = nil
     @label_options = {}
     @calculated_field_dependencies = {}
+    @definition_order = []
     
     @_commons = {}
     @_stuff = {}
@@ -48,7 +52,7 @@ class Form
     the_form = nil
     # in development mode we reload the forms if there have been any changes
     # in the forms directory
-    if RAILS_ENV == 'development'
+    if Rails.env.development?
       require 'find'
       forms_date = Time.at(0)
       Find.find(Form.forms_dir) do |f|
@@ -241,10 +245,15 @@ class Form
       :type => 'string',
     }.update(opts)
     raise "Duplicate field name: '#{name}'" if fields.has_key?(name)
-
+    
+# xx = "#{name}•#{options[:label]}•#{$file}•#{options[:type]}"  #UNCOMMENT FOR MANUAL FORM DUMP
+    
+    definition_order << name
     #TODO we should really make enums and constraints an first class object and this check should happen there
     if c = options[:constraints]
       required_constraint_given = c.has_key?('required')
+# xx += "•#{c['required'].inspect}" #UNCOMMENT FOR MANUAL FORM DUMP
+
       x = Widget.enumeration(c) if c['enumeration']
       x ||= Widget.set(c) if c['set']
       if x
@@ -257,8 +266,12 @@ class Form
           o[option] = 1
           l[label] = 1
         end
+# xx += "•#{c['enumeration'] ? 'ENUM' : 'SET'}•"+x.collect {|label,option| "#{option.nil? ? '<nil>' : option}: #{label}"}.join(';   ') #UNCOMMENT FOR MANUAL FORM DUMP
       end
+    else
+# xx += "•false"      #UNCOMMENT FOR MANUAL FORM DUMP
     end
+# puts xx #UNCOMMENT FOR MANUAL FORM DUMP
     @fields_defined << name if @fields_defined
     if options.has_key?(:calculated)
       if options[:calculated].has_key?(:from_condition) 
@@ -279,7 +292,7 @@ class Form
       raise MetaformException,"calculated fields need a :based_on_fields option that defines a list of fields used by the calculation proc" unless based_on_fields.class == Array
       based_on_fields.each do |f|
         @calculated_field_dependencies[f] ||= []
-        @calculated_field_dependencies[f]<<name
+        @calculated_field_dependencies[f] << name
         @calculated_field_dependencies[f].uniq!
       end
     end
@@ -290,6 +303,7 @@ class Form
     end
     
     the_field = Field.new(:name=>name,:type=>options[:type],:required_constraint_given => required_constraint_given)
+    the_field.file = @@_definition_file
     options.delete(:type)
     
     @_commons.each do |option_name,option_values|
@@ -436,6 +450,7 @@ class Form
       yield
     end
     condition.fields_used.each {|f| fields[f].set_dependent_fields(@fields_defined)}
+
     force_nil_condition.fields_used.each do |fn|
       f = fields[fn]
       f.add_force_nil_case(force_nil_condition,@fields_defined.clone,negate)
@@ -901,6 +916,7 @@ class Form
       :css_class => nil
     }.update(opts)
     js = yield
+    js = js.join('') if js.is_a?(Array)
     css_class = options[:css_class]
     css_class = %Q| class="#{css_class}"| if css_class
     disabled = options[:disabled] ? ' disabled="disabled"' : ''
@@ -1082,7 +1098,9 @@ class Form
   def javascript_if_field(field_name,expr,value)
     save_context(:js) do
       widget = get_current_question_by_field_name(field_name).get_widget
-      javascript %Q|if (#{widget.javascript_get_value_function(field_name)} #{expr} '#{value}') {#{yield}};|
+      js = yield
+      js = js.join('') if js.is_a?(Array)
+      javascript %Q|if (#{widget.javascript_get_value_function(field_name)} #{expr} '#{value}') {#{js}};|
     end
   end
 
@@ -1091,7 +1109,9 @@ class Form
   #################################################################################
   def javascript_confirm(text)
     save_context(:js) do
-      javascript %Q|if (confirm('#{quote_for_javascript(text)}')) {#{yield}};|
+      js = yield
+      js = js.join('') if js.is_a?(Array)
+      javascript %Q|if (confirm('#{quote_for_javascript(text)}')) {#{js}};|
     end
   end
   
@@ -1142,7 +1162,7 @@ class Form
         tabs_html = get_body.join("\n")
       end
     end
-    tabs_html
+    tabs_html.html_safe
   end
   
   def prepare_for_tabs(tabs_name,current_tab = nil)
@@ -1221,7 +1241,7 @@ class Form
       body %Q|<input type="hidden" name="meta[force_read_only]" id="meta_force_read_only" value="1">| if force_read_only
       body %Q|<input type="hidden" name="meta[last_updated]" id="meta_last_updated" value=#{record.updated_at.to_i}>|
       if @_stuff[:need_workflow_action]
-        body %Q|<input type="hidden" name="meta[workflow_action]" id="meta_workflow_action"#{@_stuff[:need_workflow_action].is_a?(String) ? %Q*value="#{@_stuff[:need_workflow_action]}"* : ''}>|
+        body %Q|<input type="hidden" name="meta[workflow_action]" id="meta_workflow_action"#{@_stuff[:need_workflow_action].is_a?(String) ? %Q* value="#{@_stuff[:need_workflow_action]}"* : ''}>|
       end
       if any_multi_index?
         body %Q|<input type="hidden" name="multi_index" id="multi_index" value="#{@_any_multi_index}">|
@@ -1239,7 +1259,8 @@ class Form
       special_fnname = ''
     if ojs
       field_name_action_hash = {}
-      ojs.collect do |condition_name,actions|
+      ojs.keys.sort.collect do |condition_name|
+        actions = ojs[condition_name]
         cond = conditions[condition_name]
         raise condition_name if cond.nil?
         if condition_name =~ /(.*)_#{MultiIndexMarker}$/
@@ -1331,9 +1352,9 @@ EOJS
     b = get_body.join("\n")
     b.gsub!(/<info(.*?)>(.*?)<\/info>/) {|match| tip($2,$1)}
 
-    if @_tip_id
-      b = javascript_include_tag("prototip-min") + stylesheet_link_tag('prototip',:media => "screen")+b
-    end
+#      if @_tip_id
+#        b = "#{javascript_include_tag("prototip-min")} #{stylesheet_link_tag('prototip',:media => "screen")} #{b}"
+#      end
 
     js = get_jscripts
     jscripts << js if js
@@ -1392,7 +1413,7 @@ end
     option_string = options.size > 0 ? ",{ #{options.join(' , ')} }" : ""
     javascript %Q|new Tip('#{tip_id}',"#{quote_for_javascript(text)}"#{option_string})|
     @_tip_id += 1
-    %Q|<img src="/images/info_circle.gif" alt="" id="#{tip_id}">|
+    %Q|<img alt="info" id="#{tip_id}" src="/assets/info_circle.gif" />|
   end
 
   #################################################################################
@@ -1532,7 +1553,7 @@ end
 
   def get_current_questions
     raise MetaformException,"attempting to get current questions without a setup presentation." if @_stuff[:current_questions].nil?
-   @_stuff[:current_questions].values
+    @_stuff[:current_questions].values
   end
   
   def get_current_field_names
@@ -1608,20 +1629,24 @@ end
   #################################################################################
   # helper function to allow separating the DSL commands into multiple files
   def include_definitions(file)
-    fn = Form.forms_dir+'/'+file
+    @@_definition_file = file
+    return if @@_loaded_definitions[self.class.to_s+file] == self.class
+    @@_loaded_definitions[self.class.to_s+file] = self.class
+    fn = Rails.root.join(Form.forms_dir).join(file).to_s
     file_contents = IO.read(fn)
-    eval(file_contents,nil,fn)
+    eval(file_contents,getBinding,fn)
   end
   
   #################################################################################
   # helper function to allow separating the DSL commands into multiple files
   def include_helpers(file)
-    return if @@_loaded_helpers[file] == self.class
-    @@_loaded_helpers[file] = self.class
-    fn = Form.forms_dir+'/'+file
+    return if @@_loaded_helpers[self.class.to_s+file] == self.class
+    @@_loaded_helpers[self.class.to_s+file] = self.class
+    fn = Rails.root.join(Form.forms_dir).join(file).to_s
     file_contents = IO.read(fn)
-    Form.class_eval(file_contents,fn)
+    self.class.class_eval(file_contents,fn)
   end
+
   
   def if_c(condition,condition_value=true)
     condition = make_condition(condition)
@@ -1654,6 +1679,7 @@ end
     return nil unless field.force_nil
     field.force_nil.each do |condition,force_nil_fields,negate|
       condition = make_condition(condition)
+      next if condition.zero_index_force_nil_only && index != 0
       condition_value = condition.evaluate
       if negate ? !condition_value : condition_value
 #        puts "FORCE NIL: condition #{condition.name} with negate: #{negate.to_s}"
@@ -1671,6 +1697,47 @@ end
   # behaviors
   def validation_exclude_states
     'explained'
+  end
+  
+  ###########################################################
+  # Dump out a key for the form
+  require 'csv.rb'
+  def defintion_dump(include_spss_codes = false)
+    dump = []
+    dump << CSV.generate_line(%w(field_name file type label required constraints)).chop
+    
+    definition_order.collect do |field_name|
+      f = fields[field_name]
+      row = [f.name,f.file,f.type,f.label]
+    
+      if c = f.constraints
+        row << c['required'].inspect
+
+        vl = f.get_constraint_value_labels(include_spss_codes)
+        l = "#{c['enumeration'] ? 'ENUM' : 'SET'}-- "
+        if vl
+          if include_spss_codes && c['enumeration']
+            i = 0
+            row << l+vl.collect do |label,option|
+              if option.nil?
+                "(empty) (<nil>): #{label}"
+              else
+                i+=1
+                "#{i} (#{option.nil? ? '<nil>' : option}): #{label}"
+              end
+            end.join(';   ')
+          else
+            row << l+vl.collect {|label,option| "#{option.nil? ? '<nil>' : option}: #{label}"}.join(';   ')
+          end
+        else
+          row << "none"
+        end
+      else
+        row << "false"
+      end
+      dump << CSV.generate_line(row).chop
+    end
+    dump.join("\n")
   end
  
   #################################################################################
@@ -1769,5 +1836,13 @@ end
   def quote_for_html_attribute(text)
     text.gsub(/"/,'&quot;')
   end
-      
+  
+  # this is here to so that inclusion of include ActionView::Helpers::AssetTagHelper will work in rails 3
+  def config
+    ActionController::Base.config
+  end
+  def controller
+    nil
+  end
+
 end

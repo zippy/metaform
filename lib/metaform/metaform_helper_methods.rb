@@ -1,7 +1,5 @@
 #These metaform helper methods are automatically added to all ActionViews
 
-ILIKE = UsingPostgres ? 'ilike' : 'like'
-
 module MetaformHelperMethods
 
   #####################################################################################

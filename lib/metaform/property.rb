@@ -40,8 +40,8 @@ class Invalid < Property
             err_message_template = field.constraints["err__explanation_approval"]
             err_message_template ||= $metaform_error_messages['_explanation_approval']
             txt ||= Constraints.fill_error(err_message_template,vals)
-            errs = txt.gsub(/\?\{(.*?)\}/) {|key| vals[$1]} +
-                    %Q|<input name=\"approvals[#{fname}][#{index}]\" id=\"approvals_#{fname}_#{index}\"  type="hidden" value=\"\" >|
+            errs =  %Q|<input name=\"approvals[#{fname}][#{index}]\" id=\"approvals_#{fname}_#{index}\"  type="hidden" value=\"\" >|+
+                    txt.gsub(/\?\{(.*?)\}/) {|key| vals[$1]}
           else
             err_message_template = field.constraints["err__explanation"]
             err_message_template ||= $metaform_error_messages['_explanation']
@@ -52,7 +52,7 @@ class Invalid < Property
       else
         error_class = "validation_error"
       end
-      question_html + %Q| <div class="#{error_class}">#{errs}</div>|
+      question_html + %Q| <div class="#{error_class}">#{errs}</div>|.html_safe
     else
       question_html
     end

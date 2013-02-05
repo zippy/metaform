@@ -25,10 +25,26 @@ describe DateHelper do
     it 'should convert invalid html values to nil' do
       convert_date_html_value({'year'=>'xsy','month'=>'99','day'=>''}).should == nil
     end
+    it 'should convert 2 digit years less than 38 to 2000s and greater than 37 to 1900s' do
+      convert_date_html_value({'year'=>'12','month'=>'1','day'=>'2'}).should == Time.mktime(2012,1,2)
+      convert_date_html_value({'year'=>'37','month'=>'1','day'=>'2'}).should == Time.mktime(2037,1,2)
+      convert_date_html_value({'year'=>'38','month'=>'1','day'=>'2'}).should == Time.mktime(1938,1,2)
+    end
   end
 end
 
 describe TimeHelper do
+  describe 'has_time?' do
+    it 'should be true for 2001-01-01 12:00' do
+      has_time?("2001-01-01 12:00").should == true
+    end
+    it 'should be false for 2001-01-01' do
+      has_time?("2001-01-01").should == false
+    end
+    it 'should be true for 12:00' do
+      has_time?("12:00").should == true
+    end
+  end
   describe 'parse_time_value' do
     it 'should convert 0:0 to 12:00 am' do
       parse_time_value("0:0").should == ['12','00','am']
@@ -53,6 +69,9 @@ describe TimeHelper do
     end
     it 'should convert empty string to nil' do
       parse_time_value('').should == nil
+    end
+    it 'should covert dates without time to nil' do
+      parse_time_value('2012-10-01').should == nil
     end
   end
   describe 'convert_time_html_value' do

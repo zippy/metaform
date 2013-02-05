@@ -138,14 +138,16 @@ class CheckBoxGroupFollowupWidget < Widget
       new_val = val.chomp('*')
       new_val
     }
-    e = Hash[*e.collect {|r| 
+    eo = [] 
+    eh = Hash[*e.collect {|r|
       r[1] = r[1].chomp('*')
+      eo << r[1]
       r.reverse}.flatten]
-    result = []
+    result = {}
     set_values.each {|key,value|
-      result << e[key] + ':  ' + value.collect!{|v| v.humanize}.join(', ')
+      result[key] = eh[key] + ':  ' + value.collect!{|v| v.humanize}.join(', ')
     }
-    result.join('\n')
+    eo.collect{|key| result[key]}.compact.join('; ')
   end
   
   ################################################################################

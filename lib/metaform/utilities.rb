@@ -45,16 +45,61 @@ module Utilities
   def kaste(strng)
     return (strng == "true")
   end
-  
-  def parse_date(value)
-    tz = Form.get_store(:time_zone)
-    if tz
-      Time.use_zone(tz) {Time.zone.parse(value)}
-    else
-      Time.parse(value)
-    end
+
+  def parse_date(date)
+    Utilities.parse_date(date)
   end
   
+  def self.parse_date(value)
+    tz = Form.get_store(:time_zone)
+    if tz
+      Utilities._parse_date(value).change(:offset => Time.find_zone(tz).formatted_offset)
+    else
+      Utilities._parse_date(value)
+    end
+  end
+
+  def parse_datetime(datetime)
+    Utilities.parse_datetime(datetime)
+  end
+
+  def self.parse_datetime(datetime)
+    begin
+      dt = _parse_datetime(datetime)
+      [dt.year,dt.month,dt.day,dt.hour,dt.min,dt.sec]
+    rescue
+      [nil,nil,nil,nil,nil,nil]
+    end
+  end
+
+  def self._parse_date(date)
+    if date =~ /^\d+-/
+      d = DateTime.parse(date)
+    #DateTime parses 1/2/2012 as Feb 1st so account for that
+    elsif date =~ /^\d+\/\d+\/\d+$/
+      d = DateTime.strptime(date, '%m/%d/%Y')
+    else
+      d = DateTime.parse(date)
+    end
+    d.to_date
+  end
+
+  def self._parse_datetime(datetime)
+    if datetime =~ /^\d+-/
+      dt = DateTime.parse(datetime)
+      #DateTime parses 1/2/2012 as Feb 1st so account for that
+    elsif datetime =~ /^\d+\/\d+\/\d+$/
+      dt = DateTime.strptime(datetime, '%m/%d/%Y')
+    elsif datetime =~ /^\d+\/\d+\/\d+ \d+:\d+:\d+$/
+      dt = DateTime.strptime(datetime, '%m/%d/%Y %H:%M:%S')
+    elsif datetime =~ /^\d+\/\d+\/\d+ \d+:\d+$/
+      dt = DateTime.strptime(datetime, '%m/%d/%Y %H:%M')
+    else
+      dt = DateTime.parse(datetime)
+    end
+    dt
+  end
+
   def is_numeric?(i)
     return false if i == ''
     case i

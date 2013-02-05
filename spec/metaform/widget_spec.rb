@@ -120,11 +120,11 @@ describe Widget do
   describe TextAreaWidget do
     it "should render an html text area with a label" do
       TextAreaWidget.render_form_object(1,'value',{}).should == 
-        "<textarea id=\"record_1\" name=\"record[1]\">value</textarea>"
+        "<textarea id=\"record_1\" name=\"record[1]\">\nvalue</textarea>"
     end
     it "should render an html input text with rows & columns parameters" do
       TextAreaWidget.render_form_object(1,'value',{:params=>'10,20'}).should == 
-        "<textarea cols=\"20\" id=\"record_1\" name=\"record[1]\" rows=\"10\">value</textarea>"
+        "<textarea cols=\"20\" id=\"record_1\" name=\"record[1]\" rows=\"10\">\nvalue</textarea>"
     end
     it "should render value as text with a read_only parameter" do
       TextAreaWidget.render_form_object_read_only(1,'value',{}).should == 
@@ -184,9 +184,23 @@ describe Widget do
     it "should convert bad html values to nil" do
       d = {'month'=>'','day'=>'','year'=>'', 'hours'=>'','minutes'=>'','am_pm'=>'am'}
       DateTimeWidget.convert_html_value(d).should == nil
+      d = {'month'=>'12','day'=>'01','year'=>'2012', 'hours'=>'','minutes'=>'','am_pm'=>'am'}
+      DateTimeWidget.convert_html_value(d).should == nil
     end
   end
-  
+
+  describe DateTimeOptionalWidget do
+    it "should convert html values to a date-time string" do
+      d = {'month'=>'12','day'=>'01','year'=>'2001', 'hours'=>'12','minutes'=>'00','am_pm'=>'am'}
+      DateTimeOptionalWidget.convert_html_value(d).should == '2001-12-01 00:00'
+    end
+    it "should convert bad html values to nil" do
+      d = {'month'=>'','day'=>'','year'=>'', 'hours'=>'','minutes'=>'','am_pm'=>'am'}
+      DateTimeOptionalWidget.convert_html_value(d).should == nil
+      d = {'month'=>'12','day'=>'01','year'=>'2012', 'hours'=>'','minutes'=>'','am_pm'=>'am'}
+      DateTimeOptionalWidget.convert_html_value(d).should == '2012-12-01'
+    end
+  end  
 
   describe TimeIntervalWidget do
     it "should render two html input texts plus a select for am/pm" do
@@ -329,16 +343,16 @@ describe Widget do
   
   describe CheckBoxGroupFollowupWidget do
     before(:each) do
-      @options = {:constraints => {'set'=>[{'val1'=>'Value 1'},{'val2'=>'Value 2'}]}, :params => "param_label,param1,param2"}
+      @options = {:constraints => {'set'=>[{'val1'=>'Value 1'},{'val2'=>'Value 2'},{'val3'=>'Value 3'},{'val4'=>'Value 4'}]}, :params => "param_label,param1,param2"}
     end
      
     it "should render html checkboxes with a custom label" do
       CheckBoxGroupFollowupWidget.render(1,"val1",'the label',@options).should == 
-      "<span class=\"label\">the label</span><br />      <input name=\"record[1][__none__]\" id=\"record_1___none__\" type=\"hidden\">\n      <span class=\"check_box_followup_input\"><input name=\"record[1][val1]\" id=\"record_1_val1\" class=\"1\" type=\"checkbox\" value=\"val1\" checked\n        onClick=\"do_click_1_regular(this,'val1','1_val1');try{values_for_1[cur_idx] = $CBFG('1');condition_actions_for_1();}catch(err){};\">\n        <label for=\"record_1_val1\">Value 1</label></span>\n                  <span id=\"1_val1\" class=\"checkbox_followups\" style=\"display:inline\">\n          &nbsp;&nbsp; param_label           <input name=\"record[1][_val1-param1]\" id=\"record_1__val145param1\" class=\"1_val1_followup\" type=\"checkbox\" value=\"param1\"  ><label for=\"record_1__val145param1\">Param1</label>\n\n          <input name=\"record[1][_val1-param2]\" id=\"record_1__val145param2\" class=\"1_val1_followup\" type=\"checkbox\" value=\"param2\"  ><label for=\"record_1__val145param2\">Param2</label>\n\n          </span>\n\n<br />      <input name=\"record[1][__none__]\" id=\"record_1___none__\" type=\"hidden\">\n      <span class=\"check_box_followup_input\"><input name=\"record[1][val2]\" id=\"record_1_val2\" class=\"1\" type=\"checkbox\" value=\"val2\" \n        onClick=\"do_click_1_regular(this,'val2','1_val2');try{values_for_1[cur_idx] = $CBFG('1');condition_actions_for_1();}catch(err){};\">\n        <label for=\"record_1_val2\">Value 2</label></span>\n                  <span id=\"1_val2\" class=\"checkbox_followups\" style=\"display:none\">\n          &nbsp;&nbsp; param_label           <input name=\"record[1][_val2-param1]\" id=\"record_1__val245param1\" class=\"1_val2_followup\" type=\"checkbox\" value=\"param1\"  ><label for=\"record_1__val245param1\">Param1</label>\n\n          <input name=\"record[1][_val2-param2]\" id=\"record_1__val245param2\" class=\"1_val2_followup\" type=\"checkbox\" value=\"param2\"  ><label for=\"record_1__val245param2\">Param2</label>\n\n          </span>\n\n<div class=\"clear\"></div><script type=\"text/javascript\">\n//<![CDATA[\n    \t\tfunction do_click_1_regular(theCheckbox,theValue,theFollowupID) {\n          var e = $(theFollowupID); \n          if (theCheckbox.checked) {\n            Effect.BlindDown(e, {duration:.5});\n            \n          } else {\n            Effect.BlindUp(e, {duration:.5});\n            $$('.1_'+theValue+'_followup').each(function(cb){cb.checked=false});\n          }           \n   \t\t  }        \n\n//]]>\n</script>"
+        "<span class=\"label\">the label</span><br />      <input name=\"record[1][__none__]\" id=\"record_1___none__\" type=\"hidden\">\n      <span class=\"check_box_followup_input\"><input name=\"record[1][val1]\" id=\"record_1_val1\" class=\"1\" type=\"checkbox\" value=\"val1\" checked\n        onClick=\"do_click_1_regular(this,'val1','1_val1');try{values_for_1[cur_idx] = $CBFG('1');condition_actions_for_1();}catch(err){};\">\n        <label for=\"record_1_val1\">Value 1</label></span>\n                  <span id=\"1_val1\" class=\"checkbox_followups\" style=\"display:inline\">\n          &nbsp;&nbsp; param_label           <input name=\"record[1][_val1-param1]\" id=\"record_1__val145param1\" class=\"1_val1_followup\" type=\"checkbox\" value=\"param1\"  ><label for=\"record_1__val145param1\">Param1</label>\n\n          <input name=\"record[1][_val1-param2]\" id=\"record_1__val145param2\" class=\"1_val1_followup\" type=\"checkbox\" value=\"param2\"  ><label for=\"record_1__val145param2\">Param2</label>\n\n          </span>\n\n<br />      <input name=\"record[1][__none__]\" id=\"record_1___none__\" type=\"hidden\">\n      <span class=\"check_box_followup_input\"><input name=\"record[1][val2]\" id=\"record_1_val2\" class=\"1\" type=\"checkbox\" value=\"val2\" \n        onClick=\"do_click_1_regular(this,'val2','1_val2');try{values_for_1[cur_idx] = $CBFG('1');condition_actions_for_1();}catch(err){};\">\n        <label for=\"record_1_val2\">Value 2</label></span>\n                  <span id=\"1_val2\" class=\"checkbox_followups\" style=\"display:none\">\n          &nbsp;&nbsp; param_label           <input name=\"record[1][_val2-param1]\" id=\"record_1__val245param1\" class=\"1_val2_followup\" type=\"checkbox\" value=\"param1\"  ><label for=\"record_1__val245param1\">Param1</label>\n\n          <input name=\"record[1][_val2-param2]\" id=\"record_1__val245param2\" class=\"1_val2_followup\" type=\"checkbox\" value=\"param2\"  ><label for=\"record_1__val245param2\">Param2</label>\n\n          </span>\n\n<br />      <input name=\"record[1][__none__]\" id=\"record_1___none__\" type=\"hidden\">\n      <span class=\"check_box_followup_input\"><input name=\"record[1][val3]\" id=\"record_1_val3\" class=\"1\" type=\"checkbox\" value=\"val3\" \n        onClick=\"do_click_1_regular(this,'val3','1_val3');try{values_for_1[cur_idx] = $CBFG('1');condition_actions_for_1();}catch(err){};\">\n        <label for=\"record_1_val3\">Value 3</label></span>\n                  <span id=\"1_val3\" class=\"checkbox_followups\" style=\"display:none\">\n          &nbsp;&nbsp; param_label           <input name=\"record[1][_val3-param1]\" id=\"record_1__val345param1\" class=\"1_val3_followup\" type=\"checkbox\" value=\"param1\"  ><label for=\"record_1__val345param1\">Param1</label>\n\n          <input name=\"record[1][_val3-param2]\" id=\"record_1__val345param2\" class=\"1_val3_followup\" type=\"checkbox\" value=\"param2\"  ><label for=\"record_1__val345param2\">Param2</label>\n\n          </span>\n\n<br />      <input name=\"record[1][__none__]\" id=\"record_1___none__\" type=\"hidden\">\n      <span class=\"check_box_followup_input\"><input name=\"record[1][val4]\" id=\"record_1_val4\" class=\"1\" type=\"checkbox\" value=\"val4\" \n        onClick=\"do_click_1_regular(this,'val4','1_val4');try{values_for_1[cur_idx] = $CBFG('1');condition_actions_for_1();}catch(err){};\">\n        <label for=\"record_1_val4\">Value 4</label></span>\n                  <span id=\"1_val4\" class=\"checkbox_followups\" style=\"display:none\">\n          &nbsp;&nbsp; param_label           <input name=\"record[1][_val4-param1]\" id=\"record_1__val445param1\" class=\"1_val4_followup\" type=\"checkbox\" value=\"param1\"  ><label for=\"record_1__val445param1\">Param1</label>\n\n          <input name=\"record[1][_val4-param2]\" id=\"record_1__val445param2\" class=\"1_val4_followup\" type=\"checkbox\" value=\"param2\"  ><label for=\"record_1__val445param2\">Param2</label>\n\n          </span>\n\n<div class=\"clear\"></div><script type=\"text/javascript\">\n//<![CDATA[\n    \t\tfunction do_click_1_regular(theCheckbox,theValue,theFollowupID) {\n          var e = $(theFollowupID); \n          if (theCheckbox.checked) {\n            Effect.BlindDown(e, {duration:.5});\n            \n          } else {\n            Effect.BlindUp(e, {duration:.5});\n            $$('.1_'+theValue+'_followup').each(function(cb){cb.checked=false});\n          }           \n   \t\t  }        \n\n//]]>\n</script>"
     end
     it "should render the list of human enumerations values if read_only, including followups" do
       CheckBoxGroupFollowupWidget.render_form_object_read_only(1,"val1: \n- param2\nval2: \n- param1\n- param2\n",@options).should == 
-        "<span id=\"record_1\">Value 1:  Param2\\nValue 2:  Param1, Param2</span>"
+        "<span id=\"record_1\">Value 1:  Param2; Value 2:  Param1, Param2</span>"
     end
   end
 

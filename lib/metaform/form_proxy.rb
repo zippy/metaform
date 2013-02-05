@@ -1,5 +1,9 @@
 class FormProxy
+  if Rails::VERSION::STRING =~ /^2./
     include ActionView::Helpers::ActiveRecordHelper
+  elsif Rails::VERSION::STRING =~ /^3./
+    include ActionView::Helpers::ActiveModelHelper
+  end
     include ActionView::Helpers::AssetTagHelper
   #  include ActionView::Helpers::BenchmarkHelper
   #  include ActionView::Helpers::CacheHelper
@@ -13,12 +17,12 @@ class FormProxy
 #    include ActionView::Helpers::JavaScriptMacrosHelper
   #  include ActionView::Helpers::NumberHelper
   #  include ActionView::Helpers::PaginationHelper
-    include ActionView::Helpers::PrototypeHelper
-    include ActionView::Helpers::PrototypeHelper::JavaScriptGenerator::GeneratorMethods
-    include ActionView::Helpers::ScriptaculousHelper
-  include ActionView::Helpers::TagHelper
-  include ActionView::Helpers::TextHelper  
-  
+#    include ActionView::Helpers::PrototypeHelper
+#    include ActionView::Helpers::PrototypeHelper::JavaScriptGenerator::GeneratorMethods
+#    include ActionView::Helpers::ScriptaculousHelper
+    include ActionView::Helpers::TagHelper
+    include ActionView::Helpers::TextHelper
+
   attr_accessor :name
   def initialize(n)
     @name = n
