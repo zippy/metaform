@@ -19,10 +19,10 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="form_spec.rb" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="form_spec.rb" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/spec/metaform/form_spec.rb">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="79" column="16" selection-start="4067" selection-end="4067" vertical-scroll-proportion="0.47959185">
+            <state line="46" column="50" selection-start="2305" selection-end="2345" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -31,7 +31,7 @@
       <file leaf-file-name="form.rb" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/lib/metaform/form.rb">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="665" column="0" selection-start="28470" selection-end="28470" vertical-scroll-proportion="0.0">
+            <state line="673" column="2" selection-start="28689" selection-end="28689" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -40,7 +40,7 @@
       <file leaf-file-name="dsl_objects.rb" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/lib/metaform/dsl_objects.rb">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="486" column="44" selection-start="13752" selection-end="13752" vertical-scroll-proportion="0.0">
+            <state line="682" column="44" selection-start="20739" selection-end="20739" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -67,7 +67,7 @@
       <file leaf-file-name="listing_utilities_spec.rb" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/spec/metaform/listing_utilities_spec.rb">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="81" column="0" selection-start="4578" selection-end="4578" vertical-scroll-proportion="0.0">
+            <state line="92" column="36" selection-start="5363" selection-end="5363" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -76,7 +76,7 @@
       <file leaf-file-name="engine.rb" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/lib/metaform/engine.rb">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="19" column="59" selection-start="594" selection-end="594" vertical-scroll-proportion="0.0">
+            <state line="17" column="84" selection-start="533" selection-end="533" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -100,10 +100,10 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="spec_helper.rb" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="spec_helper.rb" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/spec/spec_helper.rb">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="30" column="0" selection-start="1158" selection-end="1158" vertical-scroll-proportion="0.0">
+            <state line="37" column="4" selection-start="1461" selection-end="1461" vertical-scroll-proportion="0.6641975">
               <folding />
             </state>
           </provider>
@@ -126,14 +126,14 @@
         <option value="$PROJECT_DIR$/lib/metaform/metaform_helper_methods.rb" />
         <option value="$PROJECT_DIR$/spec/dummy/forms/SimpleFormform.rb" />
         <option value="$PROJECT_DIR$/lib/metaform.rb" />
-        <option value="$PROJECT_DIR$/lib/metaform/engine.rb" />
         <option value="$PROJECT_DIR$/spec/dummy/forms/sampleform_extras.rb" />
-        <option value="$PROJECT_DIR$/spec/spec_helper.rb" />
         <option value="$PROJECT_DIR$/.rspec" />
-        <option value="$PROJECT_DIR$/spec/metaform/listing_utilities_spec.rb" />
         <option value="$PROJECT_DIR$/lib/metaform/listing_utilities.rb" />
         <option value="$PROJECT_DIR$/lib/metaform/form.rb" />
+        <option value="$PROJECT_DIR$/spec/metaform/listing_utilities_spec.rb" />
+        <option value="$PROJECT_DIR$/lib/metaform/engine.rb" />
         <option value="$PROJECT_DIR$/spec/metaform/form_spec.rb" />
+        <option value="$PROJECT_DIR$/spec/spec_helper.rb" />
       </list>
     </option>
   </component>
@@ -344,6 +344,30 @@
       <RAILS_SERVER_CONFIG_SETTINGS_ID NAME="RAILS_SERVER_TYPE" VALUE="Default" />
       <RAILS_SERVER_CONFIG_SETTINGS_ID NAME="ENVIRONMENT_TYPE" VALUE="development" />
       <RAILS_SERVER_CONFIG_SETTINGS_ID NAME="LAUNCH_JS" VALUE="false" />
+      <method />
+    </configuration>
+    <configuration default="true" type="RSpecRunConfigurationType" factoryName="RSpec">
+      <predefined_log_file id="RUBY_RSPEC" enabled="true" />
+      <module name="" />
+      <RSPEC_RUN_CONFIG_SETTINGS_ID NAME="RUBY_ARGS" VALUE="-e $stdout.sync=true;$stderr.sync=true;load($0=ARGV.shift)" />
+      <RSPEC_RUN_CONFIG_SETTINGS_ID NAME="WORK DIR" VALUE="" />
+      <RSPEC_RUN_CONFIG_SETTINGS_ID NAME="SHOULD_USE_SDK" VALUE="false" />
+      <RSPEC_RUN_CONFIG_SETTINGS_ID NAME="ALTERN_SDK_NAME" VALUE="" />
+      <RSPEC_RUN_CONFIG_SETTINGS_ID NAME="myPassParentEnvs" VALUE="true" />
+      <envs />
+      <EXTENSION ID="BundlerRunConfigurationExtension" bundleExecEnabled="false" />
+      <EXTENSION ID="RubyCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" track_test_folders="true" runner="rcov" />
+      <RSPEC_RUN_CONFIG_SETTINGS_ID NAME="TESTS_FOLDER_PATH" VALUE="" />
+      <RSPEC_RUN_CONFIG_SETTINGS_ID NAME="TEST_SCRIPT_PATH" VALUE="" />
+      <RSPEC_RUN_CONFIG_SETTINGS_ID NAME="SPEC_RUNNER_PATH" VALUE="" />
+      <RSPEC_RUN_CONFIG_SETTINGS_ID NAME="TEST_FILE_MASK" VALUE="**/*_spec.rb" />
+      <RSPEC_RUN_CONFIG_SETTINGS_ID NAME="SPEC_EXAMPLE_NAME" VALUE="" />
+      <RSPEC_RUN_CONFIG_SETTINGS_ID NAME="TEST_TEST_TYPE" VALUE="TEST_SCRIPT" />
+      <RSPEC_RUN_CONFIG_SETTINGS_ID NAME="SPEC_ARGS" VALUE="" />
+      <RSPEC_RUN_CONFIG_SETTINGS_ID NAME="RUNNER_VERSION" VALUE="" />
+      <RSPEC_RUN_CONFIG_SETTINGS_ID NAME="USE_CUSTOM_SPEC_RUNNER" VALUE="false" />
+      <RSPEC_RUN_CONFIG_SETTINGS_ID NAME="DRB" VALUE="false" />
+      <RSPEC_RUN_CONFIG_SETTINGS_ID NAME="FULL_BACKTRACE" VALUE="false" />
       <method />
     </configuration>
     <configuration default="true" type="RubyRunConfigurationType" factoryName="Ruby">
@@ -571,13 +595,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/lib/metaform/engine.rb">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="19" column="59" selection-start="594" selection-end="594" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/README.md">
       <provider selected="true" editor-type-id="text-editor">
         <state line="130" column="55" selection-start="5356" selection-end="5356" vertical-scroll-proportion="0.6785714">
@@ -592,30 +609,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/spec/spec_helper.rb">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="30" column="0" selection-start="1158" selection-end="1158" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/.rspec">
       <provider selected="true" editor-type-id="text-editor">
         <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/spec/metaform/listing_utilities_spec.rb">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="81" column="0" selection-start="4578" selection-end="4578" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/lib/metaform/dsl_objects.rb">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="486" column="44" selection-start="13752" selection-end="13752" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
@@ -629,14 +625,42 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/lib/metaform/form.rb">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="665" column="0" selection-start="28470" selection-end="28470" vertical-scroll-proportion="0.0">
+        <state line="673" column="2" selection-start="28689" selection-end="28689" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/metaform/dsl_objects.rb">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="682" column="44" selection-start="20739" selection-end="20739" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/lib/metaform/engine.rb">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="17" column="84" selection-start="533" selection-end="533" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/spec/metaform/listing_utilities_spec.rb">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="92" column="36" selection-start="5363" selection-end="5363" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/spec/metaform/form_spec.rb">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="79" column="16" selection-start="4067" selection-end="4067" vertical-scroll-proportion="0.47959185">
+        <state line="46" column="50" selection-start="2305" selection-end="2345" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/spec/spec_helper.rb">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="37" column="4" selection-start="1461" selection-end="1461" vertical-scroll-proportion="0.6641975">
           <folding />
         </state>
       </provider>

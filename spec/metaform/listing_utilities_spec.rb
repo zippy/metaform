@@ -91,5 +91,6 @@ describe ListingUtilities do
     Metaform.set_usingPostgres(true)
     def_search_rules(:search,'birth_code' => 'H_Ccode')
     generate_search_options(:search).should == {:conditions=>"(:H_Ccode ilike '%ABCD%')"}
+    Metaform.set_usingPostgres(false)
   end
 end
