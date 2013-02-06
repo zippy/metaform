@@ -1035,20 +1035,24 @@ end
     Record.answer_num(self.id,field,answer,index)
   end
   
-  def Record.max_index(id,field)
+  def Record._last(what,id,field)
     conditions = {:form_instance_id => id, :field_id => field}
     max_index_field_instance = FieldInstance.find(:first,:conditions => conditions, :order => 'idx DESC')
-    max_index_field_instance ? max_index_field_instance.idx : nil
+    return nil if max_index_field_instance.nil?
+    what == :idx ? max_index_field_instance.idx : max_index_field_instance.answer
+  end
+  
+  def Record.max_index(id,field)
+    _last(:idx,id,field)
   end
   def max_index(field)
     Record.max_index(self.id,field)
   end
   
   def Record.last_answer(id,field)
-    conditions = {:form_instance_id => id, :field_id => field}
-    max_index_field_instance = FieldInstance.find(:first,:conditions => conditions, :order => 'idx DESC')
-    max_index_field_instance ? max_index_field_instance.answer : nil
+    _last(:answer,id,field)
   end
+
   def last_answer(field)
     Record.last_answer(self.id,field)
   end 
