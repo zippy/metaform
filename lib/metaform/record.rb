@@ -474,13 +474,7 @@ end
         index = nil
         was_any = true
       end
-      if index && form.fields[attribute].indexed_default_from_null_index
-        value = self[attribute,nil]
-      else
-        value = form.fields[attribute].default
-      end
-      #cache the value in the attributes hash
-      set_attribute(attribute,value,index)
+      value = form.fields[attribute].default
       was_any ? [value] : value
     end
   end

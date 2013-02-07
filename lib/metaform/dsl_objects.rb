@@ -8,7 +8,6 @@ class Field < Bin
       :followups => nil,
       :followup_conditions => nil,
       :default => nil,
-      :indexed_default_from_null_index => nil,
       :calculated => nil,
       :properties => [Invalid],
       :calculated => nil,

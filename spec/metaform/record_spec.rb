@@ -526,14 +526,14 @@ describe Record do
       @records.indexed_field_no_default.should == nil
       @records.indexed_field_no_default__1.should == nil
       @records.indexed_field_no_default = 'dog'
-      @records.indexed_field_no_default__2.should == 'dog'
-      @records.indexed_field_no_default__1.should == nil  #should still be nil because it was already set
+      @records.indexed_field_no_default__2.should == nil
+      @records.indexed_field_no_default__1.should == nil
 
       @records.indexed_field_with_default.should == 'cow'
       @records.indexed_field_with_default__1.should == 'cow'
       @records.indexed_field_with_default = 'cat'
-      @records.indexed_field_with_default__2.should == 'cat'
-      @records.indexed_field_with_default__1.should == 'cow' #should still be 'cow' because it was already set
+      @records.indexed_field_with_default__2.should == 'cow'
+      @records.indexed_field_with_default__1.should == 'cow'
     end
   end
   
@@ -546,7 +546,18 @@ describe Record do
       @record.save('new_entry')
       nr = Record.locate(:first, :index => :any)
     end
-    
+
+    describe "the cache" do
+      it "reading a value for the first time should not create a values in the cache" do
+        nr = after_init_save_and_get_from_locate do
+          @record[:breastfeeding,2] = 'X'
+          @record[:breastfeeding,3] == 'Y'
+          @record.cache.dump.should == [nil, nil, {"breastfeeding"=>"X"}]
+        end
+        nr.max_index("breastfeeding").should == 2
+      end
+    end
+
     describe "#slice" do
       it "should return an empty hash when no matching records are found"  do
         nr = after_init_save_and_get_from_locate
@@ -795,6 +806,7 @@ describe Record do
 #      end
     end
   end
+
 
   describe "-- calculated fields" do
     before(:each) do
