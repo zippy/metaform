@@ -213,6 +213,9 @@ describe Constraints do
     it "should give a different error message if also constrianed as set" do
       Constraints.verify({'required' =>true,'set' => [{'apple' => 'Apple'},{'banana' => 'Banana'}]}, '', @form).should == [Constraints::RequiredMultiErrMessage]
     end
+    it "should be able to override the default constrianed as set error message" do
+      Constraints.verify({"err__required_multi"=>"overridden error msg",'required' =>true,'set' => [{'apple' => 'Apple'},{'banana' => 'Banana'}]}, '', @form).should == ["overridden error msg"]
+    end
     it "should not trigger when value is not nil or ''" do
       Constraints.verify({'required' =>true}, 'fish', @form).should == []
     end

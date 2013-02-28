@@ -152,7 +152,10 @@ module Constraints
             raise MetaformException,"value of required constraint must be a true, false or a condition string!"
           end
           if constraint && (value == nil || value == "")
-            msg = $metaform_error_messages['_required_multi'] if constraints.has_key?('set')
+            if (constraints.has_key?('set'))
+              msg = constraints["err__required_multi"]
+              msg ||= $metaform_error_messages['_required_multi']
+            end
             msg ||= fill_error(err_message_template,{'extra'=>condition_extra_err})
             
 #            msg ||= Form.configuration[:required_error_message] ? Form.configuration[:required_error_message] : RequiredErrMessage
