@@ -1362,7 +1362,7 @@ EOJS
     js = jscripts.join("\n")
     js.gsub!(/#{EventObserveMarker}/,observe_js_for_add_function) if observe_js_for_add_function != ''      
     js.gsub!(/#{RecalculateConditionsMarker}/,recalculate_conditions_js_for_remove_function) if recalculate_conditions_js_for_remove_function != ''      
-    [b,js]
+    [b.html_safe,js.html_safe]
   end
 end
     
