@@ -699,7 +699,7 @@ class Listing < Bin
       sql_options = get_sql_options.update(sql_options)
       if sql_options[:conditions] || @display_all
         if @search_params[:paginate]=='yes'
-          @records = model.to_s.camelize.constantize.paginate(:all,sql_options.update({:page => @search_params[:page]}))
+          @records = model.to_s.camelize.constantize.paginate(sql_options.update({:page => @search_params[:page]}))
         else
           @records = model.to_s.camelize.constantize.find(:all,sql_options)
         end
