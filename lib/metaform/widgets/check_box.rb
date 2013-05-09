@@ -7,7 +7,7 @@ class CheckBoxWidget < Widget
     result << %Q|<input name="#{build_html_multi_name(field_instance_id,"Y")}" id="#{build_html_multi_id(field_instance_id,"Y")}" type="checkbox" #{checked}>|
     result << "\n"
     result << %Q|<input name="#{build_html_multi_name(field_instance_id,"__none__")}" id="#{build_html_multi_id(field_instance_id,"__none__")}" class="#{field_instance_id}" type="hidden">|
-    result
+    result.join("")
   end 
    
    ################################################################################
