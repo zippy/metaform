@@ -13,11 +13,11 @@ class RecordsController < ApplicationController
   def index
     @listing_name = params[:list_name]
     redirected = false
-    redirected = before_list_records(@listing_name) if respond_to?(:before_list_records)
+    redirected = before_list_records(@listing_name) if respond_to?(:before_list_records,true)
     if !redirected
       #Need to check that the application allows the use of manual filters.  If the application does not specifically allow,
       #then we dis-allow its use for security reasons.
-      raise MetaformIllegalSearchParameterError if params[:search] &&  params[:search][:manual_filters] && (!respond_to?(:enable_manual_filters) || !enable_manual_filters)
+      raise MetaformIllegalSearchParameterError if params[:search] &&  params[:search][:manual_filters] && (!respond_to?(:enable_manual_filters,true) || !enable_manual_filters)
       the_listing = Form.listings[@listing_name]
       raise "No listing found for #{@listing_name}" if !the_listing
       (@records,@search_params) = the_listing.fill_records(params,session)
@@ -34,21 +34,21 @@ class RecordsController < ApplicationController
     redirected = false
     
     render_options = prepare_render_show_options
-    redirected = before_show_record(@record,render_options[:template]) if respond_to?(:before_show_record)
+    redirected = before_show_record(@record,render_options[:template]) if respond_to?(:before_show_record,true)
     if !redirected
       respond_to do |format|
         format.html {(@form_html,@form_javascript) = @record.build_html(@presentation,@index,@force_read_only); render render_options}
         format.xml  { render :xml => @record.to_xml }
       end
     end
-    after_show_record(@record) if respond_to?(:after_show_record)
+    after_show_record(@record) if respond_to?(:after_show_record,true)
   end
 
   # GET /form/<form_id>/records/new[/<presentation_id>[/<tab>]]
   def new
     setup_new_record
     redirected = false
-    redirected = before_new_record(@record) if respond_to?(:before_new_record)
+    redirected = before_new_record(@record) if respond_to?(:before_new_record,true)
     if !redirected
       (@form_html,@form_javascript) = @record.build_html(@presentation,@index)
     end
@@ -59,12 +59,12 @@ class RecordsController < ApplicationController
   def create
     raise MetaformException,"record create requires a workflow action" if params[:meta]['workflow_action'].blank?
     setup_new_record
-    before_create_record(@record) if respond_to?(:before_create_record)
-    before_save_record(@record) if respond_to?(:before_save_record)
+    before_create_record(@record) if respond_to?(:before_create_record,true)
+    before_save_record(@record) if respond_to?(:before_save_record,true)
     respond_to do |format|
       if saved_attributes = @record.save(@presentation,get_meta_data)
-        after_create_record(@record) if respond_to?(:after_create_record)
-        after_save_record(@record,saved_attributes) if respond_to?(:after_save_record)
+        after_create_record(@record) if respond_to?(:after_create_record,true)
+        after_save_record(@record,saved_attributes) if respond_to?(:after_save_record,true)
         f = @record.action_result[:flash]
         if f
           flash[f[:key]] = f[:value]
@@ -84,9 +84,9 @@ class RecordsController < ApplicationController
   def update
     setup_record
     redirected = false
-    redirected = before_update_record(@record) if respond_to?(:before_update_record)
+    redirected = before_update_record(@record) if respond_to?(:before_update_record,true)
     opts = {}
-    redirected = before_save_record(@record) if respond_to?(:before_save_record) && !redirected
+    redirected = before_save_record(@record) if respond_to?(:before_save_record,true) && !redirected
     if !redirected
       respond_to do |format|
         if !params[:record] && !params[:meta]
@@ -150,8 +150,8 @@ class RecordsController < ApplicationController
           meta_data[:explanations] = params[:explanations] if params[:explanations]
           meta_data[:approvals] = params[:approvals] if params[:approvals]
           if saved_attributes = @record.update_attributes(attribs,@presentation,meta_data,opts)
-            after_update_record(@record) if respond_to?(:after_update_record)
-            after_save_record(@record,saved_attributes) if respond_to?(:after_save_record)
+            after_update_record(@record) if respond_to?(:after_update_record,true)
+            after_save_record(@record,saved_attributes) if respond_to?(:after_save_record,true)
             flash[:action_result] = @record.action_result[:return_data] if @record.action_result && @record.action_result[:return_data]
             redirect_url = @record.action_result[:redirect_url] if @record.action_result
             redirect_url = params[:_redirect_url] if !redirect_url  && params[:_redirect_url]
@@ -212,7 +212,7 @@ class RecordsController < ApplicationController
     meta[:request] = request
     meta[:session] = session
     meta[:params] = params
-    meta.update(meta_data_for_save) if respond_to?(:meta_data_for_save)
+    meta.update(meta_data_for_save) if respond_to?(:meta_data_for_save,true)
     meta
   end
 end
