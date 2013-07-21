@@ -30,6 +30,23 @@ class FormInstance < ActiveRecord::Base
   def update_validation_data(updated_vd)
     FormInstance.update_validation_data(self.id,updated_vd)
   end
-    
+
+
+  # FROM DOULADATA
+  # TODO: Figure out why the form_instance_extensions in douladata's app/model isn't working correctly in development mode.
+  # It seems to be overriding this class, resulting in the error: Association named 'field_instances' was not found;
+
+  def get_max_contact_index(type)
+    get_validation_data["_#{type}_max_index"]
+  end
+
+  def FormInstance.get_max_contact_index(id,type)
+    FormInstance.find(id).get_max_contact_index(type)
+  end
+
+  def update_max_contact_index(type,index)
+    update_validation_data({"_#{type}_max_index" => index})
+  end
+
 end
 
