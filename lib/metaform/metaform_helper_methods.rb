@@ -69,6 +69,8 @@ module MetaformHelperMethods
     </fieldset>
     EOHTML
 
-    html.html_safe
+    # For some reason the above html gets changed to (&#x27;search_from_loading&#x27;).show()
+    # so we need to replace the &#x27; with '
+    html.gsub("&#x27;", "\'").html_safe
   end
 end
