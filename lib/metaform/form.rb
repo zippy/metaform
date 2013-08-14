@@ -483,14 +483,14 @@ class Form
   #   end
   #
   #################################################################################
-  def def_dependent_fields(condition,common_options = {})
+  def def_dependent_fields(condition_str,common_options = {})
     if required_conds = common_options.delete(:additional_required_conditions)
       required_conds = [required_conds] if required_conds.is_a?(String)
-      required_conds << condition
+      required_conds << condition_str
     else
-      required_conds = condition
+      required_conds = condition_str
     end
-    condition = make_condition(condition)
+    condition = make_condition(condition_str)
     negate = :unless
     if force_nil_condition = common_options.delete(:force_nil_override)
       force_nil_condition = make_condition(force_nil_condition)
@@ -503,7 +503,14 @@ class Form
     def_fields(common_options) do
       yield
     end
-    condition.fields_used.each {|f| fields[f].set_dependent_fields(@fields_defined)}
+
+    condition.fields_used.each do |f|
+      if fields[f].nil?
+        raise "The field '#{f}' used in the condition '#{condition_str}' isn't in the fields collection."
+      end
+
+      fields[f].set_dependent_fields(@fields_defined)
+    end
 
     force_nil_condition.fields_used.each do |fn|
       f = fields[fn]
