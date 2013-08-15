@@ -33,7 +33,7 @@ class Record
     def value=(val,index=nil)
       self[index] = val
     end
-    
+
     def make_multi_dimensional(i1,i2)
       #puts "ANSWER#make_multi_dimensional i1 = #{i1.inspect}"
       #puts "ANSWER#make_multi_dimensional i2 = #{i2.inspect}"
@@ -46,7 +46,7 @@ class Record
         @value << []
       end
     end
-    
+
     def [](*index)
       make_multi_dimensional(*index) if index.size > 1
       if index.size == 0
@@ -68,13 +68,13 @@ class Record
       val = args.pop
       if index && index.to_s.include?(',')
         index_array = index.split(',')
-        while index_array.size > 1 
+        while index_array.size > 1
           args.unshift index_array.pop
         end
         index = index_array[0]
       end
       # puts "ANSWER#[]= index = #{index.inspect}, args = #{args.inspect}"
-      
+
       #puts "ANSWER#[]= val = #{val.inspect}"
       #puts "ANSWER#[]= args = #{args.inspect}"
       if args.size == 0 && muilt_dimensional?
@@ -83,7 +83,7 @@ class Record
         args.push 0
         #puts "ANSWER#[]= args = #{args.inspect}"
       end
-      
+
       if args.size == 0
         #puts "ANSWER#[]= arbs.size == 0 is true"
         @value[index.to_i] = val
@@ -96,93 +96,93 @@ class Record
         make_multi_dimensional(index,index2)
         #puts "ANSWER#[]= index = #{index.inspect}"
         #puts "ANSWER#[]= index2 = #{index2.inspect}"
-        @value[index.to_i][index2.to_i] = val        
+        @value[index.to_i][index2.to_i] = val
       end
     end
-    
+
     def size
       @value.size
     end
-    
+
     # this probably needs to have yield block so that we can count any property
     # not just which ones aren't nil
     def count(expr = nil)
       answers = @value
       answers.map!{|answer| eval(expr)  ? answer : nil } if expr
-      answers.compact.size 
+      answers.compact.size
     end
-    
+
     def exists?
       self.size > 0
     end
-    
+
     def each(&block)
       @value.each {|v| block.call(v)}
     end
-    
+
     def each_with_index(&block)
       @value.each_with_index {|v,i| block.call(v,i)}
     end
-    
+
     def to_i
       @value.compact.inject(0){|s,v| s += v.to_i}
     end
-    
+
     def to_date
       answer = @value.compact[0]
       answer ? answer.to_date : nil
     end
-    
+
     def zip(other_answer,&block)
       if !@value.nil? && other_answer.exists?
         my_value = @value.instance_of?(Array) ? @value : [@value]
         other_value = other_answer.value.instance_of?(Array) ? other_answer.value : [other_answer.value]
         if block
-          my_value.zip(other_value) {|a| block.call(a)} 
+          my_value.zip(other_value) {|a| block.call(a)}
         else
           my_value.zip(other_value)
         end
       else
-       [[nil,nil]]          
+        [[nil,nil]]
       end
     end
-    
+
     def map(&block)
       if @value
-        @value.map {|v| 
+        @value.map {|v|
           block.call(v)}
       end
     end
-    
+
     def include?(desired_value)
       @value.include?(desired_value)
     end
-    
+
     def any?(*desired_values)
-       desired_values.any?{|x| @value.any?{|y| y && y.include?(x)}}
+      desired_values.any?{|x| @value.any?{|y| y && y.include?(x)}}
     end
-    
+
     def other?(*undesired_values)
       !@value.join('').blank? && !undesired_values.any?{|x| @value.any?{|y| y && y.include?(x)}}
     end
-    
+
     def is_indexed?
       @value.size > 1
     end
-    
+
     def muilt_dimensional?
       @value[0].instance_of?(Array)
     end
-    
+
     def blank?
       return true if @value.nil?
       @value.compact.delete_if{|v| v == ""}.blank?
     end
-    
+
     def compact
       @value.compact
     end
-    
+
     def method_missing(method,*args)
       #is this an attribute setter? or questioner?
       a = method.to_s
@@ -190,56 +190,57 @@ class Record
       (attribute,index,action) = [$1,$3,$4]
       if form.field_exists?(attribute)
         case action
-        when '?'
-          val = self[attribute,index]
-          return val && val != ''
-        when '='
-          value = args[0]
-          return set_attribute(attribute,value,index)
-        else
-          #otherwise assume an attribute getter
-          return self[attribute,index]
+          when '?'
+            val = self[attribute,index]
+            return val && val != ''
+          when '='
+            value = args[0]
+            return set_attribute(attribute,value,index)
+          else
+            #otherwise assume an attribute getter
+            return self[attribute,index]
         end
       end
       super
     end
 
-        
+
     def last
       @value.last
     end
   end
-  
-class AnswersHash < Hash
-  def answer_num(field,answer,other_than = false,max_index = false)
-    raise "You can not request the answer_num for a nil or empty string answer" if answer.blank?
-    answers = self[field].value
-    answers = [answers] if answers.is_a?(String)
-    return 0 if !answers
-    answers = answers[0..max_index] if max_index
-    if other_than
-      answers.find_all{ |x| x != answer}.size
-    else
-      answers.find_all{ |x| x == answer}.size
+
+  class AnswersHash < Hash
+    def answer_num(field,answer,other_than = false,max_index = false)
+      raise "You can not request the answer_num for a nil or empty string answer" if answer.blank?
+      answers = self[field].value
+      answers = [answers] if answers.is_a?(String)
+      return 0 if !answers
+      answers = answers[0..max_index] if max_index
+      if other_than
+        answers.find_all{ |x| x != answer}.size
+      else
+        answers.find_all{ |x| x == answer}.size
+      end
     end
-  end
-  
-  def id
-    self['_id']
+
+    def id
+      self['_id']
+    end
+
+    def method_missing(method,*args)
+      a = method.to_s
+      if self.has_key?(a)
+        return self[a].value[args[0]] if args.size > 0  #If there is an arg, assume it's the index we want from the value of the Answer.
+        return self[a].value
+      end
+      super
+    end
   end
 
-  def method_missing(method,*args)
-    a = method.to_s
-    if self.has_key?(a)
-      return self[a].value[args[0]] if args.size > 0  #If there is an arg, assume it's the index we want from the value of the Answer.
-      return self[a].value
-    end
-    super
-  end
-end
-  
   attr :form_instance
   attr :errors
+  attr :validation_error_fields
   attr_accessor :action_result,:cache
   ######################################################################################
   # creating a new Record happens either because we pass in a given FormInstance
@@ -250,15 +251,15 @@ end
     @ficache = RecordCache.new if CACHE
     the_instance = FormInstance.new if !the_instance
     @form_instance = the_instance
-  
+
     #TODO this is bogus!!
     #what about adding with_record here?  more bogusness
     if the_form.nil?
       the_form = Form.make_form(the_instance.form.to_s)
     end
-      
+
     @form = the_form
-    
+
     if attributes
       set_attributes(attributes,presentation_name,options)
     end
@@ -293,7 +294,7 @@ end
         # setup and we check to make sure that the questions exist in this presentation
         # as a santity check.  TODO.  This check should be moved elsewhere!!
         if convert_from_html
-        	q = form.get_current_question_by_field_name(attribute)
+          q = form.get_current_question_by_field_name(attribute)
           raise MetaformException,"question #{attribute} was not found in presentation #{presentation_name}" if !q
           value = Widget.fetch(q.widget).convert_html_value(value,q.params)
         end
@@ -302,17 +303,17 @@ end
     end
   end
 
-    def trace
-      caller[1..3].collect {|l| l.gsub('/Users/eric/Coding/Consulting/MANA/MetaForm/git/manastats/vendor/plugins/metaform/lib/metaform/','')}.inspect
-    end
+  def trace
+    caller[1..3].collect {|l| l.gsub('/Users/eric/Coding/Consulting/MANA/MetaForm/git/manastats/vendor/plugins/metaform/lib/metaform/','')}.inspect
+  end
 
   def reset_attributes
     puts "<br>RESETTING Attributes #{trace}" if DEBUG1
     @cache.clear
     @ficache.clear if CACHE
     @record_loaded = false
-  end 
-  
+  end
+
   def set_attribute(attribute,value,index=0,load_calculated_fields=false)
     raise "whoops index was :any" if index == :any
     attrib = attribute.to_s
@@ -322,7 +323,7 @@ end
     @cache.set_attribute(attribute,value,index)
     value
   end
-  
+
   def answers_hash(*fields)
     h = {}
     fields = fields.collect {|f| f.to_s}
@@ -335,7 +336,7 @@ end
     end
     h
   end
-  
+
   def delete_fields(idx,*fields)
     if idx == :all
       FieldInstance.destroy_all(["form_instance_id = ? and field_id in (?)",@form_instance.id,fields])
@@ -345,7 +346,7 @@ end
     opts = {:attributes => fields}
     opts.update(:index => idx) if idx != :all
     @cache.clear(opts)
-    @ficache.clear(:attributes => fields)  if CACHE  
+    @ficache.clear(:attributes => fields)  if CACHE
   end
 
   def delete_fields_except(*fields)
@@ -353,7 +354,7 @@ end
     @cache.clear(:attributes => fields,:except => true)
     @ficache.clear(:attributes => fields,:except => true) if CACHE
   end
-  
+
   def delete_fields_and_validation_data(idx,*fields)
     delete_fields(idx,*fields)
     vd = form_instance.get_fresh_validation_data
@@ -366,9 +367,9 @@ end
     else
       fields.each do |fn|  #Remove fields from validation data
         if error_messages[fn] && error_messages[fn][idx]
-           em = error_messages[fn]
-           em[idx] = nil
-           error_messages[fn] = em
+          em = error_messages[fn]
+          em[idx] = nil
+          error_messages[fn] = em
         end
       end
     end
@@ -376,13 +377,13 @@ end
     form_instance.update_validation_data(vd)
     form_instance.reload
   end
-  
+
   ######################################################################################
   # some paramaters are just those of the form instance object
   def id
     form_instance.id
   end
-  
+
   def form
     @form
 #    form_instance.form
@@ -391,11 +392,11 @@ end
   def workflow
     form_instance.workflow
   end
-  
+
   def workflow_state
     form_instance.workflow_state
   end
-  
+
   def workflow_state=(new_state)
     form_instance.update_attribute(:workflow_state,new_state)
   end
@@ -403,11 +404,11 @@ end
   def workflow_state_label
     @form.workflow_state_label(workflow,workflow_state)
   end
-  
+
   def created_at
     form_instance.created_at
   end
-  
+
   def updated_at
     form_instance.updated_at
   end
@@ -415,7 +416,7 @@ end
   def created_by_id
     form_instance.created_by_id
   end
-  
+
   def updated_by_id
     form_instance.updated_by_id
   end
@@ -440,7 +441,7 @@ end
     end
     field_instances
   end
-  
+
   def _load_attributes(field_instances,fields,index)
     fields_found = []
     field_instances.each do |fi|
@@ -449,12 +450,12 @@ end
     end
     _set_nil_attributes(fields-fields_found,index)
   end
-  
+
   def _set_nil_attributes(fields,index=0)
     index = 0 if index == :any
     fields.each {|f| set_attribute(f,nil,index)}
   end
-  
+
   ######################################################################################
   # Load attributes from the database
   def load_record(fields=nil,index=nil,force = false,load_calculated_fields = false)
@@ -473,7 +474,7 @@ end
       conditions << "idx = ?"
       condition_params << index
     end
-    #    field_instances = @form_instance.field_instances.find(:all, :conditions => ["field_id in (?) and form_instance_id = ?",field_list,id])
+#    field_instances = @form_instance.field_instances.find(:all, :conditions => ["field_id in (?) and form_instance_id = ?",field_list,id])
 
     instances = @form_instance.field_instances.find(:all,:conditions => [conditions.join(' and ')].concat(condition_params))
     attributes_set = {}
@@ -504,7 +505,7 @@ end
 #    puts "[#{attribute.to_s},#{index.to_s}]<br>"
     attribute = attribute.to_s
     load_record
-    
+
     raise MetaformUndefinedFieldError, attribute if !form.field_exists?(attribute)
     if c = form.fields[attribute].calculated
       form.set_record(self)
@@ -514,11 +515,11 @@ end
         (0..last_index).each{|i|result << c[:proc].call(form,i)}
         return result
       else
-        
+
         return c[:proc].call(form,index)
       end
     end
-    
+
     if @cache.attribute_exists?(attribute,index)
 #      puts "<br> loading #{attribute}[#{index}] from cache"
       @cache.get_attribute(attribute,index)
@@ -539,13 +540,13 @@ end
       was_any ? [value] : value
     end
   end
-  
+
   def []=(attribute,*args)
     value = args.pop
     index = args[0]
     set_attribute(attribute,value,index)
   end
-  
+
   def method_missing(method,*args)
     #is this an attribute setter? or questioner?
     a = method.to_s
@@ -553,30 +554,34 @@ end
     (attribute,index,action) = [$1,$3,$4]
     if form.field_exists?(attribute)
       case action
-      when '?'
-        val = self[attribute,index]
-        return val && val != ''
-      when '='
-        value = args[0]
-        return set_attribute(attribute,value,index)
-      else
-        #otherwise assume an attribute getter
-        return self[attribute,index]
+        when '?'
+          val = self[attribute,index]
+          return val && val != ''
+        when '='
+          value = args[0]
+          return set_attribute(attribute,value,index)
+        else
+          #otherwise assume an attribute getter
+          return self[attribute,index]
       end
     end
     super
   end
-  
+
   ######################################################################################
   # return and or create ActiveModel errors object
   def errors
     @errors ||= ActiveModel::Errors.new(self)
   end
-  
+
+  def validation_error_fields
+    @validation_error_fields
+  end
+
   def build_tabs(tabs,current)
     form.build_tabs(tabs,current,self)
   end
-  
+
   def build_html(presentation = 0,index=nil,force_read_only=nil)
     if form.presentation_exists?(presentation)
       form.build(presentation,self,index,force_read_only)
@@ -588,7 +593,7 @@ end
       raise MetaformException, "presentation #{presentation} not found"
     end
   end
-    
+
   ######################################################################################
   # to save a record we have to update the form_instance info as well as update any
   # attributes
@@ -613,7 +618,7 @@ end
         #puts "SAVE self = #{self.inspect}"
         #puts "Errors #{self.errors.full_messages.inspect}"
         #puts "Errors #{self.errors.empty?}"
-        
+
         result
       end
     rescue Exception => e
@@ -624,7 +629,7 @@ end
       false
     end
   end
-  
+
   ######################################################################################
   # To update the record attributes we have to update all the field instances objects
   # that are what actually are the "attributes."  The attributes parameter should be a 
@@ -634,23 +639,23 @@ end
     # puts "presentation = #{presentation.inspect}"
     # puts "meta_data = #{meta_data.inspect}"
     # puts "options = #{options.inspect}"
-    
+
     result = nil
     #puts "BENCHMARK"+ Benchmark.measure {
     load_record #pulls in everything from the database into record cache called @cache
     extra_validate_fields = []
-     if zap_fields = options[:clear_indexes]
-       delete_fields(:all,*zap_fields)
-       extra_validate_fields.concat(zap_fields)
-     end
+    if zap_fields = options[:clear_indexes]
+      delete_fields(:all,*zap_fields)
+      extra_validate_fields.concat(zap_fields)
+    end
     preflight_state = []
     zap_fields = {}
     if @form.zapping_proc
       @form.with_record(self)  do
         preflight_state = @form.zapping_proc[:preflight_state].call(form)
       end
-    end    
-    set_attributes(attribs,presentation,options) 
+    end
+    set_attributes(attribs,presentation,options)
     if @form.zapping_proc
       @form.with_record(self)  do
         zap_fields = @form.zapping_proc[:fields_hit].call(form,preflight_state)
@@ -661,7 +666,7 @@ end
         delete_fields(idx,*fields)
         extra_validate_fields.concat(fields)
       end
-    end    
+    end
     if options[:multi_index]
       index = :any
       fields = []
@@ -680,13 +685,14 @@ end
   def _update_attributes(presentation,meta_data,fields=nil,idx=0,extra_validate_fields=nil)
     # determine if this presentation is allowed to be used for updating the 
     # record in the current state
+    @validation_error_fields = []
     puts "<br>CACHE on entrance to _update_attributes: #{@cache.dump.inspect}" if DEBUG1
     p = @form.presentations[presentation]
     p.confirm_legal_state!(workflow_state)
     invalid_fields = nil
     validation_exclude_states = nil
     forced_to_nil = {}
-    
+
     if fields
       field_list = fields.collect { |f| f.to_s }
     else
@@ -705,6 +711,7 @@ end
 
     # if presentation requires valid data before saving it then return
     if p.validation == :before_save && invalid_fields.size > 0
+      @validation_error_fields = invalid_fields.keys
       @form.set_validating(:no_explanation)
       return false
     end
@@ -794,14 +801,14 @@ end
       states[field_instance_id][index] = f.state
     end
 
-		# only save field instances if there were no errors and if any of the attributes were actually any
-		# different from what they previously were.
+    # only save field instances if there were no errors and if any of the attributes were actually any
+    # different from what they previously were.
     if errors.empty?
       saved_attributes = {}
       if !field_instances_to_save.empty?
-    		dependents = []
+        dependents = []
         FieldInstance.transaction do
-          
+
           field_instances_to_save.each do |i|
             deps = @form.dependent_fields(i.field_id)
             dependents.concat(deps) if deps
@@ -821,11 +828,11 @@ end
           end
         end
         vd = form_instance.get_validation_data #This holds the validation information which is presented in
-        #red at the top of a form.
-        
-        # any dependents and fields that were passed in for validation (usually because the were cleared
-        # by a zapping ropt) that aren't being updated in this group of attributes must have
-        # their validity status updated too.
+                                               #red at the top of a form.
+
+                                               # any dependents and fields that were passed in for validation (usually because the were cleared
+                                               # by a zapping ropt) that aren't being updated in this group of attributes must have
+                                               # their validity status updated too.
         dependents.concat(extra_validate_fields).uniq! if extra_validate_fields
         deps_to_check = dependents-field_list
         if !deps_to_check.empty?
@@ -870,7 +877,7 @@ end
   #################################################################################
   def get_attribute_states
     states = {}
-    @form_instance.field_instances.each do |fi| 
+    @form_instance.field_instances.each do |fi|
       states[fi.field_id] ||= []
       states[fi.field_id][fi.idx.to_i] = fi.state
     end
@@ -947,7 +954,7 @@ end
     count = vd[presentation]
     if index == :any
       count = [0]
-      @form.get_current_field_names.each do |f| 
+      @form.get_current_field_names.each do |f|
         errs = v[f]
         s = states[f]
         if errs
@@ -984,6 +991,11 @@ end
     invalid_fields = {}
     @cache.each(:attributes => fields) do |f,value,index|
       @form.set_current_index(index)
+
+      if f=='PPcontact_attempted_completed' || f=='PPcontact_mom_breastfeeding'
+        q=5
+      end
+
       invalid = Invalid.evaluate(@form,@form.fields[f],value)
       if !invalid.empty?
         invalid_fields[f] ||= []
@@ -997,10 +1009,10 @@ end
   # Returns a the cached invalid fields list for the current fields
   #################################################################################
   def current_invalid_fields
-  	v = form_instance.get_validation_data['_']
-  	d = {}
-  	@form.get_current_field_names.each {|f| d[f] = v[f] if v[f]} if v
-  	d
+    v = form_instance.get_validation_data['_']
+    d = {}
+    @form.get_current_field_names.each {|f| d[f] = v[f] if v[f]} if v
+    d
   end
 
   #################################################################################
@@ -1025,7 +1037,7 @@ end
 #    form_instance.update_attributes!({:validation_data => vd})
 #    vd
 #  end
-  
+
   def set_force_nil_attributes(fields=nil)
     #This method calls set_current_index, but then doesn't reset the index
     #back to the original value.  It doesn't seem to cause a problem, but
@@ -1046,15 +1058,15 @@ end
     end
     fields_forced
   end
-  
+
   def logger
     form_instance.logger
   end
-  
+
   def url(presentation,index=0)
     Record.url(id,presentation,index)
   end
-    
+
   def explanation(field_name,index = 0)
     index = index.to_i
     fi = @form_instance.field_instances.find_by_field_id_and_idx(field_name.to_s,index)
@@ -1068,7 +1080,7 @@ end
     field_instances.each {|fi| expl[fi.field_id] = fi.explanation if fi.idx == index}
     expl
   end
-  
+
   def any_explanations?
     field_instances = @form_instance.field_instances.find(:all)
     field_instances.each {|fi| return true unless fi.explanation.blank?}
@@ -1078,7 +1090,7 @@ end
   def self.human_attribute_name(attribute_key_name) #:nodoc:
     attribute_key_name
   end
-  
+
   def Record.slice(id,*field_names)
     conditions = {:form_instance_id => id, :field_id => field_names}
     result = {}
@@ -1086,15 +1098,15 @@ end
     field_names.each {|a| result[a] = {}}
     field_instances.each do |fi|
       result[fi.field_id][fi.idx] = fi.answer unless fi.answer.blank?   #To-do:  Use this line when database no longer has blank answers
-      #result[fi.field_id][fi.idx] = fi.answer #To-do:  Use this line when database no longer has blank answers
+                                                                        #result[fi.field_id][fi.idx] = fi.answer #To-do:  Use this line when database no longer has blank answers
     end if field_instances
     result = result[field_names[0]] if field_names.size == 1
     result
   end
   def slice(*field_names)
     Record.slice(self.id,*field_names)
-  end  
-  
+  end
+
   def Record.answer_num(id,field,answer,other_than=false,max_index = false)
     raise "You can not request the answer_num for a nil or empty string answer" if answer.blank?
     answer = answer.to_s  #We store answers as strings in the database and postgres would like us to do the conversion.
@@ -1112,7 +1124,7 @@ end
   def answer_num(field,answer,other_than=false,max_index = false)
     Record.answer_num(self.id,field,answer,other_than,max_index)
   end
-  
+
   #This method will return the highest index for a particular field.  Note that if a field has been
   #set to a nil or '' value, it will not be stored in the database and will thus not affect this
   #calculation.  It is therefore the highest non-blank index.
@@ -1124,7 +1136,7 @@ end
   def max_index(field)
     Record.max_index(self.id,field)
   end
-  
+
   def Record.last_answer(id,field)
     conditions = "form_instance_id = '#{id}' and field_id = '#{field}' and answer is not null and answer != ''"
     #conditions = {:form_instance_id => id, :field_id => field}  To-do:  Use this line when database no longer has blank answers
@@ -1133,8 +1145,8 @@ end
   end
   def last_answer(field)
     Record.last_answer(self.id,field)
-  end 
- 
+  end
+
   #################################################################################
   # exports the attributes of the record in the format specified
   # The options to export are:
@@ -1148,107 +1160,107 @@ end
   SPSS_FALSE = 2
   def export(opts = {})
     options = {
-      :format => :csv,
-      :options => {}
+        :format => :csv,
+        :options => {}
     }.update(opts)
     spss_clean = options[:options][:spss]
     case options[:format]
-    when :csv
-      result = []
-      fields = options[:fields]
-      date_format = options[:date_format]
-      date_time_format = options[:date_time_format]
-      raise "you must specify the :fields option with a list of fields to export" if !fields
-      puts "<br>CACHE on entrance to export: #{@cache.dump.inspect}" if DEBUG1
-      @cache.indexes.each do |index|
-        row = []
-        errs = {}
-        row << self.form.class.to_s
-        row << self.id
-        row << index
-        if date_time_format
-          row << self.created_at.strftime(date_time_format)
-          row << self.updated_at.strftime(date_time_format)
-        else
-          row << self.created_at
-          row << self.updated_at
-        end
-        row << self.workflow_state
-        fields.each do |f|
-          field_def = form.fields[f]
-          if field_def.nil?
-            row << nil
+      when :csv
+        result = []
+        fields = options[:fields]
+        date_format = options[:date_format]
+        date_time_format = options[:date_time_format]
+        raise "you must specify the :fields option with a list of fields to export" if !fields
+        puts "<br>CACHE on entrance to export: #{@cache.dump.inspect}" if DEBUG1
+        @cache.indexes.each do |index|
+          row = []
+          errs = {}
+          row << self.form.class.to_s
+          row << self.id
+          row << index
+          if date_time_format
+            row << self.created_at.strftime(date_time_format)
+            row << self.updated_at.strftime(date_time_format)
           else
-            if field_def.calculated
-              d = self[f,index]
-            else 
-              d = @cache.attributes(index)[f]
-            end
-            field_type = field_def.type
-            begin
-              if field_type == 'time' && !d.blank?
-                row << Time.local(*Utilities.parse_datetime(d)[0..6]).strftime("%H:%M:%S")
-              elsif date_format && field_type == 'date' && !d.blank?
-                row << Time.local(*Utilities.parse_datetime(d)[0..2]).strftime(date_format)
-              elsif date_time_format && field_type == 'datetime' && !d.blank?
-                row << Time.local(*Utilities.parse_datetime(d)[0..4]).strftime(date_time_format)
+            row << self.created_at
+            row << self.updated_at
+          end
+          row << self.workflow_state
+          fields.each do |f|
+            field_def = form.fields[f]
+            if field_def.nil?
+              row << nil
+            else
+              if field_def.calculated
+                d = self[f,index]
               else
-                if spss_clean && (s = field_def.get_set_values(:use_spss_order))
-                  s = s.compact
-                  # take into account that some set values have the magic * at the end which has to be ignored because it's not
-                  # actually part of the value, but an indicator that it's unique
-                  s = s.collect {|v| v =~ /(.*)\*$/ ? $1 : v}
-                  if d.nil?
-                    row.concat((0...s.size).collect {|x| SPSS_NIL})
-                  else
-                    x = []
-                    y = Constraints::load_set_value(d)
+                d = @cache.attributes(index)[f]
+              end
+              field_type = field_def.type
+              begin
+                if field_type == 'time' && !d.blank?
+                  row << Time.local(*Utilities.parse_datetime(d)[0..6]).strftime("%H:%M:%S")
+                elsif date_format && field_type == 'date' && !d.blank?
+                  row << Time.local(*Utilities.parse_datetime(d)[0..2]).strftime(date_format)
+                elsif date_time_format && field_type == 'datetime' && !d.blank?
+                  row << Time.local(*Utilities.parse_datetime(d)[0..4]).strftime(date_time_format)
+                else
+                  if spss_clean && (s = field_def.get_set_values(:use_spss_order))
+                    s = s.compact
+                    # take into account that some set values have the magic * at the end which has to be ignored because it's not
+                    # actually part of the value, but an indicator that it's unique
+                    s = s.collect {|v| v =~ /(.*)\*$/ ? $1 : v}
+                    if d.nil?
+                      row.concat((0...s.size).collect {|x| SPSS_NIL})
+                    else
+                      x = []
+                      y = Constraints::load_set_value(d)
 
-                    row.concat s.collect {|v| y.include?(v) ? SPSS_TRUE : SPSS_FALSE}
-                    e = []
-                    y.each do |v|
-                      if !s.include?(v)
-                        e << v
+                      row.concat s.collect {|v| y.include?(v) ? SPSS_TRUE : SPSS_FALSE}
+                      e = []
+                      y.each do |v|
+                        if !s.include?(v)
+                          e << v
+                        end
+                      end
+                      errs[f] = e if !e.empty?
+                    end
+                  elsif spss_clean && (e = field_def.get_enumeration_values(:use_spss_order))
+                    if d.nil?
+                      row << SPSS_NIL
+                    else
+                      e = e.compact
+                      x = []
+                      idx = e.index(d)
+                      if idx.nil?
+                        errs[f] = d
+                        row << -1
+                      else
+                        row << idx+1
                       end
                     end
-                    errs[f] = e if !e.empty?
-                  end
-                elsif spss_clean && (e = field_def.get_enumeration_values(:use_spss_order))
-                  if d.nil?
-                    row << SPSS_NIL
+                  elsif spss_clean && (field_type == 'boolean')
+                    row << (d.nil? ? SPSS_NIL : ((d == 'true') ? SPSS_TRUE : SPSS_FALSE))
                   else
-                    e = e.compact
-                    x = []
-                    idx = e.index(d)
-                    if idx.nil?
-                      errs[f] = d
-                      row << -1
-                    else
-                      row << idx+1
-                    end
+                    row << d
                   end
-                elsif spss_clean && (field_type == 'boolean')
-                  row << (d.nil? ? SPSS_NIL : ((d == 'true') ? SPSS_TRUE : SPSS_FALSE))
-                else
-                  row << d
                 end
+              rescue
+                row << d
               end
-            rescue
-              row << d
             end
           end
+          row << "invalid values: "+ errs.keys.sort.collect {|k| "#{k}=>#{errs[k].is_a?(Array) ? "[#{errs[k].join(',')}]" : errs[k]}"}.join(', ') if !errs.empty?
+          result << CSV.generate_line(row).chop
         end
-        row << "invalid values: "+ errs.keys.sort.collect {|k| "#{k}=>#{errs[k].is_a?(Array) ? "[#{errs[k].join(',')}]" : errs[k]}"}.join(', ') if !errs.empty?
-        result << CSV.generate_line(row).chop
-      end
-      result
-    else
-      raise "#{options[:format].inspect} is an unknown export format"
+        result
+      else
+        raise "#{options[:format].inspect} is an unknown export format"
     end
   end
-  
+
   def self.export_csv_header(field_list,spss_clean_form = false)
-    if spss_clean_form 
+    if spss_clean_form
       fl = []
       fields = Form.make_form(spss_clean_form).fields
       field_list.each do |f|
@@ -1267,11 +1279,11 @@ end
     end
     CSV.generate_line(['form','id','index','created_at','updated_at','workflow_state'].concat(field_list)).chop
   end
- 
+
   def loaded?
     @record_loaded
   end
-  
+
   ######################################################################################
   ######################################################################################
   # CLASS METHODS
@@ -1281,7 +1293,7 @@ end
     forms = FormInstance.find(parm,rest)
     Record.create(forms)
   end
-  
+
   #Record.locate calls Record.gather with a collection of form_instances which are determined by what and locate_options
   #locate_options are used to create a condition string for the call to FormInstance.find
   def Record.locate(what,locate_options = {})
@@ -1289,15 +1301,15 @@ end
     condition_strings = []
     conditions_params = []
     field_list = {}
-   #puts "LOCATE OPTIONS: #{locate_options.inspect}"
-    
+    #puts "LOCATE OPTIONS: #{locate_options.inspect}"
+
     if locate_options.has_key?(:filters)
       gather_options[:filters] = locate_options[:filters]
       filters = arrayify(locate_options[:filters])
       filters.each { |fltr| fltr.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1}}
     end
 
-    if locate_options.has_key?(:fields)  
+    if locate_options.has_key?(:fields)
       locate_options[:fields].each {|x| field_list[x] = 1 }
     end
 
@@ -1306,7 +1318,7 @@ end
       conditions_params << field_list.keys
       gather_options[:field_list] = field_list
     end
-    
+
     if locate_options.has_key?(:index)
       idx = locate_options[:index]
       if idx != :any
@@ -1314,7 +1326,7 @@ end
         conditions_params << idx
       end
     else
-      condition_strings << "(field_instances.idx = 0)"      
+      condition_strings << "(field_instances.idx = 0)"
     end
 
     if locate_options.has_key?(:forms)
@@ -1331,7 +1343,7 @@ end
       conditions_params << locate_options[:workflow_state_filter]
     end
     #puts "condition_strings = #{condition_strings.inspect}"
-#puts "conditions_params = #{conditions_params.inspect}"
+    #puts "conditions_params = #{conditions_params.inspect}"
     if locate_options.has_key?(:conditions)
       c = arrayify(locate_options[:conditions])
       c.each {|x| x =~ /([a-zA-Z0-9_-]+)(.*)/; condition_strings << %Q|if(field_instances.field_id = '#{$1}',if (answer #{$2},true,false),false)|}
@@ -1358,8 +1370,8 @@ end
         conditions = condition_string
       end
       find_opts = {
-        :conditions => conditions, 
-        :include => [:field_instances]
+          :conditions => conditions,
+          :include => [:field_instances]
       }
     end
     #puts "find_opts = #{find_opts.inspect}"
@@ -1375,30 +1387,30 @@ end
     gather_options[:return_answers_hash] = locate_options[:return_answers_hash] if locate_options[:return_answers_hash]
     Record.gather(gather_options)
   end
-  
+
   #Record.gather can return an Answers Hash (or an array of them) or a FormInstance (or an array of them)
   #It can start with a list of FormInstances or call a proc to find the desired FormInstances
   #It can call Record.filter to filter out results based on ruby to call on field values.
   def Record.gather(gather_options)
     #puts "GATHER OPTIONS = #{gather_options.inspect}"
     filter_options = {}
-    field_list = {} 
-    
+    field_list = {}
+
     if gather_options.has_key?(:filters)
       filters = arrayify(gather_options[:filters])
       filter_options[:filters] = filters
     end
-    
-    if gather_options.has_key?(:field_list) 
-        filter_options[:field_list] = gather_options[:field_list]
+
+    if gather_options.has_key?(:field_list)
+      filter_options[:field_list] = gather_options[:field_list]
     else
       filters.each { |fltr| fltr.scan(/:([a-zA-Z0-9_-]+)/) {|z| field_list[z[0]] = 1}} if filters
-      if gather_options.has_key?(:fields) 
+      if gather_options.has_key?(:fields)
         gather_options[:fields].each {|x| field_list[x] = 1 }
       end
       filter_options[:field_list] = field_list
     end
-    
+
     if gather_options.has_key?(:return_answers_hash)
       return_answers_hash = true
       filter_options[:return_answers_hash] = true
@@ -1410,7 +1422,7 @@ end
     if filter_options[:records]  && (filters || return_answers_hash)
       forms = Record.filter(filter_options)
     else
-      forms = filter_options[:records] 
+      forms = filter_options[:records]
     end
     return nil if !forms
     if return_answers_hash
@@ -1422,21 +1434,21 @@ end
     end
     return Record.create(forms)
   end
-  
+
   def Record.filter(filter_options)
     #puts "FILTER OPTIONS = #{filter_options.inspect}"
     return_answers_hash = filter_options.has_key?(:return_answers_hash)
-    
+
     filters = filter_options[:filters]
     filter_eval_string = filters.collect{|x| "(#{x})"}.join('&&') if filters
     filter_expr = eval_field(filter_eval_string) if filters
-    
+
     form_instances = filter_options[:records]
     if !form_instances.respond_to?('each')
       form_instances = [form_instances]
       did_it = true
     end
-    
+
     forms = []
     form_instances.each do |r|
       f = {'form_instance_id' => Answer.new(r.id), '_id' => r.id, 'workflow_state' => Answer.new(r.workflow_state),'created_at' => Answer.new(r.created_at), 'updated_at' => Answer.new(r.updated_at), 'form_id' => Answer.new(r.form.to_s)}
@@ -1469,48 +1481,48 @@ end
     #puts "forms[0]['workflow_state]=#{forms[0]['workflow_state']}"
     forms
   end
-    
+
   def Record.eval_field(expression)
-      #puts "---------"
-      #puts "eval_Field 0:  expression=#{expression}"
-      expr = expression.gsub(/\!:(\S+)/,'!(:\1)')
-      #puts "eval_Field 1:  expr=#{expr}"
-      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|each_with_index|to_i|to_date|zip|map|include|any|other\?|blank\?|last|compact)/,'f["\1"].\2')
-      #puts "eval_field 2:  expr=#{expr}"
-      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\./,'f["\1"].value.')
-      #puts "eval_field 4:  expr=#{expr}"
-      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\[/,'f["\1"][')
-      #puts "eval_field 5:  expr=#{expr}"
-      if /\.zip/.match(expr)
-        expr = expr.gsub(/\.zip\(:([a-zA-Z0-9_-]+)/,'.zip(f["\1"]')
-        expr = expr.gsub(/:([a-zA-Z0-9_-]+)\.zip/,'f["\1"].zip')
-      end
-      expr = expr.gsub(/:([a-zA-Z0-9_-]+)/,'(f["\1"] ? (f["\1"].is_indexed? ? f["\1"].value[0] : f["\1"].value) : nil)')
-      #puts "eval_field 5:  expr=#{expr}"
-      #puts "---------"
-      expr
+    #puts "---------"
+    #puts "eval_Field 0:  expression=#{expression}"
+    expr = expression.gsub(/\!:(\S+)/,'!(:\1)')
+    #puts "eval_Field 1:  expr=#{expr}"
+    expr = expr.gsub(/:([a-zA-Z0-9_-]+)\.(size|exists\?|count|is_indexed\?|each|each_with_index|to_i|to_date|zip|map|include|any|other\?|blank\?|last|compact)/,'f["\1"].\2')
+    #puts "eval_field 2:  expr=#{expr}"
+    expr = expr.gsub(/:([a-zA-Z0-9_-]+)\./,'f["\1"].value.')
+    #puts "eval_field 4:  expr=#{expr}"
+    expr = expr.gsub(/:([a-zA-Z0-9_-]+)\[/,'f["\1"][')
+    #puts "eval_field 5:  expr=#{expr}"
+    if /\.zip/.match(expr)
+      expr = expr.gsub(/\.zip\(:([a-zA-Z0-9_-]+)/,'.zip(f["\1"]')
+      expr = expr.gsub(/:([a-zA-Z0-9_-]+)\.zip/,'f["\1"].zip')
+    end
+    expr = expr.gsub(/:([a-zA-Z0-9_-]+)/,'(f["\1"] ? (f["\1"].is_indexed? ? f["\1"].value[0] : f["\1"].value) : nil)')
+    #puts "eval_field 5:  expr=#{expr}"
+    #puts "---------"
+    expr
   end
-  
+
   def Record.url(record_id,presentation,index=nil)
     url = "/records/#{record_id}"
     url << "/#{presentation}" if presentation != ""
-    url << "/#{index}" if index && index != 0 
+    url << "/#{index}" if index && index != 0
     url
   end
-  
+
   def Record.create_url(form,presentation,current)
     url = "/forms/#{form}/records"
     url << "/#{presentation}" if presentation && presentation != ""
     url << "/#{current}" if current && current != ''
     url
   end
-  
+
   def Record.listing_url(listing,params = nil)
     url = "/records/listings/#{listing}"
     url << ("?" + params.keys.map{|k| "search[#{k}]=#{params[k] ? params[k].gsub('%','%25') : ''}"}.join("&")) if params
     url
   end
-  
+
   def Record.make(the_form,presentation,attribs = {},options ={})
     #puts "RECORD.make attribs = #{attribs.inspect}"
     #TODO there is a circularity problem here.  To set up the form we call it with a presentation
@@ -1524,15 +1536,15 @@ end
     #puts "Record.make fi = #{fi.inspect}"
     fi.form_id = the_form.class.to_s
     fi.workflow = the_form.workflow_for_new_form(presentation)
-#    the_form.setup(presentation,nil)
+    #    the_form.setup(presentation,nil)
     #puts "Record.make fi = #{fi.inspect}"
     #puts "Record.make attribs = #{attribs.inspect}"
     #puts "Record.make options = #{options.inspect}"
-    
-    @record = Record.new(fi,the_form,attribs,presentation,options)    
+
+    @record = Record.new(fi,the_form,attribs,presentation,options)
   end
-  
-  
+
+
   ######################################################################################
   # convienence class method to create a bunch of records from a single or a list of 
   # FormInstances
@@ -1605,8 +1617,8 @@ end
             "\"#{f}\""
           end
         end
-        
-        
+
+
       end
       order_fields = order_fields.join(',')
       select += " order by "+order_fields
@@ -1639,17 +1651,17 @@ end
     end
     r
   end
-  
+
   def Record.sql_fieldname_convert(str)
     str.gsub(/:([a-zA-Z0-9_-]+)/,Metaform.usingPostgres ? '"\1".answer' : '\1.answer')
   end
-  
+
   private
   def Record.arrayify(param)
     return [] if param == nil
     param = [param]  if param.class != Array
     param
   end
-  
+
 end
    
