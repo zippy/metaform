@@ -991,11 +991,6 @@ class Record
     invalid_fields = {}
     @cache.each(:attributes => fields) do |f,value,index|
       @form.set_current_index(index)
-
-      if f=='PPcontact_attempted_completed' || f=='PPcontact_mom_breastfeeding'
-        q=5
-      end
-
       invalid = Invalid.evaluate(@form,@form.fields[f],value)
       if !invalid.empty?
         invalid_fields[f] ||= []
@@ -1629,7 +1624,7 @@ class Record
     if options[:load_after] && r.size > 0
       ids = r.collect {|f| f.id}.join(",")
       fields = options[:load_after].collect {|f| "'#{f.to_s}'"}.join(",")
-      fi = FieldInstance.find(:all,:conditions => "form_instance_id in (#{ids}) and field_id in (#{fields}) and idx=0")
+      fi = FieldInstance.all(:conditions => "form_instance_id in (#{ids}) and field_id in (#{fields}) and idx=0")
       field_list = [:id] + options[:load_after]
       field_list += options[:meta_fields] if options[:meta_fields]
       rec_struct = Struct.new(*field_list)
