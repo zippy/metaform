@@ -146,7 +146,7 @@ EOHTML
         year = value['year'].to_i
         year = year + 2000 if year <= 37
         year = year + 1900 if year > 37 && year < 100
-        date = Time.mktime(year,value['month'].to_i,value['day'].to_i) 
+        date = Time.mktime(year,value['month'].to_i,value['day'].to_i)
       else
         nil
       end
@@ -154,6 +154,7 @@ EOHTML
       nil
     end
   end
+
 end
 
 module MonthYearHelper
@@ -161,7 +162,7 @@ module MonthYearHelper
   def month_year_html(field_instance_id,value,options)
     date = parse_value(value)
     hide_label = options[:params]
-  	label = hide_label ? "" : " (month/year)" 
+  	label = hide_label ? "" : " (month/year)"
     id = build_html_id(field_instance_id)
     fn = 'mark_invalid_month_year'
     js = %Q|onblur="if (#{id}_first_pass) {#{fn}('#{id}')}"|
@@ -179,5 +180,11 @@ EOHTML
     end
     result
   end
-end
 
+  ################################################################################
+  def convert_month_year_html_value(value,params={})
+    value['day']='1'
+    convert_date_html_value(value,params)
+  end
+
+end

@@ -11,7 +11,7 @@ class DateWidget < Widget
     //<![CDATA[
     var record_#{field_instance_id}_first_pass =  #{value.blank? ? 'false' : 'true'};
     //]]>
-    </script> 
+    </script>
     EOHTML
     html + multi_field_wrapper_html(field_instance_id,date_html(field_instance_id,value,options))
   end
@@ -22,7 +22,7 @@ class DateWidget < Widget
   end
 
   ################################################################################
-  def self.javascript_get_value_function (field_instance_id) 
+  def self.javascript_get_value_function (field_instance_id)
     %Q|$DF('#{build_html_id(field_instance_id)}')|
   end
 

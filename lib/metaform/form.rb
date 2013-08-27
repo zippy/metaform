@@ -21,6 +21,8 @@ class Form
   # form_dates is a hash of a form filename and the current file date
   @@form_dates = {}
 
+  @@_definition_file = nil
+
   @@current_form_class = ''
   cattr_accessor :forms_dir,:cache,:configuration, :listings
 
@@ -62,6 +64,8 @@ class Form
   def initialize_form_file_dates
     if @@form_dates == {}
       require 'find'
+# FIXME to run specs use this line instead!
+#      Find.find('spec/dummy/'+Form.forms_dir) do |f|
       Find.find(Form.forms_dir) do |f|
         begin
           m = File.new(f).stat.mtime
@@ -144,7 +148,7 @@ class Form
   # the states parameter is a hash of the form:
   # {'state_name' => 'human readable state name'}
   # or
-  # {'state_name' => {:label => 'human readable state name',:validate => true/false}}  
+  # {'state_name' => {:label => 'human readable state name',:validate => true/false}}
   # if you want the state to allways display validation errors
   #################################################################################
   def workflow(workflow_name,states)
@@ -208,12 +212,12 @@ class Form
   #################################################################################
   # defines conditions
   # The options for a condition definition are:
-  # * :javascript - which is pseudo javascript (field names are preceeded with 
+  # * :javascript - which is pseudo javascript (field names are preceeded with
   #   colons and will re replaced with javascript necessary to get values frome
   #   the field widget at runtime)
   # * :ruby - ruby code that defines the condition.  Normally this code is supplied
   #   not as a Proc in the options but simply as the block
-  # * :overwrite - normally calling c will not overwrite a condition that has 
+  # * :overwrite - normally calling c will not overwrite a condition that has
   #   allready been defined.  use :overwrite to force redefining a condition
   # * :description - a human readable description of what the contition is
   #   this value will be used by Condition#humanize if available instead of the
@@ -268,7 +272,7 @@ class Form
   #################################################################################
   # defines fields
   # The options for a field definition are:
-  # * :type - defaults to 'string' and can be one of: 
+  # * :type - defaults to 'string' and can be one of:
   #   string, integer, float, decimal, boolean, date, datetime, time, text, array, hash
   # * :label - a default label to be used in human interface when displaying
   #   this field
@@ -291,7 +295,7 @@ class Form
   # * :group - a string name of a group the field is a member of
   # * :groups - a list of string names of groups the field is a member of
   # * :calculated - this field is not stored but calculated from other values.
-  # * :indexed - this field defaults to false and should be set to true when the field will be 
+  # * :indexed - this field defaults to false and should be set to true when the field will be
   #   on an indexed presentation.
   #################################################################################
   def f(name,opts = {})
@@ -422,7 +426,7 @@ class Form
   #################################################################################
   #################################################################################
   # Specifies a set of common options for a group of fields.
-  # 
+  #
   # This is most commonly used for specifying that a group of fields share a
   # common constraint a common property or a common type.
   #
@@ -432,10 +436,10 @@ class Form
   #     f 'address'
   #   end
   #
-  # def_fields calls can be nested.  Options which are hashes are merged together.  Options 
+  # def_fields calls can be nested.  Options which are hashes are merged together.  Options
   # which are strings are overridden.
   #
-  # Example-- to define three feilds which both are required the last of which has a 
+  # Example-- to define three feilds which both are required the last of which has a
   # regular expression based constraint:
   #   def_fields :constraints => {'required' => true}
   #     f 'name'
@@ -463,7 +467,7 @@ class Form
   # will all have the 'required' constraint set for that condition, and any
   # fields mentioned in the condition will have the force_nil options set on
   # the condition.
-  # 
+  #
   # This makes it easy to implement setting values which are automatically cleared
   # and required.
   #
@@ -606,8 +610,8 @@ class Form
   #
   # Options:
   # * :legal_states -
-  # * :create_with_workflow - a string that specifies that this is a presentation 
-  #   that can be used to create a new form record, and that it should be done using 
+  # * :create_with_workflow - a string that specifies that this is a presentation
+  #   that can be used to create a new form record, and that it should be done using
   #   the given workflow
   # The block given to this method is the list of questions (and supporting code)
   # that defines the questions to be displayed
@@ -646,19 +650,19 @@ class Form
   # * :css_class a css class to use in the question div html
   # * :followups an array of hashes that specifies the widgets to use
   #   for followup fields defined in the field definition
-  # * :erb an erb block to render how the question should be displayed.  
+  # * :erb an erb block to render how the question should be displayed.
   #   The default rendering is the equivalent of this:
   #    <div id="question_<%=field_name%>"<%=css_class_html%><%=initially_hidden ? ' style="display:none"' : ""%>><%=field_html%></div>
   #   though it is done as a straight interpolated string for speed.
   #   additionally variables available for inserting into the erb block are:
-  #     field_name, field_label, field_element, field_html (which is the label and element joined 
+  #     field_name, field_label, field_element, field_html (which is the label and element joined
   #     rendered together by the widget), and css_class_html which is 'class="question"' by default
   # * :initially_hidden (defaults to false) set to true if you want force the style of this question
   #   to "display:none"
   # * :force_verfiy (defaults to false)
   # * :labeling (defaults to nil, i.e. use labeling established globally)  Allows overriding of the global
   #   labeling options.  Takes the same hash of options that the #labeling method accespts
-  # * :read_only (defaults to not set) 
+  # * :read_only (defaults to not set)
   ###############################################
 
   def q(field_name,opts = {})
@@ -680,7 +684,7 @@ class Form
     question_name ||= (opts.size > 0) ? field_name+opts.inspect.hash.to_s : field_name
     read_only = @force_read_only>0 || options[:read_only]
 
-    # save the field name/question name mapping into the presentation so that we can get it out later 
+    # save the field name/question name mapping into the presentation so that we can get it out later
     # when we are trying to figure out which widget to use to render it a given field
     #    if cur_pres = @current_presentation #@_stuff[:current_presentation]
     #      mapping = cur_pres.question_names[field_name]
@@ -692,8 +696,8 @@ class Form
     #    end
 
     # note: we can't do this only in setup because the question block may have if's that only
-    # get triggered in the build phase by specific values of the question.  So we must 
-    # allways be ready to define a question if it wasn't already defined  
+    # get triggered in the build phase by specific values of the question.  So we must
+    # allways be ready to define a question if it wasn't already defined
     the_q = questions[question_name]
     if widget.is_a?(Proc)
       widget_type = widget
@@ -753,11 +757,11 @@ class Form
           else
             raise MetaformException,"followups must be specified with a String or a Hash"
         end
-        followup_question_options[:flow_through] = options[:flow_through] if options[:flow_through]  #A followup is flow-through if it's parent is.  
+        followup_question_options[:flow_through] = options[:flow_through] if options[:flow_through]  #A followup is flow-through if it's parent is.
         conds = the_q.field.followup_conditions
         cond = conds[followup_field_name]
         opts = {:css_class => 'followup',:condition=>cond}
-        if @force_show_followups  #If we called javascript_show_hide_if, it would do a check on @force_show_followups 
+        if @force_show_followups  #If we called javascript_show_hide_if, it would do a check on @force_show_followups
                                   #and would build all of the q's without hiding any of them, but if we do it here we get this nice css class of followup.
           div(:class=>'followup') do
             q followup_field_name,followup_question_options
@@ -875,7 +879,7 @@ class Form
 
   #################################################################################
   #################################################################################
-  # Question with sub-presentation.  Use this to declare a question which if the 
+  # Question with sub-presentation.  Use this to declare a question which if the
   # given condition is true then display a sub-presentation.  The default condition
   # is <field_name>=N
   # It assumes that the presentation name is the same as the field name unless
@@ -969,7 +973,7 @@ class Form
   # render button that when pressed executes a javascript function
   #
   # Options:
-  # * :css_class 
+  # * :css_class
   #################################################################################
   def function_button(name,opts={})
     return if !@render
@@ -985,7 +989,7 @@ class Form
   end
 
   #################################################################################
-  #This method is used to create all of the html and javscript to control whether a 
+  #This method is used to create all of the html and javscript to control whether a
   #tab is displayed, based on a condition.
   #Options:
   # :tab - name of presentation displayed by this tab
@@ -994,7 +998,7 @@ class Form
   #  the relevant value of this field be at the 0th index.
   # :tabs_name - group the tab is a part of
   # :current_tab - whether or not the page is currently on this tab
-  # :label - label for the tab 
+  # :label - label for the tab
   # :default_anchor_css - if desired tab isn't there, use this tab as an anchor
   # :condition - condition which should be checked to see if tab should be shown.  If this is not present, then
   # the default is :tab followed by '_changer'
@@ -1024,19 +1028,19 @@ class Form
   end
 
   #################################################################################
-  # Add a block of elements that will appear conditionally 
+  # Add a block of elements that will appear conditionally
   # at runtime on the browser depending on other form field values as specified
   # by the options.
   #
   # Options:
-  # * :operator - the javascript operator to use to compare (defaults to '==')  
+  # * :operator - the javascript operator to use to compare (defaults to '==')
   # * :value - the value to compare the field to (defaults to nil)
   # * :wrapper_element - set a custom wrapper element.  Default is 'div'
   # * :wrapper_id - set a custom id for the wrapper element that gets generated.  By default it will
   #   simply auto-generate a unique id for the element.  Note that if you use a custom
   #   id it must be unique or the Javascript won't work.
   # * :show - used to specify whether the condition should show or hide the block (defaults to true i.e. "show")
-  # * :css_class - a class for the generated div (defaults to "hideable_box_with_border")  
+  # * :css_class - a class for the generated div (defaults to "hideable_box_with_border")
   # * :condition - the javascript condition to evaluate.  If nil the condition will be
   #   generated from the :operator and :value options instead.
   # * :jsaction_show - (defaults to nil)
@@ -1046,7 +1050,7 @@ class Form
   #   javascript_show_hide_if('married',:value => 'y') do
   #     q 'children'
   #   end
-  # 
+  #
   #################################################################################
   #Note:  invoke_on_class => <class_name> requires that '<%if hiding_js%>style="display:none" <% end %>' be placed
   #in the html tag for each element of class_name where this hiding behaviour should happen on page load.  By default,
@@ -1066,7 +1070,7 @@ class Form
     }.update(opts)
     # if we are not actually building skip the generation of javascript
     # but yield so that any sub-questions and stuff can be processed.
-    # If we are a force_show_followups situation, then we want to skip 
+    # If we are a force_show_followups situation, then we want to skip
     # processing the show/hide stuff and just render the code.
     if !@render || @force_show_followups
       yield if block_given?
@@ -1118,11 +1122,11 @@ class Form
   #
   # Options: see #javascript_show_hide_if
   #
-  # Example: 
+  # Example:
   #   javascript_show_if('married=y') do
   #     q 'children'
   #   end
-  ###############################################      
+  ###############################################
   def javascript_show_if(condition,opts={},&block)
     options = {
         :css_class=>"hideable_box"
@@ -1166,7 +1170,7 @@ class Form
   end
 
   #################################################################################
-  # Returns a script to present a confirm alert and complete an action if agreed 
+  # Returns a script to present a confirm alert and complete an action if agreed
   #################################################################################
   def javascript_confirm(text)
     save_context(:js) do
@@ -1722,7 +1726,7 @@ function #{fnname}() {
   #    when Condition
   #      cond = c
   #    else
-  #      cond = c(condition.to_s) 
+  #      cond = c(condition.to_s)
   #    end
   #    ConstraintCondition.new(cond,condition_value)
   #  end
@@ -1756,7 +1760,7 @@ function #{fnname}() {
 
   ###########################################################
   # This method determines which field_instance states should
-  # not be counted as invalid.  Override it for more complicated 
+  # not be counted as invalid.  Override it for more complicated
   # behaviors
   def validation_exclude_states
     'explained'

@@ -54,4 +54,3 @@ require 'metaform/record_cache'
 # require 'metaform/form_instance'
 require 'metaform/metaform_helper_methods'
 require 'metaform/dsl_objects'
-

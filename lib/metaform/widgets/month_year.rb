@@ -1,8 +1,9 @@
 require "metaform/widget_date_time_helper"
 ################################################################################
 class MonthYearWidget < Widget
-  class <<self
+  class << self
     include MonthYearHelper
+    include DateHelper
   end
   ################################################################################
   def self.render_form_object(field_instance_id,value,options)
@@ -11,7 +12,7 @@ class MonthYearWidget < Widget
     //<![CDATA[
     var record_#{field_instance_id}_first_pass =  #{value.blank? ? 'false' : 'true'};
     //]]>
-    </script> 
+    </script>
     EOHTML
     html + multi_field_wrapper_html(field_instance_id,month_year_html(field_instance_id,value,options))
   end
@@ -35,7 +36,7 @@ class MonthYearWidget < Widget
   end
 
   ################################################################################
-  def self.javascript_get_value_function (field_instance_id) 
+  def self.javascript_get_value_function (field_instance_id)
     %Q|$DF('#{build_html_id(field_instance_id)}')|
   end
 
@@ -50,12 +51,8 @@ class MonthYearWidget < Widget
 
   ################################################################################
   def self.convert_html_value(value,params={})
-    begin
-      date = Date.new(value['year'].to_i,value['month'].to_i,1)      
-      date.to_s
-    rescue
-      nil
-    end
+    d = convert_month_year_html_value(value,params)
+    d.strftime("%Y-%m-%d") if !d.nil?
   end
 
 end
