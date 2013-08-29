@@ -147,6 +147,7 @@ describe Widget do
     it "should convert bad html values to nil" do
       DateWidget.convert_html_value({'month'=>'xx','day'=>'77','year'=>'2001'}).should == nil
       DateWidget.convert_html_value({'month'=>'','day'=>'','year'=>''}).should == nil
+      DateWidget.convert_html_value({'month'=>'12','day'=>'01','year'=>'dunno'}).should == nil
     end
   end
 
@@ -185,6 +186,8 @@ describe Widget do
       d = {'month'=>'','day'=>'','year'=>'', 'hours'=>'','minutes'=>'','am_pm'=>'am'}
       DateTimeWidget.convert_html_value(d).should == nil
       d = {'month'=>'12','day'=>'01','year'=>'2012', 'hours'=>'','minutes'=>'','am_pm'=>'am'}
+      DateTimeWidget.convert_html_value(d).should == nil
+      d = {'month'=>'12','day'=>'01','year'=>'dunno', 'hours'=>'12','minutes'=>'00','am_pm'=>'am'}
       DateTimeWidget.convert_html_value(d).should == nil
     end
   end
@@ -317,7 +320,8 @@ describe Widget do
       MonthYearWidget.convert_html_value({'year'=>'2012','month'=>'13'}).should == nil
       MonthYearWidget.convert_html_value({'month'=>'xx','year'=>'2001'}).should == nil
       MonthYearWidget.convert_html_value({'month'=>'','year'=>''}).should == nil
-end
+      MonthYearWidget.convert_html_value({'month'=>'12','year'=>'dunno'}).should == nil
+    end
   end
 
   describe CheckBoxWidget do

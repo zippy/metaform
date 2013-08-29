@@ -142,7 +142,7 @@ EOHTML
   ################################################################################
   def convert_date_html_value(value,params={})
     begin
-      if !value['year'].blank? && !value['month'].blank? && !value['day'].blank?
+      if !value['year'].blank? && !value['month'].blank? && !value['day'].blank? && value['year'] =~ /^[0-9]+$/ && value['month'] =~ /^[0-9]+$/ && value['day'] =~ /^[0-9]+$/
         year = value['year'].to_i
         year = year + 2000 if year <= 37
         year = year + 1900 if year > 37 && year < 100
