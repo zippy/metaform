@@ -64,9 +64,15 @@ class Form
   def initialize_form_file_dates
     if @@form_dates == {}
       require 'find'
-# FIXME to run specs use this line instead!
-#      Find.find('spec/dummy/'+Form.forms_dir) do |f|
-      Find.find(Form.forms_dir) do |f|
+
+      #if we're running the metaform specs, we need to find the form in the spec/dummy folder.
+      if Dir.exists?('spec/dummy/forms')
+        path = 'spec/dummy/'
+      else
+        path = ''
+      end
+
+      Find.find(path+Form.forms_dir) do |f|
         begin
           m = File.new(f).stat.mtime
           @@form_dates[f] = m
