@@ -5,4 +5,4 @@ gemspec
 
   gem 'rspec-rails'
   gem 'sqlite3-ruby'
-  gem 'debugger'
+  gem 'debugger', :platforms => :ruby
