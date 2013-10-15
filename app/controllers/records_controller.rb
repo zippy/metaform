@@ -118,15 +118,18 @@ class RecordsController < ApplicationController
             attrs = []
             zap_fields = params[:multi_index_fields].split(/,/)
             attribs = {0=>{}}
-            params[:record].each do |k,v|
-              if k =~ /_([0-9]+)_(.*)/
-                idx = $1.to_i
-                fn = $2
-  #              zap_fields << fn
-                attrs[idx] ||= {}
-                attrs[idx][fn] = v
-              else
-                attribs[0][k] = v
+
+            if params[:record]
+              params[:record].each do |k,v|
+                if k =~ /_([0-9]+)_(.*)/
+                  idx = $1.to_i
+                  fn = $2
+    #              zap_fields << fn
+                  attrs[idx] ||= {}
+                  attrs[idx][fn] = v
+                else
+                  attribs[0][k] = v
+                end
               end
             end
 
