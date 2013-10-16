@@ -273,6 +273,25 @@ class Form
     end
   end
 
+  # Used to dump a list of fields defined in each file.  Requires that the hash of arrays $export_fields is defined.
+  # example: In DataFormform.rb, before all the include_definitions, simply define an empty hash:
+  #  $export_fields = {}
+  # After all the fields have been defined (usually at the end of DataFormform.rb, call:
+  # dump_export_definitions
+  def dump_export_definitions
+    if defined? $export_fields
+      $export_fields.each do |file, fields_in_file|
+        output = file + " = %w("
+        fields_in_file.each do |field_name|
+          output << field_name + " "
+        end
+        output << ")"
+        puts(output)
+      end
+    else
+      puts "$export_fields not defined.  Please add '$export_fields = []' to DataFromform.rb or similar file."
+    end
+  end
 
   #################################################################################
   #################################################################################
@@ -309,6 +328,21 @@ class Form
         :type => 'string',
     }.update(opts)
     raise "Duplicate field name: '#{name}'" if fields.has_key?(name)
+
+    # Used to dump a list of fields defined in each file.  Requires that the hash of arrays $export_fields is defined.
+    # example: In DataFormform.rb, before all the include_definitions, simply define an empty hash:
+    #  $export_fields = {}
+    # After all the fields have been defined (usually at the end of DataFormform.rb, call:
+    # dump_export_definitions
+    if defined? $export_fields
+      # create an empty array for this file key if it doesn't already exist.
+      if $export_fields[$file].nil?
+        $export_fields[$file] = []
+      end
+
+      # add the current field to the array of fields for this particular file.
+      $export_fields[$file] << name
+    end
 
 # xx = "#{name}•#{options[:label]}•#{$file}•#{options[:type]}"  #UNCOMMENT FOR MANUAL FORM DUMP
 
@@ -1700,6 +1734,7 @@ function #{fnname}() {
   #################################################################################
   # helper function to allow separating the DSL commands into multiple files
   def include_definitions(file)
+    $file = file            # always do this, as it supports dumping the export field list.
     # used when dumping field definitions to locate the file where the field is defined.
     @@_definition_file = file
     # Only add the file if it doesn't exist.  Prevents multiple entries when form is re-instantiated.
