@@ -273,26 +273,6 @@ class Form
     end
   end
 
-  # Used to dump a list of fields defined in each file.  Requires that the hash of arrays $export_fields is defined.
-  # example: In DataFormform.rb, before all the include_definitions, simply define an empty hash:
-  #  $export_fields = {}
-  # After all the fields have been defined (usually at the end of DataFormform.rb, call:
-  # dump_export_definitions
-  def dump_export_definitions
-    if defined? $export_fields
-      $export_fields.each do |file, fields_in_file|
-        output = file + " = %w("
-        fields_in_file.each do |field_name|
-          output << field_name + " "
-        end
-        output << ")"
-        puts(output)
-      end
-    else
-      puts "$export_fields not defined.  Please add '$export_fields = []' to DataFromform.rb or similar file."
-    end
-  end
-
   #################################################################################
   #################################################################################
   # defines fields
@@ -336,10 +316,7 @@ class Form
     # dump_export_definitions
     if defined? $export_fields
       # create an empty array for this file key if it doesn't already exist.
-      if $export_fields[$file].nil?
-        $export_fields[$file] = []
-      end
-
+      $export_fields[$file] ||= []
       # add the current field to the array of fields for this particular file.
       $export_fields[$file] << name
     end
