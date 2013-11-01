@@ -8,6 +8,13 @@ module Constraints
     'numeric' => 'Answer must be numeric',
     'range' => {:numeric => 'Answer must be numeric', :range=> "Answer must be between ?{low} and ?{hi}?{extra}"},
     'date' => {:in_past=>"Date cannot be in the future",:in_future=>"Date cannot be in the past"},
+    'date_range' => {
+      :date_gte=>"Date must be on or after ?{date}",
+      :date_gt=>"Date must be after ?{date}",
+      :date_lte=>"Date must be on or before ?{date}",
+      :date_lt=>"Date must be before ?{date}",
+      :date_between=>"Date must be between ?{start_date} and ?{end_date}"
+    },
     'integer' => {:integer=>"Answer must be an integer",:positive=>"Answer must be a positive integer"},
     'unique' => 'Answer must be unique',
     'required' => RequiredErrMessage+'?{extra}',
@@ -19,12 +26,12 @@ module Constraints
     '_required_multi' => RequiredMultiErrMessage
   }
   $metaform_error_messages = DefaultErrorMessages.clone
-  
-  class << self 
+
+  class << self
     include Utilities
   end
   def Constraints.fill_error(message,values=nil)
-    
+
     case message
     when Hash
       case values
@@ -52,7 +59,7 @@ module Constraints
     return constraint_errors if !constraints
     constraints.each do |type, constraint|
       next if type =~ /^err_/
-      
+
 #      # if this constraint is conditional, then evaluate the constraint condition
 #      # before attempting to apply the constraint!
 #      if constraint.instance_of?(ConstraintCondition)
@@ -63,7 +70,7 @@ module Constraints
 #        condition_extra_err = ""
 #      end
       condition_extra_err = ''
-      
+
       err_message_template = constraints["err_#{type}"]
       err_message_template ||= $metaform_error_messages[type]
       case type
@@ -123,7 +130,33 @@ module Constraints
             end
           end
         end
-      when "unique"
+      when "date_range"
+        if !value.blank?
+          date = parse_date(value)
+          if constraint =~ /^([><]=*)(.*)/
+            op = $1
+            c = parse_date($2)
+            if op == ">=" && !(date >= c)
+              constraint_errors << fill_error(err_message_template,:date_gte => {'date' => c.strftime("%m/%d/%Y")})
+            end
+            if op == ">" && !(date > c)
+              constraint_errors << fill_error(err_message_template,:date_gt => {'date' => c.strftime("%m/%d/%Y")})
+            end
+            if op == "<=" && !(date <= c)
+              constraint_errors << fill_error(err_message_template,:date_lte => {'date' => c.strftime("%m/%d/%Y")})
+            end
+            if op == "<" && !(date < c)
+              constraint_errors << fill_error(err_message_template,:date_lt => {'date' => c.strftime("%m/%d/%Y")})
+            end
+          elsif constraint =~ /^(.*):(.*)/
+            sd = parse_date($1)
+            ed = parse_date($2)
+            if !(date >= sd && date <=ed)
+              constraint_errors << fill_error(err_message_template,:date_between => {'start_date' => sd.strftime("%m/%d/%Y"),'end_date' => ed.strftime("%m/%d/%Y")  })
+            end
+          end
+        end
+        when "unique"
         current_record_id = form.get_record.id
         records = Record.locate(:all,{:filters => [":#{constraint} == '#{value}'"],:index => :any,:fields => ['constraint']})
         constraint_errors << fill_error(err_message_template) if records.size > 0 && !records.find{|r| r.id == current_record_id}
@@ -157,7 +190,7 @@ module Constraints
               msg ||= $metaform_error_messages['_required_multi']
             end
             msg ||= fill_error(err_message_template,{'extra'=>condition_extra_err})
-            
+
 #            msg ||= Form.configuration[:required_error_message] ? Form.configuration[:required_error_message] : RequiredErrMessage
             constraint_errors << msg
           end
@@ -202,19 +235,19 @@ module Constraints
     end
     constraint_errors.flatten
   end
-  
+
   def Constraints.load_set_value(value)
     if value.blank?
       [nil]
     elsif value.is_a?(String)
       if value =~ /^---/
         YAML.load(value).keys
-      else 
+      else
         value.split(',')
       end
     elsif value.is_a?(Hash)
       value.keys
     end
   end
-  
+
 end

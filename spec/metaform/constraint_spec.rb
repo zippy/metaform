@@ -45,7 +45,7 @@ describe Constraints do
       Constraints.verify({'integer' => 'positive'}, '10xx0', @form).should == ["Answer must be an integer"]
     end
   end
-  
+
   describe 'numeric' do
     it "should trigger if value isn't a number" do
       Constraints.verify({'numeric' => true}, 'x', @form).should == ["Answer must be numeric"]
@@ -124,6 +124,16 @@ describe Constraints do
     end
     it ":in_future should trigger when date is today" do
       Constraints.verify({'date' => :in_future}, (@today).to_s, @form).should == ["Date cannot be in the past"]
+    end
+    it "should check date ranges" do
+      Constraints.verify({'date_range' => ">=1950-01-01"}, "1900-02-01", @form).should == ["Date must be on or after 01/01/1950"]
+      Constraints.verify({'date_range' => ">1950-01-01"}, "1900-02-01", @form).should == ["Date must be after 01/01/1950"]
+      Constraints.verify({'date_range' => ">1950-01-01"}, "1960-02-01", @form).should == []
+      Constraints.verify({'date_range' => "<=1950-01-01"}, "1970-02-01", @form).should == ["Date must be on or before 01/01/1950"]
+      Constraints.verify({'date_range' => "<1950-01-01"}, "1975-02-01", @form).should == ["Date must be before 01/01/1950"]
+      Constraints.verify({'date_range' => "<1950-01-01"}, "1920-02-01", @form).should == []
+      Constraints.verify({'date_range' => "1950-02-01:2001-02-01"}, "1920-01-01", @form).should == ["Date must be between 02/01/1950 and 02/01/2001"]
+      Constraints.verify({'date_range' => "1950-02-01:2000-02-01"}, "1999-01-01", @form).should == []
     end
   end
 
@@ -222,9 +232,9 @@ describe Constraints do
     it "should join conditions in an array with 'and'" do
       @record = Record.make(@form,'new_entry',{:name =>'Bob'})
       @form.with_record(@record) do
-        Constraints.verify({'required' =>["name=Bob","name=Sue"]}, '', @form).should == [] 
-        Constraints.verify({'required' =>["name=Bob","name=~B"]}, '', @form).should == ["#{Constraints::RequiredErrMessage} when Name is Bob and Name matches regex B"] 
-      end   
+        Constraints.verify({'required' =>["name=Bob","name=Sue"]}, '', @form).should == []
+        Constraints.verify({'required' =>["name=Bob","name=~B"]}, '', @form).should == ["#{Constraints::RequiredErrMessage} when Name is Bob and Name matches regex B"]
+      end
     end
   end
   describe 'required conditional' do
