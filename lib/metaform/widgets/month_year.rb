@@ -1,19 +1,20 @@
+require "metaform/widget_date_time_helper"
 ################################################################################
 class MonthYearWidget < Widget
+  class << self
+    include MonthYearHelper
+    include DateHelper
+  end
   ################################################################################
   def self.render_form_object(field_instance_id,value,options)
-    date = parse_value(value)
-    if date
-      <<-EOHTML
-<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'month')}" id="#{build_html_multi_id(field_instance_id,'month')}" value="#{date.month}" /> /
-<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'year')}" id="#{build_html_multi_id(field_instance_id,'year')}" value="#{date.year}" /> (month/year)
-EOHTML
-    else
-      <<-EOHTML
-<input type="text" size=2 class="textfield_2" name="#{build_html_multi_name(field_instance_id,'month')}" id="#{build_html_multi_id(field_instance_id,'month')}"/> /
-<input type="text" size=4 class="textfield_4" name="#{build_html_multi_name(field_instance_id,'year')}" id="#{build_html_multi_id(field_instance_id,'year')}"  /> (month/year)
-EOHTML
-    end
+    html = <<-EOHTML
+    <script type="text/javascript">
+    //<![CDATA[
+    var record_#{field_instance_id}_first_pass =  #{value.blank? ? 'false' : 'true'};
+    //]]>
+    </script>
+    EOHTML
+    html + multi_field_wrapper_html(field_instance_id,month_year_html(field_instance_id,value,options))
   end
 
   ################################################################################
@@ -35,7 +36,7 @@ EOHTML
   end
 
   ################################################################################
-  def self.javascript_get_value_function (field_instance_id) 
+  def self.javascript_get_value_function (field_instance_id)
     %Q|$DF('#{build_html_id(field_instance_id)}')|
   end
 
@@ -50,12 +51,8 @@ EOHTML
 
   ################################################################################
   def self.convert_html_value(value,params={})
-    begin
-      date = Date.new(value['year'].to_i,value['month'].to_i,1)      
-      date.to_s
-    rescue
-      nil
-    end
+    d = convert_month_year_html_value(value,params)
+    d.strftime("%Y-%m-%d") if !d.nil?
   end
 
 end

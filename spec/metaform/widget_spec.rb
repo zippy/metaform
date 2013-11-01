@@ -1,9 +1,9 @@
 require File.dirname(__FILE__) + '/../spec_helper'
 
-describe Widget do  
+describe Widget do
   describe 'default methods for all widgets' do
     it "should include a default #render_form_object_read_only" do
-      Widget.render_form_object_read_only(1,'value',{}).should == 
+      Widget.render_form_object_read_only(1,'value',{}).should ==
         "<span id=\"record_1\">value</span>"
     end
     it "should include #humanize_value" do
@@ -30,41 +30,41 @@ describe Widget do
       Widget.humanize_value(nil,:constraints => {'set' => [	[ "-" , nil ],[ "US" , "US" ],	[ "Canada" , "CAN" ]]}).should == nil
     end
   end
-  
+
   describe TextFieldWidget do
     it "should render an html input text with a label" do
-      TextFieldWidget.render_form_object(1,'value',{}).should == 
+      TextFieldWidget.render_form_object(1,'value',{}).should ==
         "<input id=\"record_1\" name=\"record[1]\" type=\"text\" value=\"value\" />"
     end
     it "should render an html input text with a size parameter" do
-      TextFieldWidget.render_form_object(1,'value',{:params=>'3'}).should == 
+      TextFieldWidget.render_form_object(1,'value',{:params=>'3'}).should ==
         "<input class=\"textfield_3\" id=\"record_1\" name=\"record[1]\" size=\"3\" type=\"text\" value=\"value\" />"
     end
     it "should render an html input text with a size and max parameter" do
-      TextFieldWidget.render_form_object(1,'value',{:params=>'3,2'}).should == 
+      TextFieldWidget.render_form_object(1,'value',{:params=>'3,2'}).should ==
         "<input class=\"textfield_3\" id=\"record_1\" maxlength=\"2\" name=\"record[1]\" size=\"3\" type=\"text\" value=\"value\" />"
     end
     it "should render value as text with a read_only parameter" do
-      TextFieldWidget.render_form_object_read_only(1,'value',{}).should == 
+      TextFieldWidget.render_form_object_read_only(1,'value',{}).should ==
         "<span id=\"record_1\">value</span>"
     end
   end
 
   describe TextFieldIntegerWidget do
     it "should render an html input text with a label" do
-      TextFieldIntegerWidget.render_form_object(1,'100',{}).should == 
+      TextFieldIntegerWidget.render_form_object(1,'100',{}).should ==
       "    <span id=\"record_1_wrapper\"><input id=\"record_1\" name=\"record[1]\" onchange=\"mark_invalid_integer('record_1')\" onkeyup=\"mark_invalid_integer('record_1')\" type=\"text\" value=\"100\" /></span>\n"
     end
     it "should render an html input text with a size parameter" do
-      TextFieldIntegerWidget.render_form_object(1,'100',{:params=>'3'}).should == 
+      TextFieldIntegerWidget.render_form_object(1,'100',{:params=>'3'}).should ==
       "    <span id=\"record_1_wrapper\"><input class=\"textfield_3\" id=\"record_1\" name=\"record[1]\" onchange=\"mark_invalid_integer('record_1')\" onkeyup=\"mark_invalid_integer('record_1')\" size=\"3\" type=\"text\" value=\"100\" /></span>\n"
     end
     it "should render an html input text with a size and max parameter" do
-      TextFieldIntegerWidget.render_form_object(1,'100',{:params=>'3,2'}).should == 
+      TextFieldIntegerWidget.render_form_object(1,'100',{:params=>'3,2'}).should ==
       "    <span id=\"record_1_wrapper\"><input class=\"textfield_3\" id=\"record_1\" maxlength=\"2\" name=\"record[1]\" onchange=\"mark_invalid_integer('record_1')\" onkeyup=\"mark_invalid_integer('record_1')\" size=\"3\" type=\"text\" value=\"100\" /></span>\n"
     end
     it "should render value as text with a read_only parameter" do
-      TextFieldIntegerWidget.render_form_object_read_only(1,'100',{}).should == 
+      TextFieldIntegerWidget.render_form_object_read_only(1,'100',{}).should ==
         "<span id=\"record_1\">100</span>"
     end
     it "should convert html values to a number" do
@@ -84,19 +84,19 @@ describe Widget do
 
   describe TextFieldFloatWidget do
     it "should render an html input text with a label" do
-      TextFieldFloatWidget.render_form_object(1,'100',{}).should == 
+      TextFieldFloatWidget.render_form_object(1,'100',{}).should ==
       "    <span id=\"record_1_wrapper\"><input id=\"record_1\" name=\"record[1]\" onchange=\"mark_invalid_float('record_1')\" onkeyup=\"mark_invalid_float('record_1')\" type=\"text\" value=\"100\" /></span>\n"
     end
     it "should render an html input text with a size parameter" do
-      TextFieldFloatWidget.render_form_object(1,'100',{:params=>'3'}).should == 
+      TextFieldFloatWidget.render_form_object(1,'100',{:params=>'3'}).should ==
       "    <span id=\"record_1_wrapper\"><input class=\"textfield_3\" id=\"record_1\" name=\"record[1]\" onchange=\"mark_invalid_float('record_1')\" onkeyup=\"mark_invalid_float('record_1')\" size=\"3\" type=\"text\" value=\"100\" /></span>\n"
     end
     it "should render an html input text with a size and max parameter" do
-      TextFieldFloatWidget.render_form_object(1,'100',{:params=>'3,2'}).should == 
+      TextFieldFloatWidget.render_form_object(1,'100',{:params=>'3,2'}).should ==
       "    <span id=\"record_1_wrapper\"><input class=\"textfield_3\" id=\"record_1\" maxlength=\"2\" name=\"record[1]\" onchange=\"mark_invalid_float('record_1')\" onkeyup=\"mark_invalid_float('record_1')\" size=\"3\" type=\"text\" value=\"100\" /></span>\n"
     end
     it "should render value as text with a read_only parameter" do
-      TextFieldFloatWidget.render_form_object_read_only(1,'100',{}).should == 
+      TextFieldFloatWidget.render_form_object_read_only(1,'100',{}).should ==
         "<span id=\"record_1\">100</span>"
     end
     it "should convert html values to a number" do
@@ -115,30 +115,30 @@ describe Widget do
       TextFieldFloatWidget.convert_html_value("0x").should == nil
       TextFieldFloatWidget.convert_html_value("0x0").should == nil
     end
-    
+
   end
   describe TextAreaWidget do
     it "should render an html text area with a label" do
-      TextAreaWidget.render_form_object(1,'value',{}).should == 
+      TextAreaWidget.render_form_object(1,'value',{}).should ==
         "<textarea id=\"record_1\" name=\"record[1]\">\nvalue</textarea>"
     end
     it "should render an html input text with rows & columns parameters" do
-      TextAreaWidget.render_form_object(1,'value',{:params=>'10,20'}).should == 
+      TextAreaWidget.render_form_object(1,'value',{:params=>'10,20'}).should ==
         "<textarea cols=\"20\" id=\"record_1\" name=\"record[1]\" rows=\"10\">\nvalue</textarea>"
     end
     it "should render value as text with a read_only parameter" do
-      TextAreaWidget.render_form_object_read_only(1,'value',{}).should == 
+      TextAreaWidget.render_form_object_read_only(1,'value',{}).should ==
         "<span id=\"record_1\">value</span>"
     end
   end
 
   describe DateWidget do
     it "should render three html input texts and the instructions" do
-      DateWidget.render_form_object(1,"2004-10-23",{}).should == 
+      DateWidget.render_form_object(1,"2004-10-23",{}).should ==
       "    <script type=\"text/javascript\">\n    //<![CDATA[\n    var record_1_first_pass =  true;\n    //]]>\n    </script> \n    <span id=\"record_1_wrapper\"><input onblur=\"if (record_1_first_pass) {mark_invalid_date('record_1')}\" type=\"text\"  size=2 class=\"textfield_2\" name=\"record[1][month]\" id=\"record_1_month\" value=\"10\" maxlength=\"2\"/> /\n<input onblur=\"if (record_1_first_pass) {mark_invalid_date('record_1')}\" type=\"text\"  size=2 class=\"textfield_2\" name=\"record[1][day]\" id=\"record_1_day\" value=\"23\" maxlength=\"2\"/> /\n<input onblur=\"mark_invalid_date('record_1');record_1_first_pass = true;\" type=\"text\" size=4 class=\"textfield_4\" name=\"record[1][year]\" id=\"record_1_year\" value=\"2004\" maxlength=\"4\"/> <span class=\"instructions\">(MM/DD/YYYY)</span>\n</span>\n"
     end
     it "should render date value as text with a read_only parameter" do
-      DateWidget.render_form_object_read_only(1,"2004-10-23",{}).should == 
+      DateWidget.render_form_object_read_only(1,"2004-10-23",{}).should ==
         "<span id=\"record_1\">10/23/2004</span>"
     end
     it "should convert html values to an SQL style string date" do
@@ -147,20 +147,21 @@ describe Widget do
     it "should convert bad html values to nil" do
       DateWidget.convert_html_value({'month'=>'xx','day'=>'77','year'=>'2001'}).should == nil
       DateWidget.convert_html_value({'month'=>'','day'=>'','year'=>''}).should == nil
+      DateWidget.convert_html_value({'month'=>'12','day'=>'01','year'=>'dunno'}).should == nil
     end
   end
-  
+
   describe TimeWidget do
     it "should render two html input texts plus a select for am/pm" do
-      TimeWidget.render_form_object(1,"3:22",{}).should == 
+      TimeWidget.render_form_object(1,"3:22",{}).should ==
         "     <script type=\"text/javascript\">\n     //<![CDATA[\n     var record_1_first_pass = true;\n     //]]>\n     </script> \n    <span id=\"record_1_wrapper\">      <input onblur=\"if (record_1_first_pass) {mark_invalid_time('record_1')}\" type=\"text\" size=2 class=\"textfield_2\" name=\"record[1][hours]\" id=\"record_1_hours\" value=\"3\" maxlength=\"2\"/>:\n      <input onblur=\"mark_invalid_time('record_1');record_1_first_pass = true;\" type=\"text\" class=\"left_margin_neg_5 textfield_2\" size=2 name=\"record[1][minutes]\" id=\"record_1_minutes\" value=\"22\" maxlength=\"2\"/>\n      <select onblur=\"if (record_1_first_pass) {mark_invalid_time('record_1')}\" name=\"record[1][am_pm]\" id=\"record_1_am_pm\">\n      \t<option value=\"am\" selected=\"selected\">AM</option>\n<option value=\"pm\">PM</option>\n\t  </select>\n</span>\n"
     end
     it "should render time value as text with a read_only parameter" do
-      TimeWidget.render_form_object_read_only(1,"3:22",{}).should == 
+      TimeWidget.render_form_object_read_only(1,"3:22",{}).should ==
         "<span id=\"record_1\">3:22 am</span>"
     end
     it "should render low min time values with a preceeding 0 text if read_only" do
-      TimeWidget.render_form_object_read_only(1,"13:02",{}).should == 
+      TimeWidget.render_form_object_read_only(1,"13:02",{}).should ==
         "<span id=\"record_1\">1:02 pm</span>"
     end
     it "should convert html values to a 24 hour string date" do
@@ -175,7 +176,7 @@ describe Widget do
       TimeWidget.convert_html_value({'hours'=>'','minutes'=>'','am_pm'=>''}).should == nil
     end
   end
-  
+
   describe DateTimeWidget do
     it "should convert html values to a date-time string" do
       d = {'month'=>'12','day'=>'01','year'=>'2001', 'hours'=>'12','minutes'=>'00','am_pm'=>'am'}
@@ -185,6 +186,8 @@ describe Widget do
       d = {'month'=>'','day'=>'','year'=>'', 'hours'=>'','minutes'=>'','am_pm'=>'am'}
       DateTimeWidget.convert_html_value(d).should == nil
       d = {'month'=>'12','day'=>'01','year'=>'2012', 'hours'=>'','minutes'=>'','am_pm'=>'am'}
+      DateTimeWidget.convert_html_value(d).should == nil
+      d = {'month'=>'12','day'=>'01','year'=>'dunno', 'hours'=>'12','minutes'=>'00','am_pm'=>'am'}
       DateTimeWidget.convert_html_value(d).should == nil
     end
   end
@@ -200,15 +203,15 @@ describe Widget do
       d = {'month'=>'12','day'=>'01','year'=>'2012', 'hours'=>'','minutes'=>'','am_pm'=>'am'}
       DateTimeOptionalWidget.convert_html_value(d).should == '2012-12-01'
     end
-  end  
+  end
 
   describe TimeIntervalWidget do
     it "should render two html input texts plus a select for am/pm" do
-      TimeIntervalWidget.render_form_object(1,"500",{}).should == 
+      TimeIntervalWidget.render_form_object(1,"500",{}).should ==
         "      <input type=\"text\" size=2 class=\"textfield_2\" name=\"record[1][hours]\" id=\"record_1_hours\" value=\"8\" /> hours\n      <input type=\"text\" size=2 class=\"textfield_2\" name=\"record[1][minutes]\" id=\"record_1_minutes\" value=\"20\" /> minutes\n"
     end
     it "should render interval value as text if read_only" do
-      TimeIntervalWidget.render_form_object_read_only(1,"500",{}).should == 
+      TimeIntervalWidget.render_form_object_read_only(1,"500",{}).should ==
         "<span id=\"record_1\">8 hours, 20 minutes</span>"
     end
     it "should convert html values to minutes" do
@@ -230,11 +233,11 @@ describe Widget do
   end
   describe TimeIntervalWithDaysWidget do
     it "should render three html input texts" do
-      TimeIntervalWithDaysWidget.render_form_object(1,"500",{}).should == 
+      TimeIntervalWithDaysWidget.render_form_object(1,"500",{}).should ==
       "      <input type=\"text\" size=2 class=\"textfield_2\" name=\"record[1][days]\" id=\"record_1_days\" value=\"0\" /> days\n      <input type=\"text\" size=2 class=\"textfield_2\" name=\"record[1][hours]\" id=\"record_1_hours\" value=\"8\" /> hours\n      <input type=\"text\" size=2 class=\"textfield_2\" name=\"record[1][minutes]\" id=\"record_1_minutes\" value=\"20\" /> minutes\n"
     end
     it "should render interval value as text if read_only" do
-      TimeIntervalWithDaysWidget.render_form_object_read_only(1,"500",{}).should == 
+      TimeIntervalWithDaysWidget.render_form_object_read_only(1,"500",{}).should ==
         "<span id=\"record_1\">0 days, 8 hours, 20 minutes</span>"
     end
     it "should convert html values to minutes" do
@@ -261,14 +264,14 @@ describe Widget do
       TimeIntervalWithDaysWidget.convert_html_value({'days'=>'x','hours'=>'1','minutes'=>'1'}).should == nil
     end
   end
-  
+
   describe FactorTextFieldsWidget do
     it "should render two html input texts and lables from params" do
-      FactorTextFieldsWidget.render_form_object(1,"500",{:params=>"5,FirstLabel,SecondLabel"}).should == 
+      FactorTextFieldsWidget.render_form_object(1,"500",{:params=>"5,FirstLabel,SecondLabel"}).should ==
         "<input type=\"text\" size=2 name=\"record[1][first_box]\" id=\"record_1_first_box\" value=\"100\" /> FirstLabel\n<input type=\"text\" size=2 name=\"record[1][second_box]\" id=\"record_1_second_box\" value=\"0\" /> SecondLabel\n<input type=\"hidden\" name=\"record[1][factor]\"  id=\"record_1_factor\"/ value=\"5\">"
     end
     it "should render factor value as text if read_only" do
-      FactorTextFieldsWidget.render_form_object_read_only(1,"500",{:params=>"5,FirstLabel,SecondLabel"}).should == 
+      FactorTextFieldsWidget.render_form_object_read_only(1,"500",{:params=>"5,FirstLabel,SecondLabel"}).should ==
         "<span id=\"record_1\">100 FirstLabel 0 SecondLabel</span>"
     end
     it "should convert html values based on the factor" do
@@ -301,22 +304,33 @@ describe Widget do
 
   describe MonthYearWidget do
     it "should render two html input texts" do
-      MonthYearWidget.render_form_object(1,"2004-10-23",{}).should == 
-        "<input type=\"text\" size=2 class=\"textfield_2\" name=\"record[1][month]\" id=\"record_1_month\" value=\"10\" /> /\n<input type=\"text\" size=4 class=\"textfield_4\" name=\"record[1][year]\" id=\"record_1_year\" value=\"2004\" /> (month/year)\n"
+      MonthYearWidget.render_form_object(1,"2004-10-23",{}).should ==
+        "    <script type=\"text/javascript\">\n    //<![CDATA[\n    var record_1_first_pass =  true;\n    //]]>\n    </script>\n    <span id=\"record_1_wrapper\"><input onblur=\"if (record_1_first_pass) {mark_invalid_month_year('record_1')}\" type=\"text\" size=2 class=\"textfield_2\" name=\"record[1][month]\" id=\"record_1_month\" value=\"10\" /> /\n<input onblur=\"mark_invalid_month_year('record_1');record_1_first_pass = true;\" type=\"text\" size=4 class=\"textfield_4\" name=\"record[1][year]\" id=\"record_1_year\" value=\"2004\" /> (month/year)\n</span>\n"
     end
     it "should render date value as text with a read_only parameter" do
-      MonthYearWidget.render_form_object_read_only(1,"2004-10-23",{}).should == 
+      MonthYearWidget.render_form_object_read_only(1,"2004-10-23",{}).should ==
         "<span id=\"record_1\">10/2004</span>"
+    end
+    it "should convert month year html values" do
+      MonthYearWidget.convert_html_value({'year'=>'2012','month'=>'12'}).should == "2012-12-01"
+      MonthYearWidget.convert_html_value({'year'=>'1','month'=>'12'}).should == "2001-12-01"
+    end
+    it "should convert bad month year html values to nil" do
+      MonthYearWidget.convert_html_value({'year'=>'2012','month'=>'0'}).should == nil
+      MonthYearWidget.convert_html_value({'year'=>'2012','month'=>'13'}).should == nil
+      MonthYearWidget.convert_html_value({'month'=>'xx','year'=>'2001'}).should == nil
+      MonthYearWidget.convert_html_value({'month'=>'','year'=>''}).should == nil
+      MonthYearWidget.convert_html_value({'month'=>'12','year'=>'dunno'}).should == nil
     end
   end
 
   describe CheckBoxWidget do
     it "should render an html checkbox " do
-      CheckBoxWidget.render_form_object(1,"Y",{}).should == 
-        ["<input name=\"record[1][Y]\" id=\"record_1_y\" type=\"checkbox\" checked>", "\n", "<input name=\"record[1][__none__]\" id=\"record_1___none__\" class=\"1\" type=\"hidden\">"]
+      CheckBoxWidget.render_form_object(1,"Y",{}).should ==
+        "<input name=\"record[1][Y]\" id=\"record_1_y\" type=\"checkbox\" checked>\n<input name=\"record[1][__none__]\" id=\"record_1___none__\" class=\"1\" type=\"hidden\">"
     end
     it "should render 'Y' checked and read_only" do
-      CheckBoxWidget.render_form_object_read_only(1,"Y",{}).should == 
+      CheckBoxWidget.render_form_object_read_only(1,"Y",{}).should ==
         "<span id=\"record_1\">Y</span>"
     end
   end
@@ -325,33 +339,33 @@ describe Widget do
     before(:each) do
       @options = {:constraints => {'set'=>[{'val1'=>'Value 1'},{'val2'=>'Value 2'},{'val3<x'=>'Value 3'}]}}
     end
-     
+
     it "should render html checkboxes with a custom label" do
-      CheckBoxGroupWidget.render(1,"val1",'the label',@options).should == 
+      CheckBoxGroupWidget.render(1,"val1",'the label',@options).should ==
         "<span class=\"label\">the label</span><input name=\"record[1][val1]\" id=\"record_1_val1\" class=\"1\" type=\"checkbox\" value=\"val1\" checked onClick=\"\"> <label for=\"record_1_val1\">Value 1</label>\n<input name=\"record[1][val2]\" id=\"record_1_val2\" class=\"1\" type=\"checkbox\" value=\"val2\" onClick=\"\"> <label for=\"record_1_val2\">Value 2</label>\n<input name=\"record[1][val3<x]\" id=\"record_1_val360x\" class=\"1\" type=\"checkbox\" value=\"val3<x\" onClick=\"\"> <label for=\"record_1_val360x\">Value 3</label><input name=\"record[1][__none__]\" id=\"record_1___none__\" type=\"hidden\">"
     end
     it "should render the list of human enumerations values if read_only" do
-      CheckBoxGroupWidget.render_form_object_read_only(1,"val1,val3<x",@options).should == 
+      CheckBoxGroupWidget.render_form_object_read_only(1,"val1,val3<x",@options).should ==
         "<span id=\"record_1\">Value 1, Value 3</span>"
     end
     it "should render the list of human enumerations values if read_only and one field is a *-indicated none field" do
       @options = {:constraints => {'set'=>[{'val1*'=>'Value 1'},{'val2'=>'Value 2'},{'val3'=>'Value 3'}]}}
-       CheckBoxGroupWidget.render_form_object_read_only(1,"val1,val3",@options).should == 
+       CheckBoxGroupWidget.render_form_object_read_only(1,"val1,val3",@options).should ==
          "<span id=\"record_1\">Value 1, Value 3</span>"
      end
   end
-  
+
   describe CheckBoxGroupFollowupWidget do
     before(:each) do
       @options = {:constraints => {'set'=>[{'val1'=>'Value 1'},{'val2'=>'Value 2'},{'val3'=>'Value 3'},{'val4'=>'Value 4'}]}, :params => "param_label,param1,param2"}
     end
-     
+
     it "should render html checkboxes with a custom label" do
-      CheckBoxGroupFollowupWidget.render(1,"val1",'the label',@options).should == 
+      CheckBoxGroupFollowupWidget.render(1,"val1",'the label',@options).should ==
         "<span class=\"label\">the label</span><br />      <input name=\"record[1][__none__]\" id=\"record_1___none__\" type=\"hidden\">\n      <span class=\"check_box_followup_input\"><input name=\"record[1][val1]\" id=\"record_1_val1\" class=\"1\" type=\"checkbox\" value=\"val1\" checked\n        onClick=\"do_click_1_regular(this,'val1','1_val1');try{values_for_1[cur_idx] = $CBFG('1');condition_actions_for_1();}catch(err){};\">\n        <label for=\"record_1_val1\">Value 1</label></span>\n                  <span id=\"1_val1\" class=\"checkbox_followups\" style=\"display:inline\">\n          &nbsp;&nbsp; param_label           <input name=\"record[1][_val1-param1]\" id=\"record_1__val145param1\" class=\"1_val1_followup\" type=\"checkbox\" value=\"param1\"  ><label for=\"record_1__val145param1\">Param1</label>\n\n          <input name=\"record[1][_val1-param2]\" id=\"record_1__val145param2\" class=\"1_val1_followup\" type=\"checkbox\" value=\"param2\"  ><label for=\"record_1__val145param2\">Param2</label>\n\n          </span>\n\n<br />      <input name=\"record[1][__none__]\" id=\"record_1___none__\" type=\"hidden\">\n      <span class=\"check_box_followup_input\"><input name=\"record[1][val2]\" id=\"record_1_val2\" class=\"1\" type=\"checkbox\" value=\"val2\" \n        onClick=\"do_click_1_regular(this,'val2','1_val2');try{values_for_1[cur_idx] = $CBFG('1');condition_actions_for_1();}catch(err){};\">\n        <label for=\"record_1_val2\">Value 2</label></span>\n                  <span id=\"1_val2\" class=\"checkbox_followups\" style=\"display:none\">\n          &nbsp;&nbsp; param_label           <input name=\"record[1][_val2-param1]\" id=\"record_1__val245param1\" class=\"1_val2_followup\" type=\"checkbox\" value=\"param1\"  ><label for=\"record_1__val245param1\">Param1</label>\n\n          <input name=\"record[1][_val2-param2]\" id=\"record_1__val245param2\" class=\"1_val2_followup\" type=\"checkbox\" value=\"param2\"  ><label for=\"record_1__val245param2\">Param2</label>\n\n          </span>\n\n<br />      <input name=\"record[1][__none__]\" id=\"record_1___none__\" type=\"hidden\">\n      <span class=\"check_box_followup_input\"><input name=\"record[1][val3]\" id=\"record_1_val3\" class=\"1\" type=\"checkbox\" value=\"val3\" \n        onClick=\"do_click_1_regular(this,'val3','1_val3');try{values_for_1[cur_idx] = $CBFG('1');condition_actions_for_1();}catch(err){};\">\n        <label for=\"record_1_val3\">Value 3</label></span>\n                  <span id=\"1_val3\" class=\"checkbox_followups\" style=\"display:none\">\n          &nbsp;&nbsp; param_label           <input name=\"record[1][_val3-param1]\" id=\"record_1__val345param1\" class=\"1_val3_followup\" type=\"checkbox\" value=\"param1\"  ><label for=\"record_1__val345param1\">Param1</label>\n\n          <input name=\"record[1][_val3-param2]\" id=\"record_1__val345param2\" class=\"1_val3_followup\" type=\"checkbox\" value=\"param2\"  ><label for=\"record_1__val345param2\">Param2</label>\n\n          </span>\n\n<br />      <input name=\"record[1][__none__]\" id=\"record_1___none__\" type=\"hidden\">\n      <span class=\"check_box_followup_input\"><input name=\"record[1][val4]\" id=\"record_1_val4\" class=\"1\" type=\"checkbox\" value=\"val4\" \n        onClick=\"do_click_1_regular(this,'val4','1_val4');try{values_for_1[cur_idx] = $CBFG('1');condition_actions_for_1();}catch(err){};\">\n        <label for=\"record_1_val4\">Value 4</label></span>\n                  <span id=\"1_val4\" class=\"checkbox_followups\" style=\"display:none\">\n          &nbsp;&nbsp; param_label           <input name=\"record[1][_val4-param1]\" id=\"record_1__val445param1\" class=\"1_val4_followup\" type=\"checkbox\" value=\"param1\"  ><label for=\"record_1__val445param1\">Param1</label>\n\n          <input name=\"record[1][_val4-param2]\" id=\"record_1__val445param2\" class=\"1_val4_followup\" type=\"checkbox\" value=\"param2\"  ><label for=\"record_1__val445param2\">Param2</label>\n\n          </span>\n\n<div class=\"clear\"></div><script type=\"text/javascript\">\n//<![CDATA[\n    \t\tfunction do_click_1_regular(theCheckbox,theValue,theFollowupID) {\n          var e = $(theFollowupID); \n          if (theCheckbox.checked) {\n            Effect.BlindDown(e, {duration:.5});\n            \n          } else {\n            Effect.BlindUp(e, {duration:.5});\n            $$('.1_'+theValue+'_followup').each(function(cb){cb.checked=false});\n          }           \n   \t\t  }        \n\n//]]>\n</script>"
     end
     it "should render the list of human enumerations values if read_only, including followups" do
-      CheckBoxGroupFollowupWidget.render_form_object_read_only(1,"val1: \n- param2\nval2: \n- param1\n- param2\n",@options).should == 
+      CheckBoxGroupFollowupWidget.render_form_object_read_only(1,"val1: \n- param2\nval2: \n- param1\n- param2\n",@options).should ==
         "<span id=\"record_1\">Value 1:  Param2; Value 2:  Param1, Param2</span>"
     end
   end
@@ -360,13 +374,13 @@ describe Widget do
     before(:each) do
       @options = {:constraints => {'enumeration'=>[{'val1'=>'Value 1'},{'val2'=>'Value 2'},{'val3'=>'Value 3'}]}}
     end
-     
+
     it "should render html checkboxes with a custom label" do
-      RadioButtonsWidget.render(1,"val1",'the label',@options).should == 
+      RadioButtonsWidget.render(1,"val1",'the label',@options).should ==
         "<span class=\"label\">the label</span><input name=\"record[1]\" id=\"record_1_val1\" class=\"1\" type=\"radio\" value=\"val1\" checked> <label for=\"record_1_val1\">Value 1</label>\n<input name=\"record[1]\" id=\"record_1_val2\" class=\"1\" type=\"radio\" value=\"val2\" > <label for=\"record_1_val2\">Value 2</label>\n<input name=\"record[1]\" id=\"record_1_val3\" class=\"1\" type=\"radio\" value=\"val3\" > <label for=\"record_1_val3\">Value 3</label>"
     end
     it "should render the human enumerations value if read_only" do
-      RadioButtonsWidget.render_form_object_read_only(1,"val2",@options).should == 
+      RadioButtonsWidget.render_form_object_read_only(1,"val2",@options).should ==
         "<span id=\"record_1\">Value 2</span>"
     end
   end
@@ -377,7 +391,7 @@ describe Widget do
     end
 
     it "should render html select" do
-      PopUpWidget.render_form_object(1,"val1",@options).should == 
+      PopUpWidget.render_form_object(1,"val1",@options).should ==
         "<select name=\"record[1]\" id=\"record_1\">\n\t<option value=\"val1\" selected=\"selected\">Value 1</option>\n<option value=\"val2\">Value 2</option>\n<option value=\"val3\">Value 3</option>\n</select>\n"
     end
     it "should render html select with nil option if specified as the param" do
@@ -386,14 +400,14 @@ describe Widget do
         "<select name=\"record[1]\" id=\"record_1\">\n\t<option value=\"\">Please choose a value</option>\n<option value=\"val1\" selected=\"selected\">Value 1</option>\n<option value=\"val2\">Value 2</option>\n<option value=\"val3\">Value 3</option>\n</select>\n"
     end
     it "should render the human enumerations value if read_only" do
-      PopUpWidget.render_form_object_read_only(1,"val2",@options).should == 
+      PopUpWidget.render_form_object_read_only(1,"val2",@options).should ==
         "<span id=\"record_1\">Value 2</span>"
     end
   end
-  
+
   describe VolumeWidget do
     it "should render an html input text with a label" do
-      VolumeWidget.render_form_object(1,'2000',{}).should == 
+      VolumeWidget.render_form_object(1,'2000',{}).should ==
       "      <input type=\"text\" size=4 class=\"textfield_4\" name=\"record[1][cups_box]\" id=\"record_1_cups_box\" value=\"8.45\" onchange=\"record_1_update_volume(true)\" /> cups or\n      <input type=\"text\" size=4 class=\"textfield_4\" name=\"record[1][ml_box]\" id=\"record_1_ml_box\" value=\"2000\" onchange=\"record_1_update_volume(false)\" /> cc (milliliters)\n      <script type=\"text/javascript\">\n//<![CDATA[\n      function record_1_update_volume(change_ml) {\n          if (change_ml) {\n            var cups = check_float($F('record_1_cups_box'));\n            if (cups==null) {\n              $('record_1_ml_box').value = '';\n            } else {\n              $('record_1_ml_box').value = Math.round(cups * 236.588237);\n            }\n          } else {\n            var ml = check_float($F('record_1_ml_box'));\n            if (ml==null) {\n              $('record_1_pounds_box').value='';\n            } else {\n              $('record_1_cups_box').value = Math.round(ml * 0.422675283) / 100;\n            }\n          }\n      }\n\n//]]>\n</script>\n"
     end
     it "should convert html values based on the ml value rounded " do
@@ -407,11 +421,11 @@ describe Widget do
 
   describe HeightWidget do
     it "should render an html input text with a label" do
-      HeightWidget.render_form_object(1,'2000',{}).should == 
+      HeightWidget.render_form_object(1,'2000',{}).should ==
       "      <input type=\"text\" size=2 class=\"textfield_2\" name=\"record[1][feet_box]\" id=\"record_1_feet_box\" value=\"65\" onchange=\"record_1_update_height(true)\" /> ft\n      <input type=\"text\" size=2 class=\"textfield_2\" name=\"record[1][inches_box]\" id=\"record_1_inches_box\" value=\"7\" onchange=\"record_1_update_height(true)\" /> in or\n      <input type=\"text\" size=4 class=\"textfield_4\" name=\"record[1][meters_box]\" id=\"record_1_meters_box\" value=\"20.0\" onchange=\"record_1_update_height(false)\" /> m\n      <script type=\"text/javascript\">\n//<![CDATA[\n      function record_1_update_height(change_meters) {\n        if (change_meters) {\n          var feet = check_float($F('record_1_feet_box'));\n          var inches = check_float($F('record_1_inches_box'));\n          if (feet == null && inches == null){\n              $('record_1_meters_box').value=''\n            }else{\n              if (feet == null) { $('record_1_feet_box').value=''; feet = 0};\n              if (inches == null) { $('record_1_inches_box').value=''; inches = 0};\n               var meters = Math.round((feet * 12 + inches) *  2.54)/100;\n              $('record_1_meters_box').value = meters;\n            }\n          } else {\n            var meters = check_float($F('record_1_meters_box'));\n            if (meters == null){\n              $('record_1_feet_box').value='';\n              $('record_1_inches_box').value='';\n            }else{\n              var total_inches = meters * 39.370079;\n              var feet = Math.floor(total_inches / 12);\n              var inches = Math.round(total_inches % 12);\n              if (inches == 12) {\n                feet++;\n                inches = 0;\n              }\n              $('record_1_feet_box').value = feet;\n              $('record_1_inches_box').value = inches;\n            }\n          }\n      }\n\n//]]>\n</script>\n"
     end
     it "should render value as text with a read_only parameter" do
-      HeightWidget.render_form_object_read_only(1,'2000',{}).should == 
+      HeightWidget.render_form_object_read_only(1,'2000',{}).should ==
         "<span id=\"record_1\">65' 7\" (2000 cm)</span>"
     end
     it "should convert html values based on the meters box and convert to centimeters value" do
@@ -428,14 +442,14 @@ describe Widget do
       HeightWidget.convert_html_value({'meters_box'=> '0x1'}).should == nil
     end
   end
-  
+
   describe WeightWidget do
     it "should render an html input text with a label" do
-      WeightWidget.render_form_object(1,'2000',{}).should == 
+      WeightWidget.render_form_object(1,'2000',{}).should ==
       "      <input type=\"text\" size=2 class=\"textfield_2\" name=\"record[1][pounds_box]\" id=\"record_1_pounds_box\" value=\"4\" onchange=\"record_1_update_weight(true)\" /> lb\n      <input type=\"text\" size=2 class=\"textfield_2\" name=\"record[1][ounces_box]\" id=\"record_1_ounces_box\" value=\"7\" onchange=\"record_1_update_weight(true)\" /> oz or\n      <input type=\"text\" size=4 class=\"textfield_4\" name=\"record[1][grams_box]\" id=\"record_1_grams_box\" value=\"2000\" onchange=\"record_1_update_weight(false)\" /> g\n      <script type=\"text/javascript\">\n//<![CDATA[\n      function record_1_update_weight(change_grams) {\n          if (change_grams) {\n            var pounds = check_float($F('record_1_pounds_box'));\n            var ounces = check_float($F('record_1_ounces_box'));\n            if ((pounds==null) && (ounces==null)){\n              $('record_1_grams_box').value=''\n            }else{\n              if (pounds==null) { $('record_1_pounds_box').value=''; pounds = 0};\n              if (ounces==null) { $('record_1_ounces_box').value=''; ounces = 0};\n              var grams = (pounds * 16 + ounces) * 28.3495231;\n              $('record_1_grams_box').value = Math.round(grams);\n            }\n          } else {\n            var grams = check_float($F('record_1_grams_box'));\n            if (grams==null){\n              $('record_1_pounds_box').value='';\n              $('record_1_ounces_box').value='';\n            }else{\n              var total_ounces = grams * 0.0352739619;\n              $('record_1_pounds_box').value = Math.floor(total_ounces / 16);\n              $('record_1_ounces_box').value = Math.round(total_ounces % 16);\n            }\n          }\n      }\n\n//]]>\n</script>\n"
     end
     it "should render value as text with a read_only parameter" do
-      WeightWidget.render_form_object_read_only(1,'2000',{}).should == 
+      WeightWidget.render_form_object_read_only(1,'2000',{}).should ==
         "<span id=\"record_1\">2000 grams</span>"
     end
     it "should convert html values based on the grams value" do
@@ -447,7 +461,7 @@ describe Widget do
       WeightWidget.convert_html_value({'grams_box'=> '1.5'}).should == nil
       WeightWidget.convert_html_value({'grams_box'=> '14x'}).should == nil
     end
-    
+
   end
 
   describe WeightLbkgWidget do
