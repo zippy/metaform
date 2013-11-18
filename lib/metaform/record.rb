@@ -242,6 +242,14 @@ class Record
   attr :errors
   attr :validation_error_fields
   attr_accessor :action_result,:cache
+
+  # records_controller#show sets this so we have access to URL information in the presentations
+  # I added this to make it easier to support creating links like "send e-mail" in presentations.
+  # See the presentation 'contact_info' in BFDS.
+  # In general, it seems like a useful way to get access to Rails controller info in the context of a record.
+  # -- MTC
+  attr_accessor :controller
+
   ######################################################################################
   # creating a new Record happens either because we pass in a given FormInstance
   # or we create a raw new one here
@@ -263,6 +271,11 @@ class Record
     if attributes
       set_attributes(attributes,presentation_name,options)
     end
+  end
+
+  # Returns the last initialized index (non-nil cache entry)
+  def last_index
+    @cache.indexes.pop
   end
 
   ######################################################################################

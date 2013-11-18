@@ -31,8 +31,11 @@ class RecordsController < ApplicationController
   # GET /records/1.xml
   def show
     setup_record
+
+    # See comments in the attr_accessor :controller of lib\metaform\record.rb, around line 252.
+    @record.controller = self if @record
+
     redirected = false
-    
     render_options = prepare_render_show_options
     redirected = before_show_record(@record,render_options[:template]) if respond_to?(:before_show_record,true)
     if !redirected

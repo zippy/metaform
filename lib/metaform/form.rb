@@ -1280,6 +1280,7 @@ class Form
     #raise "set_current_index:  index = #{index}" if index == 2
     @_index = index
   end
+
   def get_current_index
     @_index
   end
