@@ -770,7 +770,7 @@ class Record
       # shouldn't be updating fields against the workflow rules.
       raise MetaformException,"field '#{field_instance_id}' not in form" if !form.field_exists?(field_instance_id)
 #      f = field_instances.find {|fi| fi.field_id == field_instance_id && fi.idx == index}
-      f = FieldInstance.find(:first, :conditions=>["form_instance_id = ? and field_id = ? and idx = ?",form_instance.id,field_instance_id,index]) if !CACHE
+      f = FieldInstance.first(:conditions=>["form_instance_id = ? and field_id = ? and idx = ?",form_instance.id,field_instance_id,index]) if !CACHE
       f = @ficache.get_attribute(field_instance_id,index) if CACHE
       has_explanation = explanations && explanations[field_instance_id] && explanations[field_instance_id].has_key?(index.to_s)
       explanation_value = explanations[field_instance_id][index.to_s] if has_explanation
@@ -917,8 +917,19 @@ class Record
           else
             idx = index
           end
-          fi = FieldInstance.new({:answer => value, :field_id=>f, :form_instance_id => @form_instance.id, :idx => idx, :state => 'calculated'})
-          fi.save
+
+          # If the value is nil, write it only if the write_only_if_not_nil flag is false (this is the default)
+          # This prevents calculated fields from polluting indices they are not meant to exist on.
+          # In BDS, see the example field "PPcontact_bf_stop_date"
+          if value.nil?
+            if !the_field.write_only_if_not_nil
+              fi = FieldInstance.new({:answer => value, :field_id=>f, :form_instance_id => @form_instance.id, :idx => idx, :state => 'calculated'})
+              fi.save
+            end
+          else
+            fi = FieldInstance.new({:answer => value, :field_id=>f, :form_instance_id => @form_instance.id, :idx => idx, :state => 'calculated'})
+            fi.save
+          end
         end
       end
     end

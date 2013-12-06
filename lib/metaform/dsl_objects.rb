@@ -17,7 +17,8 @@ class Field < Bin
       :force_nil => nil,
       :dependent_fields => nil,
       :indexed => false,
-      :file => nil
+      :file => nil,
+      write_only_if_not_nil: false
     }
   end
   def required_bins
