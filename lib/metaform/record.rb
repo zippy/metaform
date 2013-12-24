@@ -612,7 +612,11 @@ class Record
   # attributes
   # TODO here is another place where it's clear that things are wonky.  Mixing in the
   # workflow_action into the save function is odd.  
-  def save(presentation,meta_data = nil)
+  # 12/23/2013 - MTC
+  # Added dont_nillify so that test scripts such as used in BDS can initialize followup fields.
+  # Without this flag, the followup values are always set to nil when the parent value is set,
+  # which makes it impossible to write tests for other than top-level fields.
+  def save(presentation, meta_data = nil, dont_nillify)
     #puts "SAVE presentation = #{presentation.inspect}"
     #puts "SAVE meta_data = #{meta_data.inspect}"
     #puts "SAVE  @form_instance = #{@form_instance.inspect}"
@@ -625,7 +629,7 @@ class Record
         result = @form_instance.save
         #puts "result = #{result.inspect}"
         if result
-          result = _update_attributes(presentation,meta_data)
+          result = _update_attributes(presentation, meta_data, nil, 0, nil, dont_nillify)
           raise "no new state" if !result
         end
         #puts "SAVE self = #{self.inspect}"
@@ -695,7 +699,7 @@ class Record
     result
   end
 
-  def _update_attributes(presentation,meta_data,fields=nil,idx=0,extra_validate_fields=nil)
+  def _update_attributes(presentation, meta_data, fields=nil, idx=0, extra_validate_fields=nil, dont_nillify)
     # determine if this presentation is allowed to be used for updating the 
     # record in the current state
     @validation_error_fields = []
@@ -713,7 +717,7 @@ class Record
     end
     @form.with_record(self) do
       # force any attributes to nil that need forcing
-      forced_to_nil = set_force_nil_attributes(field_list)
+      forced_to_nil = set_force_nil_attributes(field_list) unless dont_nillify
       field_list.concat(forced_to_nil.keys).uniq!
 
       # evaluate the validity of the attributes to be saved
