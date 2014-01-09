@@ -615,8 +615,8 @@ class Record
   # 12/23/2013 - MTC
   # Added dont_nillify so that test scripts such as used in BDS can initialize followup fields.
   # Without this flag, the followup values are always set to nil when the parent value is set,
-  # which makes it impossible to write tests for other than top-level fields.
-  def save(presentation, meta_data = nil, dont_nillify)
+  # which makes it impossible to create test data for other than top-level fields.
+  def save(presentation, meta_data = nil, dont_nillify = false)
     #puts "SAVE presentation = #{presentation.inspect}"
     #puts "SAVE meta_data = #{meta_data.inspect}"
     #puts "SAVE  @form_instance = #{@form_instance.inspect}"
@@ -699,7 +699,7 @@ class Record
     result
   end
 
-  def _update_attributes(presentation, meta_data, fields=nil, idx=0, extra_validate_fields=nil, dont_nillify)
+  def _update_attributes(presentation, meta_data, fields=nil, idx=0, extra_validate_fields=nil, dont_nillify = false)
     # determine if this presentation is allowed to be used for updating the 
     # record in the current state
     @validation_error_fields = []
